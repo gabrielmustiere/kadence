@@ -50,10 +50,15 @@
       "date": "2026-09-28",
       "type": "Livraison",
       "description": "Story livrée dans le commit d700878 sur la branche feat/001-acces-roles."
+    },
+    {
+      "date": "2026-09-28",
+      "type": "Release",
+      "description": "Story publiée dans la version v0.1.0 « Équipe, rôles et accès »."
     }
   ],
   "delivery": {
-    "release": null,
+    "release": "v0.1.0",
     "commit": "d700878"
   }
 }
