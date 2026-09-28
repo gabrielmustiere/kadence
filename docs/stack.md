@@ -25,7 +25,7 @@ Monolithe Symfony 8.1 en PHP 8.5, rendu serveur Twig + Symfony UX (Stimulus, Tur
 
 - **Framework** : Symfony `8.1.*` (contrainte), `8.1.7` résolue (`composer.json`, `composer.lock`)
 - **ORM / données** : Doctrine ORM `^3.7.2` (3.7.2 résolue), DoctrineBundle `^3.3.2` (3.3.2 résolue), Doctrine Migrations `^4.0.1` (`composer.json`, `composer.lock`)
-- **Authentification** : `symfony/security-bundle` — login par formulaire e-mail / mot de passe avec CSRF, provider entité `App\Entity\User` (propriété `email`), tout le site en `ROLE_USER` sauf `/login` (`config/packages/security.yaml`, `src/Entity/User.php`)
+- **Authentification** : `symfony/security-bundle` — login par formulaire e-mail / mot de passe avec CSRF, provider entité `App\Entity\User` chargé par `UserRepository` (e-mail insensible à la casse) ; rôles hiérarchisés `ROLE_DIRECTION` ⊃ `ROLE_LEAD` ⊃ `ROLE_PROD` ⊃ `ROLE_USER`, `/equipe` réservé à `ROLE_DIRECTION`, reste du site en `ROLE_USER` sauf `/login` ; `UserChecker` refusant les comptes désactivés ; limitation des tentatives par `login_throttling` via `symfony/rate-limiter` `8.1.*` (8.1.6 résolue) (`config/packages/security.yaml`, `src/Entity/User.php`, `src/Repository/UserRepository.php`, `src/Security/UserChecker.php`, `composer.json`, `composer.lock`)
 - **Asynchrone** : Symfony Messenger — transport `async` sur Doctrine (`MESSENGER_TRANSPORT_DSN=doctrine://default`), 3 retries avec backoff ×2, transport `failed` ; e-mails et notifications routés en async ; `sync://` en test (`config/packages/messenger.yaml`, `.env`, `.env.test`)
 - **E-mails / notifications** : `symfony/mailer`, `symfony/notifier` (`composer.json`, `config/packages/mailer.yaml`, `config/packages/notifier.yaml`)
 - **Libs structurantes** : Form, Validator, Serializer, HttpClient, Intl, Translation, ExpressionLanguage, Twig 3.30 + `twig/extra-bundle` / `twig/html-extra` (`composer.json`, `composer.lock`)
@@ -84,3 +84,4 @@ Monolithe Symfony 8.1 en PHP 8.5, rendu serveur Twig + Symfony UX (Stimulus, Tur
 ## Changelog
 
 - 2026-09-28 — Création — amorcé depuis gabrielmustiere/symfony-template
+- 2026-09-28 — Éditer — Backend (authentification) — sync post-livraison de la story 001-f-acces-roles

@@ -1,0 +1,50 @@
+{
+  "version": 2,
+  "title": "Inscrire l'équipe avec un rôle pour que chacun ne voie que ce qui le concerne",
+  "created": "2026-09-28",
+  "updated": "2026-09-28",
+  "tags": [
+    "equipe",
+    "authentification",
+    "roles",
+    "permissions"
+  ],
+  "backlog": "acces-roles",
+  "changelog": [
+    {
+      "date": "2026-09-28",
+      "type": "Création",
+      "description": "Pitch initial rédigé à partir de la ligne de backlog acces-roles (domaine D1)."
+    },
+    {
+      "date": "2026-09-28",
+      "type": "Planification",
+      "description": "Plan technique validé (rôle en enum, DTO, UserChecker + subscriber de garde, TeamManager) ; pitch aligné : coupure immédiate des sessions désactivées et questions ouvertes tranchées."
+    },
+    {
+      "date": "2026-09-28",
+      "type": "Implémentation",
+      "description": "Sept sous-tâches du plan livrées (rôles, sécurité, TeamManager, commande, Mon compte, écrans Équipe, navigation) ; 50 tests PHPUnit et 6 E2E verts ; écarts mineurs d'ordonnancement et down() de migration limité à une table vide."
+    },
+    {
+      "date": "2026-09-28",
+      "type": "Review",
+      "description": "Review : 0 bloquant, 1 important (documentation du down() de migration), 3 mineurs ; ajout hors plan du raccourci de connexion en dev. Statut : CORRECTIONS REQUISES."
+    },
+    {
+      "date": "2026-09-28",
+      "type": "Review",
+      "description": "Findings corrigés (documentation de la migration, login_throttling via symfony/rate-limiter, mot de passe provisoire indexé par personne, purge des comptes E2E) ; statut PRÊT À COMMITER."
+    },
+    {
+      "date": "2026-09-28",
+      "type": "Report",
+      "description": "Report rédigé : conformité 95 %, 13/14 critères (chronométrage non mesuré), aucun élément non implémenté ; ajouts : raccourci de connexion dev, login_throttling (symfony/rate-limiter)."
+    },
+    {
+      "date": "2026-09-28",
+      "type": "Sync",
+      "description": "Doc réalignée sur le livré : pitch (règle 17, limitation des tentatives de connexion) ; plan (périmètre, mécanismes, tests, ordre d'exécution réel avec étape 8 « Retours de review », critères de sortie cochés, risques) ; stack.md (authentification) ; backlog (acces-roles en clôture)."
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier {{ member.firstName }} {{ member.lastName }} · Kadence{% endblock %}
+
+{% block body %}
+    <div class="mx-auto max-w-2xl">
+        <twig:Card>
+            <twig:Card:Header>
+                <twig:Card:Title as="h1">Modifier {{ member.firstName }} {{ member.lastName }}</twig:Card:Title>
+            </twig:Card:Header>
+            <twig:Card:Content>
+                {{ include('team/_form.html.twig', {submit_label: 'Enregistrer'}) }}
+            </twig:Card:Content>
+        </twig:Card>
+    </div>
+{% endblock %}

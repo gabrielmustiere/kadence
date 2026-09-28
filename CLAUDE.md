@@ -89,7 +89,14 @@ make quality                              # CS-Fixer (corrige) + PHPStan + build
 
 ## Identifiants de test
 
-- `admin@example.com` / `password` (ROLE_USER)
+Tous avec le mot de passe `password` :
+
+- `admin@example.com` — direction (ROLE_DIRECTION)
+- `lead@example.com` — lead (ROLE_LEAD)
+- `prod@example.com` — prod (ROLE_PROD)
+- `ancien@example.com` — prod désactivé (connexion refusée)
+
+Premier compte direction hors fixtures : `symfony console app:create-director`.
 
 ## Skills disponibles
 

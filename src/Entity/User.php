@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Enum\Type\Role;
 use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -22,11 +23,22 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 180)]
     private ?string $email = null;
 
-    /**
-     * @var list<string>
-     */
+    /** @var non-empty-string|null */
+    #[ORM\Column(name: 'first_name', length: 100)]
+    private ?string $firstName = null;
+
+    /** @var non-empty-string|null */
+    #[ORM\Column(name: 'last_name', length: 100)]
+    private ?string $lastName = null;
+
+    #[ORM\Column(length: 20, enumType: Role::class)]
+    private Role $role = Role::Prod;
+
     #[ORM\Column]
-    private array $roles = [];
+    private bool $active = true;
+
+    #[ORM\Column(name: 'must_change_password')]
+    private bool $mustChangePassword = false;
 
     #[ORM\Column]
     private ?string $password = null;
@@ -44,7 +56,69 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     /** @param non-empty-string $email */
     public function setEmail(string $email): static
     {
-        $this->email = $email;
+        $this->email = mb_strtolower($email);
+
+        return $this;
+    }
+
+    public function getFirstName(): ?string
+    {
+        return $this->firstName;
+    }
+
+    /** @param non-empty-string $firstName */
+    public function setFirstName(string $firstName): static
+    {
+        $this->firstName = $firstName;
+
+        return $this;
+    }
+
+    public function getLastName(): ?string
+    {
+        return $this->lastName;
+    }
+
+    /** @param non-empty-string $lastName */
+    public function setLastName(string $lastName): static
+    {
+        $this->lastName = $lastName;
+
+        return $this;
+    }
+
+    public function getRole(): Role
+    {
+        return $this->role;
+    }
+
+    public function setRole(Role $role): static
+    {
+        $this->role = $role;
+
+        return $this;
+    }
+
+    public function isActive(): bool
+    {
+        return $this->active;
+    }
+
+    public function setActive(bool $active): static
+    {
+        $this->active = $active;
+
+        return $this;
+    }
+
+    public function mustChangePassword(): bool
+    {
+        return $this->mustChangePassword;
+    }
+
+    public function setMustChangePassword(bool $mustChangePassword): static
+    {
+        $this->mustChangePassword = $mustChangePassword;
 
         return $this;
     }
@@ -62,20 +136,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     public function getRoles(): array
     {
-        $roles = $this->roles;
-        $roles[] = 'ROLE_USER';
-
-        return array_unique($roles);
-    }
-
-    /**
-     * @param list<string> $roles
-     */
-    public function setRoles(array $roles): static
-    {
-        $this->roles = $roles;
-
-        return $this;
+        return [$this->role->securityRole()];
     }
 
     /**

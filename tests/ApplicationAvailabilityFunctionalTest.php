@@ -32,6 +32,9 @@ final class ApplicationAvailabilityFunctionalTest extends WebTestCase
     {
         yield ['/'];
         yield ['/design-system'];
+        yield ['/equipe'];
+        yield ['/equipe/nouveau'];
+        yield ['/mon-compte/mot-de-passe'];
         yield ['/login'];
     }
 }

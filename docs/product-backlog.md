@@ -173,7 +173,7 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
 ### MVP — Lancement initial (abandon du tableur, tests H1/H2, baseline North Star) · `0/7 livrées`
 
 - [ ] `acces-roles` — Permettre à la direction d'inscrire l'équipe avec un rôle, pour que chacun ne voie que ce qui le concerne.
-  - Pas encore cadrée
+  - Story `001-f-acces-roles` · **clôture en cours**
   - C1.1, C1.2, C1.3 · P6 · dép. — · Vision : audience (direction, leads, prod), principe 2
 - [ ] `projets-sous-projets` — Permettre à un lead de créer projets et sous-projets estimés en jours, pour disposer d'un référentiel sur lequel saisir.
   - Pas encore cadrée

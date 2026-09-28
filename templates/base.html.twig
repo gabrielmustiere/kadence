@@ -65,24 +65,20 @@
                 <button type="button" data-dropdown-toggle="paper-topbar-user-menu" data-test="user-menu-toggle"
                         class="flex mx-3 rounded-full focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600">
                     <span class="grid size-8 place-items-center rounded-full bg-gray-900 text-sm font-semibold text-white dark:bg-violet-500">
-                        {{ app.user.userIdentifier|first|upper }}
+                        {{ app.user.firstName|first|upper }}
                     </span>
                 </button>
                 <div class="hidden z-50 my-4 w-56 text-base list-none bg-white rounded-xl divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600"
                      id="paper-topbar-user-menu">
                     <div class="py-3 px-4">
-                        <span class="block text-sm font-semibold text-gray-900 dark:text-white">{{ app.user.userIdentifier }}</span>
-                        <span class="block text-xs text-gray-500 truncate dark:text-gray-400">Compte utilisateur</span>
+                        <span class="block text-sm font-semibold text-gray-900 dark:text-white" data-test="user-menu-name">{{ app.user.firstName }} {{ app.user.lastName }}</span>
+                        <span class="block text-xs text-gray-500 truncate dark:text-gray-400">{{ app.user.role.label }}</span>
                     </div>
                     <ul class="py-1 text-gray-700 dark:text-gray-300">
                         <li>
-                            <a href="#" class="flex items-center gap-2 py-2 px-4 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
-                                <twig:ux:icon name="tabler:user" class="w-4 h-4"/> Mon profil
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#" class="flex items-center gap-2 py-2 px-4 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
-                                <twig:ux:icon name="tabler:settings" class="w-4 h-4"/> Paramètres
+                            <a href="{{ path('app_account_password') }}" data-test="nav-account"
+                               class="flex items-center gap-2 py-2 px-4 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                                <twig:ux:icon name="tabler:user" class="w-4 h-4"/> Mon compte
                             </a>
                         </li>
                     </ul>
@@ -118,6 +114,15 @@
                     <span class="ml-3">Tableau de bord</span>
                 </a>
             </li>
+            {% if is_granted('ROLE_DIRECTION') %}
+            <li>
+                <a href="{{ path('app_team_index') }}" data-test="nav-team"
+                   class="flex items-center p-2 text-base font-medium text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+                    <twig:ux:icon name="tabler:users" class="w-6 h-6 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"/>
+                    <span class="ml-3">Équipe</span>
+                </a>
+            </li>
+            {% endif %}
         </ul>
         <ul class="pt-5 mt-5 space-y-2 border-t border-gray-200 dark:border-gray-700">
             <li>

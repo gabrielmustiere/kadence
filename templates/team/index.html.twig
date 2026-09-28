@@ -1,0 +1,105 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Équipe · Kadence{% endblock %}
+
+{% block body %}
+    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+            <h1 class="font-display text-2xl font-bold tracking-tight text-heading sm:text-3xl">Équipe</h1>
+            <p class="mt-1 text-sm text-body">Qui a accès à Kadence, et avec quel rôle.</p>
+        </div>
+        <twig:Button as="a" href="{{ path('app_team_new') }}" data-test="team-new">
+            <twig:ux:icon name="tabler:user-plus" class="size-4 me-1.5"/>
+            Inscrire une personne
+        </twig:Button>
+    </div>
+
+    <div class="overflow-x-auto rounded-base border border-default">
+        <twig:Table data-test="team-table">
+            <twig:Table:Header>
+                <twig:Table:Row>
+                    <twig:Table:Head>Nom</twig:Table:Head>
+                    <twig:Table:Head>E-mail</twig:Table:Head>
+                    <twig:Table:Head>Rôle</twig:Table:Head>
+                    <twig:Table:Head>Statut</twig:Table:Head>
+                    <twig:Table:Head><span class="sr-only">Actions</span></twig:Table:Head>
+                </twig:Table:Row>
+            </twig:Table:Header>
+            <twig:Table:Body>
+                {% for member in members %}
+                    {% set token = csrf_token('team-member-' ~ member.id) %}
+                    <twig:Table:Row data-test="team-member-row" data-email="{{ member.email }}">
+                        <twig:Table:Cell class="font-medium text-heading">{{ member.firstName }} {{ member.lastName }}</twig:Table:Cell>
+                        <twig:Table:Cell>{{ member.email }}</twig:Table:Cell>
+                        <twig:Table:Cell><twig:Badge variant="gray" data-test="member-role">{{ member.role.label }}</twig:Badge></twig:Table:Cell>
+                        <twig:Table:Cell>
+                            {% if member.active %}
+                                <twig:Badge variant="success" data-test="member-status">Active</twig:Badge>
+                            {% else %}
+                                <twig:Badge variant="alternative" border="bordered" data-test="member-status">Désactivée</twig:Badge>
+                            {% endif %}
+                        </twig:Table:Cell>
+                        <twig:Table:Cell>
+                            <div class="flex flex-wrap justify-end gap-2">
+                                <twig:Button as="a" size="xs" variant="outline" href="{{ path('app_team_edit', {id: member.id}) }}" data-test="member-edit">Modifier</twig:Button>
+
+                                {% if member.active %}
+                                    <twig:Modal id="reset-password-{{ member.id }}">
+                                        <twig:Modal:Trigger>
+                                            <twig:Button size="xs" variant="outline" data-test="member-reset-password" {{ ...modal_trigger_attrs }}>Nouveau mot de passe</twig:Button>
+                                        </twig:Modal:Trigger>
+                                        <twig:Modal:Content>
+                                            <twig:Modal:Header>
+                                                <twig:Modal:Title>Nouveau mot de passe provisoire</twig:Modal:Title>
+                                            </twig:Modal:Header>
+                                            <twig:Modal:Body>
+                                                <p class="text-body">L'actuel mot de passe de {{ member.firstName }} {{ member.lastName }} cessera immédiatement de fonctionner. Un mot de passe provisoire vous sera affiché une seule fois.</p>
+                                            </twig:Modal:Body>
+                                            <twig:Modal:Footer>
+                                                <form method="post" action="{{ path('app_team_reset_password', {id: member.id}) }}">
+                                                    <input type="hidden" name="_token" value="{{ token }}">
+                                                    <twig:Button type="submit" data-test="member-reset-password-confirm">Générer</twig:Button>
+                                                </form>
+                                                <twig:Modal:Close>
+                                                    <twig:Button variant="outline" {{ ...modal_close_attrs }}>Annuler</twig:Button>
+                                                </twig:Modal:Close>
+                                            </twig:Modal:Footer>
+                                        </twig:Modal:Content>
+                                    </twig:Modal>
+
+                                    <twig:Modal id="deactivate-{{ member.id }}">
+                                        <twig:Modal:Trigger>
+                                            <twig:Button size="xs" variant="outline-danger" data-test="member-deactivate" {{ ...modal_trigger_attrs }}>Désactiver</twig:Button>
+                                        </twig:Modal:Trigger>
+                                        <twig:Modal:Content>
+                                            <twig:Modal:Header>
+                                                <twig:Modal:Title>Désactiver {{ member.firstName }} {{ member.lastName }} ?</twig:Modal:Title>
+                                            </twig:Modal:Header>
+                                            <twig:Modal:Body>
+                                                <p class="text-body">La personne ne pourra plus se connecter et sa session en cours sera coupée. Son historique est conservé, et vous pourrez la réactiver à tout moment.</p>
+                                            </twig:Modal:Body>
+                                            <twig:Modal:Footer>
+                                                <form method="post" action="{{ path('app_team_deactivate', {id: member.id}) }}">
+                                                    <input type="hidden" name="_token" value="{{ token }}">
+                                                    <twig:Button type="submit" variant="danger" data-test="member-deactivate-confirm">Désactiver</twig:Button>
+                                                </form>
+                                                <twig:Modal:Close>
+                                                    <twig:Button variant="outline" {{ ...modal_close_attrs }}>Annuler</twig:Button>
+                                                </twig:Modal:Close>
+                                            </twig:Modal:Footer>
+                                        </twig:Modal:Content>
+                                    </twig:Modal>
+                                {% else %}
+                                    <form method="post" action="{{ path('app_team_reactivate', {id: member.id}) }}">
+                                        <input type="hidden" name="_token" value="{{ token }}">
+                                        <twig:Button type="submit" size="xs" variant="outline-success" data-test="member-reactivate">Réactiver</twig:Button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </twig:Table:Cell>
+                    </twig:Table:Row>
+                {% endfor %}
+            </twig:Table:Body>
+        </twig:Table>
+    </div>
+{% endblock %}
