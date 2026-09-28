@@ -45,6 +45,15 @@
       "date": "2026-09-28",
       "type": "Sync",
       "description": "Doc réalignée sur le livré : pitch (règle 17, limitation des tentatives de connexion) ; plan (périmètre, mécanismes, tests, ordre d'exécution réel avec étape 8 « Retours de review », critères de sortie cochés, risques) ; stack.md (authentification) ; backlog (acces-roles en clôture)."
+    },
+    {
+      "date": "2026-09-28",
+      "type": "Livraison",
+      "description": "Story livrée dans le commit d700878 sur la branche feat/001-acces-roles."
     }
-  ]
+  ],
+  "delivery": {
+    "release": null,
+    "commit": "d700878"
+  }
 }
