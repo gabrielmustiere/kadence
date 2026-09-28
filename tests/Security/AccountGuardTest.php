@@ -35,10 +35,8 @@ final class AccountGuardTest extends WebTestCase
         $client = self::createClient();
         $client->loginUser($this->createUser(mustChangePassword: true));
 
-        foreach (['/', '/design-system'] as $url) {
-            $client->request('GET', $url);
-            self::assertResponseRedirects('/mon-compte/mot-de-passe', message: $url);
-        }
+        $client->request('GET', '/');
+        self::assertResponseRedirects('/mon-compte/mot-de-passe');
 
         $client->request('GET', '/mon-compte/mot-de-passe');
         self::assertResponseIsSuccessful();

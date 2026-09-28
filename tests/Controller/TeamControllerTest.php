@@ -47,10 +47,13 @@ final class TeamControllerTest extends WebTestCase
         $client = $this->directorClient();
         $client->request('GET', '/');
         self::assertSelectorExists('[data-test="nav-team"]');
+        self::assertSelectorExists('[data-test="home-team"]');
 
         $client->loginUser($this->fixtureUser('prod@example.com'));
         $client->request('GET', '/');
         self::assertSelectorNotExists('[data-test="nav-team"]');
+        self::assertSelectorNotExists('[data-test="home-team"]');
+        self::assertSelectorExists('[data-test="home-account"]');
         self::assertSelectorTextContains('[data-test="user-menu-name"]', 'Paula Durand');
     }
 

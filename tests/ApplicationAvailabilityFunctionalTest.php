@@ -31,7 +31,6 @@ final class ApplicationAvailabilityFunctionalTest extends WebTestCase
     public static function urlProvider(): \Generator
     {
         yield ['/'];
-        yield ['/design-system'];
         yield ['/equipe'];
         yield ['/equipe/nouveau'];
         yield ['/mon-compte/mot-de-passe'];

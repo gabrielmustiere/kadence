@@ -16,11 +16,13 @@ test('modal opens and closes without JS errors', async ({ page }) => {
   await page.click('button[type="submit"]');
   await expect(page).not.toHaveURL(/\/login/);
 
-  await page.goto('/design-system');
-  await page.click('[data-test="modal-trigger"]');
-  await expect(page.locator('#modal-modal-confirm')).toBeVisible();
-  await page.click('[data-test="modal-cancel"]');
-  await expect(page.locator('#modal-modal-confirm')).toBeHidden();
+  await page.goto('/equipe');
+  const row = page.locator('[data-email="lead@example.com"]');
+  const dialog = row.locator('dialog', { has: page.locator('[data-test="member-deactivate-cancel"]') });
+  await row.locator('[data-test="member-deactivate"]').click();
+  await expect(dialog).toBeVisible();
+  await row.locator('[data-test="member-deactivate-cancel"]').click();
+  await expect(dialog).toBeHidden();
 
   expect(errors).toEqual([]);
 });
