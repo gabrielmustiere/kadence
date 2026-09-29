@@ -173,13 +173,13 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
 
 > Les cases sont **dérivées** de `docs/story/*/metadata.json` (champ `backlog` + `delivery`) — ne les coche pas à la main, la prochaine passe les recalculerait. Une case est cochée quand la story est **livrée** (`delivery.commit` renseigné) ; les états intermédiaires se lisent sur la ligne « Story ».
 
-### MVP — Lancement initial (abandon du tableur, tests H1/H2, baseline North Star) · `1/7 livrées`
+### MVP — Lancement initial (abandon du tableur, tests H1/H2, baseline North Star) · `2/7 livrées`
 
 - [x] `acces-roles` — Permettre à la direction d'inscrire l'équipe avec un rôle, pour que chacun ne voie que ce qui le concerne.
   - Story `001-f-acces-roles` · **livrée** v0.1.0
   - C1.1, C1.2, C1.3 · P6 · dép. — · Vision : audience (direction, leads, prod), principe 2
-- [ ] `projets-sous-projets` — Permettre à un lead de créer des projets découpés en lots et sous-lots, estimés en jours et confiés à un responsable, pour disposer d'un référentiel sur lequel saisir.
-  - Story `002-f-projets-lots-sous-lots` · **clôture en cours**
+- [x] `projets-sous-projets` — Permettre à un lead de créer des projets découpés en lots et sous-lots, estimés en jours et confiés à un responsable, pour disposer d'un référentiel sur lequel saisir.
+  - Story `002-f-projets-lots-sous-lots` · **livrée** v0.2.0
   - C2.1, C2.2, C2.3 · P2 · dép. `acces-roles` · Vision : principe 3, horizon 3 mois
 - [ ] `jalons-dates-annoncees` — Permettre au responsable de poser la période prévue, la date annoncée (historisée) et la livraison réelle d'une feuille, pour mesurer la North Star dès le départ.
   - Pas encore cadrée
@@ -236,7 +236,7 @@ _(dérivé — recalculé à chaque passe, ne pas maintenir à la main)_
 
 ### Capacités par horizon
 
-- **MVP** — livrées : C1.1, C1.2, C1.3 · planifiées : C2.1, C2.2, C2.3, C2.4, C2.5, C3.1, C3.2, C3.3, C3.4, C3.5, C5.1, C5.2, C5.3, C7.2
+- **MVP** — livrées : C1.1, C1.2, C1.3, C2.1, C2.2, C2.3 · planifiées : C2.4, C2.5, C3.1, C3.2, C3.3, C3.4, C3.5, C5.1, C5.2, C5.3, C7.2
 - **V2** — livrées : — · planifiées : C2.6, C4.1, C4.2, C4.3, C4.4, C6.1, C6.2, C6.3, C7.1, C7.3
 - **V3** — livrées : — · planifiées : C5.4
 
@@ -247,7 +247,7 @@ _(dérivé — recalculé à chaque passe, ne pas maintenir à la main)_
 ### Parcours supportés
 
 - **P1 — Saisir sa journée** : entièrement supporté en MVP.
-- **P2 — Lancer un projet** : partiellement supporté en MVP (C4.4 et C6.2 en V2).
+- **P2 — Lancer un projet** : partiellement supporté en MVP (C2.1, C2.2, C2.3 livrées ; C2.4 à venir ; C4.4 et C6.2 en V2).
 - **P3 — Réagir à une dérive** : partiellement supporté en MVP (réaffectation C4.4 en V2 ; réannonce C7.2 disponible).
 - **P4 — S'engager sur une date** : partiellement supporté en MVP (C6.1, C6.2, C7.1 en V2 ; annonce C2.4/C7.2 disponible).
 - **P5 — Revue de pilotage** : partiellement supporté en MVP (C7.1 et C6.1 en V2 ; dérives C5.3 et taux de saisie C3.5 disponibles).
