@@ -43,6 +43,15 @@
       "date": "2026-09-29",
       "type": "Sync",
       "description": "Doc réalignée sur le livré : plan (vérification de l'étape 5, stratégie de test, critères de sortie cochés, mitigation N+1, questions ouvertes tranchées) ; stack.md (contrainte SQLite : clés étrangères non appliquées, LOWER ASCII) ; backlog (projets-sous-projets en clôture)."
+    },
+    {
+      "date": "2026-09-29",
+      "type": "Livraison",
+      "description": "Story livrée dans le commit 7c402c5 sur la branche main."
     }
-  ]
+  ],
+  "delivery": {
+    "release": null,
+    "commit": "7c402c5"
+  }
 }
