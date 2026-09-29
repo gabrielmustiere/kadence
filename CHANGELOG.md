@@ -10,6 +10,20 @@ Chaque version porte un **titre** et distingue les **évolutions fonctionnelles*
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-29 — Projets, lots et sous-lots
+
+### ✨ Fonctionnel
+- **Projets découpés en lots et sous-lots** — les leads et la direction créent des projets et les découpent en lots, eux-mêmes découpables en sous-lots ; un titre ne peut pas être utilisé deux fois au même niveau.
+- **Estimation et responsable** — chaque lot non découpé ou sous-lot porte une estimation en jours entiers et un responsable ; les totaux des lots et des projets se calculent tout seuls.
+- **Ce qu'il reste à compléter** — les parties « à estimer », « à désigner » ou « à redésigner » (responsable parti) et les projets « à découper » sont signalés ; un total incomplet est marqué « partiel ».
+- **Découper sans rien perdre** — le premier sous-lot d'un lot reprend son estimation et son responsable, et supprimer le dernier sous-lot les fait remonter sur le lot.
+- **Responsables autonomes** — le responsable d'un lot ou d'un sous-lot, quel que soit son rôle, en modifie le titre, la description et l'estimation.
+- **Projets visibles par tous** — chacun consulte les projets ; le filtre « Mes responsabilités » retrouve ceux où l'on porte une partie.
+- **Création plus rapide** — « Enregistrer et ajouter un autre » enchaîne les lots, et les formulaires occupent toute la largeur de l'écran.
+
+### 🔧 Technique
+- **Schéma projets et lots** — nouvelles tables `project` et `lot` ; `make db-reset` (ou `make migrate` puis `make fixtures`) charge les projets de démonstration.
+
 ## [0.1.0] - 2026-09-28 — Équipe, rôles et accès
 
 ### ✨ Fonctionnel
@@ -25,5 +39,6 @@ Chaque version porte un **titre** et distingue les **évolutions fonctionnelles*
 - **Connexion rapide en dev** — choix d'un compte de fixtures sur la page de connexion, uniquement en environnement de développement.
 - **Nettoyage du template d'amorçage** — suppression de la page design system et de la route de test d'e-mail.
 
-[Unreleased]: https://github.com/gabrielmustiere/kadence/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/gabrielmustiere/kadence/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/gabrielmustiere/kadence/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/gabrielmustiere/kadence/releases/tag/v0.1.0
