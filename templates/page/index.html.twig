@@ -11,6 +11,7 @@
     </div>
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {{ _self.shortcut(path('app_timesheet'), 'tabler:calendar-week', 'Ma semaine', 'Saisir vos temps de la semaine, au quart de journée.', 'home-timesheet') }}
         {{ _self.shortcut(path('app_project_index'), 'tabler:folders', 'Projets', 'Découper les projets en lots et sous-lots, estimer et confier chaque partie.', 'home-projects') }}
         {% if is_granted('ROLE_DIRECTION') %}
             {{ _self.shortcut(path('app_team_index'), 'tabler:users', 'Équipe', 'Inscrire les personnes, gérer leurs rôles et leurs accès.', 'home-team') }}

@@ -41,7 +41,7 @@ final class AccountController extends AbstractController
             $this->security->login($user, 'form_login', 'main');
             $this->addFlash('success', 'Votre mot de passe a été modifié.');
 
-            return $this->redirectToRoute('app_page');
+            return $this->redirectToRoute('app_timesheet');
         }
 
         return $this->render('account/password.html.twig', [

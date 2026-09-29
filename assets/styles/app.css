@@ -234,3 +234,57 @@
     --color-dark-subtle: var(--color-gray-700);
     --color-dark-backdrop: var(--color-gray-950);
 }
+
+/* Timesheet quarter bar: hovering a notch previews it and the notches before it, like rating stars. */
+@layer components {
+    .quarter-bar {
+        display: flex;
+        gap: 3px;
+        min-width: 6.5rem;
+    }
+
+    .quarter {
+        flex: 1 1 0;
+        height: 1.75rem;
+        border-radius: var(--radius-xs);
+        background-color: var(--color-neutral-quaternary);
+        cursor: pointer;
+        transition: background-color 80ms ease-in-out, transform 80ms ease-in-out;
+    }
+
+    .quarter[data-filled='true'] {
+        background-color: var(--color-brand);
+    }
+
+    .quarter-bar:has(.quarter:not(:disabled):hover) .quarter:not(:disabled) {
+        background-color: var(--color-brand-light);
+    }
+
+    .quarter-bar .quarter:not(:disabled):hover ~ .quarter:not(:disabled) {
+        background-color: var(--color-neutral-quaternary);
+    }
+
+    .quarter-bar:has(.quarter[aria-pressed='true']:hover) .quarter:not(:disabled) {
+        background-color: var(--color-neutral-quaternary);
+        outline: 1px dashed var(--color-brand-light);
+        outline-offset: -1px;
+    }
+
+    .quarter:not(:disabled):hover {
+        transform: scaleY(1.12);
+    }
+
+    .quarter:disabled {
+        cursor: not-allowed;
+        background-image: repeating-linear-gradient(135deg, transparent 0 4px, var(--color-neutral-tertiary) 4px 6px);
+    }
+
+    .quarter:disabled:not([data-filled='true']) {
+        background-color: var(--color-neutral-secondary-medium);
+    }
+
+    .quarter:focus-visible {
+        outline: 2px solid var(--color-brand);
+        outline-offset: 2px;
+    }
+}

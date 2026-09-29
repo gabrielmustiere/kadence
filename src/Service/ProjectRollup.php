@@ -11,7 +11,10 @@ use App\Model\ProjectSummary;
 
 final readonly class ProjectRollup
 {
-    public function summarize(Project $project): ProjectSummary
+    /**
+     * @param array<int, int> $quartersByLot time entered on each lot, by lot id
+     */
+    public function summarize(Project $project, array $quartersByLot = []): ProjectSummary
     {
         $lots = [];
         $subLotCount = 0;
@@ -20,15 +23,18 @@ final readonly class ProjectRollup
                 ++$subLotCount;
                 continue;
             }
-            $lots[] = $this->summarizeLot($lot);
+            $lots[] = $this->summarizeLot($lot, $quartersByLot);
         }
 
         [$estimateDays, $toEstimate, $toAssign, $toReassign] = self::sum($lots);
 
-        return new ProjectSummary($project, $lots, $estimateDays, $subLotCount, $toEstimate, $toAssign, $toReassign);
+        return new ProjectSummary($project, $lots, $estimateDays, $subLotCount, $toEstimate, $toAssign, $toReassign, self::anyHasTime($lots));
     }
 
-    private function summarizeLot(Lot $lot): LotSummary
+    /**
+     * @param array<int, int> $quartersByLot
+     */
+    private function summarizeLot(Lot $lot, array $quartersByLot): LotSummary
     {
         if ($lot->isLeaf()) {
             $estimateDays = $lot->getEstimateDays();
@@ -41,12 +47,21 @@ final readonly class ProjectRollup
                 null === $estimateDays ? 1 : 0,
                 null === $owner ? 1 : 0,
                 null !== $owner && !$owner->isActive() ? 1 : 0,
+                ($quartersByLot[$lot->getId() ?? 0] ?? 0) > 0,
             );
         }
 
-        $children = array_map($this->summarizeLot(...), $lot->getChildren()->getValues());
+        $children = array_map(fn (Lot $child): LotSummary => $this->summarizeLot($child, $quartersByLot), $lot->getChildren()->getValues());
 
-        return new LotSummary($lot, $children, ...self::sum($children));
+        return new LotSummary($lot, $children, ...[...self::sum($children), self::anyHasTime($children)]);
+    }
+
+    /**
+     * @param list<LotSummary> $summaries
+     */
+    private static function anyHasTime(array $summaries): bool
+    {
+        return array_any($summaries, static fn (LotSummary $summary): bool => $summary->hasTime);
     }
 
     /**

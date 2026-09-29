@@ -12,6 +12,12 @@
                     Son estimation est la somme de ses sous-lots.
                 {% endif %}
             </p>
+            {% if consumed_quarters > 0 %}
+                <p class="mt-2 text-sm text-body" data-test="lot-consumed">
+                    {% if lot.initialEstimateDays is not null %}Estimation initiale : <strong class="text-heading">{{ lot.initialEstimateDays }} j</strong>. {% endif %}
+                    {{ consumed_quarters|days }} déjà saisis : une révision de l'estimation ne peut pas descendre sous {{ minimum_estimate_days }} j.
+                </p>
+            {% endif %}
         </twig:Card:Header>
         <twig:Card:Content>
             {{ include('lot/_form.html.twig', {

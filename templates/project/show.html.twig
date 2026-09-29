@@ -38,22 +38,30 @@
                             <twig:Modal:Title>Supprimer « {{ project.title }} » ?</twig:Modal:Title>
                         </twig:Modal:Header>
                         <twig:Modal:Body>
-                            <p class="text-body" data-test="project-delete-scope">
-                                {% if summary.isUnsplit %}
-                                    Le projet ne contient aucun lot.
-                                {% else %}
-                                    Ses {{ summary.lots|length }} lot(s) et {{ summary.subLotCount }} sous-lot(s) seront supprimés avec lui.
-                                {% endif %}
-                                Cette action est définitive.
-                            </p>
+                            {% if summary.hasTime %}
+                                <p class="text-body" data-test="project-delete-blocked">
+                                    Des temps sont saisis sur ce projet : il ne peut plus être supprimé.
+                                </p>
+                            {% else %}
+                                <p class="text-body" data-test="project-delete-scope">
+                                    {% if summary.isUnsplit %}
+                                        Le projet ne contient aucun lot.
+                                    {% else %}
+                                        Ses {{ summary.lots|length }} lot(s) et {{ summary.subLotCount }} sous-lot(s) seront supprimés avec lui.
+                                    {% endif %}
+                                    Cette action est définitive.
+                                </p>
+                            {% endif %}
                         </twig:Modal:Body>
                         <twig:Modal:Footer>
-                            <form method="post" action="{{ path('app_project_delete', {id: project.id}) }}">
-                                <input type="hidden" name="_token" value="{{ csrf_token('project-' ~ project.id) }}">
-                                <twig:Button type="submit" variant="danger" data-test="project-delete-confirm">Supprimer</twig:Button>
-                            </form>
+                            {% if not summary.hasTime %}
+                                <form method="post" action="{{ path('app_project_delete', {id: project.id}) }}">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('project-' ~ project.id) }}">
+                                    <twig:Button type="submit" variant="danger" data-test="project-delete-confirm">Supprimer</twig:Button>
+                                </form>
+                            {% endif %}
                             <twig:Modal:Close>
-                                <twig:Button variant="outline" {{ ...modal_close_attrs }}>Annuler</twig:Button>
+                                <twig:Button variant="outline" {{ ...modal_close_attrs }}>{{ summary.hasTime ? 'Fermer' : 'Annuler' }}</twig:Button>
                             </twig:Modal:Close>
                         </twig:Modal:Footer>
                     </twig:Modal:Content>

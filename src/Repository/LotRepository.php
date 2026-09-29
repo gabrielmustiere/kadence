@@ -7,6 +7,7 @@ namespace App\Repository;
 use App\Entity\Lot;
 use App\Entity\Project;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -45,5 +46,48 @@ class LotRepository extends ServiceEntityRepository
         $titles = $queryBuilder->getQuery()->getSingleColumnResult();
 
         return $titles;
+    }
+
+    /**
+     * Every leaf (lot without sub-lot, or sub-lot) with its parent lot and its project.
+     *
+     * @return list<Lot>
+     */
+    public function findLeavesWithAncestors(): array
+    {
+        /** @var list<Lot> $leaves */
+        $leaves = $this->createLeavesQueryBuilder()->getQuery()->getResult();
+
+        return $leaves;
+    }
+
+    /**
+     * @param list<int> $ids
+     *
+     * @return list<Lot>
+     */
+    public function findLeavesByIds(array $ids): array
+    {
+        if ([] === $ids) {
+            return [];
+        }
+
+        /** @var list<Lot> $leaves */
+        $leaves = $this->createLeavesQueryBuilder()
+            ->andWhere('l.id IN (:ids)')
+            ->setParameter('ids', $ids)
+            ->getQuery()
+            ->getResult();
+
+        return $leaves;
+    }
+
+    private function createLeavesQueryBuilder(): QueryBuilder
+    {
+        return $this->createQueryBuilder('l')
+            ->addSelect('parent', 'p')
+            ->join('l.project', 'p')
+            ->leftJoin('l.parent', 'parent')
+            ->andWhere('l.children IS EMPTY');
     }
 }

@@ -33,6 +33,9 @@
         {% else %}
             <span class="whitespace-nowrap" data-test="estimate">{{ lot.estimateDays }} j</span>
         {% endif %}
+        {% if lot.leaf and lot.initialEstimateDays is not null %}
+            <span class="mt-0.5 block whitespace-nowrap text-xs text-body" data-test="initial-estimate">initiale {{ lot.initialEstimateDays }} j</span>
+        {% endif %}
     </twig:Table:Cell>
     <twig:Table:Cell>
         <div class="flex flex-wrap justify-end gap-2">
@@ -52,22 +55,30 @@
                             <twig:Modal:Title>Supprimer « {{ lot.title }} » ?</twig:Modal:Title>
                         </twig:Modal:Header>
                         <twig:Modal:Body>
-                            <p class="text-body" data-test="lot-delete-scope">
-                                {% if not lot.leaf %}
-                                    Ses {{ lot.children|length }} sous-lot(s) seront supprimés avec lui.
-                                {% elseif lot.subLot and lot.parent.children|length == 1 %}
-                                    C'est le dernier sous-lot : son estimation et son responsable remonteront sur « {{ lot.parent.title }} ».
-                                {% endif %}
-                                Cette action est définitive.
-                            </p>
+                            {% if summary.hasTime %}
+                                <p class="text-body" data-test="lot-delete-blocked">
+                                    Des temps sont saisis sur {{ lot.leaf ? 'ce lot' : 'ses sous-lots' }} : il ne peut plus être supprimé.
+                                </p>
+                            {% else %}
+                                <p class="text-body" data-test="lot-delete-scope">
+                                    {% if not lot.leaf %}
+                                        Ses {{ lot.children|length }} sous-lot(s) seront supprimés avec lui.
+                                    {% elseif lot.subLot and lot.parent.children|length == 1 %}
+                                        C'est le dernier sous-lot : son estimation et son responsable remonteront sur « {{ lot.parent.title }} ».
+                                    {% endif %}
+                                    Cette action est définitive.
+                                </p>
+                            {% endif %}
                         </twig:Modal:Body>
                         <twig:Modal:Footer>
-                            <form method="post" action="{{ path('app_lot_delete', {id: lot.id}) }}">
-                                <input type="hidden" name="_token" value="{{ csrf_token('lot-' ~ lot.id) }}">
-                                <twig:Button type="submit" variant="danger" data-test="lot-delete-confirm">Supprimer</twig:Button>
-                            </form>
+                            {% if not summary.hasTime %}
+                                <form method="post" action="{{ path('app_lot_delete', {id: lot.id}) }}">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('lot-' ~ lot.id) }}">
+                                    <twig:Button type="submit" variant="danger" data-test="lot-delete-confirm">Supprimer</twig:Button>
+                                </form>
+                            {% endif %}
                             <twig:Modal:Close>
-                                <twig:Button variant="outline" {{ ...modal_close_attrs }}>Annuler</twig:Button>
+                                <twig:Button variant="outline" {{ ...modal_close_attrs }}>{{ summary.hasTime ? 'Fermer' : 'Annuler' }}</twig:Button>
                             </twig:Modal:Close>
                         </twig:Modal:Footer>
                     </twig:Modal:Content>

@@ -7,8 +7,10 @@ namespace App\Controller;
 use App\Dto\ProjectInput;
 use App\Entity\Project;
 use App\Entity\User;
+use App\Exception\LotHasTimeEntriesException;
 use App\Form\ProjectType;
 use App\Repository\ProjectRepository;
+use App\Repository\TimeEntryRepository;
 use App\Service\ProjectManager;
 use App\Service\ProjectRollup;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
@@ -60,10 +62,10 @@ final class ProjectController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_project_show', requirements: ['id' => '\d+'], methods: ['GET'])]
-    public function show(#[MapEntity(expr: 'repository.findOneForDetail(id)')] Project $project): Response
+    public function show(#[MapEntity(expr: 'repository.findOneForDetail(id)')] Project $project, TimeEntryRepository $timeEntryRepository): Response
     {
         return $this->render('project/show.html.twig', [
-            'summary' => $this->projectRollup->summarize($project),
+            'summary' => $this->projectRollup->summarize($project, $timeEntryRepository->sumQuartersByLot($project)),
         ]);
     }
 
@@ -94,7 +96,13 @@ final class ProjectController extends AbstractController
         }
 
         $title = $project->getTitle();
-        $this->projectManager->deleteProject($project);
+        try {
+            $this->projectManager->deleteProject($project);
+        } catch (LotHasTimeEntriesException $exception) {
+            $this->addFlash('error', $exception->getMessage());
+
+            return $this->redirectToRoute('app_project_show', ['id' => $project->getId()]);
+        }
         $this->addFlash('success', \sprintf('Le projet « %s » est supprimé.', $title));
 
         return $this->redirectToRoute('app_project_index');

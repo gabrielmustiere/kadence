@@ -6,6 +6,7 @@ parameters:
     paths:
         - bin/
         - config/
+        - fixtures/
         - public/
         - src/
         - tests/
@@ -14,7 +15,7 @@ parameters:
         - src/Kernel.php
         - public/index.php
     ignoreErrors:
-        # Cognitive complexity non appliquée aux Entity / FormType / Repository
+        # Cognitive complexity non appliquée aux Entity / FormType / Repository / fixtures
         -
             identifier: complexity.classLike
             reportUnmatched: false
@@ -22,6 +23,7 @@ parameters:
                 - src/Entity/*
                 - src/Form/*
                 - src/Repository/*
+                - fixtures/*
         -
             identifier: complexity.functionLike
             reportUnmatched: false
@@ -29,6 +31,7 @@ parameters:
                 - src/Entity/*
                 - src/Form/*
                 - src/Repository/*
+                - fixtures/*
         -
             identifier: complexity.dependencyTree
             reportUnmatched: false
@@ -36,3 +39,4 @@ parameters:
                 - src/Entity/*
                 - src/Form/*
                 - src/Repository/*
+                - fixtures/*

@@ -7,7 +7,10 @@ namespace App\Controller;
 use App\Dto\LotInput;
 use App\Entity\Lot;
 use App\Entity\Project;
+use App\Exception\LotHasTimeEntriesException;
 use App\Form\LotType;
+use App\Model\Quarters;
+use App\Repository\TimeEntryRepository;
 use App\Security\Voter\LotVoter;
 use App\Service\ProjectManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -76,7 +79,7 @@ final class LotController extends AbstractController
     }
 
     #[Route('/lots/{id}/modifier', name: 'app_lot_edit', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
-    public function edit(Request $request, Lot $lot): Response
+    public function edit(Request $request, Lot $lot, TimeEntryRepository $timeEntryRepository): Response
     {
         $this->denyAccessUnlessGranted(LotVoter::EDIT, $lot);
 
@@ -95,7 +98,14 @@ final class LotController extends AbstractController
             return $this->redirectToRoute('app_project_show', ['id' => $lot->getProject()->getId()]);
         }
 
-        return $this->render('lot/edit.html.twig', ['form' => $form, 'lot' => $lot]);
+        $consumedQuarters = $timeEntryRepository->sumQuartersForLotId((int) $lot->getId());
+
+        return $this->render('lot/edit.html.twig', [
+            'form' => $form,
+            'lot' => $lot,
+            'consumed_quarters' => $consumedQuarters,
+            'minimum_estimate_days' => Quarters::daysRoundedUp($consumedQuarters),
+        ]);
     }
 
     #[Route('/lots/{id}/supprimer', name: 'app_lot_delete', requirements: ['id' => '\d+'], methods: ['POST'])]
@@ -108,8 +118,12 @@ final class LotController extends AbstractController
 
         $title = $lot->getTitle();
         $projectId = $lot->getProject()->getId();
-        $this->projectManager->deleteLot($lot);
-        $this->addFlash('success', \sprintf('« %s » est supprimé.', $title));
+        try {
+            $this->projectManager->deleteLot($lot);
+            $this->addFlash('success', \sprintf('« %s » est supprimé.', $title));
+        } catch (LotHasTimeEntriesException $exception) {
+            $this->addFlash('error', $exception->getMessage());
+        }
 
         return $this->redirectToRoute('app_project_show', ['id' => $projectId]);
     }

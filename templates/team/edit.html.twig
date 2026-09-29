@@ -11,4 +11,30 @@
             {{ include('team/_form.html.twig', {submit_label: 'Enregistrer'}) }}
         </twig:Card:Content>
     </twig:Card>
+
+    <twig:Card class="mt-6" data-test="weekly-max-history">
+        <twig:Card:Header>
+            <twig:Card:Title as="h2">Historique du maximum hebdomadaire</twig:Card:Title>
+            <p class="mt-2 text-sm text-body">Chaque semaine applique la valeur en vigueur à son lundi. Supprimer une valeur rétablit la précédente.</p>
+        </twig:Card:Header>
+        <twig:Card:Content>
+            <ul class="divide-y divide-default text-sm">
+                <li class="flex items-center justify-between gap-4 py-2" data-test="weekly-max-default">
+                    <span><strong class="text-heading">5 j</strong> <span class="text-body">par défaut</span></span>
+                </li>
+                {% for weeklyMax in weekly_maxes %}
+                    <li class="flex items-center justify-between gap-4 py-2" data-test="weekly-max-entry" data-from="{{ weeklyMax.effectiveFrom|date('Y-m-d') }}">
+                        <span>
+                            <strong class="text-heading">{{ weeklyMax.quarters|days }}</strong>
+                            <span class="text-body">à partir de la semaine du {{ weeklyMax.effectiveFrom|date('d/m/Y') }}</span>
+                        </span>
+                        <form method="post" action="{{ path('app_team_weekly_max_delete', {id: member.id, weeklyMaxId: weeklyMax.id}) }}">
+                            <input type="hidden" name="_token" value="{{ csrf_token('weekly-max-' ~ weeklyMax.id) }}">
+                            <twig:Button type="submit" size="xs" variant="outline-danger" data-test="weekly-max-delete">Supprimer</twig:Button>
+                        </form>
+                    </li>
+                {% endfor %}
+            </ul>
+        </twig:Card:Content>
+    </twig:Card>
 {% endblock %}

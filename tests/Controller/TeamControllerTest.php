@@ -7,6 +7,8 @@ namespace App\Tests\Controller;
 use App\Entity\User;
 use App\Enum\Type\Role;
 use App\Repository\UserRepository;
+use App\Repository\WeeklyMaxRepository;
+use App\Tests\Support\CreatesTimeEntries;
 use App\Tests\Support\CreatesUsers;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -15,6 +17,7 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 final class TeamControllerTest extends WebTestCase
 {
+    use CreatesTimeEntries;
     use CreatesUsers;
 
     #[DataProvider('nonDirectorProvider')]
@@ -137,6 +140,71 @@ final class TeamControllerTest extends WebTestCase
         self::assertResponseRedirects('/equipe');
     }
 
+    public function testDirectionSetsAWeeklyMaximumFromTheChosenWeek(): void
+    {
+        $client = $this->directorClient();
+        $member = $this->createUser();
+        $url = '/equipe/' . $member->getId() . '/modifier';
+
+        $this->submitMemberForm($client, $url, ['weeklyMaxDays' => '4.5', 'weeklyMaxFrom' => '2026-10-07']);
+
+        self::assertResponseRedirects('/equipe');
+        $history = $this->weeklyMaxRepository()->findForUser($member);
+        self::assertCount(1, $history);
+        self::assertSame(18, $history[0]->getQuarters());
+        self::assertSame('2026-10-05', $history[0]->getEffectiveFrom()->format('Y-m-d'));
+
+        $client->request('GET', $url);
+        self::assertSelectorTextContains('[data-test="weekly-max-entry"][data-from="2026-10-05"]', '4,5 j');
+    }
+
+    #[DataProvider('invalidWeeklyMaxProvider')]
+    public function testInvalidWeeklyMaximumIsRefused(string $days): void
+    {
+        $client = $this->directorClient();
+        $member = $this->createUser();
+
+        $this->submitMemberForm($client, '/equipe/' . $member->getId() . '/modifier', ['weeklyMaxDays' => $days]);
+
+        self::assertResponseStatusCodeSame(422);
+        self::assertSame([], $this->weeklyMaxRepository()->findForUser($member));
+    }
+
+    /**
+     * @return \Generator<array{string}>
+     */
+    public static function invalidWeeklyMaxProvider(): \Generator
+    {
+        yield 'zero' => ['0'];
+        yield 'more than five days' => ['5.5'];
+        yield 'not a quarter of a day' => ['4.3'];
+    }
+
+    public function testDirectionDeletesAWeeklyMaximumValue(): void
+    {
+        $client = $this->directorClient();
+        $member = $this->createUser();
+        $this->createWeeklyMax($member, '2026-09-07', 16);
+
+        $crawler = $client->request('GET', '/equipe/' . $member->getId() . '/modifier');
+        $client->submit($crawler->filter('[data-test="weekly-max-entry"] [data-test="weekly-max-delete"]')->form());
+
+        self::assertResponseRedirects('/equipe/' . $member->getId() . '/modifier');
+        self::assertSame([], $this->weeklyMaxRepository()->findForUser($member));
+    }
+
+    public function testWeeklyMaximumValueOfAnotherMemberCannotBeDeletedThroughThisOne(): void
+    {
+        $client = $this->directorClient();
+        $owner = $this->createUser();
+        $weeklyMax = $this->createWeeklyMax($owner, '2026-09-07', 16);
+
+        $client->request('POST', '/equipe/' . $this->createUser()->getId() . '/maximum/' . $weeklyMax->getId() . '/supprimer');
+
+        self::assertResponseStatusCodeSame(404);
+        self::assertCount(1, $this->weeklyMaxRepository()->findForUser($owner));
+    }
+
     public function testDeactivateThenReactivateMember(): void
     {
         $client = $this->directorClient();
@@ -255,6 +323,14 @@ final class TeamControllerTest extends WebTestCase
         \assert($userRepository instanceof UserRepository);
 
         return $userRepository;
+    }
+
+    private function weeklyMaxRepository(): WeeklyMaxRepository
+    {
+        $repository = self::getContainer()->get(WeeklyMaxRepository::class);
+        \assert($repository instanceof WeeklyMaxRepository);
+
+        return $repository;
     }
 
     private function passwordHasher(): UserPasswordHasherInterface

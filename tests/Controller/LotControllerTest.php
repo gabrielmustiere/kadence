@@ -7,8 +7,10 @@ namespace App\Tests\Controller;
 use App\Entity\Lot;
 use App\Entity\Project;
 use App\Entity\User;
+use App\Repository\TimeEntryRepository;
 use App\Repository\UserRepository;
 use App\Tests\Support\CreatesProjects;
+use App\Tests\Support\CreatesTimeEntries;
 use App\Tests\Support\CreatesUsers;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -17,6 +19,7 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 final class LotControllerTest extends WebTestCase
 {
     use CreatesProjects;
+    use CreatesTimeEntries;
     use CreatesUsers;
 
     public function testLeadChainsLotsWithAddAnother(): void
@@ -219,6 +222,129 @@ final class LotControllerTest extends WebTestCase
         self::assertTrue($lot->isLeaf());
         self::assertSame(3, $lot->getEstimateDays());
         self::assertSame($lead->getId(), $lot->getOwner()?->getId());
+    }
+
+    public function testEstimateCannotGoBelowTheConsumedTimeRoundedUp(): void
+    {
+        $client = $this->clientAs('lead@example.com');
+        $lot = $this->createLotWithTime(5, [4, 4, 4, 1]);
+        $url = '/lots/' . $lot->getId() . '/modifier';
+
+        $client->request('GET', $url);
+        self::assertSelectorTextContains('[data-test="lot-consumed"]', 'ne peut pas descendre sous 4 j');
+
+        $this->submitLotForm($client, $url, ['estimateDays' => '3']);
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('[data-test="lot-form"]', '3,25 j déjà saisis sur cette feuille : l\'estimation ne peut pas descendre sous 4 j.');
+
+        $this->submitLotForm($client, $url, ['estimateDays' => '']);
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('[data-test="lot-form"]', 'ne peut plus être retirée');
+
+        $this->submitLotForm($client, $url, ['estimateDays' => '4']);
+        self::assertResponseRedirects('/projets/' . $lot->getProject()->getId());
+        self::assertSame(4, $this->reloadLot($lot)->getEstimateDays());
+        self::assertSame(5, $this->reloadLot($lot)->getInitialEstimateDays());
+    }
+
+    public function testALeafOverrunningItsEstimateStaysEditableWithoutRevisingIt(): void
+    {
+        $client = $this->clientAs('lead@example.com');
+        $lot = $this->createLotWithTime(2, [4, 4, 4]);
+        $url = '/lots/' . $lot->getId() . '/modifier';
+
+        $this->submitLotForm($client, $url, ['title' => 'Renommée ' . uniqid()]);
+        self::assertResponseRedirects('/projets/' . $lot->getProject()->getId());
+        self::assertSame(2, $this->reloadLot($lot)->getEstimateDays());
+
+        $this->submitLotForm($client, $url, ['estimateDays' => '1']);
+        self::assertResponseStatusCodeSame(422);
+
+        $this->submitLotForm($client, '/lots/' . $lot->getId() . '/sous-lots/nouveau', ['title' => 'Premier']);
+        self::assertResponseRedirects('/projets/' . $lot->getProject()->getId());
+        self::assertFalse($this->reloadLot($lot)->isLeaf());
+    }
+
+    public function testFirstEstimateOfALeafCarryingTimeBecomesItsInitialEstimate(): void
+    {
+        $client = $this->clientAs('lead@example.com');
+        $lot = $this->createLotWithTime(null, [2]);
+
+        $this->submitLotForm($client, '/lots/' . $lot->getId() . '/modifier', ['estimateDays' => '6']);
+
+        self::assertSame(6, $this->reloadLot($lot)->getInitialEstimateDays());
+        $client->request('GET', '/projets/' . $lot->getProject()->getId());
+        self::assertSelectorTextContains('[data-test="lot-row"][data-title="' . $lot->getTitle() . '"] [data-test="initial-estimate"]', 'initiale 6 j');
+    }
+
+    public function testFirstSubLotTakesOverTheTimeOfItsLot(): void
+    {
+        $client = $this->clientAs('lead@example.com');
+        $lot = $this->createLotWithTime(8, [4, 1]);
+
+        $this->submitLotForm($client, '/lots/' . $lot->getId() . '/sous-lots/nouveau', ['title' => 'Modèle']);
+
+        self::assertResponseRedirects('/projets/' . $lot->getProject()->getId());
+        $lot = $this->reloadLot($lot);
+        $subLot = $lot->getChildren()->first();
+        self::assertInstanceOf(Lot::class, $subLot);
+        self::assertSame(8, $subLot->getEstimateDays());
+        self::assertSame(8, $subLot->getInitialEstimateDays());
+        self::assertNull($lot->getInitialEstimateDays());
+        self::assertSame(0, $this->timeEntryRepository()->sumQuartersForLotId((int) $lot->getId()));
+        self::assertSame(5, $this->timeEntryRepository()->sumQuartersForLotId((int) $subLot->getId()));
+    }
+
+    public function testFirstSubLotCannotTakeOverAnEstimateBelowTheConsumedTime(): void
+    {
+        $client = $this->clientAs('lead@example.com');
+        $lot = $this->createLotWithTime(8, [4, 4, 4]);
+
+        $this->submitLotForm($client, '/lots/' . $lot->getId() . '/sous-lots/nouveau', ['title' => 'Modèle', 'estimateDays' => '2']);
+
+        self::assertResponseStatusCodeSame(422);
+        self::assertTrue($this->reloadLot($lot)->isLeaf());
+    }
+
+    public function testALotCarryingTimeCannotBeDeleted(): void
+    {
+        $client = $this->clientAs('lead@example.com');
+        $lot = $this->createLot($this->createProject(), 3);
+        $crawler = $client->request('GET', '/projets/' . $lot->getProject()->getId());
+        $deleteForm = $crawler->filter('[data-test="lot-delete-confirm"]')->form();
+        $this->createTimeEntry($this->createUser(), $lot, '2026-09-28', 1);
+
+        $client->submit($deleteForm);
+
+        self::assertResponseRedirects('/projets/' . $lot->getProject()->getId());
+        $client->followRedirect();
+        self::assertSelectorTextContains('[data-test="lot-row"][data-title="' . $lot->getTitle() . '"]', $lot->getTitle() ?? '');
+        self::assertSelectorExists('[data-test="lot-delete-blocked"]');
+        self::assertSelectorNotExists('[data-test="lot-row"][data-title="' . $lot->getTitle() . '"] [data-test="lot-delete-confirm"]');
+    }
+
+    /**
+     * @param positive-int|null $estimateDays
+     * @param list<int<1, 4>>   $quarters     one entry per day, from Monday 2026-09-21
+     */
+    private function createLotWithTime(?int $estimateDays, array $quarters): Lot
+    {
+        $lot = $this->createLot($this->createProject(), $estimateDays);
+        $lot->setInitialEstimateDays($estimateDays);
+        $user = $this->createUser();
+        foreach ($quarters as $offset => $quarter) {
+            $this->createTimeEntry($user, $lot, \sprintf('2026-09-%d', 21 + $offset), $quarter);
+        }
+
+        return $lot;
+    }
+
+    private function timeEntryRepository(): TimeEntryRepository
+    {
+        $repository = self::getContainer()->get(TimeEntryRepository::class);
+        \assert($repository instanceof TimeEntryRepository);
+
+        return $repository;
     }
 
     /**

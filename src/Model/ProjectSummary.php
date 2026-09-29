@@ -19,6 +19,7 @@ final readonly class ProjectSummary
         public int $toEstimate,
         public int $toAssign,
         public int $toReassign,
+        public bool $hasTime = false,
     ) {
     }
 

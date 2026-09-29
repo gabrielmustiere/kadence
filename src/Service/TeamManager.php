@@ -8,6 +8,7 @@ use App\Dto\TeamMemberInput;
 use App\Entity\User;
 use App\Enum\Type\Role;
 use App\Exception\LastActiveDirectorException;
+use App\Model\Week;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -19,6 +20,7 @@ final readonly class TeamManager
         private UserRepository $userRepository,
         private UserPasswordHasherInterface $passwordHasher,
         private TemporaryPasswordGenerator $temporaryPasswordGenerator,
+        private WeeklyMaxManager $weeklyMaxManager,
     ) {
     }
 
@@ -83,6 +85,12 @@ final readonly class TeamManager
             ->setLastName(self::required($input->lastName))
             ->setEmail(self::required($input->email))
             ->setRole($input->role ?? throw new \LogicException('A validated team member input has a role.'));
+
+        $this->weeklyMaxManager->change(
+            $user,
+            self::weeklyMaxQuarters($input->weeklyMaxDays),
+            Week::containing($input->weeklyMaxFrom ?? throw new \LogicException('A validated team member input has a weekly maximum start.')),
+        );
     }
 
     private function issueTemporaryPassword(User $user): string
@@ -99,6 +107,19 @@ final readonly class TeamManager
         if ($user->isActive() && Role::Direction === $user->getRole() && $this->userRepository->countActiveDirectors() <= 1) {
             throw new LastActiveDirectorException();
         }
+    }
+
+    /**
+     * @return int<1, 20>
+     */
+    private static function weeklyMaxQuarters(?float $days): int
+    {
+        $quarters = null === $days ? 0 : (int) round($days * 4);
+        if ($quarters < 1 || $quarters > WeeklyMaxManager::DEFAULT_QUARTERS) {
+            throw new \LogicException('A validated team member input has a weekly maximum between a quarter and five days.');
+        }
+
+        return $quarters;
     }
 
     /**

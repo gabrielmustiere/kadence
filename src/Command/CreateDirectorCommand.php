@@ -6,7 +6,9 @@ namespace App\Command;
 
 use App\Dto\TeamMemberInput;
 use App\Enum\Type\Role;
+use App\Model\Week;
 use App\Service\TeamManager;
+use Psr\Clock\ClockInterface;
 use Symfony\Component\Console\Attribute\Argument;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Attribute\Ask;
@@ -23,6 +25,7 @@ final readonly class CreateDirectorCommand
     public function __construct(
         private TeamManager $teamManager,
         private ValidatorInterface $validator,
+        private ClockInterface $clock,
     ) {
     }
 
@@ -32,7 +35,7 @@ final readonly class CreateDirectorCommand
         #[Argument('Prénom'), Ask('Prénom')] string $firstName,
         #[Argument('Nom'), Ask('Nom')] string $lastName,
     ): int {
-        $input = new TeamMemberInput();
+        $input = TeamMemberInput::forNewMember(Week::containing($this->clock->now()));
         $input->email = $email;
         $input->firstName = $firstName;
         $input->lastName = $lastName;

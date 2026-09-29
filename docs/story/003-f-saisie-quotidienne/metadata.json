@@ -1,0 +1,42 @@
+{
+  "version": 2,
+  "title": "Saisir ses temps de la semaine en quarts de journée, d'un clic par case",
+  "created": "2026-09-29",
+  "updated": "2026-09-29",
+  "tags": [
+    "saisie-temps"
+  ],
+  "backlog": "saisie-quotidienne",
+  "changelog": [
+    {
+      "date": "2026-09-29",
+      "type": "Création",
+      "description": "Pitch initial rédigé à partir de la ligne de backlog saisie-quotidienne (domaine D3) : grille hebdomadaire en quarts de journée à crans façon notation par étoiles, plafonds jour et semaine, maximum hebdomadaire par personne fixé par la direction, garde-fous des règles 17 et 18 de la story 002 et bascule d'un lot qui porte des temps."
+    },
+    {
+      "date": "2026-09-29",
+      "type": "Planification",
+      "description": "Plan technique validé (TimeEntry en quarts entiers par personne, feuille et jour ; WeeklyMax historisé par lundi d'effet, 5 j par défaut sans entrée ; Lot.initialEstimateDays ; Live Component Timesheet avec survol en CSS pur ; TimesheetManager, TimesheetBuilder, WeeklyMaxManager, LeafFinder ; garde-fous dans ProjectManager et contrainte EstimateCoversConsumed ; connexion redirigée vers /saisie) ; pitch aligné : maximum historisé avec suppression d'une valeur, diminution d'une case toujours possible."
+    },
+    {
+      "date": "2026-09-29",
+      "type": "Implémentation",
+      "description": "Huit sous-tâches du plan livrées (modèle et migration, semaine et maximum hebdomadaire historisé dans la fiche Équipe, TimesheetManager, TimesheetBuilder et LeafFinder, Live Component Timesheet et page /saisie, rendu graphique, garde-fous du référentiel, E2E) ; 165 tests PHPUnit et 18 E2E verts ; fixtures dev d'une fausse entreprise (4 projets, 14 collaborateurs, 6 mois de saisie) ; écarts : TimesheetBuilder testé contre la base, helpers Quarters et LeafOrder, LotInput::currentEstimateDays, CreateDirectorCommand adaptée, redirections attendues mises à jour dans les tests existants."
+    },
+    {
+      "date": "2026-09-29",
+      "type": "Review",
+      "description": "Revue du diff : 1 bloquant (révision bornée appliquée même sans changement d'estimation), 1 important et 6 mineurs, tous corrigés ; prêt à commiter."
+    },
+    {
+      "date": "2026-09-29",
+      "type": "Report",
+      "description": "Compte rendu d'implémentation : 60/62 fichiers conformes au plan, 26/26 critères atteints, 13 écarts volontaires documentés (révision bornée limitée à une révision, fixtures de démonstration en dev), aucune dette issue de la review."
+    },
+    {
+      "date": "2026-09-29",
+      "type": "Sync",
+      "description": "Doc réalignée sur le livré : règle 25 du pitch limitée à une révision de l'estimation ; plan mis à jour (EstimateCoversConsumed, focusedDay, Week sans horloge, filtre weekday, Quarters, LeafOrder, _leaf_path, fixtures de démonstration en dev analysées par PHPStan, TimesheetBuilder testé contre la base, budget de requêtes dans le contrôleur, fichiers modifiés non prévus) ; backlog passé au quart de journée, C4.1 annotée, ligne saisie-quotidienne en clôture."
+    }
+  ]
+}

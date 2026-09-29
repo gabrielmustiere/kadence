@@ -9,6 +9,7 @@ use App\Entity\Project;
 use App\Entity\User;
 use App\Repository\UserRepository;
 use App\Tests\Support\CreatesProjects;
+use App\Tests\Support\CreatesTimeEntries;
 use App\Tests\Support\CreatesUsers;
 use Doctrine\Bundle\DoctrineBundle\DataCollector\DoctrineDataCollector;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -18,6 +19,7 @@ use Symfony\Component\HttpKernel\Profiler\Profile;
 final class ProjectControllerTest extends WebTestCase
 {
     use CreatesProjects;
+    use CreatesTimeEntries;
     use CreatesUsers;
 
     public function testProdBrowsesProjectsButCannotManageThem(): void
@@ -199,6 +201,27 @@ final class ProjectControllerTest extends WebTestCase
         foreach ($ids as $id) {
             self::assertNull($entityManager->find(Lot::class, $id));
         }
+    }
+
+    public function testAProjectCarryingTimeCannotBeDeleted(): void
+    {
+        $client = $this->clientAs('lead@example.com');
+        $project = $this->createProject();
+        $split = $this->createLot($project);
+        $subLot = $this->createLot($project, 2, null, $split);
+        $crawler = $client->request('GET', '/projets/' . $project->getId());
+        $deleteForm = $crawler->filter('[data-test="project-delete-confirm"]')->form();
+        $this->createTimeEntry($this->createUser(), $subLot, '2026-09-28', 2);
+
+        $client->submit($deleteForm);
+
+        self::assertResponseRedirects('/projets/' . $project->getId());
+        $client->followRedirect();
+        self::assertSelectorExists('[data-test="project-delete-blocked"]');
+        self::assertSelectorNotExists('[data-test="project-delete-confirm"]');
+        self::assertSelectorCount(2, '[data-test="lot-delete-blocked"]');
+        $this->entityManager()->clear();
+        self::assertNotNull($this->entityManager()->find(Project::class, $project->getId()));
     }
 
     public function testDeletingWithAnInvalidCsrfTokenIsRefused(): void

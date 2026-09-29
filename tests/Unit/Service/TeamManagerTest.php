@@ -6,11 +6,15 @@ namespace App\Tests\Unit\Service;
 
 use App\Dto\TeamMemberInput;
 use App\Entity\User;
+use App\Entity\WeeklyMax;
 use App\Enum\Type\Role;
 use App\Exception\LastActiveDirectorException;
+use App\Model\Week;
 use App\Repository\UserRepository;
+use App\Repository\WeeklyMaxRepository;
 use App\Service\TeamManager;
 use App\Service\TemporaryPasswordGenerator;
+use App\Service\WeeklyMaxManager;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -33,6 +37,28 @@ final class TeamManagerTest extends TestCase
         self::assertTrue($user->mustChangePassword());
         self::assertSame('hashed:' . $temporaryPassword, $user->getPassword());
         self::assertSame(TemporaryPasswordGenerator::LENGTH, \strlen($temporaryPassword));
+    }
+
+    public function testRegisterWithAPartTimeMaximumRecordsItFromTheChosenWeek(): void
+    {
+        $persisted = [];
+        $entityManager = $this->createMock(EntityManagerInterface::class);
+        $entityManager->expects($this->exactly(2))->method('persist')->willReturnCallback(
+            static function (object $entity) use (&$persisted): void {
+                $persisted[] = $entity;
+            },
+        );
+        $entityManager->expects($this->once())->method('flush');
+        $input = $this->input(Role::Prod);
+        $input->weeklyMaxDays = 4.5;
+        $input->weeklyMaxFrom = new \DateTimeImmutable('2026-10-07');
+
+        $this->teamManager($entityManager)->register($input);
+
+        $weeklyMaxes = array_values(array_filter($persisted, static fn (object $entity): bool => $entity instanceof WeeklyMax));
+        self::assertCount(1, $weeklyMaxes);
+        self::assertSame(18, $weeklyMaxes[0]->getQuarters());
+        self::assertSame('2026-10-05', $weeklyMaxes[0]->getEffectiveFrom()->format('Y-m-d'));
     }
 
     public function testDeactivatingLastActiveDirectorIsRefused(): void
@@ -130,11 +156,14 @@ final class TeamManagerTest extends TestCase
             static fn (User $user, string $plainPassword): string => 'hashed:' . $plainPassword,
         );
 
+        $entityManager ??= $this->createStub(EntityManagerInterface::class);
+
         return new TeamManager(
-            $entityManager ?? $this->createStub(EntityManagerInterface::class),
+            $entityManager,
             $userRepository,
             $passwordHasher,
             new TemporaryPasswordGenerator(),
+            new WeeklyMaxManager($entityManager, $this->createStub(WeeklyMaxRepository::class)),
         );
     }
 
@@ -155,6 +184,7 @@ final class TeamManagerTest extends TestCase
         $input->lastName = 'Dupont';
         $input->email = 'Jeanne.Dupont@example.com';
         $input->role = $role;
+        $input->weeklyMaxFrom = Week::containing(new \DateTimeImmutable('2026-09-30'))->monday;
 
         return $input;
     }

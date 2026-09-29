@@ -13,6 +13,8 @@ use Doctrine\Persistence\ObjectManager;
 
 class ProjectFixtures extends Fixture implements DependentFixtureInterface
 {
+    public const string SUPPORT = 'lot-support';
+
     public function load(ObjectManager $manager): void
     {
         $lead = $this->getReference(AppFixtures::LEAD, User::class);
@@ -29,7 +31,7 @@ class ProjectFixtures extends Fixture implements DependentFixtureInterface
         $this->lot($kadence, 'Rappels de saisie', 3, $former);
 
         $support = $this->project('Support et maintenance', 'Temps de support et de maintenance corrective, estimé par période.');
-        $this->lot($support, 'Support', 20, $lead);
+        $this->addReference(self::SUPPORT, $this->lot($support, 'Support', 20, $lead));
 
         $portal = $this->project('Évolution du portail', null);
 

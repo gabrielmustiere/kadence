@@ -6,10 +6,16 @@ namespace App\Controller;
 
 use App\Dto\TeamMemberInput;
 use App\Entity\User;
+use App\Entity\WeeklyMax;
 use App\Exception\LastActiveDirectorException;
 use App\Form\TeamMemberType;
+use App\Model\Week;
 use App\Repository\UserRepository;
+use App\Repository\WeeklyMaxRepository;
 use App\Service\TeamManager;
+use App\Service\WeeklyMaxManager;
+use Psr\Clock\ClockInterface;
+use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -25,6 +31,8 @@ final class TeamController extends AbstractController
 
     public function __construct(
         private readonly TeamManager $teamManager,
+        private readonly WeeklyMaxManager $weeklyMaxManager,
+        private readonly ClockInterface $clock,
     ) {
     }
 
@@ -39,7 +47,7 @@ final class TeamController extends AbstractController
     #[Route('/nouveau', name: 'app_team_new', methods: ['GET', 'POST'])]
     public function new(Request $request): Response
     {
-        $input = new TeamMemberInput();
+        $input = TeamMemberInput::forNewMember($this->currentWeek());
         $form = $this->createForm(TeamMemberType::class, $input);
         $form->handleRequest($request);
 
@@ -53,9 +61,10 @@ final class TeamController extends AbstractController
     }
 
     #[Route('/{id}/modifier', name: 'app_team_edit', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
-    public function edit(Request $request, User $user): Response
+    public function edit(Request $request, User $user, WeeklyMaxRepository $weeklyMaxRepository): Response
     {
-        $input = TeamMemberInput::fromUser($user);
+        $currentWeek = $this->currentWeek();
+        $input = TeamMemberInput::fromUser($user, $this->weeklyMaxManager->quartersFor($user, $currentWeek), $currentWeek);
         $form = $this->createForm(TeamMemberType::class, $input);
         $form->handleRequest($request);
 
@@ -70,7 +79,27 @@ final class TeamController extends AbstractController
             return $this->redirectToRoute('app_team_index');
         }
 
-        return $this->render('team/edit.html.twig', ['form' => $form, 'member' => $user]);
+        return $this->render('team/edit.html.twig', [
+            'form' => $form,
+            'member' => $user,
+            'weekly_maxes' => $weeklyMaxRepository->findForUser($user),
+        ]);
+    }
+
+    #[Route('/{id}/maximum/{weeklyMaxId}/supprimer', name: 'app_team_weekly_max_delete', requirements: ['id' => '\d+', 'weeklyMaxId' => '\d+'], methods: ['POST'])]
+    public function deleteWeeklyMax(Request $request, User $user, #[MapEntity(id: 'weeklyMaxId')] WeeklyMax $weeklyMax): Response
+    {
+        if ($weeklyMax->getUser() !== $user) {
+            throw $this->createNotFoundException('Cette valeur n\'appartient pas à cette personne.');
+        }
+        if (!$this->isCsrfTokenValid('weekly-max-' . $weeklyMax->getId(), $request->getPayload()->getString('_token'))) {
+            throw $this->createAccessDeniedException('Jeton CSRF invalide.');
+        }
+
+        $this->weeklyMaxManager->delete($weeklyMax);
+        $this->addFlash('success', \sprintf('La valeur du maximum hebdomadaire de %s est supprimée.', $user->getFirstName()));
+
+        return $this->redirectToRoute('app_team_edit', ['id' => $user->getId()]);
     }
 
     #[Route('/{id}/desactiver', name: 'app_team_deactivate', requirements: ['id' => '\d+'], methods: ['POST'])]
@@ -160,6 +189,11 @@ final class TeamController extends AbstractController
             static fn (mixed $password, mixed $id): bool => \is_int($id) && \is_string($password),
             \ARRAY_FILTER_USE_BOTH,
         );
+    }
+
+    private function currentWeek(): Week
+    {
+        return Week::containing($this->clock->now());
     }
 
     private static function memberId(User $user): int

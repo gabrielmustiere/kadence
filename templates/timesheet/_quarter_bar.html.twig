@@ -1,0 +1,15 @@
+<div class="quarter-bar" data-test="quarter-bar" data-quarters="{{ cell.quarters }}" data-max="{{ cell.maxSelectable }}">
+    {%- for notch in 1..4 %}
+        {%- set active = notch == cell.quarters %}
+        <button type="button" class="quarter" data-test="quarter" data-value="{{ notch }}"
+                data-filled="{{ notch <= cell.quarters ? 'true' : 'false' }}"
+                aria-pressed="{{ active ? 'true' : 'false' }}"
+                aria-label="{{ active ? 'Effacer' : notch|quarter_fraction ~ ' j' }} — {{ cell.day|weekday }} {{ cell.day|date('d/m') }}, {{ lot.project.title }} › {{ lot.parent ? lot.parent.title ~ ' › ' }}{{ lot.title }}"
+                {% if not cell.selectable(notch) %}disabled{% endif %}
+                data-action="live#action"
+                data-live-action-param="record"
+                data-live-lot-param="{{ lot.id }}"
+                data-live-day-param="{{ cell.day|date('Y-m-d') }}"
+                data-live-quarters-param="{{ active ? 0 : notch }}"></button>
+    {%- endfor %}
+</div>

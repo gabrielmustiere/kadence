@@ -1,0 +1,101 @@
+{% set grid = this.grid %}
+<div {{ attributes.defaults({'data-test': 'timesheet'}) }}>
+    {% if error %}
+        <twig:Alert variant="warning" border="bordered" class="mb-4" data-test="timesheet-error">
+            <twig:ux:icon name="tabler:alert-triangle" class="size-4 shrink-0"/>
+            <span>{{ error }}</span>
+        </twig:Alert>
+    {% endif %}
+
+    <p class="mb-3 text-sm text-body">
+        Total de la semaine :
+        <strong class="{{ grid.complete ? 'text-fg-success-strong' : 'text-heading' }}" data-test="week-total" data-complete="{{ grid.complete ? 'true' : 'false' }}">{{ grid.quarters|days }} / {{ grid.maxQuarters|days }}</strong>
+    </p>
+
+    <div class="mb-3 grid grid-cols-5 gap-1 md:hidden" role="tablist" aria-label="Jour affiché">
+        {% for column in grid.days %}
+            {% set selected = loop.index0 == focusedDay %}
+            <button type="button" role="tab" aria-selected="{{ selected ? 'true' : 'false' }}"
+                    data-test="day-tab" data-day="{{ column.date|date('Y-m-d') }}"
+                    data-action="live#action" data-live-action-param="showDay" data-live-index-param="{{ loop.index0 }}"
+                    class="rounded-base border px-1 py-1.5 text-center text-xs {{ selected ? 'border-brand ring-2 ring-brand-medium' : 'border-default' }} {{ column.complete ? 'bg-success-soft' : 'bg-neutral-primary' }}">
+                <span class="block font-semibold {{ column.today ? 'text-fg-brand' : 'text-heading' }}">{{ column.date|weekday }} {{ column.date|date('d') }}</span>
+                <span class="block {{ column.forgotten ? 'font-semibold text-fg-warning' : 'text-body' }}">{{ column.quarters|days }}</span>
+            </button>
+        {% endfor %}
+    </div>
+
+    <div class="overflow-x-auto rounded-base border border-default bg-neutral-primary">
+        <table class="w-full text-sm" data-test="timesheet-grid" data-loading="action(record)|addClass(opacity-75)">
+            <thead>
+                <tr>
+                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium uppercase text-body">Lot</th>
+                    {% for column in grid.days %}
+                        <th scope="col"
+                            class="w-32 px-2 py-2 text-center {{ loop.index0 != focusedDay ? 'max-md:hidden' }} {{ column.complete ? 'bg-success-soft' : (column.today ? 'bg-brand-softer') }}"
+                            data-test="day-header" data-day="{{ column.date|date('Y-m-d') }}"
+                            data-complete="{{ column.complete ? 'true' : 'false' }}"
+                            data-forgotten="{{ column.forgotten ? 'true' : 'false' }}"
+                            data-today="{{ column.today ? 'true' : 'false' }}">
+                            <span class="block text-xs font-semibold uppercase {{ column.today ? 'text-fg-brand' : 'text-heading' }}">
+                                {{ column.date|weekday }} {{ column.date|date('d/m') }}
+                                {% if column.today %}<span class="sr-only">(aujourd'hui)</span>{% endif %}
+                            </span>
+                            <span class="mt-0.5 flex items-center justify-center gap-1 text-xs {{ column.forgotten ? 'font-semibold text-fg-warning' : (column.complete ? 'text-fg-success-strong' : 'text-body') }}" data-test="day-total">
+                                {% if column.forgotten %}<twig:ux:icon name="tabler:alert-circle" class="size-3.5" aria-hidden="true"/>{% endif %}
+                                {% if column.complete %}<twig:ux:icon name="tabler:check" class="size-3.5" aria-hidden="true"/>{% endif %}
+                                {{ column.quarters|days }}
+                                {% if column.forgotten %}<span class="sr-only">— journée incomplète</span>{% endif %}
+                            </span>
+                        </th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in grid.rows %}
+                    <tr class="border-t border-default" data-test="timesheet-row" data-lot="{{ row.lot.id }}">
+                        <th scope="row" class="px-3 py-2 text-left font-normal">
+                            {{ include('timesheet/_leaf_path.html.twig', {lot: row.lot}) }}
+                        </th>
+                        {% for cell in row.cells %}
+                            {% set column = grid.days[loop.index0] %}
+                            <td class="px-2 py-2 {{ loop.index0 != focusedDay ? 'max-md:hidden' }} {{ column.complete ? 'bg-success-soft' : (column.today ? 'bg-brand-softer') }}"
+                                data-test="timesheet-cell" data-day="{{ cell.day|date('Y-m-d') }}">
+                                {{ include('timesheet/_quarter_bar.html.twig', {lot: row.lot, cell: cell}) }}
+                            </td>
+                        {% endfor %}
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="6" class="px-3 py-6 text-center text-body" data-test="timesheet-empty">
+                            Aucune saisie cette semaine ni la précédente : ajoutez une ligne pour commencer.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mt-4 max-w-xl">
+        <label for="timesheet-search" class="mb-1 block text-sm font-medium text-heading">Ajouter une ligne</label>
+        <input id="timesheet-search" type="search" autocomplete="off" value="{{ query }}"
+               placeholder="Projet, lot ou sous-lot…"
+               data-model="debounce(250)|query" data-test="add-line-input"
+               class="block w-full rounded-base border border-default-medium bg-neutral-secondary-medium px-3 py-2 text-sm text-heading placeholder:text-body focus:border-brand focus:ring-brand">
+        {% if not this.searchTooShort %}
+            <ul class="mt-2 divide-y divide-default overflow-hidden rounded-base border border-default bg-neutral-primary" data-test="add-line-results">
+                {% for lot in this.searchResults %}
+                    <li>
+                        <button type="button" class="w-full px-3 py-2 text-left text-sm hover:bg-neutral-secondary-soft"
+                                data-test="add-line-result" data-lot="{{ lot.id }}"
+                                data-action="live#action" data-live-action-param="addLot" data-live-lot-param="{{ lot.id }}">
+                            {{ include('timesheet/_leaf_path.html.twig', {lot: lot}) }}
+                        </button>
+                    </li>
+                {% else %}
+                    <li class="px-3 py-2 text-sm text-body" data-test="add-line-none">Aucune feuille ne correspond.</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+</div>

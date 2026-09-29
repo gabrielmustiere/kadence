@@ -7,10 +7,12 @@ namespace App\Dto;
 use App\Entity\Lot;
 use App\Entity\Project;
 use App\Entity\User;
+use App\Validator\EstimateCoversConsumed;
 use App\Validator\UniqueLotTitle;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[UniqueLotTitle]
+#[EstimateCoversConsumed]
 final class LotInput
 {
     public ?int $id = null;
@@ -29,6 +31,9 @@ final class LotInput
     public ?int $estimateDays = null;
 
     public ?User $owner = null;
+
+    /** The estimate carried before this change: by the edited lot, or by the lot a first sub-lot takes over. */
+    public ?int $currentEstimateDays = null;
 
     public static function forLotOf(Project $project): self
     {
@@ -50,6 +55,7 @@ final class LotInput
         if ($parent->isLeaf()) {
             $input->estimateDays = $parent->getEstimateDays();
             $input->owner = $parent->getOwner();
+            $input->currentEstimateDays = $parent->getEstimateDays();
         }
 
         return $input;
@@ -65,6 +71,7 @@ final class LotInput
         $input->description = $lot->getDescription();
         $input->estimateDays = $lot->getEstimateDays();
         $input->owner = $lot->getOwner();
+        $input->currentEstimateDays = $lot->getEstimateDays();
 
         return $input;
     }

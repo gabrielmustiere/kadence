@@ -42,13 +42,13 @@ test('la direction inscrit une personne qui choisit son mot de passe à la premi
   await page.fill('[data-test="new-password-confirm"]', newPassword);
   await page.click('[data-test="change-password-submit"]');
 
-  await expect(page.locator('h1')).toContainText('Tableau de bord');
+  await expect(page.locator('h1')).toContainText('Ma semaine');
   await expect(page.locator('[data-test="nav-team"]')).toHaveCount(0);
 });
 
 test('un membre de prod ne voit pas la gestion d\'équipe', async ({ page }) => {
   await login(page, 'prod@example.com', 'password');
-  await expect(page.locator('h1')).toContainText('Tableau de bord');
+  await expect(page.locator('h1')).toContainText('Ma semaine');
   await expect(page.locator('[data-test="nav-team"]')).toHaveCount(0);
 
   const response = await page.goto('/equipe');

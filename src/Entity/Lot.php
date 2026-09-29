@@ -43,6 +43,10 @@ class Lot
     #[ORM\Column(name: 'estimate_days', nullable: true)]
     private ?int $estimateDays = null;
 
+    /** @var positive-int|null the estimate in force when the leaf first had both time entries and an estimate */
+    #[ORM\Column(name: 'initial_estimate_days', nullable: true)]
+    private ?int $initialEstimateDays = null;
+
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(name: 'owner_id')]
     private ?User $owner = null;
@@ -141,6 +145,20 @@ class Lot
     public function setEstimateDays(?int $estimateDays): static
     {
         $this->estimateDays = $estimateDays;
+
+        return $this;
+    }
+
+    /** @return positive-int|null */
+    public function getInitialEstimateDays(): ?int
+    {
+        return $this->initialEstimateDays;
+    }
+
+    /** @param positive-int|null $initialEstimateDays */
+    public function setInitialEstimateDays(?int $initialEstimateDays): static
+    {
+        $this->initialEstimateDays = $initialEstimateDays;
 
         return $this;
     }

@@ -59,7 +59,7 @@ final class AccountControllerTest extends WebTestCase
 
         $this->submitNewPassword($client, self::STRONG_PASSWORD);
 
-        self::assertResponseRedirects('/');
+        self::assertResponseRedirects('/saisie');
         self::assertFalse($this->reloadUser($user)->mustChangePassword());
         $client->followRedirect();
         self::assertResponseIsSuccessful();
@@ -84,7 +84,7 @@ final class AccountControllerTest extends WebTestCase
 
         $this->submitNewPassword($client, self::STRONG_PASSWORD, 'password');
 
-        self::assertResponseRedirects('/');
+        self::assertResponseRedirects('/saisie');
         $client->request('GET', '/mon-compte/mot-de-passe');
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('h1', 'Changer mon mot de passe');

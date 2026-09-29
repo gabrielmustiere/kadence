@@ -82,6 +82,22 @@ final class ProjectRollupTest extends TestCase
         self::assertFalse($summary->isPartial());
     }
 
+    public function testTimeOnALeafMarksItsSplitLotAndItsProject(): void
+    {
+        $project = new Project()->setTitle('Kadence');
+        $split = $this->lot($project, null, null);
+        $this->lot($project, 3, $this->user(), $split);
+
+        $withoutTime = new ProjectRollup()->summarize($project);
+        $withTime = new ProjectRollup()->summarize($project, [0 => 2]);
+
+        self::assertFalse($withoutTime->hasTime);
+        self::assertFalse($withoutTime->lots[0]->hasTime);
+        self::assertTrue($withTime->hasTime);
+        self::assertTrue($withTime->lots[0]->hasTime);
+        self::assertTrue($withTime->lots[0]->children[0]->hasTime);
+    }
+
     /** @param positive-int|null $estimateDays */
     private function lot(Project $project, ?int $estimateDays, ?User $owner, ?Lot $parent = null): Lot
     {

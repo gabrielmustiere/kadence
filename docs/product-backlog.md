@@ -12,6 +12,7 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
 |------|--------|----------|-------|
 | 2026-09-28 | Création | — | Backlog initial dérivé de la vision |
 | 2026-09-29 | Éditer | D2, D4, C1.2, C2.1–C2.5, C3.1, C3.2, C4.4, C5.1–C5.4, C6.2, P1, P2, P7, règles transverses, 8 lignes de backlog | Découpage projet → lot → sous-lot cadré par la story 002 (principe 3 de la vision réécrit) ; estimation révisable après saisie ; réactivation livrée par la story 001 |
+| 2026-09-29 | Éditer | C3.1, C4.1, P1, règle transverse « saisie », ligne `saisie-quotidienne` | Sync post-livraison de la story 003-f-saisie-quotidienne : saisie au quart de journée ; maximum de saisie hebdomadaire historisé avancé depuis C4.1 |
 
 ## Domaines fonctionnels
 
@@ -44,7 +45,7 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
 
 ### D3 — Saisie des temps
 
-- **C3.1** — Un membre de l'équipe peut déclarer sa journée en répartissant ses demi-journées sur des feuilles (lots ou sous-lots).
+- **C3.1** — Un membre de l'équipe peut déclarer sa journée en répartissant ses quarts de journée sur des feuilles (lots ou sous-lots).
 - **C3.2** — Un membre peut retrouver ses lots et sous-lots habituels en tête de liste (pour saisir en moins d'une minute).
 - **C3.3** — Un membre peut corriger une journée déjà saisie.
 - **C3.4** — Le système peut rappeler à une personne, et à elle seule, qu'elle n'a pas saisi sa journée.
@@ -52,7 +53,7 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
 
 ### D4 — Capacité
 
-- **C4.1** — La direction peut définir le temps de travail de chaque personne (temps plein, temps partiel, jours travaillés).
+- **C4.1** — La direction peut définir le temps de travail de chaque personne (temps plein, temps partiel, jours travaillés). Le maximum de saisie hebdomadaire de chaque personne, historisé par semaine d'effet, est posé par `saisie-quotidienne` ; reste le temps de travail détaillé (jours travaillés, répartition du temps partiel sur la semaine).
 - **C4.2** — Une personne peut déclarer ses absences (congés, maladie).
 - **C4.3** — La direction peut déclarer les jours fériés et les fermetures.
 - **C4.4** — Un lead peut affecter une part de la capacité d'une personne à une feuille sur une période (pour planifier la charge et projeter les dates).
@@ -83,7 +84,7 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
 - **Acteur** : membre de l'équipe de prod (utilisateur secondaire de la vision, dont dépend toute la chaîne).
 - **Déclencheur** : fin de journée, ou rappel de saisie manquante.
 - **Étapes** : C3.2 → C3.1 (→ C3.3 en cas d'oubli ou d'erreur).
-- **État final** : la journée est répartie en demi-journées sur des feuilles.
+- **État final** : la journée est répartie en quarts de journée sur des feuilles.
 - **Fréquence** : 1 fois par jour et par personne (15 à 40 saisies par jour).
 
 ### P2 — Lancer un projet
@@ -165,7 +166,7 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
 
 ### Conventions transverses
 
-- Estimations en **jours** ; saisie en **demi-journées**.
+- Estimations en **jours** ; saisie en **quarts de journée**.
 - Semaine de travail du lundi au vendredi ; fuseau Europe/Paris.
 - Interface en français uniquement.
 
@@ -184,8 +185,8 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
 - [ ] `jalons-dates-annoncees` — Permettre au responsable de poser la période prévue, la date annoncée (historisée) et la livraison réelle d'une feuille, pour mesurer la North Star dès le départ.
   - Pas encore cadrée
   - C2.4, C2.5, C7.2 · P4, P7 · dép. `projets-sous-projets` · Vision : North Star (baseline à 3 mois), principe 4
-- [ ] `saisie-quotidienne` — Permettre à chacun de saisir sa journée en demi-journées, lots et sous-lots habituels en tête, en moins d'une minute.
-  - Pas encore cadrée
+- [ ] `saisie-quotidienne` — Permettre à chacun de saisir sa journée en quarts de journée, lots et sous-lots habituels en tête, en moins d'une minute.
+  - Story `003-f-saisie-quotidienne` · **clôture en cours**
   - C3.1, C3.2, C3.3 · P1 · dép. `projets-sous-projets` · Vision : principe 1, hypothèse H1
 - [ ] `rappel-saisie` — Rappeler personnellement une saisie manquante et montrer à la direction le taux de saisie de l'équipe, pour tenir la discipline de saisie.
   - Pas encore cadrée

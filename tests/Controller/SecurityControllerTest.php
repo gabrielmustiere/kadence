@@ -50,9 +50,9 @@ final class SecurityControllerTest extends WebTestCase
             '_password' => 'password',
         ]);
 
-        self::assertResponseRedirects('/');
+        self::assertResponseRedirects('/saisie');
         $client->followRedirect();
-        self::assertSelectorTextContains('h1', 'Tableau de bord');
+        self::assertSelectorTextContains('h1', 'Ma semaine');
     }
 
     public function testLoginWithInvalidCredentials(): void
@@ -81,7 +81,7 @@ final class SecurityControllerTest extends WebTestCase
             '_password' => 'password',
         ]);
 
-        self::assertResponseRedirects('/');
+        self::assertResponseRedirects('/saisie');
     }
 
     public function testDeactivatedUserCannotLoginAndGetsGenericMessage(): void

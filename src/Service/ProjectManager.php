@@ -9,12 +9,15 @@ use App\Dto\ProjectInput;
 use App\Entity\Lot;
 use App\Entity\Project;
 use App\Exception\LotDepthException;
+use App\Exception\LotHasTimeEntriesException;
+use App\Repository\TimeEntryRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
 final readonly class ProjectManager
 {
     public function __construct(
         private EntityManagerInterface $entityManager,
+        private TimeEntryRepository $timeEntryRepository,
     ) {
     }
 
@@ -37,6 +40,10 @@ final readonly class ProjectManager
 
     public function deleteProject(Project $project): void
     {
+        if ($this->timeEntryRepository->existsForProject($project)) {
+            throw new LotHasTimeEntriesException($project->getTitle());
+        }
+
         $this->entityManager->remove($project);
         $this->entityManager->flush();
     }
@@ -54,7 +61,8 @@ final readonly class ProjectManager
 
     /**
      * The estimate and owner of a lot receiving its first sub-lot move to that sub-lot: the input is expected
-     * to carry them (see LotInput::forSubLotOf()), and the lot, no longer a leaf, loses them.
+     * to carry them (see LotInput::forSubLotOf()), and the lot, no longer a leaf, loses them. Its time entries
+     * and initial estimate move along.
      */
     public function addSubLot(Lot $parent, LotInput $input): Lot
     {
@@ -62,12 +70,23 @@ final readonly class ProjectManager
             throw new LotDepthException();
         }
 
+        $takesOver = $parent->isLeaf();
+        $hasTime = $takesOver && $this->timeEntryRepository->existsForLots([$parent]);
+
         $subLot = new Lot($parent->getProject(), $parent);
         $this->applyLot($subLot, $input);
+        if ($takesOver) {
+            $subLot->setInitialEstimateDays($parent->getInitialEstimateDays() ?? ($hasTime ? $subLot->getEstimateDays() : null));
+        }
         $this->clearLeafData($parent);
 
-        $this->entityManager->persist($subLot);
-        $this->entityManager->flush();
+        $this->entityManager->wrapInTransaction(function () use ($parent, $subLot, $hasTime): void {
+            $this->entityManager->persist($subLot);
+            $this->entityManager->flush();
+            if ($hasTime) {
+                $this->timeEntryRepository->moveToLot($parent, $subLot);
+            }
+        });
 
         return $subLot;
     }
@@ -83,11 +102,18 @@ final readonly class ProjectManager
      */
     public function deleteLot(Lot $lot): void
     {
+        if ($this->timeEntryRepository->existsForLots([$lot, ...$lot->getChildren()->getValues()])) {
+            throw new LotHasTimeEntriesException($lot->getTitle());
+        }
+
         $parent = $lot->getParent();
         if (null !== $parent) {
             $parent->removeChild($lot);
             if ($parent->isLeaf()) {
-                $parent->setEstimateDays($lot->getEstimateDays())->setOwner($lot->getOwner());
+                $parent
+                    ->setEstimateDays($lot->getEstimateDays())
+                    ->setOwner($lot->getOwner())
+                    ->setInitialEstimateDays($lot->getInitialEstimateDays());
             }
         }
 
@@ -123,11 +149,16 @@ final readonly class ProjectManager
         $lot
             ->setEstimateDays(self::positiveOrNull($input->estimateDays))
             ->setOwner($input->owner);
+
+        if (null === $lot->getInitialEstimateDays() && null !== $lot->getEstimateDays() && null !== $lot->getId()
+            && $this->timeEntryRepository->existsForLots([$lot])) {
+            $lot->setInitialEstimateDays($lot->getEstimateDays());
+        }
     }
 
     private function clearLeafData(Lot $lot): void
     {
-        $lot->setEstimateDays(null)->setOwner(null);
+        $lot->setEstimateDays(null)->setOwner(null)->setInitialEstimateDays(null);
     }
 
     /**
