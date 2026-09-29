@@ -1,0 +1,8 @@
+{{ form_start(form, {attr: {'data-test': 'project-form'}}) }}
+    {{ form_row(form.title) }}
+    {{ form_row(form.description) }}
+    <div class="mt-6 flex items-center gap-3">
+        <twig:Button type="submit" data-test="project-submit">{{ submit_label }}</twig:Button>
+        <a href="{{ cancel_path }}" class="text-sm text-body underline hover:no-underline">Annuler</a>
+    </div>
+{{ form_end(form) }}

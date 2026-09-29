@@ -1,0 +1,17 @@
+{{ form_start(form, {attr: {'data-test': 'lot-form'}}) }}
+    {{ form_row(form.title) }}
+    {{ form_row(form.description) }}
+    {% if form.estimateDays is defined or form.owner is defined %}
+        <div class="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
+            {% if form.estimateDays is defined %}{{ form_row(form.estimateDays) }}{% endif %}
+            {% if form.owner is defined %}{{ form_row(form.owner) }}{% endif %}
+        </div>
+    {% endif %}
+    <div class="mt-6 flex flex-wrap items-center gap-3">
+        <twig:Button type="submit" data-test="lot-submit">{{ submit_label }}</twig:Button>
+        {% if add_another|default(false) %}
+            <twig:Button type="submit" variant="outline" name="{{ constant('App\\Controller\\LotController::ADD_ANOTHER') }}" value="1" data-test="lot-submit-add-another">Enregistrer et ajouter un autre</twig:Button>
+        {% endif %}
+        <a href="{{ cancel_path }}" class="text-sm text-body underline hover:no-underline">Annuler</a>
+    </div>
+{{ form_end(form) }}

@@ -1,0 +1,4 @@
+<span class="whitespace-nowrap" data-test="estimate">{{ summary.estimateDays }} j</span>
+{%- if summary.isPartial %}
+    <twig:Badge variant="alternative" border="bordered" class="ms-1.5" data-test="estimate-partial">partiel</twig:Badge>
+{%- endif %}

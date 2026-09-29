@@ -1,0 +1,101 @@
+{% extends 'base.html.twig' %}
+
+{% set project = summary.project %}
+
+{% block title %}{{ project.title }} · Kadence{% endblock %}
+
+{% block body %}
+    <a href="{{ path('app_project_index') }}" class="mb-4 inline-flex items-center gap-1 text-sm text-body hover:underline">
+        <twig:ux:icon name="tabler:arrow-left" class="size-4"/>
+        Projets
+    </a>
+
+    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div class="min-w-0">
+            <h1 class="font-display text-2xl font-bold tracking-tight text-heading sm:text-3xl" data-test="project-heading">{{ project.title }}</h1>
+            {% if project.description %}
+                <p class="mt-2 max-w-3xl whitespace-pre-line text-sm text-body" data-test="project-description">{{ project.description }}</p>
+            {% endif %}
+            <div class="mt-3 flex flex-wrap items-center gap-3 text-sm text-body">
+                <span>Estimation totale : <strong class="text-heading" data-test="project-total">{{ include('project/_estimate.html.twig') }}</strong></span>
+                {% if summary.isUnsplit %}
+                    <twig:Badge variant="gray" data-test="signal-unsplit">à découper</twig:Badge>
+                {% else %}
+                    {{ include('project/_signals.html.twig') }}
+                {% endif %}
+            </div>
+        </div>
+
+        {% if is_granted('ROLE_LEAD') %}
+            <div class="flex shrink-0 flex-wrap gap-2">
+                <twig:Button as="a" size="sm" variant="outline" href="{{ path('app_project_edit', {id: project.id}) }}" data-test="project-edit">Modifier</twig:Button>
+                <twig:Modal id="delete-project-{{ project.id }}">
+                    <twig:Modal:Trigger>
+                        <twig:Button size="sm" variant="outline-danger" data-test="project-delete" {{ ...modal_trigger_attrs }}>Supprimer</twig:Button>
+                    </twig:Modal:Trigger>
+                    <twig:Modal:Content>
+                        <twig:Modal:Header>
+                            <twig:Modal:Title>Supprimer « {{ project.title }} » ?</twig:Modal:Title>
+                        </twig:Modal:Header>
+                        <twig:Modal:Body>
+                            <p class="text-body" data-test="project-delete-scope">
+                                {% if summary.isUnsplit %}
+                                    Le projet ne contient aucun lot.
+                                {% else %}
+                                    Ses {{ summary.lots|length }} lot(s) et {{ summary.subLotCount }} sous-lot(s) seront supprimés avec lui.
+                                {% endif %}
+                                Cette action est définitive.
+                            </p>
+                        </twig:Modal:Body>
+                        <twig:Modal:Footer>
+                            <form method="post" action="{{ path('app_project_delete', {id: project.id}) }}">
+                                <input type="hidden" name="_token" value="{{ csrf_token('project-' ~ project.id) }}">
+                                <twig:Button type="submit" variant="danger" data-test="project-delete-confirm">Supprimer</twig:Button>
+                            </form>
+                            <twig:Modal:Close>
+                                <twig:Button variant="outline" {{ ...modal_close_attrs }}>Annuler</twig:Button>
+                            </twig:Modal:Close>
+                        </twig:Modal:Footer>
+                    </twig:Modal:Content>
+                </twig:Modal>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="mb-3 flex items-center justify-between gap-4">
+        <h2 class="font-display text-lg font-semibold text-heading">Lots</h2>
+        {% if is_granted('ROLE_LEAD') %}
+            <twig:Button as="a" size="sm" href="{{ path('app_lot_new', {id: project.id}) }}" data-test="lot-new">
+                <twig:ux:icon name="tabler:plus" class="size-4 me-1.5"/>
+                Ajouter un lot
+            </twig:Button>
+        {% endif %}
+    </div>
+
+    {% if summary.isUnsplit %}
+        <twig:Card data-test="lots-empty">
+            <p class="text-body">Ce projet n'est pas encore découpé en lots.</p>
+        </twig:Card>
+    {% else %}
+        <div class="overflow-x-auto rounded-base border border-default">
+            <twig:Table data-test="lots-table">
+                <twig:Table:Header>
+                    <twig:Table:Row>
+                        <twig:Table:Head>Lot</twig:Table:Head>
+                        <twig:Table:Head>Responsable</twig:Table:Head>
+                        <twig:Table:Head>Estimation</twig:Table:Head>
+                        <twig:Table:Head><span class="sr-only">Actions</span></twig:Table:Head>
+                    </twig:Table:Row>
+                </twig:Table:Header>
+                <twig:Table:Body>
+                    {% for lotSummary in summary.lots %}
+                        {{ include('project/_lot_row.html.twig', {summary: lotSummary, nested: false}) }}
+                        {% for subLotSummary in lotSummary.children %}
+                            {{ include('project/_lot_row.html.twig', {summary: subLotSummary, nested: true}) }}
+                        {% endfor %}
+                    {% endfor %}
+                </twig:Table:Body>
+            </twig:Table>
+        </div>
+    {% endif %}
+{% endblock %}

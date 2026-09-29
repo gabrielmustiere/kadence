@@ -1,0 +1,23 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier {{ lot.title }} · Kadence{% endblock %}
+
+{% block body %}
+    <twig:Card>
+        <twig:Card:Header>
+            <twig:Card:Title as="h1">Modifier « {{ lot.title }} »</twig:Card:Title>
+            <p class="mt-2 text-sm text-body">
+                {{ lot.subLot ? 'Sous-lot de « ' ~ lot.parent.title ~ ' »' : 'Lot' }} du projet « {{ lot.project.title }} ».
+                {% if not lot.leaf %}
+                    Son estimation est la somme de ses sous-lots.
+                {% endif %}
+            </p>
+        </twig:Card:Header>
+        <twig:Card:Content>
+            {{ include('lot/_form.html.twig', {
+                submit_label: 'Enregistrer',
+                cancel_path: path('app_project_show', {id: lot.project.id}),
+            }) }}
+        </twig:Card:Content>
+    </twig:Card>
+{% endblock %}

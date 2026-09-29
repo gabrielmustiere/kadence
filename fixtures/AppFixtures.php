@@ -10,6 +10,11 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class AppFixtures extends Fixture
 {
+    public const string DIRECTOR = 'user-director';
+    public const string LEAD = 'user-lead';
+    public const string PROD = 'user-prod';
+    public const string FORMER = 'user-former';
+
     public function __construct(
         private readonly UserPasswordHasherInterface $passwordHasher,
     ) {
@@ -17,10 +22,17 @@ class AppFixtures extends Fixture
 
     public function load(ObjectManager $manager): void
     {
-        $manager->persist($this->createUser('admin@example.com', 'Alice', 'Martin', Role::Direction));
-        $manager->persist($this->createUser('lead@example.com', 'Louis', 'Bernard', Role::Lead));
-        $manager->persist($this->createUser('prod@example.com', 'Paula', 'Durand', Role::Prod));
-        $manager->persist($this->createUser('ancien@example.com', 'Arthur', 'Petit', Role::Prod)->setActive(false));
+        $users = [
+            self::DIRECTOR => $this->createUser('admin@example.com', 'Alice', 'Martin', Role::Direction),
+            self::LEAD => $this->createUser('lead@example.com', 'Louis', 'Bernard', Role::Lead),
+            self::PROD => $this->createUser('prod@example.com', 'Paula', 'Durand', Role::Prod),
+            self::FORMER => $this->createUser('ancien@example.com', 'Arthur', 'Petit', Role::Prod)->setActive(false),
+        ];
+
+        foreach ($users as $reference => $user) {
+            $manager->persist($user);
+            $this->addReference($reference, $user);
+        }
         $manager->flush();
     }
 

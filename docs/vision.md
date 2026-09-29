@@ -1,8 +1,8 @@
 # Vision — Kadence
 
-> Pitch en une phrase : Kadence est l'outil interne de pilotage de production de notre éditeur logiciel (15 à 40 personnes), qui permet à la direction et aux leads de savoir à date ce que l'équipe peut encore absorber et quand chaque projet sera livré, à partir d'une saisie quotidienne des temps et d'estimations déclaratives par projet et sous-projet.
+> Pitch en une phrase : Kadence est l'outil interne de pilotage de production de notre éditeur logiciel (15 à 40 personnes), qui permet à la direction et aux leads de savoir à date ce que l'équipe peut encore absorber et quand chaque projet sera livré, à partir d'une saisie quotidienne des temps et d'estimations déclaratives sur des projets découpés en lots et sous-lots.
 
-_Document vivant — enrichi au fil du cycle de vie, refondu lors d'un pivot stratégique. Date de dernière mise à jour : 2026-09-28._
+_Document vivant — enrichi au fil du cycle de vie, refondu lors d'un pivot stratégique. Date de dernière mise à jour : 2026-09-29._
 
 ## Changelog
 
@@ -11,6 +11,8 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
 | Date | Nature | Axe | Motif |
 |------|--------|-----|-------|
 | 2026-09-28 | Création | — | Vision initiale |
+| 2026-09-29 | Édition ciblée | Principes produit | Principe 3 : découpage projet → lot → sous-lot, l'estimation vit au niveau le plus fin (cadrage de la story projets, lots et sous-lots) |
+| 2026-09-29 | Édition ciblée | Pitch, audience, positionnement, métriques, anti-objectifs, hypothèses H2 et H3, horizons, notes | Vocabulaire réaligné sur lot / sous-lot ; H2 : l'estimation révisable (initiale conservée) devient la règle, le repli devient un reste à faire déclaré |
 
 ## Le problème
 
@@ -35,7 +37,7 @@ L'équipe travaille essentiellement sur l'évolution de nos propres logiciels (r
 Deux usages distincts, portés par deux rôles :
 
 - **Direction** — arbitre les priorités et s'engage sur des dates. A besoin de lire la roadmap (dates annoncées vs projetées) et de voir les surcharges à venir avant de dire oui.
-- **Leads / chefs de projet** — pilotent au quotidien. Déclarent les estimations des projets et sous-projets, suivent le consommé, réagissent aux alertes de dérive.
+- **Leads / chefs de projet** — pilotent au quotidien. Découpent les projets en lots et sous-lots et en déclarent les estimations, suivent le consommé, réagissent aux alertes de dérive.
 - **Volume cible** : quelques personnes (direction + leads) sur un effectif de 15 à 40.
 - **Ce qui les bloque aujourd'hui** : l'information existe en morceaux dans le tableur, mais personne n'a la vue consolidée à date sans refaire le calcul à la main.
 
@@ -58,7 +60,7 @@ Deux usages distincts, portés par deux rôles :
 
 ### Pourquoi nous, plutôt qu'eux
 
-Les outils du marché (Harvest, Toggl, Productive, Teamwork…) couplent le suivi des temps à la gestion de tâches, à la facturation ou au pilotage de projets clients. Kadence fait le choix inverse : **pas de tâches, pas d'argent**, uniquement la chaîne estimation → saisie → capacité → date projetée, au niveau projet / sous-projet, calibrée pour un éditeur qui pilote sa propre roadmap.
+Les outils du marché (Harvest, Toggl, Productive, Teamwork…) couplent le suivi des temps à la gestion de tâches, à la facturation ou au pilotage de projets clients. Kadence fait le choix inverse : **pas de tâches, pas d'argent**, uniquement la chaîne estimation → saisie → capacité → date projetée, au niveau projet / lot / sous-lot, calibrée pour un éditeur qui pilote sa propre roadmap.
 
 ### Unfair advantage
 
@@ -75,7 +77,7 @@ Mesure directement le problème : les dates annoncées sont-elles encore des par
 ### Métriques secondaires
 
 - **Activation (saisie)** : % de jours ouvrés saisis dans les 48 h, par l'ensemble de l'équipe.
-- **Qualité d'estimation** : écart moyen estimé / réalisé par sous-projet terminé.
+- **Qualité d'estimation** : écart moyen entre estimation initiale et réalisé, par lot ou sous-lot terminé.
 - **Détection précoce** : délai entre la première alerte de rythme de consommation et le dépassement effectif du budget.
 - **Rétention** : le tableur n'est plus maintenu ; la direction lit les dates dans l'outil.
 - **Monétisation** : sans objet (outil interne).
@@ -98,14 +100,14 @@ Mesure directement le problème : les dates annoncées sont-elles encore des par
 
 1. **Saisir sa journée prend moins d'une minute** — toute feature qui alourdit la saisie quotidienne est refusée, quelle que soit la valeur de la donnée supplémentaire. Toute la chaîne repose sur une saisie fiable et fraîche.
 2. **On pilote des projets et une capacité, jamais des personnes** — la charge individuelle sert à planifier (qui est disponible quand), jamais à comparer, classer ou évaluer. Aucune vue de productivité individuelle. C'est la condition d'une saisie honnête.
-3. **Pas de granularité sous le sous-projet** — l'estimation est déclarative, au niveau projet ou sous-projet. Un besoin qui exige de descendre à la tâche est hors périmètre.
+3. **Pas de granularité sous le sous-lot, jamais de tâche** — un projet se découpe en lots, eux-mêmes découpables en sous-lots, et pas au-delà. L'estimation est déclarative et vit au niveau le plus fin de ce découpage (le sous-lot, ou le lot s'il n'en a pas). Un besoin qui exige de descendre à la tâche est hors périmètre.
 4. **Une date annoncée s'affiche toujours à côté de sa date projetée** — l'écart est visible, jamais masqué. L'outil ne remplace pas l'engagement humain, il le confronte au calcul.
 
 ## Anti-objectifs
 
 Ce qu'on **refuse explicitement** de faire, et pourquoi :
 
-- **Gestion de tâches** — l'outil ne gère ni tâches ni tickets ; il ne concurrence pas un outil de tickets et reste au niveau projet / sous-projet.
+- **Gestion de tâches** — l'outil ne gère ni tâches ni tickets ; il ne concurrence pas un outil de tickets et reste au niveau projet / lot / sous-lot.
 - **Évaluation individuelle** — aucune mesure de productivité par personne (cf. principe 2).
 - **Facturation, devis, comptabilité** — on pilote du temps et des dates, pas de l'argent.
 - **Accès clients / roadmap publique** — la roadmap est interne (direction + prod).
@@ -117,8 +119,8 @@ Ce qu'on **refuse explicitement** de faire, et pourquoi :
 | # | Hypothèse | Comment l'invalider | Statut |
 |---|-----------|---------------------|--------|
 | 1 | 15 à 40 personnes tiennent une saisie quotidienne ≥ 90 % si elle prend moins d'une minute | Mesurer le taux de saisie à 48 h dès le premier mois d'usage | À tester |
-| 2 | Le rythme de consommation (consommé vs estimé, rapporté à l'avancement dans le temps) suffit à détecter les dépassements assez tôt, sans reste à faire ni estimation révisable | Sur 3 mois, comparer la date de première alerte à la date de dépassement effectif ; si l'alerte arrive trop tard, repli sur une estimation révisable (l'initiale conservée) | À tester |
-| 3 | Des estimations déclaratives au niveau sous-projet sont assez fines pour projeter des dates de fin crédibles | Comparer dates projetées et dates réelles sur les premiers jalons livrés | À tester |
+| 2 | Le rythme de consommation (consommé vs estimé, rapporté à l'avancement dans le temps) suffit à détecter les dépassements assez tôt, sans reste à faire déclaré — l'estimation reste révisable (jamais sous le consommé, l'initiale conservée) | Sur 3 mois, comparer la date de première alerte à la date de dépassement effectif de l'estimation initiale ; si l'alerte arrive trop tard, repli sur un reste à faire déclaré par le responsable | À tester |
+| 3 | Des estimations déclaratives au niveau le plus fin du découpage (lot ou sous-lot) sont assez fines pour projeter des dates de fin crédibles | Comparer dates projetées et dates réelles sur les premiers jalons livrés | À tester |
 | 4 | La baseline de la North Star est mesurable sur 3 mois (assez de jalons livrés pour être significative) | Compter les jalons échus sur la période ; si trop peu, allonger la fenêtre de baseline | À tester |
 
 ## Risques externes
@@ -130,7 +132,7 @@ Ce qu'on **refuse explicitement** de faire, et pourquoi :
 
 ### 3-6 mois
 
-- **À 3 mois** : saisie quotidienne des temps en place, projets et sous-projets estimés, consommé vs estimé, alerte sur le rythme de consommation. Le tableur est abandonné. Baseline de la North Star mesurée.
+- **À 3 mois** : saisie quotidienne des temps en place, projets découpés en lots et sous-lots estimés, consommé vs estimé, alerte sur le rythme de consommation. Le tableur est abandonné. Baseline de la North Star mesurée.
 - **À 6 mois** : charge vs capacité semaine par semaine (congés, temps partiels inclus), date de fin projetée par projet, roadmap interne affichant dates annoncées et dates projetées.
 
 ### 1 an
@@ -145,8 +147,8 @@ Pas d'ambition au-delà de l'usage interne. Une éventuelle commercialisation à
 
 Pointeurs bruts pour `/product-backlog` et `/feature-pitch` — **ne pas concevoir ici** :
 
-- Saisie quotidienne des temps (< 1 min) sur projets / sous-projets.
-- Référentiel projets / sous-projets avec estimation déclarative.
+- Saisie quotidienne des temps (< 1 min) sur les lots et sous-lots.
+- Référentiel projets / lots / sous-lots avec estimation déclarative.
 - Consommé vs estimé et alerte de rythme de consommation.
 - Capacité de l'équipe : congés, temps partiels, disponibilités.
 - Charge vs capacité semaine par semaine.

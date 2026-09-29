@@ -1,0 +1,27 @@
+{% extends 'base.html.twig' %}
+
+{% set heading = parent ? 'Ajouter un sous-lot à « ' ~ parent.title ~ ' »' : 'Ajouter un lot à « ' ~ project.title ~ ' »' %}
+
+{% block title %}{{ heading }} · Kadence{% endblock %}
+
+{% block body %}
+    <twig:Card>
+        <twig:Card:Header>
+            <twig:Card:Title as="h1">{{ heading }}</twig:Card:Title>
+            {% if parent and takes_over %}
+                <p class="mt-2 text-sm text-body" data-test="lot-takes-over">
+                    C'est le premier sous-lot de « {{ parent.title }} » : il reprend son estimation et son responsable, que le lot ne portera plus. Ajustez-les si besoin.
+                </p>
+            {% elseif not parent %}
+                <p class="mt-2 text-sm text-body">Un lot porte l'estimation et le responsable tant qu'il n'est pas découpé en sous-lots.</p>
+            {% endif %}
+        </twig:Card:Header>
+        <twig:Card:Content>
+            {{ include('lot/_form.html.twig', {
+                submit_label: 'Enregistrer',
+                add_another: true,
+                cancel_path: path('app_project_show', {id: project.id}),
+            }) }}
+        </twig:Card:Content>
+    </twig:Card>
+{% endblock %}

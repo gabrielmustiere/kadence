@@ -1,0 +1,78 @@
+{% set lot = summary.lot %}
+{% set owner = lot.owner %}
+{% set mine = owner is not null and app.user is not null and owner.id == app.user.id %}
+<twig:Table:Row data-test="lot-row" data-title="{{ lot.title }}" data-mine="{{ mine ? 'true' : 'false' }}">
+    <twig:Table:Cell class="{{ nested ? 'ps-10' : 'font-medium text-heading' }}">
+        <div class="flex items-center gap-2">
+            {% if nested %}<twig:ux:icon name="tabler:corner-down-right" class="size-4 shrink-0 text-body"/>{% endif %}
+            <span data-test="lot-title">{{ lot.title }}</span>
+        </div>
+        {% if lot.description %}
+            <p class="mt-1 whitespace-pre-line text-xs font-normal text-body">{{ lot.description }}</p>
+        {% endif %}
+    </twig:Table:Cell>
+    <twig:Table:Cell data-test="lot-owner-cell">
+        {% if not lot.leaf %}
+            <span class="text-body">—</span>
+        {% elseif owner is null %}
+            <twig:Badge variant="warning" data-test="leaf-to-assign">à désigner</twig:Badge>
+        {% else %}
+            <span class="{{ owner.active ? '' : 'line-through' }}">{{ owner.firstName }} {{ owner.lastName }}</span>
+            {% if not owner.active %}
+                <twig:Badge variant="danger" class="ms-1.5" data-test="leaf-to-reassign">à redésigner</twig:Badge>
+            {% elseif mine %}
+                <twig:Badge variant="brand" class="ms-1.5" data-test="leaf-mine">vous</twig:Badge>
+            {% endif %}
+        {% endif %}
+    </twig:Table:Cell>
+    <twig:Table:Cell data-test="lot-estimate-cell">
+        {% if not lot.leaf %}
+            {{ include('project/_estimate.html.twig') }}
+        {% elseif lot.estimateDays is null %}
+            <twig:Badge variant="warning" data-test="leaf-to-estimate">à estimer</twig:Badge>
+        {% else %}
+            <span class="whitespace-nowrap" data-test="estimate">{{ lot.estimateDays }} j</span>
+        {% endif %}
+    </twig:Table:Cell>
+    <twig:Table:Cell>
+        <div class="flex flex-wrap justify-end gap-2">
+            {% if is_granted('LOT_EDIT', lot) %}
+                <twig:Button as="a" size="xs" variant="outline" href="{{ path('app_lot_edit', {id: lot.id}) }}" data-test="lot-edit">Modifier</twig:Button>
+            {% endif %}
+            {% if is_granted('ROLE_LEAD') %}
+                {% if not nested %}
+                    <twig:Button as="a" size="xs" variant="outline" href="{{ path('app_lot_new_sub_lot', {id: lot.id}) }}" data-test="lot-new-sub-lot">Ajouter un sous-lot</twig:Button>
+                {% endif %}
+                <twig:Modal id="delete-lot-{{ lot.id }}">
+                    <twig:Modal:Trigger>
+                        <twig:Button size="xs" variant="outline-danger" data-test="lot-delete" {{ ...modal_trigger_attrs }}>Supprimer</twig:Button>
+                    </twig:Modal:Trigger>
+                    <twig:Modal:Content>
+                        <twig:Modal:Header>
+                            <twig:Modal:Title>Supprimer « {{ lot.title }} » ?</twig:Modal:Title>
+                        </twig:Modal:Header>
+                        <twig:Modal:Body>
+                            <p class="text-body" data-test="lot-delete-scope">
+                                {% if not lot.leaf %}
+                                    Ses {{ lot.children|length }} sous-lot(s) seront supprimés avec lui.
+                                {% elseif lot.subLot and lot.parent.children|length == 1 %}
+                                    C'est le dernier sous-lot : son estimation et son responsable remonteront sur « {{ lot.parent.title }} ».
+                                {% endif %}
+                                Cette action est définitive.
+                            </p>
+                        </twig:Modal:Body>
+                        <twig:Modal:Footer>
+                            <form method="post" action="{{ path('app_lot_delete', {id: lot.id}) }}">
+                                <input type="hidden" name="_token" value="{{ csrf_token('lot-' ~ lot.id) }}">
+                                <twig:Button type="submit" variant="danger" data-test="lot-delete-confirm">Supprimer</twig:Button>
+                            </form>
+                            <twig:Modal:Close>
+                                <twig:Button variant="outline" {{ ...modal_close_attrs }}>Annuler</twig:Button>
+                            </twig:Modal:Close>
+                        </twig:Modal:Footer>
+                    </twig:Modal:Content>
+                </twig:Modal>
+            {% endif %}
+        </div>
+    </twig:Table:Cell>
+</twig:Table:Row>

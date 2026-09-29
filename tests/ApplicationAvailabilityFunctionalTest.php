@@ -34,6 +34,8 @@ final class ApplicationAvailabilityFunctionalTest extends WebTestCase
         yield ['/equipe'];
         yield ['/equipe/nouveau'];
         yield ['/mon-compte/mot-de-passe'];
+        yield ['/projets'];
+        yield ['/projets/nouveau'];
         yield ['/login'];
     }
 }

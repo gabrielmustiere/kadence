@@ -1,0 +1,14 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier {{ project.title }} · Kadence{% endblock %}
+
+{% block body %}
+    <twig:Card>
+        <twig:Card:Header>
+            <twig:Card:Title as="h1">Modifier le projet</twig:Card:Title>
+        </twig:Card:Header>
+        <twig:Card:Content>
+            {{ include('project/_form.html.twig', {submit_label: 'Enregistrer', cancel_path: path('app_project_show', {id: project.id})}) }}
+        </twig:Card:Content>
+    </twig:Card>
+{% endblock %}

@@ -1,0 +1,48 @@
+{
+  "version": 2,
+  "title": "Découper chaque projet en lots et sous-lots estimés, chacun confié à un responsable",
+  "created": "2026-09-29",
+  "updated": "2026-09-29",
+  "tags": [
+    "projets",
+    "lots"
+  ],
+  "backlog": "projets-sous-projets",
+  "changelog": [
+    {
+      "date": "2026-09-29",
+      "type": "Création",
+      "description": "Pitch initial rédigé à partir de la ligne de backlog projets-sous-projets (domaine D2) : découpage projet → lot → sous-lot, estimation et responsable portés par les feuilles, principe 3 de la vision réécrit en conséquence."
+    },
+    {
+      "date": "2026-09-29",
+      "type": "Planification",
+      "description": "Plan technique validé (Project + Lot auto-référencé, estimation en jours entiers, ProjectManager pour bascule et remontée, voter LOT_EDIT, pages dédiées avec « ajouter un autre ») ; pitch aligné : estimation en jours entiers et questions ouvertes tranchées."
+    },
+    {
+      "date": "2026-09-29",
+      "type": "Implémentation",
+      "description": "Sept sous-tâches du plan livrées (modèle et migration, ProjectManager et ProjectRollup, voter LOT_EDIT, validation et formulaires, écrans projets, écrans lots, E2E) ; 97 tests PHPUnit et 9 E2E verts ; écarts mineurs : helper TitleComparison, lignes de l'arbre en templates inclus, 404 pour un sous-lot de sous-lot, test automatique du nombre de requêtes."
+    },
+    {
+      "date": "2026-09-29",
+      "type": "Review",
+      "description": "Review : 0 bloquant, 1 important (deux critères d'acceptation sans test : champs absents sur un lot découpé, renommage en doublon), 4 mineurs (a11y du filtre, classes vides, pleine largeur hors périmètre, périmètre du plan à réaligner). Statut : CORRECTIONS REQUISES."
+    },
+    {
+      "date": "2026-09-29",
+      "type": "Review",
+      "description": "Findings corrigés (trois tests d'acceptation ajoutés, aria-current sur le filtre actif, classes vides retirées de « Mon compte », plan réaligné dont l'ajout hors plan de la pleine largeur) ; statut PRÊT À COMMITER."
+    },
+    {
+      "date": "2026-09-29",
+      "type": "Report",
+      "description": "Report rédigé : conformité 95 %, 13/14 critères (chronométrage non mesuré), aucun élément non implémenté ; écarts : forSubLotOf() au lieu de inheritedFrom(), 404 pour un sous-lot de sous-lot, test automatique du nombre de requêtes ; ajouts : TitleComparison, templates partiels, pleine largeur des formulaires Équipe et « Mon compte »."
+    },
+    {
+      "date": "2026-09-29",
+      "type": "Sync",
+      "description": "Doc réalignée sur le livré : plan (vérification de l'étape 5, stratégie de test, critères de sortie cochés, mitigation N+1, questions ouvertes tranchées) ; stack.md (contrainte SQLite : clés étrangères non appliquées, LOWER ASCII) ; backlog (projets-sous-projets en clôture)."
+    }
+  ]
+}

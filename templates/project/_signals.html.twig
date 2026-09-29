@@ -1,0 +1,11 @@
+<div class="flex flex-wrap gap-1.5">
+    {% if summary.toEstimate > 0 %}
+        <twig:Badge variant="warning" data-test="signal-to-estimate">{{ summary.toEstimate }} à estimer</twig:Badge>
+    {% endif %}
+    {% if summary.toAssign > 0 %}
+        <twig:Badge variant="warning" data-test="signal-to-assign">{{ summary.toAssign }} à désigner</twig:Badge>
+    {% endif %}
+    {% if summary.toReassign > 0 %}
+        <twig:Badge variant="danger" data-test="signal-to-reassign">{{ summary.toReassign }} à redésigner</twig:Badge>
+    {% endif %}
+</div>

@@ -1,0 +1,70 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Projets · Kadence{% endblock %}
+
+{% block body %}
+    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+            <h1 class="font-display text-2xl font-bold tracking-tight text-heading sm:text-3xl">Projets</h1>
+            <p class="mt-1 text-sm text-body">Les projets, leur découpage en lots et sous-lots, et ce qu'il reste à estimer ou à confier.</p>
+        </div>
+        {% if is_granted('ROLE_LEAD') %}
+            <twig:Button as="a" href="{{ path('app_project_new') }}" data-test="project-new">
+                <twig:ux:icon name="tabler:plus" class="size-4 me-1.5"/>
+                Nouveau projet
+            </twig:Button>
+        {% endif %}
+    </div>
+
+    <div class="mb-4 flex gap-2">
+        <twig:Button as="a" size="xs" variant="{{ mine ? 'outline' : 'brand' }}" href="{{ path('app_project_index') }}" :aria-current="mine ? false : 'page'" data-test="filter-all">Tous les projets</twig:Button>
+        <twig:Button as="a" size="xs" variant="{{ mine ? 'brand' : 'outline' }}" href="{{ path('app_project_index', {'mes-responsabilites': 1}) }}" :aria-current="mine ? 'page' : false" data-test="filter-mine">Mes responsabilités</twig:Button>
+    </div>
+
+    {% if projects is empty %}
+        <twig:Card data-test="projects-empty">
+            <p class="text-body">
+                {% if mine %}
+                    Vous n'êtes responsable d'aucun lot ni sous-lot pour l'instant.
+                {% else %}
+                    Aucun projet pour l'instant.
+                {% endif %}
+            </p>
+        </twig:Card>
+    {% else %}
+        <div class="overflow-x-auto rounded-base border border-default">
+            <twig:Table data-test="projects-table">
+                <twig:Table:Header>
+                    <twig:Table:Row>
+                        <twig:Table:Head>Projet</twig:Table:Head>
+                        <twig:Table:Head>Estimation</twig:Table:Head>
+                        <twig:Table:Head>À compléter</twig:Table:Head>
+                    </twig:Table:Row>
+                </twig:Table:Header>
+                <twig:Table:Body>
+                    {% for summary in projects %}
+                        <twig:Table:Row data-test="project-row" data-title="{{ summary.project.title }}">
+                            <twig:Table:Cell class="font-medium text-heading">
+                                <a href="{{ path('app_project_show', {id: summary.project.id}) }}" class="hover:underline" data-test="project-link">{{ summary.project.title }}</a>
+                            </twig:Table:Cell>
+                            <twig:Table:Cell>
+                                {% if summary.isUnsplit %}
+                                    <span class="text-body">—</span>
+                                {% else %}
+                                    {{ include('project/_estimate.html.twig') }}
+                                {% endif %}
+                            </twig:Table:Cell>
+                            <twig:Table:Cell>
+                                {% if summary.isUnsplit %}
+                                    <twig:Badge variant="gray" data-test="signal-unsplit">à découper</twig:Badge>
+                                {% else %}
+                                    {{ include('project/_signals.html.twig') }}
+                                {% endif %}
+                            </twig:Table:Cell>
+                        </twig:Table:Row>
+                    {% endfor %}
+                </twig:Table:Body>
+            </twig:Table>
+        </div>
+    {% endif %}
+{% endblock %}
