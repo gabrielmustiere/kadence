@@ -37,6 +37,15 @@
       "date": "2026-09-29",
       "type": "Sync",
       "description": "Doc réalignée sur le livré : règle 25 du pitch limitée à une révision de l'estimation ; plan mis à jour (EstimateCoversConsumed, focusedDay, Week sans horloge, filtre weekday, Quarters, LeafOrder, _leaf_path, fixtures de démonstration en dev analysées par PHPStan, TimesheetBuilder testé contre la base, budget de requêtes dans le contrôleur, fichiers modifiés non prévus) ; backlog passé au quart de journée, C4.1 annotée, ligne saisie-quotidienne en clôture."
+    },
+    {
+      "date": "2026-09-29",
+      "type": "Livraison",
+      "description": "Story livrée dans le commit cf00fa1 sur la branche main."
     }
-  ]
+  ],
+  "delivery": {
+    "release": null,
+    "commit": "cf00fa1"
+  }
 }
