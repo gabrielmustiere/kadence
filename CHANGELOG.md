@@ -10,6 +10,23 @@ Chaque version porte un **titre** et distingue les **évolutions fonctionnelles*
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-29 — Saisie quotidienne des temps
+
+### ✨ Fonctionnel
+- **Ma semaine** — après la connexion, chacun arrive sur la grille de sa semaine : les jours en colonnes, ses lots et sous-lots en lignes. Ceux de la semaine et de la précédente sont proposés d'office, et « Ajouter une ligne » retrouve n'importe quel lot ou sous-lot par son nom.
+- **Un clic par case** — chaque case se saisit au quart de journée (¼, ½, ¾ ou 1 j) sur une barre de quatre crans qui se remplit au survol, comme une notation par étoiles. Le clic enregistre aussitôt, et un nouveau clic sur le cran actif remet la case à zéro.
+- **Jamais plus d'une journée par jour** — les crans qui feraient dépasser 1 j sur un jour, ou le maximum de la semaine, sont grisés. Un enregistrement refusé, par exemple depuis un second onglet, est expliqué, et diminuer une case reste toujours possible. Les jours à venir sont verrouillés.
+- **Journée complète en vert** — chaque jour affiche son total, et la semaine son total face au maximum (« 3 j / 4,5 j »). Une journée complète passe au vert, et un jour passé incomplet est signalé tant que la semaine n'a pas atteint son maximum.
+- **De semaine en semaine** — les boutons semaine précédente, suivante et « Cette semaine » permettent de corriger une journée passée.
+- **Sur téléphone** — la grille présente un jour à la fois, avec un sélecteur des jours.
+- **Maximum hebdomadaire** — la direction fixe, sur la fiche de chaque personne, son maximum de saisie par semaine (5 j par défaut, 4,5 j pour un 90 %…) à partir d'une semaine choisie. L'historique des valeurs s'affiche sous la fiche, et une valeur saisie par erreur peut y être supprimée.
+- **Temps protégés dans les projets** — un projet, un lot ou un sous-lot qui porte des temps ne peut plus être supprimé. Le premier sous-lot d'un lot reprend ses temps. L'estimation initiale reste consultable, et une révision ne peut pas descendre sous le temps déjà saisi.
+
+### 🔧 Technique
+- **Schéma de la saisie** — nouvelles tables `time_entry` et `weekly_max`, et estimation initiale sur les lots. Sur une base de dev existante, `make db-reset` est requis.
+- **Entreprise de démonstration** — en développement, `make db-reset` charge une fausse entreprise : 4 projets découpés, 14 personnes dont des temps partiels, et six mois de saisie.
+- **Fixtures sous analyse statique** — les fixtures sont désormais vérifiées par PHPStan.
+
 ## [0.2.0] - 2026-09-29 — Projets, lots et sous-lots
 
 ### ✨ Fonctionnel
@@ -39,6 +56,7 @@ Chaque version porte un **titre** et distingue les **évolutions fonctionnelles*
 - **Connexion rapide en dev** — choix d'un compte de fixtures sur la page de connexion, uniquement en environnement de développement.
 - **Nettoyage du template d'amorçage** — suppression de la page design system et de la route de test d'e-mail.
 
-[Unreleased]: https://github.com/gabrielmustiere/kadence/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/gabrielmustiere/kadence/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/gabrielmustiere/kadence/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/gabrielmustiere/kadence/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/gabrielmustiere/kadence/releases/tag/v0.1.0
