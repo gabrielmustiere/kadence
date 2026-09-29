@@ -48,10 +48,15 @@
       "date": "2026-09-29",
       "type": "Livraison",
       "description": "Story livrée dans le commit 7c402c5 sur la branche main."
+    },
+    {
+      "date": "2026-09-29",
+      "type": "Release",
+      "description": "Story publiée dans la version v0.2.0 « Projets, lots et sous-lots »."
     }
   ],
   "delivery": {
-    "release": null,
+    "release": "v0.2.0",
     "commit": "7c402c5"
   }
 }
