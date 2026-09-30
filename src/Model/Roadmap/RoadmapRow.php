@@ -8,6 +8,7 @@ use App\Entity\Lot;
 use App\Entity\LotMember;
 use App\Entity\Project;
 use App\Enum\Type\RoadmapSignal;
+use App\Model\Quarters;
 
 /**
  * A line of the roadmap: a project or a split lot with the span of its leaves, or a leaf with its past and future parts.
@@ -55,6 +56,19 @@ final readonly class RoadmapRow
     public function overrunQuarters(): int
     {
         return max(0, -($this->remainingQuarters ?? 0));
+    }
+
+    /**
+     * Time entered within the estimate, null while « à estimer ».
+     */
+    public function realizedQuarters(): ?int
+    {
+        $estimate = $this->lot?->getEstimateDays();
+        if (null === $estimate || null === $this->remainingQuarters) {
+            return null;
+        }
+
+        return $estimate * Quarters::PER_DAY - max(0, $this->remainingQuarters);
     }
 
     public function isEndUnknown(): bool

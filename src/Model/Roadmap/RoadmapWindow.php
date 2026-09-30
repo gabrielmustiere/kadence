@@ -68,7 +68,7 @@ final readonly class RoadmapWindow
         $left = max(0, $start);
         $right = min($days, $end);
 
-        return new RoadmapBar(100 * $left / $days, 100 * ($right - $left) / $days, $start < 0, $end > $days);
+        return new RoadmapBar(100 * $left / $days, 100 * ($right - $left) / $days, $start < 0, $end > $days, $from, $to);
     }
 
     /**

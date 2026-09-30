@@ -1,0 +1,46 @@
+{#
+    The details of a bar of the roadmap, shown by Flowbite on hover. Expects `id`, `row`, `bar` and `kind`: realized,
+    overrun, future or span.
+#}
+{% set legend = {
+    realized: ['Saisi', 'rounded-sm bg-brand'],
+    overrun: ["Saisi au-delà de l'estimation", 'rounded-sm bg-danger'],
+    future: ['Restant, calculé', 'rounded-sm border border-dashed border-brand bg-brand-soft'],
+    span: [row.lot ? 'Lot' : 'Projet', 'rounded-full bg-brand-medium'],
+}[kind] %}
+<div id="{{ id }}" role="tooltip" class="invisible absolute z-20 w-80 rounded-base border border-default bg-neutral-primary-soft p-3 text-xs text-body opacity-0 shadow-md transition-opacity duration-150" data-test="roadmap-tooltip-{{ kind }}">
+    <p class="text-sm font-semibold text-heading">{{ row.title }}</p>
+    <p class="mt-1 flex items-center gap-1.5"><span class="inline-block h-2.5 w-5 {{ legend[1] }}"></span>{{ legend[0] }}</p>
+    <dl class="mt-2 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 border-t border-default pt-2">
+        <dt>Période</dt>
+        <dd class="whitespace-nowrap text-heading" data-test="roadmap-tooltip-period">
+            {{ bar.from|weekday }} {{ bar.from|date('d/m/Y') }} →
+            {% if kind == 'span' and row.end is null %}fin inconnue{% else %}{{ bar.to|weekday }} {{ bar.to|date('d/m/Y') }}{% endif %}
+        </dd>
+        {% if kind == 'realized' %}
+            <dt>Saisi</dt>
+            <dd class="text-heading"><span data-test="roadmap-realized">{{ row.realizedQuarters|days }}</span> sur {{ row.lot.estimateDays }} j estimés</dd>
+        {% elseif kind == 'overrun' %}
+            <dt>Dépassement</dt>
+            <dd class="text-heading"><span class="font-medium text-fg-danger-strong" data-test="roadmap-overrun">{{ row.overrunQuarters|days }}</span> au-delà des {{ row.lot.estimateDays }} j estimés</dd>
+            <dt>Fin</dt>
+            <dd class="text-heading">inconnue, estimation à réviser</dd>
+        {% elseif kind == 'future' %}
+            <dt>Restant</dt>
+            <dd class="text-heading"><span data-test="roadmap-remaining">{{ row.remainingQuarters|days }}</span> sur {{ row.lot.estimateDays }} j estimés</dd>
+        {% endif %}
+        {% if row.leaf and row.members is not empty %}
+            <dt>Équipe</dt>
+            <dd>
+                <ul class="space-y-0.5 text-heading" data-test="roadmap-team">
+                    {% for member in row.members %}
+                        <li class="flex justify-between gap-3">
+                            <span class="{{ member.user.active ? '' : 'line-through' }}">{{ member.user.firstName }} {{ member.user.lastName }}</span>
+                            <span class="tabular-nums">{{ member.share }} %</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </dd>
+        {% endif %}
+    </dl>
+</div>

@@ -58,14 +58,11 @@
                                         <twig:Badge variant="{{ signal.variant }}" data-test="signal-{{ signal.value }}">{{ signal.label }}</twig:Badge>
                                     {% endfor %}
                                 </div>
-                                {% if project.start %}
-                                    <p class="mt-0.5 ps-5.5 text-xs text-body" data-test="roadmap-dates">{{ include('roadmap/_dates.html.twig', {row: project}) }}</p>
-                                {% endif %}
                             </div>
                             <div class="roadmap-track relative min-h-12">
                                 {{ include('roadmap/_today.html.twig') }}
                                 {% if project.span %}
-                                    {{ include('roadmap/_bar.html.twig', {bar: project.span, class: 'h-3 rounded-full bg-brand-medium', test: 'roadmap-bar-span'}) }}
+                                    {{ include('roadmap/_bar.html.twig', {row: project, bar: project.span, kind: 'span', class: 'h-3 rounded-full bg-brand-medium', test: 'roadmap-bar-span'}) }}
                                 {% endif %}
                             </div>
                         </summary>

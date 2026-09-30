@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace App\Model\Roadmap;
 
 /**
- * A span of days placed on the window, in percent of its width; cut at an edge when it goes beyond it.
+ * A span of days placed on the window, in percent of its width; cut at an edge when it goes beyond it, while $from and
+ * $to keep its whole span.
  */
 final readonly class RoadmapBar
 {
@@ -14,6 +15,8 @@ final readonly class RoadmapBar
         public float $width,
         public bool $cutStart,
         public bool $cutEnd,
+        public \DateTimeImmutable $from,
+        public \DateTimeImmutable $to,
     ) {
     }
 

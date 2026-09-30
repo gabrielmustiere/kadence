@@ -55,6 +55,8 @@ final class RoadmapWindowTest extends TestCase
         self::assertEqualsWithDelta(7 * self::DAY, $before->width, 1e-9);
         self::assertTrue($before->cutStart);
         self::assertFalse($before->cutEnd);
+        self::assertSame('2026-08-24', $before->from->format('Y-m-d'), 'A cut bar keeps its whole span.');
+        self::assertSame('2026-09-06', $before->to->format('Y-m-d'));
 
         $after = $window->bar(new \DateTimeImmutable('2027-06-10'), new \DateTimeImmutable('2027-06-20'));
         self::assertNotNull($after);

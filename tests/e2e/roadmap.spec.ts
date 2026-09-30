@@ -69,9 +69,12 @@ test('un lead planifie une feuille et la voit sur la roadmap', async ({ page }) 
   await expect(leaf).toBeHidden();
   await projectRow(page).locator('summary').click();
   await expect(leaf).toBeVisible();
-  await expect(leaf.locator('[data-test="roadmap-team"]')).toHaveText('Paula D. 50 %');
-  await expect(leaf.locator('[data-test="roadmap-remaining"]')).toHaveText('10 j');
-  await expect(leaf.locator('[data-test="roadmap-bar-future"]')).toBeVisible();
+  const tooltip = leaf.locator('[data-test="roadmap-tooltip-future"]');
+  await expect(tooltip).toBeHidden();
+  await leaf.locator('[data-test="roadmap-bar-future"]').hover();
+  await expect(tooltip).toBeVisible();
+  await expect(tooltip.locator('[data-test="roadmap-team"]')).toHaveText('Paula Durand 50 %');
+  await expect(tooltip.locator('[data-test="roadmap-remaining"]')).toHaveText('10 j');
   await expect(projectRow(page).locator('summary [data-test="roadmap-bar-span"]')).toBeVisible();
 });
 
