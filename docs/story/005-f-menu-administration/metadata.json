@@ -42,6 +42,15 @@
       "date": "2026-09-30",
       "type": "Sync",
       "description": "Plan réaligné sur le livré : marge fixe mb-6 sous la liste du haut, titre Administration associé à sa liste (aria-labelledby), scénario E2E sur l'entrée active et fenêtres de 1280 px, mitigation du risque de recouvrement ; pitch conforme ; aucun document projet touché (pas de manifeste, pas de ligne de backlog)."
+    },
+    {
+      "date": "2026-09-30",
+      "type": "Livraison",
+      "description": "Story livrée dans le commit e48326f sur la branche main."
     }
-  ]
+  ],
+  "delivery": {
+    "release": null,
+    "commit": "e48326f"
+  }
 }
