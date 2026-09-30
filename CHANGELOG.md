@@ -10,6 +10,20 @@ Chaque version porte un **titre** et distingue les **évolutions fonctionnelles*
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-09-30 — Planification et roadmap
+
+### ✨ Fonctionnel
+- **Page Roadmap** — une entrée « Roadmap » dans le menu montre, projet par projet, la chronologie des lots et sous-lots sur une frise de 41 semaines : ce qui a été saisi, puis ce qui reste, réparti sur la capacité de l'équipe. Les projets se déplient, on avance ou recule de 4 semaines, et « Aujourd'hui » ramène à la semaine en cours.
+- **Date de début et équipe** — les leads et la direction posent sur chaque lot non découpé ou sous-lot une date de début et une équipe, où chacun consacre 25, 50, 75 ou 100 % de sa capacité. Le responsable fait toujours partie de l'équipe.
+- **Fin calculée** — la fin de chaque lot se calcule sur le restant, le maximum hebdomadaire et les jours fériés de chacun. Elle se recale sur ce qui est saisi : une semaine moins remplie repousse la fin.
+- **Surcharge refusée ou signalée** — une planification qui chargerait une personne au-delà de 100 % un jour donné est refusée, avec le lot en conflit. Une surcharge qui apparaît d'elle-même est signalée « à replanifier » aux leads et à la direction.
+- **Signaux de la roadmap** — démarrage en retard, estimation atteinte, dépassement (avec son ampleur, et les jours saisis au-delà de l'estimation en rouge), équipe à revoir, lots non planifiés et planning partiel.
+- **Grille de saisie** — les colonnes de jours de « Ma semaine » sont séparées par des pointillés.
+
+### 🔧 Technique
+- **Schéma** — nouvelle table `lot_member` et date de début sur les lots. La migration place chaque responsable existant dans l'équipe de son lot, à 100 %. Sur une base de dev existante, `make db-reset` régénère une démonstration planifiée.
+- **Chronologie calculée à la volée** — elle n'est jamais stockée et se recalcule à chaque affichage, en un nombre constant de requêtes.
+
 ## [0.5.0] - 2026-09-30 — Menu d'administration
 
 ### ✨ Fonctionnel
@@ -78,7 +92,8 @@ Chaque version porte un **titre** et distingue les **évolutions fonctionnelles*
 - **Connexion rapide en dev** — choix d'un compte de fixtures sur la page de connexion, uniquement en environnement de développement.
 - **Nettoyage du template d'amorçage** — suppression de la page design system et de la route de test d'e-mail.
 
-[Unreleased]: https://github.com/gabrielmustiere/kadence/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/gabrielmustiere/kadence/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/gabrielmustiere/kadence/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/gabrielmustiere/kadence/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/gabrielmustiere/kadence/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/gabrielmustiere/kadence/compare/v0.2.0...v0.3.0
