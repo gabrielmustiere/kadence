@@ -87,9 +87,10 @@ final class RoadmapControllerTest extends WebTestCase
         $crawler = $client->request('GET', '/roadmap');
 
         $row = $crawler->filter(\sprintf('[data-test="roadmap-project"][data-title="%s"] [data-test="roadmap-leaf"][data-title="Dépassée"]', $project->getTitle()));
-        self::assertCount(1, $row->filter('[data-test="signal-overrun"]'));
+        self::assertSame('en dépassement +50 %', $row->filter('[data-test="signal-overrun"]')->text());
         $overrun = $row->filter('[data-test="roadmap-tooltip-overrun"]');
         self::assertSame('1 j', $overrun->filter('[data-test="roadmap-overrun"]')->text());
+        self::assertSame('+50 %', $overrun->filter('[data-test="roadmap-overrun-percent"]')->text());
         self::assertSame('Lun 05/10/2026 → Lun 05/10/2026', $overrun->filter('[data-test="roadmap-tooltip-period"]')->text());
         self::assertSame('Jeu 01/10/2026 → Ven 02/10/2026', $row->filter('[data-test="roadmap-tooltip-realized"] [data-test="roadmap-tooltip-period"]')->text(), 'The time within the estimate ends on its last day entered, not on the day before the overrun.');
         self::assertCount(0, $row->filter('[data-test="roadmap-remaining"]'));

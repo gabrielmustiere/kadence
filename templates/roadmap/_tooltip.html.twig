@@ -22,7 +22,7 @@
             <dd class="text-heading"><span data-test="roadmap-realized">{{ row.realizedQuarters|days }}</span> sur {{ row.lot.estimateDays }} j estimés</dd>
         {% elseif kind == 'overrun' %}
             <dt>Dépassement</dt>
-            <dd class="text-heading"><span class="font-medium text-fg-danger-strong" data-test="roadmap-overrun">{{ row.overrunQuarters|days }}</span> au-delà des {{ row.lot.estimateDays }} j estimés</dd>
+            <dd class="text-heading"><span class="font-medium text-fg-danger-strong"><span data-test="roadmap-overrun">{{ row.overrunQuarters|days }}</span> (<span data-test="roadmap-overrun-percent">+{{ row.overrunPercent }} %</span>)</span> au-delà des {{ row.lot.estimateDays }} j estimés</dd>
             <dt>Fin</dt>
             <dd class="text-heading">inconnue, estimation à réviser</dd>
         {% elseif kind == 'future' %}

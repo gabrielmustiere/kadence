@@ -11,7 +11,7 @@
                 <span class="text-sm {{ row.leaf ? 'font-medium' : 'font-semibold' }} text-heading">{{ row.title }}</span>
             {% endif %}
             {% for signal in row.signals %}
-                <twig:Badge variant="{{ signal.variant }}" data-test="signal-{{ signal.value }}">{{ signal.label }}</twig:Badge>
+                <twig:Badge variant="{{ signal.variant }}" data-test="signal-{{ signal.value }}">{{ signal.label }}{% if signal is same as(constant('App\\Enum\\Type\\RoadmapSignal::Overrun')) %} +{{ row.overrunPercent }} %{% endif %}</twig:Badge>
             {% endfor %}
         </div>
     </div>

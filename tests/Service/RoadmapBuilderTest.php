@@ -86,6 +86,7 @@ final class RoadmapBuilderTest extends KernelTestCase
 
         self::assertSame([RoadmapSignal::Overrun], $overrunRow->signals);
         self::assertSame(2, $overrunRow->overrunQuarters());
+        self::assertSame(50, $overrunRow->overrunPercent());
         self::assertNull($overrunRow->end);
         self::assertTrue($overrunRow->isEndUnknown());
         self::assertSame('2026-10-02', $overrunRow->lastDay?->format('Y-m-d'));

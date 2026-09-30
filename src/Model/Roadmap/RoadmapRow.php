@@ -59,6 +59,20 @@ final readonly class RoadmapRow
     }
 
     /**
+     * Time entered beyond the estimate in percent of it, rounded but never down to 0 % once overrun; null within it.
+     */
+    public function overrunPercent(): ?int
+    {
+        $estimate = $this->lot?->getEstimateDays();
+        $overrun = $this->overrunQuarters();
+        if (null === $estimate || 0 === $overrun) {
+            return null;
+        }
+
+        return max(1, (int) round(100 * $overrun / ($estimate * Quarters::PER_DAY)));
+    }
+
+    /**
      * Time entered within the estimate, null while « à estimer ».
      */
     public function realizedQuarters(): ?int
