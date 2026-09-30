@@ -10,6 +10,18 @@ Chaque version porte un **titre** et distingue les **évolutions fonctionnelles*
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-09-30 — Jours fériés français et belges
+
+### ✨ Fonctionnel
+- **Jours fériés verrouillés** — dans « Ma semaine », un jour férié est grisé et nommé (« Férié · Toussaint ») : on n'y saisit plus de temps, et il n'est jamais signalé comme un oubli. Sur téléphone, l'onglet du jour indique « Férié ».
+- **Semaine complète malgré un jour férié** — le maximum d'une semaine qui compte un jour férié ne dépasse plus ses jours ouvrés : 5 j et 4,5 j deviennent 4 j, et la semaine passe au complet une fois ces jours saisis.
+- **France ou Belgique** — la direction choisit, sur la fiche de chaque personne, le calendrier de jours fériés qu'elle suit (France par défaut). La France compte 11 jours légaux et la Belgique 10, Pâques, Ascension et Pentecôte comprises, pour n'importe quelle année.
+- **Page « Jours fériés »** — réservée à la direction, elle présente les deux calendriers année par année et signale les jours tombant un week-end. On peut y ajouter un jour (un jour de remplacement belge, par exemple), retirer un jour légal travaillé (comme le lundi de Pentecôte) et annuler un ajustement.
+
+### 🔧 Technique
+- **Extension PHP `calendar` requise** — elle sert au calcul de Pâques, et l'hébergement devra la fournir.
+- **Schéma** — nouvelle table `holiday_adjustment` et calendrier par personne (France pour les comptes existants). Sur une base de dev existante, `make db-reset` régénère la démonstration, avec désormais deux personnes en Belgique et aucun temps sur les jours fériés.
+
 ## [0.3.0] - 2026-09-29 — Saisie quotidienne des temps
 
 ### ✨ Fonctionnel
@@ -56,7 +68,8 @@ Chaque version porte un **titre** et distingue les **évolutions fonctionnelles*
 - **Connexion rapide en dev** — choix d'un compte de fixtures sur la page de connexion, uniquement en environnement de développement.
 - **Nettoyage du template d'amorçage** — suppression de la page design system et de la route de test d'e-mail.
 
-[Unreleased]: https://github.com/gabrielmustiere/kadence/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/gabrielmustiere/kadence/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/gabrielmustiere/kadence/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/gabrielmustiere/kadence/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/gabrielmustiere/kadence/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/gabrielmustiere/kadence/releases/tag/v0.1.0
