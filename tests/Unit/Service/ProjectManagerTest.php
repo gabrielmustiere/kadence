@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Service;
 
 use App\Dto\LotInput;
+use App\Dto\LotMemberInput;
 use App\Dto\ProjectInput;
 use App\Entity\Lot;
+use App\Entity\LotMember;
 use App\Entity\Project;
 use App\Entity\User;
 use App\Exception\LotDepthException;
@@ -218,6 +220,73 @@ final class ProjectManagerTest extends TestCase
         $this->expectException(LotHasTimeEntriesException::class);
 
         new ProjectManager($entityManager, $timeEntryRepository)->deleteProject($project);
+    }
+
+    public function testAddLotAppliesTheStartDateAndTheTeamWithTheOwnerAtFullShare(): void
+    {
+        $owner = $this->user();
+        $member = $this->user();
+        $input = $this->lotInput('Socle', 5, $owner);
+        $input->startDate = new \DateTimeImmutable('2026-10-05 15:00');
+        $input->members = [LotMemberInput::of($member, 50)];
+
+        $lot = $this->manager()->addLot($this->project(), $input);
+
+        self::assertSame('2026-10-05 00:00', $lot->getStartDate()?->format('Y-m-d H:i'));
+        self::assertSame([[$member, 50], [$owner, 100]], $this->team($lot));
+    }
+
+    public function testUpdateLotChangesSharesAndRemovesMembersInPlace(): void
+    {
+        $owner = $this->user();
+        $leaving = $this->user();
+        $lot = $this->lot($this->project(), 5, $owner);
+        $ownerMember = new LotMember($lot, $owner, 100);
+        new LotMember($lot, $leaving, 50);
+        $input = LotInput::fromLot($lot);
+        $input->members = [LotMemberInput::of($owner, 75)];
+
+        $this->manager()->updateLot($lot, $input);
+
+        self::assertSame([[$owner, 75]], $this->team($lot));
+        self::assertSame($ownerMember, $lot->getMembers()->first(), 'The remaining member is updated, not replaced.');
+    }
+
+    public function testFirstSubLotTakesOverTheStartDateAndTheTeamOfItsLot(): void
+    {
+        $owner = $this->user();
+        $member = $this->user();
+        $lot = $this->lot($this->project(), 8, $owner)->setStartDate(new \DateTimeImmutable('2026-10-05'));
+        new LotMember($lot, $owner, 100);
+        new LotMember($lot, $member, 25);
+
+        $subLot = $this->manager()->addSubLot($lot, $this->prefilledSubLotInput($lot, 'Modèle'));
+
+        self::assertSame('2026-10-05', $subLot->getStartDate()?->format('Y-m-d'));
+        self::assertSame([[$owner, 100], [$member, 25]], $this->team($subLot));
+        self::assertNull($lot->getStartDate());
+        self::assertCount(0, $lot->getMembers());
+    }
+
+    public function testDeletingTheLastSubLotMovesItsStartDateAndTeamBackToItsLot(): void
+    {
+        $owner = $this->user();
+        $lot = $this->lot($this->project(), null, null);
+        $subLot = $this->subLot($lot, 3, $owner)->setStartDate(new \DateTimeImmutable('2026-10-05'));
+        new LotMember($subLot, $owner, 50);
+
+        $this->manager()->deleteLot($subLot);
+
+        self::assertSame('2026-10-05', $lot->getStartDate()?->format('Y-m-d'));
+        self::assertSame([[$owner, 50]], $this->team($lot));
+    }
+
+    /**
+     * @return list<array{User, int}>
+     */
+    private function team(Lot $lot): array
+    {
+        return array_map(static fn (LotMember $member): array => [$member->getUser(), $member->getShare()], $lot->getMembers()->getValues());
     }
 
     private function manager(): ProjectManager

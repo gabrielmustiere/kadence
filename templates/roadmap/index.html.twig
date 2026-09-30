@@ -1,0 +1,80 @@
+{% extends 'base.html.twig' %}
+
+{% set window = roadmap.window %}
+
+{% block title %}Roadmap · Kadence{% endblock %}
+
+{% block body %}
+    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+            <h1 class="font-display text-2xl font-bold tracking-tight text-heading sm:text-3xl">Roadmap</h1>
+            <p class="mt-1 text-sm text-body">La chronologie de chaque projet : ce qui a été saisi, puis ce qui reste, réparti sur la capacité de l'équipe.</p>
+        </div>
+        <nav class="flex shrink-0 gap-2" aria-label="Période affichée">
+            <twig:Button as="a" size="sm" variant="outline" href="{{ path('app_roadmap_week', {week: window.previous.iso}) }}" data-test="roadmap-previous">
+                <twig:ux:icon name="tabler:chevron-left" class="size-4 me-1"/>
+                4 semaines
+            </twig:Button>
+            <twig:Button as="a" size="sm" variant="{{ window.anchor.equals(current_week) ? 'brand' : 'outline' }}" href="{{ path('app_roadmap') }}" :aria-current="window.anchor.equals(current_week) ? 'page' : false" data-test="roadmap-today">Aujourd'hui</twig:Button>
+            <twig:Button as="a" size="sm" variant="outline" href="{{ path('app_roadmap_week', {week: window.next.iso}) }}" data-test="roadmap-next">
+                4 semaines
+                <twig:ux:icon name="tabler:chevron-right" class="size-4 ms-1"/>
+            </twig:Button>
+        </nav>
+    </div>
+
+    <div class="mb-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-body" data-test="roadmap-legend">
+        <span class="inline-flex items-center gap-1.5"><span class="inline-block h-3 w-6 rounded-sm bg-brand"></span>Saisi</span>
+        <span class="inline-flex items-center gap-1.5"><span class="inline-block h-3 w-6 rounded-sm bg-danger"></span>Saisi au-delà de l'estimation</span>
+        <span class="inline-flex items-center gap-1.5"><span class="inline-block h-3 w-6 rounded-sm border border-dashed border-brand bg-brand-soft"></span>Restant, calculé</span>
+        <span class="inline-flex items-center gap-1.5"><span class="inline-block h-2 w-6 rounded-full bg-brand-medium"></span>Lot ou projet</span>
+        <span class="inline-flex items-center gap-1.5"><span class="inline-block h-3 w-px bg-danger"></span>Aujourd'hui</span>
+        <span data-test="roadmap-period">Du {{ window.firstDay|date('d/m/Y') }} au {{ window.lastDay|date('d/m/Y') }}</span>
+    </div>
+
+    {% if roadmap.projects is empty %}
+        <twig:Card data-test="roadmap-empty">
+            <p class="text-body">Aucun projet pour l'instant.</p>
+        </twig:Card>
+    {% else %}
+        <div class="overflow-x-auto rounded-base border border-default bg-neutral-primary" style="--roadmap-weeks: {{ constant('App\\Model\\Roadmap\\RoadmapWindow::WEEK_COUNT') }}" data-test="roadmap">
+            <div class="min-w-[72rem]">
+                <div class="grid grid-cols-[20rem_1fr] bg-neutral-secondary-medium text-xs font-medium text-heading">
+                    <div class="sticky left-0 z-10 bg-neutral-secondary-medium px-4 py-2">Projet</div>
+                    <div class="relative h-8" data-test="roadmap-months">
+                        {% for month in roadmap.months %}
+                            <span class="absolute top-2 whitespace-nowrap border-l border-default-medium ps-1" style="left: {{ month[1]|number_format(4, '.', '') }}%">{{ month[0] }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% for project in roadmap.projects %}
+                    <details class="group border-t border-default" data-test="roadmap-project" data-title="{{ project.title }}">
+                        <summary class="grid cursor-pointer list-none grid-cols-[20rem_1fr] hover:bg-neutral-secondary-soft [&::-webkit-details-marker]:hidden">
+                            <div class="sticky left-0 z-10 bg-neutral-primary px-4 py-3 group-hover:bg-neutral-secondary-soft">
+                                <div class="flex flex-wrap items-center gap-1.5">
+                                    <twig:ux:icon name="tabler:chevron-right" class="size-4 shrink-0 text-body transition-transform group-open:rotate-90"/>
+                                    <span class="font-semibold text-heading">{{ project.title }}</span>
+                                    {% for signal in project.signals %}
+                                        <twig:Badge variant="{{ signal.variant }}" data-test="signal-{{ signal.value }}">{{ signal.label }}</twig:Badge>
+                                    {% endfor %}
+                                </div>
+                                {% if project.start %}
+                                    <p class="mt-0.5 ps-5.5 text-xs text-body" data-test="roadmap-dates">{{ include('roadmap/_dates.html.twig', {row: project}) }}</p>
+                                {% endif %}
+                            </div>
+                            <div class="roadmap-track relative min-h-12">
+                                {{ include('roadmap/_today.html.twig') }}
+                                {% if project.span %}
+                                    {{ include('roadmap/_bar.html.twig', {bar: project.span, class: 'h-3 rounded-full bg-brand-medium', test: 'roadmap-bar-span'}) }}
+                                {% endif %}
+                            </div>
+                        </summary>
+                        {% for row in project.children %}
+                            {{ include('roadmap/_row.html.twig', {row: row, depth: 1}) }}
+                        {% endfor %}
+                    </details>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}

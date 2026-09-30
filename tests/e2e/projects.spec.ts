@@ -1,8 +1,9 @@
 import { test, expect, Page } from '@playwright/test';
 import { execFileSync } from 'node:child_process';
 
-// SQLite n'applique pas les clés étrangères ici : on purge les lots avant leurs projets.
+// SQLite n'applique pas les clés étrangères ici : on purge les équipes avant leurs lots, et les lots avant leurs projets.
 test.afterAll(() => {
+  execFileSync('symfony', ['console', 'dbal:run-sql', `DELETE FROM lot_member WHERE lot_id IN (SELECT l.id FROM lot l JOIN project p ON p.id = l.project_id WHERE p.title LIKE 'E2E %')`]);
   execFileSync('symfony', ['console', 'dbal:run-sql', `DELETE FROM lot WHERE project_id IN (SELECT id FROM project WHERE title LIKE 'E2E %')`]);
   execFileSync('symfony', ['console', 'dbal:run-sql', `DELETE FROM project WHERE title LIKE 'E2E %'`]);
 });

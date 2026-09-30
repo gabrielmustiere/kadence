@@ -22,7 +22,7 @@
         <twig:Card:Content>
             {{ include('lot/_form.html.twig', {
                 submit_label: 'Enregistrer',
-                cancel_path: path('app_project_show', {id: lot.project.id}),
+                cancel_path: back_path,
             }) }}
         </twig:Card:Content>
     </twig:Card>

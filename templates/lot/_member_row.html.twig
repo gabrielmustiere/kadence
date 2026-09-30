@@ -1,0 +1,11 @@
+<li class="flex items-start gap-3" data-form-collection-item data-test="lot-member-row">
+    <div class="min-w-0 flex-1">
+        {{ form_row(member.user, {label_attr: {class: 'sr-only'}}) }}
+    </div>
+    <div class="w-28 shrink-0">
+        {{ form_row(member.share, {label_attr: {class: 'sr-only'}}) }}
+    </div>
+    <twig:Button type="button" size="icon" variant="ghost" class="mt-0.5 shrink-0" data-action="form-collection#remove" data-test="lot-member-remove" aria-label="Retirer ce membre">
+        <twig:ux:icon name="tabler:x" class="size-5"/>
+    </twig:Button>
+</li>

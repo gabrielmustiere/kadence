@@ -51,6 +51,27 @@ class WeeklyMaxRepository extends ServiceEntityRepository
     }
 
     /**
+     * @return array<int, list<array{string, int<1, 20>}>> Monday of effect (Y-m-d) and quarters, oldest first, by user id
+     */
+    public function findAllQuartersByUser(): array
+    {
+        /** @var list<WeeklyMax> $weeklyMaxes */
+        $weeklyMaxes = $this->createQueryBuilder('w')
+            ->addSelect('u')
+            ->join('w.user', 'u')
+            ->orderBy('w.effectiveFrom', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        $quarters = [];
+        foreach ($weeklyMaxes as $weeklyMax) {
+            $quarters[(int) $weeklyMax->getUser()->getId()][] = [$weeklyMax->getEffectiveFrom()->format('Y-m-d'), $weeklyMax->getQuarters()];
+        }
+
+        return $quarters;
+    }
+
+    /**
      * @return list<WeeklyMax> oldest first
      */
     public function findForUser(User $user): array

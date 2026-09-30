@@ -1,0 +1,52 @@
+{
+  "version": 2,
+  "title": "Planifier chaque feuille avec une date de début et une équipe pour dessiner la chronologie des projets sur une roadmap",
+  "created": "2026-09-30",
+  "updated": "2026-09-30",
+  "tags": [
+    "roadmap"
+  ],
+  "backlog": "date-fin-projetee",
+  "changelog": [
+    {
+      "date": "2026-09-30",
+      "type": "Création",
+      "description": "Pitch initial rattaché à la ligne date-fin-projetee (couvre aussi en partie affectation-sous-projets et roadmap-interne) : date de début et équipe avec part de capacité (25/50/75/100 %) par feuille, responsable inclus dans l'équipe, chronologie recalculée en continu (passé = temps saisis, futur = restant réparti sur la capacité de l'équipe, maximum hebdomadaire et jours fériés compris), surcharge au-delà de 100 % refusée à la planification et signalée « à replanifier » quand elle survient d'elle-même, page Roadmap globale en semaines (−4 à +36) ; date annoncée hors scope."
+    },
+    {
+      "date": "2026-09-30",
+      "type": "Planification",
+      "description": "Plan technique validé : entité LotMember (part 25/50/75/100) et Lot.startDate avec reprise des responsables à 100 %, planification dans le formulaire du lot (option with_planning, CollectionType + contrôleur Stimulus form-collection), invariant responsable ⇒ membre et transferts de bascule dans ProjectManager, chronologie jamais stockée calculée par un moteur pur (Scheduler, DailyCapacity en unités entières de 1/6000 de quart, horizon de 3 ans) alimenté par ScheduleLoader en 4 requêtes, contrainte PlanningFitsCapacity (avant/après à estimation égale), page /roadmap rendue côté serveur (fenêtre de 41 semaines, pas de 4, projets repliés en <details>, retour depuis le formulaire) ; pitch aligné : questions ouvertes tranchées, règle 16 étendue au restant non couvert en 3 ans."
+    },
+    {
+      "date": "2026-09-30",
+      "type": "Implémentation",
+      "description": "Huit sous-tâches du plan livrées (modèle LotMember et Lot.startDate, moteur Scheduler/DailyCapacity en unités entières, ScheduleLoader, planification dans le formulaire du lot avec contrôleur Stimulus form-collection, contrainte PlanningFitsCapacity, page /roadmap et retour depuis le formulaire, fixtures de démo planifiées, E2E) ; 286 tests PHPUnit et 31 E2E verts ; écarts : reprise des responsables dans une migration de données séparée (migration de schéma non retouchée), RoadmapBuilderTest contre la base (ScheduleLoader non simulable), chargeur en 6 requêtes constantes (toutes les personnes chargées), objets ScheduleData/RoadmapBar/Roadmap et enum RoadmapSignal ajoutés, feuilles terminées des fixtures ramenées à une estimation épuisée, purge des équipes dans projects.spec.ts."
+    },
+    {
+      "date": "2026-09-30",
+      "type": "Implémentation",
+      "description": "Signal « estimation épuisée » scindé à la demande de l'utilisateur : « estimation atteinte » (saisi = estimé, fin au dernier jour saisi, badge gris) et « en dépassement » (saisi > estimé, ampleur affichée, jours saisis au-delà de l'estimation en rouge sur la barre à partir du jour de franchissement, fin inconnue propagée au lot et au projet) ; jour de franchissement chargé en une requête pour les seules feuilles en dépassement ; règles 15, 21, 24, 25 et critère d'acceptation du pitch réécrits ; fixtures de démo : feuilles terminées dans les temps ramenées à des jours entiers (estimation atteinte), dépassements réels conservés."
+    },
+    {
+      "date": "2026-09-30",
+      "type": "Review",
+      "description": "Revue du diff : 0 bloquant, 1 important (retirer la ligne du responsable remonte sa part à 100 %), 6 mineurs (chargement du planning à chaque enregistrement, requête par ligne d'équipe, feuille planifiée sans capacité comptée non planifiée, jours fériés au-delà de l'horizon, nombre de semaines dupliqué et weeks() mort, test manquant sur les personnes désactivées). Statut : CORRECTIONS REQUISES."
+    },
+    {
+      "date": "2026-09-30",
+      "type": "Review",
+      "description": "Important et six mineurs corrigés pendant la passe (part en vigueur du responsable conservée, validateur court-circuité sans changement de planification, personnes chargées une fois, feuille planifiée sans barre gardant sa date de début, jours fériés étendus à la date saisie, WEEK_COUNT partagé avec le CSS, test des personnes désactivées) ; 295 tests PHPUnit et 31 E2E verts. Statut : PRÊT À COMMITER."
+    },
+    {
+      "date": "2026-09-30",
+      "type": "Report",
+      "description": "Report rédigé : conformité 90 %, 21/21 critères d'acceptation (part par défaut à 100 % d'une ligne ajoutée constatée manquante puis corrigée par prototype_data), écarts documentés (migration de données séparée, chargeur en 6-7 requêtes constantes, Unique avec normaliseur, RoadmapBuilderTest contre la base, signal de dépassement scindé, fixtures), Timesheet.html.twig rattaché à la story sur décision de l'utilisateur ; dette : reprise à vérifier en production, suite complète à relancer au commit, clôture, absences, backlog et plan à réaligner."
+    },
+    {
+      "date": "2026-09-30",
+      "type": "Sync",
+      "description": "Plan réaligné sur le livré (chargeur en requêtes constantes au lieu de 4, deux migrations, Unique avec normaliseur, findAllQuartersByUser, PlannedMember sans calendrier, RoadmapBuilderTest contre la base, requêtes constantes vérifiées dans RoadmapControllerTest, fichiers ajoutés au périmètre dont Timesheet.html.twig, critères de sortie attestés cochés) ; pitch déjà aligné en cours de route ; backlog : ligne date-fin-projetee en clôture en cours, C2.4, C4.4 et règle « période prévue » éditées, notes des lignes voisines enrichies."
+    }
+  ]
+}

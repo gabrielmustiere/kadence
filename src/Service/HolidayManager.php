@@ -31,12 +31,12 @@ final readonly class HolidayManager
      */
     public function holidaysOf(User $user, Week $week): array
     {
-        return $this->between($user->getHolidayCalendar(), $week->monday, $week->friday());
+        return $this->holidaysBetween($user->getHolidayCalendar(), $week->monday, $week->friday());
     }
 
     public function isHoliday(HolidayCalendar $calendar, \DateTimeImmutable $day): bool
     {
-        return [] !== $this->between($calendar, $day, $day);
+        return [] !== $this->holidaysBetween($calendar, $day, $day);
     }
 
     public function adjustmentAt(HolidayCalendar $calendar, \DateTimeImmutable $day): ?HolidayAdjustment
@@ -109,7 +109,7 @@ final readonly class HolidayManager
     /**
      * @return array<string, non-empty-string> labels by day (Y-m-d) between two days included, in date order
      */
-    private function between(HolidayCalendar $calendar, \DateTimeImmutable $from, \DateTimeImmutable $to): array
+    public function holidaysBetween(HolidayCalendar $calendar, \DateTimeImmutable $from, \DateTimeImmutable $to): array
     {
         $first = $from->format('Y-m-d');
         $last = $to->format('Y-m-d');

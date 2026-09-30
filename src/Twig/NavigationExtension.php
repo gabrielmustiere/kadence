@@ -12,6 +12,7 @@ final class NavigationExtension
     private const array SECTIONS = [
         'dashboard' => ['app_page'],
         'timesheet' => ['app_timesheet'],
+        'roadmap' => ['app_roadmap'],
         'projects' => ['app_project_', 'app_lot_'],
         'team' => ['app_team_'],
         'holidays' => ['app_holiday_'],

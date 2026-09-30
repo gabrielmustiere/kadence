@@ -1,0 +1,47 @@
+{#
+    A lot or a leaf of the roadmap, and the sub-lots of a split lot. Expects `row`, `roadmap` and `depth`.
+#}
+{% set lot = row.lot %}
+<div class="grid grid-cols-[20rem_1fr] border-t border-default" data-test="{{ row.leaf ? 'roadmap-leaf' : 'roadmap-lot' }}" data-title="{{ row.title }}">
+    <div class="sticky left-0 z-10 bg-neutral-primary px-4 py-2 {{ depth > 1 ? 'ps-12' : 'ps-8' }}">
+        <div class="flex flex-wrap items-center gap-1.5">
+            {% if row.leaf and is_granted('LOT_EDIT', lot) %}
+                <a href="{{ path('app_lot_edit', {id: lot.id, roadmap: roadmap.window.anchor.iso}) }}" class="text-sm font-medium text-heading hover:underline" data-test="roadmap-leaf-link">{{ row.title }}</a>
+            {% else %}
+                <span class="text-sm {{ row.leaf ? 'font-medium' : 'font-semibold' }} text-heading">{{ row.title }}</span>
+            {% endif %}
+            {% for signal in row.signals %}
+                <twig:Badge variant="{{ signal.variant }}" data-test="signal-{{ signal.value }}">{{ signal.label }}</twig:Badge>
+            {% endfor %}
+        </div>
+        {% if row.leaf %}
+            <p class="mt-0.5 text-xs text-body" data-test="roadmap-detail">
+                {%- if row.members is not empty -%}
+                    <span data-test="roadmap-team">
+                        {%- for member in row.members -%}
+                            <span class="{{ member.user.active ? '' : 'line-through' }}">{{ member.user.firstName }} {{ member.user.lastName|first }}.</span> {{ member.share }} %{% if not loop.last %} · {% endif %}
+                        {%- endfor -%}
+                    </span>
+                {%- endif -%}
+                {%- if row.overrunQuarters > 0 %} — <span class="font-medium text-fg-danger-strong">dépassé de <span data-test="roadmap-overrun">{{ row.overrunQuarters|days }}</span></span>
+                {%- elseif row.remainingQuarters is not null %} — restant <span data-test="roadmap-remaining">{{ row.remainingQuarters|days }}</span>{% endif -%}
+                {%- if row.start %} — <span data-test="roadmap-dates">{{ include('roadmap/_dates.html.twig') }}</span>{% endif -%}
+            </p>
+        {% elseif row.start %}
+            <p class="mt-0.5 text-xs text-body" data-test="roadmap-dates">{{ include('roadmap/_dates.html.twig') }}</p>
+        {% endif %}
+    </div>
+    <div class="roadmap-track relative min-h-12">
+        {{ include('roadmap/_today.html.twig') }}
+        {% if row.leaf %}
+            {% if row.realized %}{{ include('roadmap/_bar.html.twig', {bar: row.realized, class: 'h-4 rounded-sm bg-brand', test: 'roadmap-bar-realized'}) }}{% endif %}
+            {% if row.overrun %}{{ include('roadmap/_bar.html.twig', {bar: row.overrun, class: 'h-4 rounded-sm bg-danger', test: 'roadmap-bar-overrun'}) }}{% endif %}
+            {% if row.future %}{{ include('roadmap/_bar.html.twig', {bar: row.future, class: 'h-4 rounded-sm border border-dashed border-brand bg-brand-soft', test: 'roadmap-bar-future'}) }}{% endif %}
+        {% elseif row.span %}
+            {{ include('roadmap/_bar.html.twig', {bar: row.span, class: 'h-2.5 rounded-full bg-brand-medium', test: 'roadmap-bar-span'}) }}
+        {% endif %}
+    </div>
+</div>
+{% for child in row.children %}
+    {{ include('roadmap/_row.html.twig', {row: child, depth: depth + 1}) }}
+{% endfor %}

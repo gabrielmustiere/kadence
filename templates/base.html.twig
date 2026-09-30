@@ -88,6 +88,9 @@
             <li>
                 <twig:NavLink href="{{ path('app_timesheet') }}" icon="tabler:calendar-week" :active="nav == 'timesheet'" data-test="nav-timesheet">Ma semaine</twig:NavLink>
             </li>
+            <li>
+                <twig:NavLink href="{{ path('app_roadmap') }}" icon="tabler:timeline" :active="nav == 'roadmap'" data-test="nav-roadmap">Roadmap</twig:NavLink>
+            </li>
         </ul>
         <div class="mt-auto shrink-0 border-t border-gray-200 pt-4 dark:border-gray-700" data-test="nav-admin">
             <p id="nav-admin-title" class="mb-2 px-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Administration</p>

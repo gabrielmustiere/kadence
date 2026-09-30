@@ -1,0 +1,1 @@
+{{ row.start|date('d/m') }} → {% if row.end %}{{ row.end|date('d/m/Y') }}{% elseif row.overrunQuarters > 0 %}fin inconnue, estimation à réviser{% else %}fin inconnue{% endif %}

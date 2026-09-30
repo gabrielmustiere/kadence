@@ -10,12 +10,14 @@ use App\Entity\Project;
 use App\Exception\LotHasTimeEntriesException;
 use App\Form\LotType;
 use App\Model\Quarters;
+use App\Model\Week;
 use App\Repository\TimeEntryRepository;
 use App\Security\Voter\LotVoter;
 use App\Service\ProjectManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -33,7 +35,7 @@ final class LotController extends AbstractController
     public function new(Request $request, Project $project): Response
     {
         $input = LotInput::forLotOf($project);
-        $form = $this->createForm(LotType::class, $input);
+        $form = $this->createForm(LotType::class, $input, ['with_planning' => true]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -58,7 +60,7 @@ final class LotController extends AbstractController
 
         $input = LotInput::forSubLotOf($parent);
         $takesOver = $parent->isLeaf();
-        $form = $this->createForm(LotType::class, $input, ['current_owner' => $input->owner]);
+        $form = $this->createForm(LotType::class, $input, ['current_owner' => $input->owner, 'with_planning' => true]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -79,14 +81,19 @@ final class LotController extends AbstractController
     }
 
     #[Route('/lots/{id}/modifier', name: 'app_lot_edit', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
-    public function edit(Request $request, Lot $lot, TimeEntryRepository $timeEntryRepository): Response
+    public function edit(Request $request, Lot $lot, TimeEntryRepository $timeEntryRepository, #[MapQueryParameter] ?string $roadmap = null): Response
     {
         $this->denyAccessUnlessGranted(LotVoter::EDIT, $lot);
+        $back = null === $roadmap ? null : self::roadmapWeek($roadmap);
+        $backPath = null === $back
+            ? $this->generateUrl('app_project_show', ['id' => $lot->getProject()->getId()])
+            : $this->generateUrl('app_roadmap_week', ['week' => $back->iso()]);
 
         $input = LotInput::fromLot($lot);
         $form = $this->createForm(LotType::class, $input, [
             'with_estimate' => $lot->isLeaf(),
             'with_owner' => $lot->isLeaf() && $this->isGranted('ROLE_LEAD'),
+            'with_planning' => $lot->isLeaf() && $this->isGranted('ROLE_LEAD'),
             'current_owner' => $lot->getOwner(),
         ]);
         $form->handleRequest($request);
@@ -95,7 +102,7 @@ final class LotController extends AbstractController
             $this->projectManager->updateLot($lot, $input);
             $this->addFlash('success', \sprintf('« %s » est mis à jour.', $lot->getTitle()));
 
-            return $this->redirectToRoute('app_project_show', ['id' => $lot->getProject()->getId()]);
+            return $this->redirect($backPath);
         }
 
         $consumedQuarters = $timeEntryRepository->sumQuartersForLotId((int) $lot->getId());
@@ -105,6 +112,7 @@ final class LotController extends AbstractController
             'lot' => $lot,
             'consumed_quarters' => $consumedQuarters,
             'minimum_estimate_days' => Quarters::daysRoundedUp($consumedQuarters),
+            'back_path' => $backPath,
         ]);
     }
 
@@ -126,5 +134,14 @@ final class LotController extends AbstractController
         }
 
         return $this->redirectToRoute('app_project_show', ['id' => $projectId]);
+    }
+
+    private static function roadmapWeek(string $iso): ?Week
+    {
+        try {
+            return Week::fromIso($iso);
+        } catch (\InvalidArgumentException) {
+            return null;
+        }
     }
 }

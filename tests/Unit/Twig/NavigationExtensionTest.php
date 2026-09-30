@@ -24,6 +24,8 @@ final class NavigationExtensionTest extends TestCase
         yield 'dashboard' => ['app_page', 'dashboard'];
         yield 'current week' => ['app_timesheet', 'timesheet'];
         yield 'another week' => ['app_timesheet_week', 'timesheet'];
+        yield 'roadmap' => ['app_roadmap', 'roadmap'];
+        yield 'roadmap of another week' => ['app_roadmap_week', 'roadmap'];
         yield 'project list' => ['app_project_index', 'projects'];
         yield 'project page' => ['app_project_show', 'projects'];
         yield 'new lot' => ['app_lot_new', 'projects'];

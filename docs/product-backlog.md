@@ -14,6 +14,7 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
 | 2026-09-29 | Éditer | D2, D4, C1.2, C2.1–C2.5, C3.1, C3.2, C4.4, C5.1–C5.4, C6.2, P1, P2, P7, règles transverses, 8 lignes de backlog | Découpage projet → lot → sous-lot cadré par la story 002 (principe 3 de la vision réécrit) ; estimation révisable après saisie ; réactivation livrée par la story 001 |
 | 2026-09-29 | Éditer | C3.1, C4.1, P1, règle transverse « saisie », ligne `saisie-quotidienne` | Sync post-livraison de la story 003-f-saisie-quotidienne : saisie au quart de journée ; maximum de saisie hebdomadaire historisé avancé depuis C4.1 |
 | 2026-09-30 | Éditer | C4.3, convention transverse « jours fériés », notes `rappel-saisie` et `capacite-equipe` | Sync post-livraison de la story 004-f-jours-feries : jours fériés France et Belgique posés (calendrier par personne, ajustements de la direction, saisie verrouillée) ; restent les fermetures |
+| 2026-09-30 | Éditer | C2.4, C4.4, règle transverse « période prévue », ligne `jalons-dates-annoncees`, notes `jalons-dates-annoncees`, `alerte-derive`, `affectation-sous-projets`, `roadmap-interne` et `charge-vs-capacite` | Sync post-livraison de la story 006-f-roadmap-planification : période prévue calculée (date de début posée, fin calculée sur le restant et la capacité), équipe et parts par feuille avec refus de surcharge, page Roadmap sans date annoncée ; lignes `affectation-sous-projets` et `roadmap-interne` recouvertes en partie |
 
 ## Domaines fonctionnels
 
@@ -40,7 +41,7 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
 - **C2.1** — Un lead peut créer un projet, simple enveloppe qui cumule ses lots.
 - **C2.2** — Un lead peut découper un projet en lots, et un lot en sous-lots.
 - **C2.3** — Un lead peut déclarer l'estimation en jours d'une feuille (lot sans sous-lot, ou sous-lot) et en désigner le responsable, qui peut ensuite la réviser.
-- **C2.4** — Le responsable peut poser la période prévue d'une feuille et, le cas échéant, une date annoncée (ce qui en fait un jalon).
+- **C2.4** — Le responsable peut poser une date annoncée sur une feuille (ce qui en fait un jalon). La période prévue d'une feuille n'est pas saisie : elle va de sa date de début, posée par un lead ou la direction, à sa fin calculée (story `006-f-roadmap-planification`).
 - **C2.5** — Le responsable peut clôturer une feuille, ce qui enregistre sa date de livraison réelle.
 - **C2.6** — Un lead peut archiver un projet terminé pour le retirer de la saisie.
 
@@ -57,7 +58,7 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
 - **C4.1** — La direction peut définir le temps de travail de chaque personne (temps plein, temps partiel, jours travaillés). Le maximum de saisie hebdomadaire de chaque personne, historisé par semaine d'effet, est posé par `saisie-quotidienne` ; reste le temps de travail détaillé (jours travaillés, répartition du temps partiel sur la semaine).
 - **C4.2** — Une personne peut déclarer ses absences (congés, maladie).
 - **C4.3** — La direction peut déclarer les jours fériés et les fermetures. Les jours fériés sont posés par la story `004-f-jours-feries` : calendriers légaux France et Belgique calculés, calendrier de chaque personne, jours ajoutés ou retirés par la direction ; restent les fermetures.
-- **C4.4** — Un lead peut affecter une part de la capacité d'une personne à une feuille sur une période (pour planifier la charge et projeter les dates).
+- **C4.4** — Un lead peut composer l'équipe d'une feuille en affectant à chaque personne une part de sa capacité (25, 50, 75 ou 100 %), valable de la date de début de la feuille jusqu'à sa fin calculée (pour planifier la charge et projeter les dates). Posée par la story `006-f-roadmap-planification`, qui refuse une planification portant une personne au-delà de 100 % un jour donné.
 
 ### D5 — Suivi de consommation
 
@@ -155,7 +156,7 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
 
 - **Découpage** : un projet se découpe en lots, un lot peut se découper en sous-lots, pas au-delà (principe 3 de la vision). Une **feuille** est un lot sans sous-lot, ou un sous-lot : seule une feuille porte estimation, responsable, saisie, période prévue et date annoncée ; un lot découpé et un projet n'en sont que le cumul.
 - **Jalon** : seule une feuille portant une date annoncée est un jalon. Une feuille sans date annoncée (ex. support, maintenance) sert à la saisie, au rythme de consommation et à la charge, mais ne compte pas dans la North Star.
-- **Période prévue ≠ date annoncée** : la période prévue (début, fin) sert au rythme de consommation et à la planification ; la date annoncée est un engagement.
+- **Période prévue ≠ date annoncée** : la période prévue (de la date de début posée à la fin calculée sur le restant et la capacité de l'équipe) sert au rythme de consommation et à la planification ; la date annoncée est un engagement.
 - **Historisation des annonces** : une date annoncée n'est jamais écrasée ; chaque réannonce est conservée.
 - **Référence North Star** : un jalon est « tenu » s'il est livré à ± 1 semaine de sa **première** date annoncée. Réannoncer ne rattrape pas un jalon.
 - **Estimation déclarative, révisable sous condition** : l'estimation d'une feuille se modifie librement tant qu'aucun temps n'y est saisi ; ensuite, elle reste révisable mais jamais en dessous du consommé, et l'estimation en vigueur au premier temps saisi est conservée comme **estimation initiale** (référence de la qualité d'estimation). Le restant = estimé − consommé.
@@ -184,7 +185,7 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
 - [x] `projets-sous-projets` — Permettre à un lead de créer des projets découpés en lots et sous-lots, estimés en jours et confiés à un responsable, pour disposer d'un référentiel sur lequel saisir.
   - Story `002-f-projets-lots-sous-lots` · **livrée** v0.2.0
   - C2.1, C2.2, C2.3 · P2 · dép. `acces-roles` · Vision : principe 3, horizon 3 mois
-- [ ] `jalons-dates-annoncees` — Permettre au responsable de poser la période prévue, la date annoncée (historisée) et la livraison réelle d'une feuille, pour mesurer la North Star dès le départ.
+- [ ] `jalons-dates-annoncees` — Permettre au responsable de poser la date annoncée (historisée) et la livraison réelle d'une feuille, pour mesurer la North Star dès le départ.
   - Pas encore cadrée
   - C2.4, C2.5, C7.2 · P4, P7 · dép. `projets-sous-projets` · Vision : North Star (baseline à 3 mois), principe 4
 - [ ] `saisie-quotidienne` — Permettre à chacun de saisir sa journée en quarts de journée, lots et sous-lots habituels en tête, en moins d'une minute.
@@ -212,7 +213,7 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
   - Pas encore cadrée
   - C6.1, C6.3 · P4, P5, P6 · dép. `affectation-sous-projets` · Vision : valeur direction (voir la surcharge avant de s'engager), principe 2
 - [ ] `date-fin-projetee` — Calculer la date de fin projetée de chaque feuille à partir de son restant et de la capacité affectée.
-  - Pas encore cadrée
+  - Story `006-f-roadmap-planification` · **clôture en cours**
   - C6.2 · P2, P4 · dép. `affectation-sous-projets`, `consomme-vs-estime` · Vision : hypothèse H3, horizon 6 mois
 - [ ] `roadmap-interne` — Permettre à tous de consulter les jalons à venir avec date annoncée et date projetée côte à côte, pour répondre à « c'est pour quand ? » en lisant une page.
   - Pas encore cadrée
@@ -262,8 +263,11 @@ _(dérivé — recalculé à chaque passe, ne pas maintenir à la main)_
 - `saisie-quotidienne` : le « moins d'une minute » est un critère d'acceptation à rendre mesurable ; penser à la saisie d'une journée passée (C3.3) sans alourdir le cas nominal. Web responsive (anti-objectif : pas d'app mobile native). La saisie se fait sur les feuilles : le découpage en sous-lots allonge la liste (principe 1 sous tension). Appliquer le gel puis la révision bornée de l'estimation, le blocage des suppressions dès qu'un temps est saisi, et trancher le sort des temps d'un lot qui reçoit son premier sous-lot (questions ouvertes de la story 002).
 - `rappel-saisie` : canal du rappel à définir (e-mail, notification…) sans intégration externe au départ ; le taux affiché doit rester global (principe 2). Les jours ouvrés d'une personne excluent les jours fériés de son calendrier (story 004) : ne pas rappeler ni compter un jour férié.
 - `capacite-equipe` : les jours fériés sont livrés par la story 004 ; restent le temps de travail détaillé, les absences et les fermetures. Les ajustements de jours fériés ne servent pas aux fermetures (hors scope de la story 004). La livraison de la story 004 cochera la ligne : la découper si l'avancement doit rester exact.
-- `jalons-dates-annoncees` : distinguer clairement période prévue et date annoncée ; la première date annoncée fait foi pour la North Star. Le jalon est porté par une feuille.
-- `alerte-derive` : définir le « rythme prévu » (estimation étalée sur la période prévue ?) et le seuil d'alerte ; l'efficacité de l'alerte est exactement ce que teste H2. L'estimation étant révisable après saisie, trancher si le rythme se calcule sur l'estimation initiale ou révisée.
+- `jalons-dates-annoncees` : la période prévue est désormais calculée (story 006) ; reste la date annoncée, historisée, et la clôture. La première date annoncée fait foi pour la North Star. Le jalon est porté par une feuille. Sans clôture, une feuille terminée paraît « estimation atteinte » ou « en dépassement » sur la roadmap, et une feuille en dépassement rend inconnue la fin de son projet.
+- `alerte-derive` : définir le « rythme prévu » (estimation étalée sur la période prévue, désormais calculée ?) et le seuil d'alerte ; la roadmap (story 006) signale déjà une feuille « en dépassement » et colore les jours saisis au-delà de l'estimation ; l'efficacité de l'alerte est exactement ce que teste H2. L'estimation étant révisable après saisie, trancher si le rythme se calcule sur l'estimation initiale ou révisée.
+- `affectation-sous-projets` : C4.4 est posée par la story 006 (équipe et parts par feuille, refus de surcharge), rattachée à `date-fin-projetee`. La ligne est à fusionner ou à retirer ; une part variable dans le temps n'a pas été retenue.
+- `roadmap-interne` : la page Roadmap existe (story 006, frise des feuilles avec fin calculée). Reste à y poser la date annoncée à côté de la fin calculée (principe 4) et à lister les jalons à venir.
+- `charge-vs-capacite` : la story 006 calcule déjà la charge de chaque personne jour par jour (refus et signal « à replanifier » au-delà de 100 %). Reste la vue semaine par semaine. Une feuille en dépassement ne charge plus son équipe : à reprendre avec `consomme-vs-estime`. Les absences ne sont pas encore déduites de la capacité.
 - `acces-roles` : → tranché et livré (v0.1.0) : comptes e-mail / mot de passe gérés dans Kadence, sans SSO.
 - Avant déploiement du MVP : cadrage social et données personnelles (information des salariés, CSE selon l'effectif) — hors outil, mais bloquant pour le lancement.
 - Écarts non retenus à ce stade (vision) : simulation « et si », affectation suggérée.

@@ -82,6 +82,25 @@ class LotRepository extends ServiceEntityRepository
         return $leaves;
     }
 
+    /**
+     * Every leaf with its project, its parent lot, its owner and its team.
+     *
+     * @return list<Lot>
+     */
+    public function findLeavesForSchedule(): array
+    {
+        /** @var list<Lot> $leaves */
+        $leaves = $this->createLeavesQueryBuilder()
+            ->addSelect('o', 'm', 'mu')
+            ->leftJoin('l.owner', 'o')
+            ->leftJoin('l.members', 'm')
+            ->leftJoin('m.user', 'mu')
+            ->getQuery()
+            ->getResult();
+
+        return $leaves;
+    }
+
     private function createLeavesQueryBuilder(): QueryBuilder
     {
         return $this->createQueryBuilder('l')

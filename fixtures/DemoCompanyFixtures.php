@@ -6,6 +6,7 @@ namespace DataFixtures;
 
 use App\Entity\HolidayAdjustment;
 use App\Entity\Lot;
+use App\Entity\LotMember;
 use App\Entity\Project;
 use App\Entity\TimeEntry;
 use App\Entity\User;
@@ -41,6 +42,23 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
 
     /** Leaves left « à estimer » although time is entered on them. */
     private const array TO_ESTIMATE = ['Notifications'];
+
+    /**
+     * The team of the running leaves, owner first: they start on the week of their first entry. Thomas is loaded at
+     * 150 % by Régularisations and Recette, as when a planning is overtaken by the time entered.
+     */
+    private const array TEAMS = [
+        'Régularisations' => [['thomas', 100], ['julien', 50]],
+        'Bulletins' => [['camille', 100], ['lea', 50]],
+        'Recette' => [['julien', 50], ['lea', 50], ['thomas', 50]],
+        'Publication sur les stores' => [['sophie', 50], ['chloe', 50], ['emma', 100]],
+        'Webhooks' => [['nathan', 100], ['karim', 50], ['lucas', 50]],
+        'Documentation' => [['ines', 100], ['lucas', 50]],
+        'Tableau de bord partenaire' => [['maxime', 100]],
+    ];
+
+    /** A leaf planned two weeks ago on which nobody has entered time yet: title, estimate in days, team (owner first). */
+    private const array LATE_START = ['Migration des clients', 15, [['karim', 50]]];
 
     /**
      * Person key => first name, last name, role, team, weekly quarters, day off (ISO day) or null, first week, weekly
@@ -116,6 +134,12 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
     /** @var array<int, int> quarters entered by lot id */
     private array $consumed = [];
 
+    /** @var array<string, Lot> every leaf by title */
+    private array $leaves = [];
+
+    /** @var array<int, TimeEntry> the last entry made on each lot, by lot id */
+    private array $lastEntries = [];
+
     public function __construct(
         private readonly UserPasswordHasherInterface $passwordHasher,
         private readonly ClockInterface $clock,
@@ -143,6 +167,7 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
             $this->loadTimeEntries($manager, $key, $person, $firstWeek, $today, $support);
         }
         $this->estimate();
+        $this->plan($firstWeek, $today);
         $manager->flush();
     }
 
@@ -228,6 +253,7 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
      */
     private function addLeaf(string $team, Lot $leaf, ?array $weeks): void
     {
+        $this->leaves[(string) $leaf->getTitle()] = $leaf;
         if (null !== $weeks) {
             $this->leavesByTeam[$team][] = [$leaf, $weeks[0], $weeks[1]];
         }
@@ -278,7 +304,9 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
 
                 $capacity = $this->dayCapacity((int) $day->format('N'), $weeklyQuarters, $dayOff);
                 foreach ($this->split($capacity, $leaves, $support) as [$leaf, $dayQuarters]) {
-                    $manager->persist(new TimeEntry($person, $leaf, $day, $dayQuarters));
+                    $entry = new TimeEntry($person, $leaf, $day, $dayQuarters);
+                    $manager->persist($entry);
+                    $this->lastEntries[(int) $leaf->getId()] = $entry;
                     $this->consumed[(int) $leaf->getId()] = ($this->consumed[(int) $leaf->getId()] ?? 0) + $dayQuarters;
                 }
             }
@@ -370,8 +398,8 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
     }
 
     /**
-     * Finished leaves are estimated around what they consumed (some overran), running ones above it; the initial
-     * estimate sometimes differs, as if it had been revised since.
+     * Finished leaves either consumed exactly their estimate or overran it, running ones are estimated above what they
+     * consumed; the initial estimate sometimes differs, as if it had been revised since.
      */
     private function estimate(): void
     {
@@ -381,12 +409,71 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
                     continue;
                 }
 
-                $consumedDays = ($this->consumed[(int) $leaf->getId()] ?? 0) / 4;
-                $factor = $lastWeek < self::WEEKS ? [0.8, 0.9, 1.0, 1.1, 1.2][mt_rand(0, 4)] : 1.3 + mt_rand(0, 7) / 10;
-                $estimate = max(1, (int) round($consumedDays * $factor));
+                $consumed = $this->consumed[(int) $leaf->getId()] ?? 0;
+                $finished = $lastWeek < self::WEEKS;
+                $factor = $finished ? [0.8, 0.9, 1.0, 1.1, 1.2][mt_rand(0, 4)] : 1.3 + mt_rand(0, 7) / 10;
+                $estimate = match (true) {
+                    $finished && $factor >= 1.0 => intdiv($this->trimToWholeDays($leaf, $consumed), 4),
+                    $finished => (int) floor($consumed / 4 * $factor),
+                    default => (int) round($consumed / 4 * $factor),
+                };
+                $estimate = max(1, $estimate);
                 $initial = mt_rand(1, 100) <= 30 ? max(1, (int) round($estimate * 0.8)) : $estimate;
                 $leaf->setEstimateDays($estimate)->setInitialEstimateDays($initial);
             }
+        }
+    }
+
+    /**
+     * Takes the part of a day beyond whole days off the last entry of a leaf, so that it consumed exactly its estimate.
+     *
+     * @return int the quarters consumed afterwards
+     */
+    private function trimToWholeDays(Lot $leaf, int $consumed): int
+    {
+        $excess = $consumed % 4;
+        $last = $this->lastEntries[(int) $leaf->getId()] ?? null;
+        $trimmed = null === $last ? 0 : $last->getQuarters() - $excess;
+        if (0 === $excess || null === $last || $trimmed < 1 || $trimmed > 4) {
+            return $consumed;
+        }
+
+        $last->setQuarters($trimmed);
+
+        return $consumed - $excess;
+    }
+
+    /**
+     * Every leaf with time entered starts on the week of its first entry; finished leaves keep their owner alone.
+     */
+    private function plan(Week $firstWeek, \DateTimeImmutable $today): void
+    {
+        foreach ($this->leavesByTeam as $leaves) {
+            foreach ($leaves as [$leaf, $firstActiveWeek]) {
+                $leaf->setStartDate($this->week($firstWeek, $firstActiveWeek)->monday);
+                $team = self::TEAMS[(string) $leaf->getTitle()] ?? null;
+                $owner = $leaf->getOwner();
+                if (null !== $team) {
+                    $this->staff($leaf, $team);
+                } elseif (null !== $owner) {
+                    new LotMember($leaf, $owner, 100);
+                }
+            }
+        }
+
+        [$title, $estimateDays, $team] = self::LATE_START;
+        $late = $this->leaves[$title]->setEstimateDays($estimateDays)->setStartDate(Week::containing($today)->monday->modify('-2 weeks'));
+        $this->staff($late, $team);
+    }
+
+    /**
+     * @param list<array{string, int<25, 100>}> $team person key and share, owner first
+     */
+    private function staff(Lot $leaf, array $team): void
+    {
+        $leaf->setOwner($this->people[$team[0][0]]);
+        foreach ($team as [$key, $share]) {
+            new LotMember($leaf, $this->people[$key], $share);
         }
     }
 

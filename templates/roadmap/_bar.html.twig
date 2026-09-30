@@ -1,0 +1,9 @@
+{% set fade = bar.cutStart and bar.cutEnd
+    ? 'linear-gradient(to right, transparent, black 12px, black calc(100% - 12px), transparent)'
+    : (bar.cutStart ? 'linear-gradient(to right, transparent, black 12px)' : (bar.cutEnd ? 'linear-gradient(to left, transparent, black 12px)' : null)) %}
+<div class="absolute top-1/2 -translate-y-1/2 {{ class }} {{ bar.cutStart ? 'rounded-l-none' : '' }} {{ bar.cutEnd ? 'rounded-r-none' : '' }}"
+     style="{{ bar.style }}{% if fade %}; mask-image: {{ fade }}{% endif %}"
+     data-test="{{ test }}"
+     data-cut-start="{{ bar.cutStart ? 'true' : 'false' }}"
+     data-cut-end="{{ bar.cutEnd ? 'true' : 'false' }}"
+     aria-hidden="true"></div>

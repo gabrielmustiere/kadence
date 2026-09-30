@@ -287,4 +287,9 @@
         outline: 2px solid var(--color-brand);
         outline-offset: 2px;
     }
+
+    /* One line per week of the roadmap window, whose week count is set on the page by --roadmap-weeks. */
+    .roadmap-track {
+        background-image: repeating-linear-gradient(to right, var(--color-default) 0 1px, transparent 1px calc(100% / var(--roadmap-weeks)));
+    }
 }

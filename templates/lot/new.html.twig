@@ -10,10 +10,10 @@
             <twig:Card:Title as="h1">{{ heading }}</twig:Card:Title>
             {% if parent and takes_over %}
                 <p class="mt-2 text-sm text-body" data-test="lot-takes-over">
-                    C'est le premier sous-lot de « {{ parent.title }} » : il reprend son estimation et son responsable, que le lot ne portera plus. Ajustez-les si besoin.
+                    C'est le premier sous-lot de « {{ parent.title }} » : il reprend son estimation, son responsable, sa date de début et son équipe, que le lot ne portera plus. Ajustez-les si besoin.
                 </p>
             {% elseif not parent %}
-                <p class="mt-2 text-sm text-body">Un lot porte l'estimation et le responsable tant qu'il n'est pas découpé en sous-lots.</p>
+                <p class="mt-2 text-sm text-body">Un lot porte l'estimation, le responsable et la planification tant qu'il n'est pas découpé en sous-lots.</p>
             {% endif %}
         </twig:Card:Header>
         <twig:Card:Content>

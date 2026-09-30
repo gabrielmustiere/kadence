@@ -7,7 +7,9 @@ namespace App\Service;
 use App\Dto\LotInput;
 use App\Dto\ProjectInput;
 use App\Entity\Lot;
+use App\Entity\LotMember;
 use App\Entity\Project;
+use App\Entity\User;
 use App\Exception\LotDepthException;
 use App\Exception\LotHasTimeEntriesException;
 use App\Repository\TimeEntryRepository;
@@ -60,9 +62,9 @@ final readonly class ProjectManager
     }
 
     /**
-     * The estimate and owner of a lot receiving its first sub-lot move to that sub-lot: the input is expected
-     * to carry them (see LotInput::forSubLotOf()), and the lot, no longer a leaf, loses them. Its time entries
-     * and initial estimate move along.
+     * The estimate, owner, start date and team of a lot receiving its first sub-lot move to that sub-lot: the input
+     * is expected to carry them (see LotInput::forSubLotOf()), and the lot, no longer a leaf, loses them. Its time
+     * entries and initial estimate move along.
      */
     public function addSubLot(Lot $parent, LotInput $input): Lot
     {
@@ -98,7 +100,8 @@ final readonly class ProjectManager
     }
 
     /**
-     * Removing the last sub-lot of a lot turns the lot back into a leaf that takes over the sub-lot's estimate and owner.
+     * Removing the last sub-lot of a lot turns the lot back into a leaf that takes over the sub-lot's estimate, owner,
+     * start date and team.
      */
     public function deleteLot(Lot $lot): void
     {
@@ -113,7 +116,11 @@ final readonly class ProjectManager
                 $parent
                     ->setEstimateDays($lot->getEstimateDays())
                     ->setOwner($lot->getOwner())
-                    ->setInitialEstimateDays($lot->getInitialEstimateDays());
+                    ->setInitialEstimateDays($lot->getInitialEstimateDays())
+                    ->setStartDate($lot->getStartDate());
+                foreach ($lot->getMembers() as $member) {
+                    new LotMember($parent, $member->getUser(), $member->getShare());
+                }
             }
         }
 
@@ -148,7 +155,9 @@ final readonly class ProjectManager
 
         $lot
             ->setEstimateDays(self::positiveOrNull($input->estimateDays))
-            ->setOwner($input->owner);
+            ->setOwner($input->owner)
+            ->setStartDate($input->startDate);
+        self::applyMembers($lot, $input->effectiveMembers());
 
         if (null === $lot->getInitialEstimateDays() && null !== $lot->getEstimateDays() && null !== $lot->getId()
             && $this->timeEntryRepository->existsForLots([$lot])) {
@@ -158,7 +167,36 @@ final readonly class ProjectManager
 
     private function clearLeafData(Lot $lot): void
     {
-        $lot->setEstimateDays(null)->setOwner(null)->setInitialEstimateDays(null);
+        $lot->setEstimateDays(null)->setOwner(null)->setInitialEstimateDays(null)->setStartDate(null);
+        self::applyMembers($lot, []);
+    }
+
+    /**
+     * Updates the members in place rather than replacing them: a person removed and added back within one flush
+     * would be inserted before being deleted, and break the uniqueness of a person in a team.
+     *
+     * @param list<array{User, int<25, 100>}> $members person and share
+     */
+    private static function applyMembers(Lot $lot, array $members): void
+    {
+        $shares = [];
+        foreach ($members as [$user, $share]) {
+            $shares[spl_object_id($user)] = [$user, $share];
+        }
+
+        foreach ($lot->getMembers()->toArray() as $member) {
+            $key = spl_object_id($member->getUser());
+            if (isset($shares[$key])) {
+                $member->setShare($shares[$key][1]);
+                unset($shares[$key]);
+            } else {
+                $lot->removeMember($member);
+            }
+        }
+
+        foreach ($shares as [$user, $share]) {
+            new LotMember($lot, $user, $share);
+        }
     }
 
     /**

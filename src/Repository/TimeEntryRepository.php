@@ -70,6 +70,55 @@ class TimeEntryRepository extends ServiceEntityRepository
         return $quarters;
     }
 
+    /**
+     * @return array<int, array{int, string, string}> quarters entered, first and last day entered (Y-m-d), by lot id
+     */
+    public function summarizeByLot(): array
+    {
+        /** @var list<array{lotId: int|string, quarters: int|string, first: string, last: string}> $rows */
+        $rows = $this->createQueryBuilder('e')
+            ->select('IDENTITY(e.lot) AS lotId', 'SUM(e.quarters) AS quarters', 'MIN(e.day) AS first', 'MAX(e.day) AS last')
+            ->groupBy('e.lot')
+            ->getQuery()
+            ->getArrayResult();
+
+        $summaries = [];
+        foreach ($rows as $row) {
+            $summaries[(int) $row['lotId']] = [(int) $row['quarters'], $row['first'], $row['last']];
+        }
+
+        return $summaries;
+    }
+
+    /**
+     * @param list<int> $lotIds
+     *
+     * @return array<int, array<string, int>> quarters entered each day (Y-m-d, in date order), by lot id
+     */
+    public function sumQuartersByDayForLots(array $lotIds): array
+    {
+        if ([] === $lotIds) {
+            return [];
+        }
+
+        /** @var list<array{lotId: int|string, day: \DateTimeImmutable, quarters: int|string}> $rows */
+        $rows = $this->createQueryBuilder('e')
+            ->select('IDENTITY(e.lot) AS lotId', 'e.day AS day', 'SUM(e.quarters) AS quarters')
+            ->andWhere('IDENTITY(e.lot) IN (:lots)')
+            ->setParameter('lots', $lotIds, ArrayParameterType::INTEGER)
+            ->groupBy('e.lot', 'e.day')
+            ->orderBy('e.day', 'ASC')
+            ->getQuery()
+            ->getArrayResult();
+
+        $days = [];
+        foreach ($rows as $row) {
+            $days[(int) $row['lotId']][$row['day']->format('Y-m-d')] = (int) $row['quarters'];
+        }
+
+        return $days;
+    }
+
     public function sumQuartersForLotId(int $lotId): int
     {
         $sum = $this->createQueryBuilder('e')

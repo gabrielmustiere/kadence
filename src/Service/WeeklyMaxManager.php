@@ -40,7 +40,17 @@ final readonly class WeeklyMaxManager
      */
     public function capFor(User $user, Week $week, int $holidayCount): int
     {
-        return max(0, min($this->quartersFor($user, $week), Quarters::PER_DAY * (5 - $holidayCount)));
+        return self::cap($this->quartersFor($user, $week), $holidayCount);
+    }
+
+    /**
+     * @param int<1, 20> $quarters
+     *
+     * @return int<0, 20>
+     */
+    public static function cap(int $quarters, int $holidayCount): int
+    {
+        return max(0, min($quarters, Quarters::PER_DAY * (5 - $holidayCount)));
     }
 
     /**

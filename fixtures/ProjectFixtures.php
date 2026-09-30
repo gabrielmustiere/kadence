@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DataFixtures;
 
 use App\Entity\Lot;
+use App\Entity\LotMember;
 use App\Entity\Project;
 use App\Entity\User;
 use Doctrine\Bundle\FixturesBundle\Fixture;
@@ -61,6 +62,11 @@ class ProjectFixtures extends Fixture implements DependentFixtureInterface
      */
     private function lot(Project $project, string $title, ?int $estimateDays, ?User $owner, ?Lot $parent = null): Lot
     {
-        return new Lot($project, $parent)->setTitle($title)->setEstimateDays($estimateDays)->setOwner($owner);
+        $lot = new Lot($project, $parent)->setTitle($title)->setEstimateDays($estimateDays)->setOwner($owner);
+        if (null !== $owner) {
+            new LotMember($lot, $owner, 100);
+        }
+
+        return $lot;
     }
 }

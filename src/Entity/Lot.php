@@ -51,11 +51,20 @@ class Lot
     #[ORM\JoinColumn(name: 'owner_id')]
     private ?User $owner = null;
 
+    #[ORM\Column(name: 'start_date', type: Types::DATE_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $startDate = null;
+
+    /** @var Collection<int, LotMember> */
+    #[ORM\OneToMany(targetEntity: LotMember::class, mappedBy: 'lot', cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[ORM\OrderBy(['id' => 'ASC'])]
+    private Collection $members;
+
     public function __construct(Project $project, ?self $parent = null)
     {
         $this->project = $project;
         $this->parent = $parent;
         $this->children = new ArrayCollection();
+        $this->members = new ArrayCollection();
 
         $project->addLot($this);
         $parent?->addChild($this);
@@ -171,6 +180,42 @@ class Lot
     public function setOwner(?User $owner): static
     {
         $this->owner = $owner;
+
+        return $this;
+    }
+
+    public function getStartDate(): ?\DateTimeImmutable
+    {
+        return $this->startDate;
+    }
+
+    public function setStartDate(?\DateTimeImmutable $startDate): static
+    {
+        $this->startDate = $startDate?->setTime(0, 0);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, LotMember>
+     */
+    public function getMembers(): Collection
+    {
+        return $this->members;
+    }
+
+    public function addMember(LotMember $member): static
+    {
+        if (!$this->members->contains($member)) {
+            $this->members->add($member);
+        }
+
+        return $this;
+    }
+
+    public function removeMember(LotMember $member): static
+    {
+        $this->members->removeElement($member);
 
         return $this;
     }
