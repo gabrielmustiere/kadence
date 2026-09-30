@@ -24,7 +24,7 @@
     <div class="flex flex-wrap justify-between items-center">
         <div class="flex justify-start items-center">
             <button data-drawer-target="app-sidebar" data-drawer-toggle="app-sidebar"
-                    aria-controls="app-sidebar" type="button"
+                    aria-controls="app-sidebar" type="button" data-test="sidebar-toggle"
                     class="p-2 mr-2 text-gray-600 rounded-lg cursor-pointer md:hidden hover:text-gray-900 hover:bg-gray-100 focus:bg-gray-100 dark:focus:bg-gray-700 focus:ring-2 focus:ring-gray-100 dark:focus:ring-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
                 <twig:ux:icon name="tabler:menu-2" class="w-6 h-6"/>
                 <span class="sr-only">Ouvrir le menu</span>
@@ -76,49 +76,35 @@
 </nav>
 
 {# Sidebar #}
+{% set nav = nav_section(app.current_route) %}
 <aside id="app-sidebar"
        class="fixed top-0 left-0 z-40 w-64 h-screen pt-14 transition-transform -translate-x-full bg-white border-r border-gray-200 md:translate-x-0 dark:bg-gray-800 dark:border-gray-700"
        aria-label="Sidebar">
-    <div class="overflow-y-auto py-5 px-3 h-full bg-white dark:bg-gray-800">
-        <ul class="space-y-2">
+    <div class="flex flex-col overflow-y-auto py-5 px-3 h-full bg-white dark:bg-gray-800">
+        <ul class="mb-6 shrink-0 space-y-2">
             <li>
-                <a href="{{ path('app_page') }}"
-                   class="flex items-center p-2 text-base font-medium text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-                    <twig:ux:icon name="tabler:layout-dashboard" class="w-6 h-6 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"/>
-                    <span class="ml-3">Tableau de bord</span>
-                </a>
+                <twig:NavLink href="{{ path('app_page') }}" icon="tabler:layout-dashboard" :active="nav == 'dashboard'" data-test="nav-dashboard">Tableau de bord</twig:NavLink>
             </li>
             <li>
-                <a href="{{ path('app_timesheet') }}" data-test="nav-timesheet"
-                   class="flex items-center p-2 text-base font-medium text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-                    <twig:ux:icon name="tabler:calendar-week" class="w-6 h-6 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"/>
-                    <span class="ml-3">Ma semaine</span>
-                </a>
+                <twig:NavLink href="{{ path('app_timesheet') }}" icon="tabler:calendar-week" :active="nav == 'timesheet'" data-test="nav-timesheet">Ma semaine</twig:NavLink>
             </li>
-            <li>
-                <a href="{{ path('app_project_index') }}" data-test="nav-projects"
-                   class="flex items-center p-2 text-base font-medium text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-                    <twig:ux:icon name="tabler:folders" class="w-6 h-6 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"/>
-                    <span class="ml-3">Projets</span>
-                </a>
-            </li>
-            {% if is_granted('ROLE_DIRECTION') %}
-            <li>
-                <a href="{{ path('app_team_index') }}" data-test="nav-team"
-                   class="flex items-center p-2 text-base font-medium text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-                    <twig:ux:icon name="tabler:users" class="w-6 h-6 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"/>
-                    <span class="ml-3">Équipe</span>
-                </a>
-            </li>
-            <li>
-                <a href="{{ path('app_holiday_index') }}" data-test="nav-holidays"
-                   class="flex items-center p-2 text-base font-medium text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-                    <twig:ux:icon name="tabler:calendar-off" class="w-6 h-6 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"/>
-                    <span class="ml-3">Jours fériés</span>
-                </a>
-            </li>
-            {% endif %}
         </ul>
+        <div class="mt-auto shrink-0 border-t border-gray-200 pt-4 dark:border-gray-700" data-test="nav-admin">
+            <p id="nav-admin-title" class="mb-2 px-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Administration</p>
+            <ul class="space-y-2" aria-labelledby="nav-admin-title">
+                <li>
+                    <twig:NavLink href="{{ path('app_project_index') }}" icon="tabler:folders" :active="nav == 'projects'" data-test="nav-projects">Projets</twig:NavLink>
+                </li>
+                {% if is_granted('ROLE_DIRECTION') %}
+                <li>
+                    <twig:NavLink href="{{ path('app_team_index') }}" icon="tabler:users" :active="nav == 'team'" data-test="nav-team">Équipe</twig:NavLink>
+                </li>
+                <li>
+                    <twig:NavLink href="{{ path('app_holiday_index') }}" icon="tabler:calendar-off" :active="nav == 'holidays'" data-test="nav-holidays">Jours fériés</twig:NavLink>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
     </div>
 </aside>
 

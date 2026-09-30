@@ -1,0 +1,47 @@
+{
+  "version": 2,
+  "title": "Regrouper Projets, Équipe et Jours fériés dans une section Administration en bas du menu",
+  "created": "2026-09-30",
+  "updated": "2026-09-30",
+  "tags": [
+    "navigation",
+    "administration"
+  ],
+  "changelog": [
+    {
+      "date": "2026-09-30",
+      "type": "Création",
+      "description": "Pitch initial, sans ligne de backlog : menu en deux zones (Tableau de bord et Ma semaine en haut, section Administration ancrée en bas avec Projets, Équipe et Jours fériés selon le rôle), entrée de la page courante mise en évidence, page d'accueil découpée de la même façon avec un raccourci Jours fériés pour la direction ; droits inchangés."
+    },
+    {
+      "date": "2026-09-30",
+      "type": "Planification",
+      "description": "Plan technique validé : menu latéral en colonne flex (section Administration en mt-auto, blocs shrink-0), entrées factorisées dans un composant Twig anonyme NavLink, entrée active par la fonction Twig pure nav_section(app.current_route) (NavigationExtension, correspondance par préfixe de route), style actif en accent de marque avec aria-current, accueil en deux grilles avec raccourci Jours fériés ; tests unitaire, fonctionnel par rôle et par page, E2E de géométrie."
+    },
+    {
+      "date": "2026-09-30",
+      "type": "Implémentation",
+      "description": "Quatre sous-tâches du plan livrées (fonction Twig nav_section, composant NavLink et menu en deux zones avec section Administration ancrée en bas, accueil découpé avec raccourci Jours fériés, E2E de géométrie) ; 219 tests PHPUnit et 28 E2E verts ; écarts mineurs : liste du haut en mb-6 pour garder un espace quand la section suit, scénario E2E supplémentaire sur l'entrée active au fil de la navigation, fenêtres E2E en 1280 px de large."
+    },
+    {
+      "date": "2026-09-30",
+      "type": "Review",
+      "description": "Revue du diff : 0 bloquant, 0 important, 1 mineur (titre « Administration » non associé à sa liste pour les lecteurs d'écran) ; prêt à commiter."
+    },
+    {
+      "date": "2026-09-30",
+      "type": "Review",
+      "description": "Mineur corrigé : titre « Administration » associé à sa liste par aria-labelledby, vérifié dans NavigationTest ; prêt à commiter."
+    },
+    {
+      "date": "2026-09-30",
+      "type": "Report",
+      "description": "Compte rendu d'implémentation : 5/7 fichiers conformes au plan (71 %), 9/9 critères atteints, 3 écarts volontaires (marge fixe sous la liste du haut, titre Administration associé à sa liste, scénario E2E supplémentaire à 1280 px), aucune dette issue de la review ; dette ouverte : libellé Administration pour les leads et la prod, aria-label « Sidebar » en anglais."
+    },
+    {
+      "date": "2026-09-30",
+      "type": "Sync",
+      "description": "Plan réaligné sur le livré : marge fixe mb-6 sous la liste du haut, titre Administration associé à sa liste (aria-labelledby), scénario E2E sur l'entrée active et fenêtres de 1280 px, mitigation du risque de recouvrement ; pitch conforme ; aucun document projet touché (pas de manifeste, pas de ligne de backlog)."
+    }
+  ]
+}
