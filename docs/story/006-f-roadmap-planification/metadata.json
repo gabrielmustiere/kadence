@@ -52,10 +52,15 @@
       "date": "2026-09-30",
       "type": "Livraison",
       "description": "Story livrée par le commit 8891ea6 (feat(roadmap)) ; suite complète verte avant commit : 296 tests PHPUnit et 31 E2E."
+    },
+    {
+      "date": "2026-09-30",
+      "type": "Release",
+      "description": "Story publiée dans la release v0.6.0 « Planification et roadmap »."
     }
   ],
   "delivery": {
-    "release": null,
+    "release": "v0.6.0",
     "commit": "8891ea6"
   }
 }
