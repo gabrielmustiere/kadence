@@ -48,7 +48,7 @@ final class ScheduleLoaderTest extends KernelTestCase
         self::assertSame($bruno, $data->people[(int) $bruno->getId()]);
     }
 
-    public function testOverrunDayIsTheDayTheTimeEnteredWentBeyondTheEstimate(): void
+    public function testOverrunDaysAreTheLastDayWithinTheEstimateAndTheDayTheTimeEnteredWentBeyondIt(): void
     {
         $alice = $this->createUser();
         $bruno = $this->createUser();
@@ -61,7 +61,9 @@ final class ScheduleLoaderTest extends KernelTestCase
 
         $overrunDays = $this->loader()->load()->overrunDays;
 
-        self::assertSame('2026-10-06', $overrunDays[(int) $overrun->getId()]->format('Y-m-d'));
+        [$lastDayWithin, $overrunDay] = $overrunDays[(int) $overrun->getId()];
+        self::assertSame('2026-10-05', $lastDayWithin?->format('Y-m-d'));
+        self::assertSame('2026-10-06', $overrunDay->format('Y-m-d'));
         self::assertArrayNotHasKey((int) $reached->getId(), $overrunDays);
     }
 

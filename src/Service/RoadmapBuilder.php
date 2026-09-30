@@ -39,8 +39,8 @@ final readonly class RoadmapBuilder
     }
 
     /**
-     * @param array<int, true>               $overloaded
-     * @param array<int, \DateTimeImmutable> $overrunDays
+     * @param array<int, true>                                               $overloaded
+     * @param array<int, array{\DateTimeImmutable|null, \DateTimeImmutable}> $overrunDays
      */
     private function projectRow(Project $project, RoadmapWindow $window, ScheduleResult $result, array $overloaded, array $overrunDays): RoadmapRow
     {
@@ -62,8 +62,8 @@ final readonly class RoadmapBuilder
     }
 
     /**
-     * @param array<int, true>               $overloaded
-     * @param array<int, \DateTimeImmutable> $overrunDays
+     * @param array<int, true>                                               $overloaded
+     * @param array<int, array{\DateTimeImmutable|null, \DateTimeImmutable}> $overrunDays
      */
     private function splitLotRow(Lot $lot, RoadmapWindow $window, ScheduleResult $result, array $overloaded, array $overrunDays): RoadmapRow
     {
@@ -102,8 +102,8 @@ final readonly class RoadmapBuilder
     }
 
     /**
-     * @param array<int, true>               $overloaded
-     * @param array<int, \DateTimeImmutable> $overrunDays
+     * @param array<int, true>                                               $overloaded
+     * @param array<int, array{\DateTimeImmutable|null, \DateTimeImmutable}> $overrunDays
      */
     private function leafRow(Lot $leaf, RoadmapWindow $window, ScheduleResult $result, array $overloaded, array $overrunDays): RoadmapRow
     {
@@ -144,22 +144,26 @@ final readonly class RoadmapBuilder
     }
 
     /**
-     * The days entered, split on the day the estimate was gone beyond.
+     * The days entered, split between the last day entered within the estimate and the day it was gone beyond.
+     *
+     * @param array{\DateTimeImmutable|null, \DateTimeImmutable}|null $overrunDays
      *
      * @return array{RoadmapBar|null, RoadmapBar|null} within the estimate, then beyond it
      */
-    private static function realizedBars(LeafSchedule $schedule, RoadmapWindow $window, ?\DateTimeImmutable $overrunDay): array
+    private static function realizedBars(LeafSchedule $schedule, RoadmapWindow $window, ?array $overrunDays): array
     {
         $from = $schedule->realizedFrom;
         $to = $schedule->realizedTo;
         if (null === $from || null === $to) {
             return [null, null];
         }
-        if (null === $overrunDay) {
+        if (null === $overrunDays) {
             return [$window->bar($from, $to), null];
         }
 
-        return [$overrunDay > $from ? $window->bar($from, $overrunDay->modify('-1 day')) : null, $window->bar($overrunDay, $to)];
+        [$lastDayWithin, $overrunDay] = $overrunDays;
+
+        return [null === $lastDayWithin ? null : $window->bar($from, $lastDayWithin), $window->bar($overrunDay, $to)];
     }
 
     /**

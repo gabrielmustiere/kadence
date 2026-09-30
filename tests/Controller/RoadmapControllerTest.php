@@ -91,6 +91,7 @@ final class RoadmapControllerTest extends WebTestCase
         $overrun = $row->filter('[data-test="roadmap-tooltip-overrun"]');
         self::assertSame('1 j', $overrun->filter('[data-test="roadmap-overrun"]')->text());
         self::assertSame('Lun 05/10/2026 → Lun 05/10/2026', $overrun->filter('[data-test="roadmap-tooltip-period"]')->text());
+        self::assertSame('Jeu 01/10/2026 → Ven 02/10/2026', $row->filter('[data-test="roadmap-tooltip-realized"] [data-test="roadmap-tooltip-period"]')->text(), 'The time within the estimate ends on its last day entered, not on the day before the overrun.');
         self::assertCount(0, $row->filter('[data-test="roadmap-remaining"]'));
         self::assertCount(1, $row->filter('[data-test="roadmap-bar-realized"]'));
         self::assertCount(1, $row->filter('[data-test="roadmap-bar-overrun"]'));

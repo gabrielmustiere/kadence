@@ -78,7 +78,8 @@ final readonly class ScheduleLoader
     /**
      * @param array<int, LeafPlan> $plans
      *
-     * @return array<int, \DateTimeImmutable> day on which the time entered went beyond the estimate, by lot id
+     * @return array<int, array{\DateTimeImmutable|null, \DateTimeImmutable}> last day entered within the estimate, then day on
+     *                                                                        which the time entered went beyond it, by lot id
      */
     private function overrunDays(array $plans): array
     {
@@ -86,17 +87,30 @@ final readonly class ScheduleLoader
 
         $days = [];
         foreach ($this->timeEntryRepository->sumQuartersByDayForLots(array_keys($overrun)) as $lotId => $quartersByDay) {
-            $entered = 0;
-            foreach ($quartersByDay as $day => $quarters) {
-                $entered += $quarters;
-                if ($entered > $overrun[$lotId]->estimateQuarters) {
-                    $days[$lotId] = new \DateTimeImmutable($day);
-                    break;
-                }
-            }
+            $days[$lotId] = self::overrunDaysOf($overrun[$lotId], $quartersByDay);
         }
 
-        return $days;
+        return array_filter($days);
+    }
+
+    /**
+     * @param array<string, int> $quartersByDay quarters entered each day (Y-m-d, in date order)
+     *
+     * @return array{\DateTimeImmutable|null, \DateTimeImmutable}|null
+     */
+    private static function overrunDaysOf(LeafPlan $plan, array $quartersByDay): ?array
+    {
+        $entered = 0;
+        $lastDayWithin = null;
+        foreach ($quartersByDay as $day => $quarters) {
+            $entered += $quarters;
+            if ($entered > $plan->estimateQuarters) {
+                return [null === $lastDayWithin ? null : new \DateTimeImmutable($lastDayWithin), new \DateTimeImmutable($day)];
+            }
+            $lastDayWithin = $day;
+        }
+
+        return null;
     }
 
     /**
