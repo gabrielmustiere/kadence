@@ -10,6 +10,14 @@ Chaque version porte un **titre** et distingue les **évolutions fonctionnelles*
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-09-30 — Roadmap plus lisible
+
+### ✨ Fonctionnel
+- **Détails au survol** — la colonne de gauche de la roadmap ne garde que le titre et les signaux. Survoler un tronçon de la frise ouvre une bulle avec sa période exacte, la quantité saisie, restante ou dépassée rapportée à l'estimation, et l'équipe avec la part de chacun.
+- **Dépassement en pourcentage** — le badge « en dépassement » et la bulle du tronçon rouge indiquent l'écart par rapport à l'estimation (150 j saisis pour 100 j estimés : +50 %).
+- **Projets dépliés conservés** — un projet déplié le reste quand on avance, recule ou revient à aujourd'hui dans la frise.
+- **Fin du saisi exacte** — pour un lot en dépassement, la partie saisie dans l'estimation s'arrête sur son dernier jour saisi, et non plus la veille du dépassement.
+
 ## [0.6.0] - 2026-09-30 — Planification et roadmap
 
 ### ✨ Fonctionnel
@@ -92,7 +100,8 @@ Chaque version porte un **titre** et distingue les **évolutions fonctionnelles*
 - **Connexion rapide en dev** — choix d'un compte de fixtures sur la page de connexion, uniquement en environnement de développement.
 - **Nettoyage du template d'amorçage** — suppression de la page design system et de la route de test d'e-mail.
 
-[Unreleased]: https://github.com/gabrielmustiere/kadence/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/gabrielmustiere/kadence/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/gabrielmustiere/kadence/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/gabrielmustiere/kadence/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/gabrielmustiere/kadence/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/gabrielmustiere/kadence/compare/v0.3.0...v0.4.0
