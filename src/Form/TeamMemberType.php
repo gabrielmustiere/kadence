@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Form;
 
 use App\Dto\TeamMemberInput;
+use App\Enum\Type\HolidayCalendar;
 use App\Enum\Type\Role;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
@@ -39,6 +40,14 @@ final class TeamMemberType extends AbstractType
                 'expanded' => true,
                 'choice_label' => static fn (Role $role): string => $role->label(),
                 'choice_attr' => static fn (Role $role): array => ['data-test' => 'member-role-' . $role->value],
+            ])
+            ->add('holidayCalendar', EnumType::class, [
+                'class' => HolidayCalendar::class,
+                'label' => 'Jours fériés',
+                'help' => 'Le calendrier des jours fériés que suit la personne, et non sa nationalité.',
+                'expanded' => true,
+                'choice_label' => static fn (HolidayCalendar $calendar): string => $calendar->label(),
+                'choice_attr' => static fn (HolidayCalendar $calendar): array => ['data-test' => 'member-holiday-calendar-' . $calendar->value],
             ])
             ->add('weeklyMaxDays', NumberType::class, [
                 'label' => 'Maximum de saisie par semaine (jours)',

@@ -64,6 +64,23 @@ final class WeeklyMaxManagerTest extends KernelTestCase
         self::assertSame(18, $this->manager()->quartersFor($user, Week::fromIso('2026-W41')));
     }
 
+    public function testTheCapOfAWeekLeavesItsHolidaysOut(): void
+    {
+        $fullTime = $this->createUser();
+        $ninetyPercent = $this->createUser();
+        $sixtyPercent = $this->createUser();
+        $this->createWeeklyMax($ninetyPercent, '2026-09-28', 18);
+        $this->createWeeklyMax($sixtyPercent, '2026-09-28', 12);
+        $week = Week::fromIso('2026-W40');
+
+        self::assertSame(20, $this->manager()->capFor($fullTime, $week, 0));
+        self::assertSame(16, $this->manager()->capFor($fullTime, $week, 1));
+        self::assertSame(0, $this->manager()->capFor($fullTime, $week, 5));
+        self::assertSame(16, $this->manager()->capFor($ninetyPercent, $week, 1));
+        self::assertSame(12, $this->manager()->capFor($sixtyPercent, $week, 2));
+        self::assertSame(8, $this->manager()->capFor($sixtyPercent, $week, 3));
+    }
+
     private function manager(): WeeklyMaxManager
     {
         $manager = self::getContainer()->get(WeeklyMaxManager::class);

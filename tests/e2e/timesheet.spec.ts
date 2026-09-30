@@ -3,6 +3,8 @@ import { execFileSync } from 'node:child_process';
 
 // Le serveur tourne à la date réelle : on ne saisit que le lundi de la semaine en cours, toujours passé ou aujourd'hui.
 // Les données de la story sont créées et purgées en SQL (SQLite n'applique pas les clés étrangères : temps avant lots).
+// Un jour férié de la semaine réelle verrouillerait des cases : le calendrier France est neutralisé sur la semaine en
+// cours et la précédente par des retraits marqués, purgés avant et après.
 test.describe.configure({ mode: 'serial' });
 
 const project = `Saisie E2E ${Date.now().toString(36)}`;
@@ -31,7 +33,16 @@ function iso(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
+const neutralization = 'Neutralisation E2E';
+
+function neutralizeHolidays() {
+  const days = [0, 1, 2, 3, 4].flatMap((offset) => [shiftDays(previousMonday, offset), shiftDays(monday, offset)]);
+  const values = days.map((day) => `('fr', '${iso(day)}', 'removed', '${neutralization}')`).join(', ');
+  sql(`INSERT OR IGNORE INTO holiday_adjustment (calendar, day, type, label) VALUES ${values}`);
+}
+
 function purge() {
+  sql(`DELETE FROM holiday_adjustment WHERE label = '${neutralization}'`);
   const lots = `SELECT l.id FROM lot l JOIN project p ON p.id = l.project_id WHERE p.title LIKE 'Saisie E2E %'`;
   sql(`DELETE FROM time_entry WHERE lot_id IN (${lots})`);
   sql(`DELETE FROM lot WHERE project_id IN (SELECT id FROM project WHERE title LIKE 'Saisie E2E %')`);
@@ -41,6 +52,7 @@ function purge() {
 
 test.beforeAll(() => {
   purge();
+  neutralizeHolidays();
   sql(`DELETE FROM time_entry WHERE user_id = (SELECT id FROM "user" WHERE email = 'prod@example.com') AND day >= '${iso(monday)}'`);
   sql(`INSERT INTO project (title) VALUES ('${project}')`);
   for (const [title, days] of [['Alpha', 5], ['Bêta', 3], ['Gamma', 2]] as const) {

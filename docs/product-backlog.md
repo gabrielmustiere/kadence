@@ -2,7 +2,7 @@
 
 > Carte des capacités fonctionnelles et backlog priorisé dérivé de `docs/vision.md`.
 
-_Document vivant — enrichi/édité au fil du cycle de vie, refondu lors d'un pivot. Date de dernière mise à jour : 2026-09-29._
+_Document vivant — enrichi/édité au fil du cycle de vie, refondu lors d'un pivot. Date de dernière mise à jour : 2026-09-30._
 
 ## Changelog
 
@@ -13,6 +13,7 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
 | 2026-09-28 | Création | — | Backlog initial dérivé de la vision |
 | 2026-09-29 | Éditer | D2, D4, C1.2, C2.1–C2.5, C3.1, C3.2, C4.4, C5.1–C5.4, C6.2, P1, P2, P7, règles transverses, 8 lignes de backlog | Découpage projet → lot → sous-lot cadré par la story 002 (principe 3 de la vision réécrit) ; estimation révisable après saisie ; réactivation livrée par la story 001 |
 | 2026-09-29 | Éditer | C3.1, C4.1, P1, règle transverse « saisie », ligne `saisie-quotidienne` | Sync post-livraison de la story 003-f-saisie-quotidienne : saisie au quart de journée ; maximum de saisie hebdomadaire historisé avancé depuis C4.1 |
+| 2026-09-30 | Éditer | C4.3, convention transverse « jours fériés », notes `rappel-saisie` et `capacite-equipe` | Sync post-livraison de la story 004-f-jours-feries : jours fériés France et Belgique posés (calendrier par personne, ajustements de la direction, saisie verrouillée) ; restent les fermetures |
 
 ## Domaines fonctionnels
 
@@ -55,7 +56,7 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
 
 - **C4.1** — La direction peut définir le temps de travail de chaque personne (temps plein, temps partiel, jours travaillés). Le maximum de saisie hebdomadaire de chaque personne, historisé par semaine d'effet, est posé par `saisie-quotidienne` ; reste le temps de travail détaillé (jours travaillés, répartition du temps partiel sur la semaine).
 - **C4.2** — Une personne peut déclarer ses absences (congés, maladie).
-- **C4.3** — La direction peut déclarer les jours fériés et les fermetures.
+- **C4.3** — La direction peut déclarer les jours fériés et les fermetures. Les jours fériés sont posés par la story `004-f-jours-feries` : calendriers légaux France et Belgique calculés, calendrier de chaque personne, jours ajoutés ou retirés par la direction ; restent les fermetures.
 - **C4.4** — Un lead peut affecter une part de la capacité d'une personne à une feuille sur une période (pour planifier la charge et projeter les dates).
 
 ### D5 — Suivi de consommation
@@ -168,6 +169,7 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
 
 - Estimations en **jours** ; saisie en **quarts de journée**.
 - Semaine de travail du lundi au vendredi ; fuseau Europe/Paris.
+- Jours fériés : chaque personne suit le calendrier France ou Belgique ; un jour férié de son calendrier n'est pas saisissable, et le maximum de sa semaine ne dépasse pas ses jours non fériés.
 - Interface en français uniquement.
 
 ## Backlog priorisé
@@ -201,7 +203,7 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
 ### V2 — Court terme post-lancement (planifier, rendre la roadmap lisible) · `0/7 livrées`
 
 - [ ] `capacite-equipe` — Permettre de déclarer temps de travail, temps partiels, absences, jours fériés et fermetures, pour connaître la capacité réelle.
-  - Pas encore cadrée
+  - Story `004-f-jours-feries` · **clôture en cours**
   - C4.1, C4.2, C4.3 · P6 · dép. `acces-roles` · Vision : irritant « planning intenable », horizon 6 mois
 - [ ] `affectation-sous-projets` — Permettre à un lead d'affecter une part de la capacité d'une personne à une feuille (lot ou sous-lot) sur une période.
   - Pas encore cadrée
@@ -258,7 +260,8 @@ _(dérivé — recalculé à chaque passe, ne pas maintenir à la main)_
 ## Notes pour `/feature-pitch`
 
 - `saisie-quotidienne` : le « moins d'une minute » est un critère d'acceptation à rendre mesurable ; penser à la saisie d'une journée passée (C3.3) sans alourdir le cas nominal. Web responsive (anti-objectif : pas d'app mobile native). La saisie se fait sur les feuilles : le découpage en sous-lots allonge la liste (principe 1 sous tension). Appliquer le gel puis la révision bornée de l'estimation, le blocage des suppressions dès qu'un temps est saisi, et trancher le sort des temps d'un lot qui reçoit son premier sous-lot (questions ouvertes de la story 002).
-- `rappel-saisie` : canal du rappel à définir (e-mail, notification…) sans intégration externe au départ ; le taux affiché doit rester global (principe 2).
+- `rappel-saisie` : canal du rappel à définir (e-mail, notification…) sans intégration externe au départ ; le taux affiché doit rester global (principe 2). Les jours ouvrés d'une personne excluent les jours fériés de son calendrier (story 004) : ne pas rappeler ni compter un jour férié.
+- `capacite-equipe` : les jours fériés sont livrés par la story 004 ; restent le temps de travail détaillé, les absences et les fermetures. Les ajustements de jours fériés ne servent pas aux fermetures (hors scope de la story 004). La livraison de la story 004 cochera la ligne : la découper si l'avancement doit rester exact.
 - `jalons-dates-annoncees` : distinguer clairement période prévue et date annoncée ; la première date annoncée fait foi pour la North Star. Le jalon est porté par une feuille.
 - `alerte-derive` : définir le « rythme prévu » (estimation étalée sur la période prévue ?) et le seuil d'alerte ; l'efficacité de l'alerte est exactement ce que teste H2. L'estimation étant révisable après saisie, trancher si le rythme se calcule sur l'estimation initiale ou révisée.
 - `acces-roles` : → tranché et livré (v0.1.0) : comptes e-mail / mot de passe gérés dans Kadence, sans SSO.

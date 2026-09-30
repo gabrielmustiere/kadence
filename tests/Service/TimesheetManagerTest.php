@@ -7,6 +7,7 @@ namespace App\Tests\Service;
 use App\Entity\Lot;
 use App\Entity\TimeEntry;
 use App\Entity\User;
+use App\Enum\Type\HolidayCalendar;
 use App\Exception\TimeEntryRefusedException;
 use App\Repository\TimeEntryRepository;
 use App\Service\TimesheetManager;
@@ -98,6 +99,42 @@ final class TimesheetManagerTest extends KernelTestCase
         $this->manager()->record($user, $lot, new \DateTimeImmutable('2026-09-28'), 4);
     }
 
+    public function testNothingIsRecordedOnAHolidayOfThePersonsCalendar(): void
+    {
+        $french = $this->createUser();
+        $belgian = $this->createUser(holidayCalendar: HolidayCalendar::Belgium);
+        $lot = $this->createLot($this->createProject());
+        $this->createTimeEntry($french, $lot, '2026-07-14', 2);
+
+        foreach ([1, 0] as $quarters) {
+            try {
+                $this->manager()->record($french, $lot, new \DateTimeImmutable('2026-07-14'), $quarters);
+                self::fail('A holiday is never recorded on.');
+            } catch (TimeEntryRefusedException $exception) {
+                self::assertSame('Le 14/07 est férié (Fête nationale) : on n\'y saisit pas de temps.', $exception->getMessage());
+            }
+        }
+        self::assertSame([2], $this->quartersOf($french, '2026-07-13', '2026-07-17'));
+
+        $this->manager()->record($belgian, $lot, new \DateTimeImmutable('2026-07-14'), 4);
+        self::assertSame([4], $this->quartersOf($belgian, '2026-07-13', '2026-07-17'));
+    }
+
+    public function testTheWeeklyMaximumLeavesHolidaysOut(): void
+    {
+        $user = $this->createUser();
+        $lot = $this->createLot($this->createProject());
+        $this->createTimeEntry($user, $lot, '2026-07-14', 2);
+        foreach (['2026-07-13', '2026-07-15', '2026-07-16'] as $day) {
+            $this->createTimeEntry($user, $lot, $day, 4);
+        }
+
+        $this->expectException(TimeEntryRefusedException::class);
+        $this->expectExceptionMessage('Il ne reste que 0,5 j à saisir cette semaine (maximum 4 j).');
+
+        $this->manager()->record($user, $lot, new \DateTimeImmutable('2026-07-17'), 4);
+    }
+
     #[DataProvider('refusedCellProvider')]
     public function testRefusedCells(string $day, int $quarters, bool $splitLot, string $message): void
     {
@@ -154,11 +191,11 @@ final class TimesheetManagerTest extends KernelTestCase
     /**
      * @return list<int>
      */
-    private function quartersOf(User $user): array
+    private function quartersOf(User $user, string $from = '2026-09-01', string $to = '2026-10-31'): array
     {
         $repository = self::getContainer()->get(TimeEntryRepository::class);
         \assert($repository instanceof TimeEntryRepository);
-        $entries = $repository->findForUserBetween($user, new \DateTimeImmutable('2026-09-01'), new \DateTimeImmutable('2026-10-31'));
+        $entries = $repository->findForUserBetween($user, new \DateTimeImmutable($from), new \DateTimeImmutable($to));
         usort($entries, static fn (TimeEntry $a, TimeEntry $b): int => $a->getId() <=> $b->getId());
 
         return array_map(static fn (TimeEntry $entry): int => $entry->getQuarters(), $entries);

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Dto;
 
 use App\Entity\User;
+use App\Enum\Type\HolidayCalendar;
 use App\Enum\Type\Role;
 use App\Model\Week;
 use App\Validator\UniqueTeamEmail;
@@ -30,6 +31,9 @@ final class TeamMemberInput
 
     #[Assert\NotNull]
     public ?Role $role = Role::Prod;
+
+    #[Assert\NotNull]
+    public ?HolidayCalendar $holidayCalendar = HolidayCalendar::France;
 
     #[Assert\NotNull]
     #[Assert\Range(min: 0.25, max: 5)]
@@ -58,6 +62,7 @@ final class TeamMemberInput
         $input->lastName = $user->getLastName();
         $input->email = $user->getEmail();
         $input->role = $user->getRole();
+        $input->holidayCalendar = $user->getHolidayCalendar();
         $input->weeklyMaxDays = $weeklyMaxQuarters / 4;
         $input->weeklyMaxFrom = $currentWeek->monday;
 

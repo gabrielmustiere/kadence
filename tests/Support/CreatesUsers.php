@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace App\Tests\Support;
 
 use App\Entity\User;
+use App\Enum\Type\HolidayCalendar;
 use App\Enum\Type\Role;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 trait CreatesUsers
 {
-    private function createUser(Role $role = Role::Prod, string $password = 'password', bool $mustChangePassword = false): User
+    private function createUser(Role $role = Role::Prod, string $password = 'password', bool $mustChangePassword = false, HolidayCalendar $holidayCalendar = HolidayCalendar::France): User
     {
         $container = static::getContainer();
         $hasher = $container->get(UserPasswordHasherInterface::class);
@@ -22,6 +23,7 @@ trait CreatesUsers
             ->setFirstName('Test')
             ->setLastName('User')
             ->setRole($role)
+            ->setHolidayCalendar($holidayCalendar)
             ->setMustChangePassword($mustChangePassword);
         $user->setPassword($hasher->hashPassword($user, $password));
 

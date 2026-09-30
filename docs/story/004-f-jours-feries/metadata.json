@@ -1,0 +1,52 @@
+{
+  "version": 2,
+  "title": "Verrouiller la saisie des jours fériés selon le calendrier français ou belge de chacun",
+  "created": "2026-09-30",
+  "updated": "2026-09-30",
+  "tags": [
+    "jours-feries"
+  ],
+  "backlog": "capacite-equipe",
+  "changelog": [
+    {
+      "date": "2026-09-30",
+      "type": "Création",
+      "description": "Pitch initial rattaché à la ligne capacite-equipe (partie jours fériés de C4.3) : calendriers France et Belgique calculés et ajustables par la direction (ajout avec libellé, retrait d'un jour légal), rattachement de chaque personne sur la fiche Équipe (France par défaut, sans historique), verrou absolu de la saisie les jours fériés, maximum de la semaine plafonné aux jours non fériés, page « Jours fériés » réservée à la direction."
+    },
+    {
+      "date": "2026-09-30",
+      "type": "Planification",
+      "description": "Plan technique validé : jours légaux calculés à la volée (LegalHolidays, easter_days() avec ext-calendar déclarée), ajustements persistés dans HolidayAdjustment (unique par calendrier et jour), User.holidayCalendar (défaut fr), HolidayManager comme porte d'entrée unique, verrou absolu et plafond de semaine via WeeklyMaxManager::capFor(), colonne fériée sans barre, page /jours-feries réservée à la direction avec contrainte AddableHoliday, fixtures belges et neutralisation des jours fériés dans les E2E existants."
+    },
+    {
+      "date": "2026-09-30",
+      "type": "ADR",
+      "description": "ADR-0002 gravé (accepted) : jours légaux calculés à la volée par un service maison (easter_days(), ext-calendar), écarts stockés comme ajustements par calendrier et par jour ; Yasumi, table matérialisée par année et liste déclarée annuellement écartées."
+    },
+    {
+      "date": "2026-09-30",
+      "type": "Implémentation",
+      "description": "Huit sous-tâches du plan livrées (calendriers légaux et ext-calendar, modèle et migration, HolidayManager, verrou et plafond dans la grille, calendrier sur la fiche Équipe, page /jours-feries, fixtures belges, E2E avec neutralisation) ; 199 tests PHPUnit et 24 E2E verts ; écarts : formulaire et DTO renommés HolidayAdditionType / HolidayAdditionInput (collision avec l'enum HolidayAdjustmentType), retrait sur POST /jours-feries/retirer sans année, HolidayManager::adjustmentAt() pour le validateur, purge des ajustements de test par le trait PurgesHolidayAdjustments, colonne fériée en bg-neutral-tertiary, WeekGrid inchangé."
+    },
+    {
+      "date": "2026-09-30",
+      "type": "Review",
+      "description": "Revue du diff : 0 bloquant, 0 important, 4 mineurs (année hors 1000–9999 en erreur 500 sur la page Jours fériés, TimesheetDay::isHoliday() inutilisée, test du calendrier par défaut qui ne teste que le helper, docblock des fixtures mal recoupé) ; prêt à commiter."
+    },
+    {
+      "date": "2026-09-30",
+      "type": "Review",
+      "description": "Les 4 mineurs de la revue corrigés (contrainte de route [1-9]\\d{3} et navigation d'année bornée avec test, isHoliday() retirée, test du helper retiré, docblock des fixtures recoupé) ; 199 tests PHPUnit et 6 E2E des jours fériés verts ; prêt à commiter."
+    },
+    {
+      "date": "2026-09-30",
+      "type": "Report",
+      "description": "Compte rendu d'implémentation : 35/41 fichiers conformes au plan (85 %), 15/15 critères atteints, 8 écarts volontaires documentés (renommages HolidayAdditionType/HolidayAdditionInput, route de retrait sans année, bornes d'année, isHoliday() retirée, WeekGrid inchangé, jeton bg-neutral-tertiary, adjustmentAt(), purge des ajustements de test), aucune dette issue de la review ; dette ouverte : temps saisis sur un jour qui devient férié et ext-calendar en production."
+    },
+    {
+      "date": "2026-09-30",
+      "type": "Sync",
+      "description": "Doc réalignée sur le livré : plan mis à jour (HolidayAdditionType / HolidayAdditionInput, route de retrait sans année, années 1000–9999, adjustmentAt(), jeton neutral-tertiary, WeekGrid et isHoliday() retirés du périmètre, trait PurgesHolidayAdjustments et CreatesUsers ajoutés, convention de test et risque associé) ; pitch conforme ; stack.md enrichi (extensions PHP, ext-calendar en production) ; backlog : C4.3 annotée, convention transverse « jours fériés », notes rappel-saisie et capacite-equipe, ligne capacite-equipe en clôture."
+    }
+  ]
+}

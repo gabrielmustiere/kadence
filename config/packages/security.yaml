@@ -45,6 +45,7 @@ security:
     access_control:
         - { path: ^/login, roles: PUBLIC_ACCESS }
         - { path: ^/equipe, roles: ROLE_DIRECTION }
+        - { path: ^/jours-feries, roles: ROLE_DIRECTION }
         - { path: ^/, roles: ROLE_USER }
         # - { path: ^/profile, roles: ROLE_USER }
 

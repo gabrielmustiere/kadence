@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Controller;
 
 use App\Entity\User;
+use App\Enum\Type\HolidayCalendar;
 use App\Enum\Type\Role;
 use App\Repository\UserRepository;
 use App\Repository\WeeklyMaxRepository;
@@ -88,6 +89,7 @@ final class TeamControllerTest extends WebTestCase
         self::assertTrue($client->getResponse()->headers->hasCacheControlDirective('no-store'));
         self::assertTrue($this->passwordHasher()->isPasswordValid($user, $temporaryPassword));
         self::assertSame(Role::Lead, $user->getRole());
+        self::assertSame(HolidayCalendar::France, $user->getHolidayCalendar());
         self::assertTrue($user->mustChangePassword());
 
         $client->request('GET', '/equipe/' . $user->getId() . '/mot-de-passe-provisoire');
@@ -128,6 +130,20 @@ final class TeamControllerTest extends WebTestCase
         self::assertSame($newEmail, $member->getEmail());
         self::assertSame(Role::Lead, $member->getRole());
         self::assertTrue($this->passwordHasher()->isPasswordValid($member, 'password'));
+    }
+
+    public function testEditAttachesTheMemberToTheBelgianCalendar(): void
+    {
+        $client = $this->directorClient();
+        $member = $this->createUser();
+
+        $crawler = $client->request('GET', '/equipe/' . $member->getId() . '/modifier');
+        self::assertSame('fr', $crawler->filter('[data-test^="member-holiday-calendar-"]:checked')->attr('value'));
+
+        $this->submitMemberForm($client, '/equipe/' . $member->getId() . '/modifier', ['holidayCalendar' => 'be']);
+
+        self::assertResponseRedirects('/equipe');
+        self::assertSame(HolidayCalendar::Belgium, $this->reloadUser($member)->getHolidayCalendar());
     }
 
     public function testEditKeepingOwnEmailIsValid(): void

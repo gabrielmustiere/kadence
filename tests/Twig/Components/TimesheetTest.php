@@ -179,9 +179,27 @@ final class TimesheetTest extends KernelTestCase
         $this->component($user)->call('record', ['lot' => $lot->getId(), 'day' => '2026-09-21', 'quarters' => 1]);
     }
 
-    private function component(User $user): TestLiveComponent
+    public function testAHolidayColumnHasNoNotchAndRecordingOnItShowsTheRefusal(): void
     {
-        return $this->createLiveComponent('Timesheet', ['week' => '2026-W40'])->actingAs($user);
+        $user = $this->createUser();
+        $lot = $this->createLot($this->createProject());
+        $this->createTimeEntry($user, $lot, '2026-07-13', 4);
+        $component = $this->component($user, '2026-W29');
+
+        $crawler = $component->render()->crawler();
+        self::assertSame('Férié · Fête nationale', $crawler->filter('[data-test="day-header"][data-day="2026-07-14"] [data-test="day-holiday"]')->text());
+        self::assertCount(0, $crawler->filter('[data-test="timesheet-cell"][data-day="2026-07-14"] [data-test="quarter"]'));
+        self::assertSame('1 j / 4 j', $crawler->filter('[data-test="week-total"]')->text());
+
+        $component->call('record', ['lot' => $lot->getId(), 'day' => '2026-07-14', 'quarters' => 1]);
+
+        self::assertSame('Le 14/07 est férié (Fête nationale) : on n\'y saisit pas de temps.', $component->render()->crawler()->filter('[data-test="timesheet-error"]')->text());
+        self::assertSame([4], $this->quartersOf($user, '2026-07-13', '2026-07-17'));
+    }
+
+    private function component(User $user, string $week = '2026-W40'): TestLiveComponent
+    {
+        return $this->createLiveComponent('Timesheet', ['week' => $week])->actingAs($user);
     }
 
     private function selectedTab(TestLiveComponent $component): ?string
@@ -192,11 +210,11 @@ final class TimesheetTest extends KernelTestCase
     /**
      * @return list<int>
      */
-    private function quartersOf(User $user): array
+    private function quartersOf(User $user, string $from = '2026-09-28', string $to = '2026-10-02'): array
     {
         $repository = self::getContainer()->get(TimeEntryRepository::class);
         \assert($repository instanceof TimeEntryRepository);
-        $entries = $repository->findForUserBetween($user, new \DateTimeImmutable('2026-09-28'), new \DateTimeImmutable('2026-10-02'));
+        $entries = $repository->findForUserBetween($user, new \DateTimeImmutable($from), new \DateTimeImmutable($to));
         usort($entries, static fn (TimeEntry $a, TimeEntry $b): int => $a->getDay() <=> $b->getDay());
 
         return array_map(static fn (TimeEntry $entry): int => $entry->getQuarters(), $entries);

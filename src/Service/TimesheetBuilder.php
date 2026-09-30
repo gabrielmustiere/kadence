@@ -23,6 +23,7 @@ final readonly class TimesheetBuilder
         private TimeEntryRepository $timeEntryRepository,
         private LotRepository $lotRepository,
         private WeeklyMaxManager $weeklyMaxManager,
+        private HolidayManager $holidayManager,
         private ClockInterface $clock,
     ) {
     }
@@ -51,14 +52,17 @@ final readonly class TimesheetBuilder
         $lots = array_values($lots);
         usort($lots, LeafOrder::compare(...));
 
-        return $this->compose($week, $lots, $quarters, $this->weeklyMaxManager->quartersFor($user, $week));
+        $holidays = $this->holidayManager->holidaysOf($user, $week);
+
+        return $this->compose($week, $lots, $quarters, $holidays, $this->weeklyMaxManager->capFor($user, $week, \count($holidays)));
     }
 
     /**
      * @param list<Lot>                            $lots
      * @param array<int, array<string, int<1, 4>>> $quarters quarters by lot id, then by day
+     * @param array<string, non-empty-string>      $holidays holiday labels by day
      */
-    private function compose(Week $week, array $lots, array $quarters, int $maxQuarters): WeekGrid
+    private function compose(Week $week, array $lots, array $quarters, array $holidays, int $maxQuarters): WeekGrid
     {
         $today = $this->clock->now()->format('Y-m-d');
         $dayQuarters = [];
@@ -76,7 +80,7 @@ final readonly class TimesheetBuilder
                     $dayQuarters[$day->format('Y-m-d')],
                     $weekQuarters,
                     $maxQuarters,
-                    $day->format('Y-m-d') > $today,
+                    $day->format('Y-m-d') > $today || isset($holidays[$day->format('Y-m-d')]),
                 ),
                 $week->days(),
             )),
@@ -88,7 +92,8 @@ final readonly class TimesheetBuilder
                 $day,
                 $dayQuarters[$day->format('Y-m-d')],
                 $day->format('Y-m-d') === $today,
-                $day->format('Y-m-d') < $today && $weekQuarters < $maxQuarters && $dayQuarters[$day->format('Y-m-d')] < Quarters::PER_DAY,
+                $day->format('Y-m-d') < $today && $weekQuarters < $maxQuarters && $dayQuarters[$day->format('Y-m-d')] < Quarters::PER_DAY && !isset($holidays[$day->format('Y-m-d')]),
+                $holidays[$day->format('Y-m-d')] ?? null,
             ),
             $week->days(),
         );
@@ -99,11 +104,11 @@ final readonly class TimesheetBuilder
     /**
      * @param int<0, 4> $quarters
      */
-    private function cell(\DateTimeImmutable $day, int $quarters, int $dayQuarters, int $weekQuarters, int $maxQuarters, bool $future): TimesheetCell
+    private function cell(\DateTimeImmutable $day, int $quarters, int $dayQuarters, int $weekQuarters, int $maxQuarters, bool $locked): TimesheetCell
     {
         $allowed = min(Quarters::PER_DAY - ($dayQuarters - $quarters), $maxQuarters - ($weekQuarters - $quarters));
 
-        return new TimesheetCell($day, $quarters, max($quarters, min(Quarters::PER_DAY, max(0, $allowed))), $future);
+        return new TimesheetCell($day, $quarters, max($quarters, min(Quarters::PER_DAY, max(0, $allowed))), $locked);
     }
 
     private static function id(Lot $lot): int

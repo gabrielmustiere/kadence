@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Enum\Type\HolidayCalendar;
 use App\Enum\Type\Role;
 use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
@@ -33,6 +34,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(length: 20, enumType: Role::class)]
     private Role $role = Role::Prod;
+
+    #[ORM\Column(name: 'holiday_calendar', length: 2, enumType: HolidayCalendar::class, options: ['default' => 'fr'])]
+    private HolidayCalendar $holidayCalendar = HolidayCalendar::France;
 
     #[ORM\Column]
     private bool $active = true;
@@ -95,6 +99,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setRole(Role $role): static
     {
         $this->role = $role;
+
+        return $this;
+    }
+
+    public function getHolidayCalendar(): HolidayCalendar
+    {
+        return $this->holidayCalendar;
+    }
+
+    public function setHolidayCalendar(HolidayCalendar $holidayCalendar): static
+    {
+        $this->holidayCalendar = $holidayCalendar;
 
         return $this;
     }

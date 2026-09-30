@@ -1,6 +1,6 @@
 # Stack technique — Kadence
 
-> Dernière mise à jour : 2026-09-29 — cartographie factuelle de la stack. Chaque entrée est prouvée par un fichier du dépôt (source entre parenthèses) ou marquée _non renseigné_.
+> Dernière mise à jour : 2026-09-30 — cartographie factuelle de la stack. Chaque entrée est prouvée par un fichier du dépôt (source entre parenthèses) ou marquée _non renseigné_.
 
 ## Vue d'ensemble
 
@@ -19,6 +19,7 @@ Monolithe Symfony 8.1 en PHP 8.5, rendu serveur Twig + Symfony UX (Stimulus, Tur
 
 - **PHP** `>=8.5` (contrainte), version épinglée `8.5` — source : `composer.json`, `.php-version`
 - **Configuration PHP locale** : `date.timezone = Europe/Paris`, `memory_limit = 1024M` — source : `php.ini`
+- **Extensions PHP requises** : `ext-calendar` (fêtes mobiles des jours fériés via `easter_days()`, ADR-0002), `ext-ctype`, `ext-iconv` — source : `composer.json`
 - **Node.js** : utilisé uniquement pour l'outillage (Playwright) ; aucune version épinglée (`package.json`, pas de `.nvmrc`)
 
 ## Backend
@@ -81,9 +82,11 @@ Monolithe Symfony 8.1 en PHP 8.5, rendu serveur Twig + Symfony UX (Stimulus, Tur
 - **SQLite : clés étrangères non appliquées, `LOWER()` limité à l'ASCII** : aucune activation des clés étrangères dans la configuration Doctrine, donc les contraintes déclarées par les migrations ne sont pas vérifiées et les suppressions en cascade passent par l'ORM (`cascade: ['remove']`) ; les comparaisons insensibles à la casse se font en PHP (`config/packages/doctrine.yaml`, `src/Entity/Lot.php`, `src/Validator/TitleComparison.php`). À reprendre avec le choix de la base de production.
 - **Mailpit en `:latest`** : image non épinglée (dev uniquement).
 - **Pas de CI** : la QA repose sur la discipline locale.
+- **`ext-calendar` requise en production** : les jours fériés en dépendent ; l'hébergement devra la fournir, sans quoi `composer install` échoue (`composer.json`, `docs/adr/0002-jours-feries-calcules-et-ajustements.md`).
 
 ## Changelog
 
 - 2026-09-28 — Création — amorcé depuis gabrielmustiere/symfony-template
 - 2026-09-28 — Éditer — Backend (authentification) — sync post-livraison de la story 001-f-acces-roles
 - 2026-09-29 — Enrichir — Contraintes & dette (SQLite : clés étrangères, LOWER) — sync post-livraison de la story 002-f-projets-lots-sous-lots
+- 2026-09-30 — Enrichir — Langages & runtimes (extensions PHP requises), Contraintes & dette (`ext-calendar` en production) — sync post-livraison de la story 004-f-jours-feries

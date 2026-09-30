@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 namespace DataFixtures;
 
+use App\Entity\HolidayAdjustment;
 use App\Entity\Lot;
 use App\Entity\Project;
 use App\Entity\TimeEntry;
 use App\Entity\User;
 use App\Entity\WeeklyMax;
+use App\Enum\Type\HolidayCalendar;
 use App\Enum\Type\Role;
 use App\Model\Week;
+use App\Service\HolidayManager;
+use App\Service\LegalHolidays;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
@@ -22,14 +26,18 @@ use function Symfony\Component\String\u;
 
 /**
  * A fake software company for the dev environment: four projects split into lots and sub-lots, a team with part-time
- * people, and six months of time entries up to yesterday. Test accounts get no entry in the current week, so that the
- * end-to-end scenarios find it empty. Deterministic: the same seed always gives the same company, relative to today.
+ * people and two people on the Belgian holiday calendar, and six months of time entries up to yesterday, none on a
+ * holiday. Test accounts get no entry in the current week, so that the end-to-end scenarios find it empty.
+ * Deterministic: the same seed always gives the same company, relative to today.
  */
 #[When(env: 'dev')]
 final class DemoCompanyFixtures extends Fixture implements DependentFixtureInterface
 {
     private const int WEEKS = 26;
     private const int SEED = 2026;
+
+    /** People on the Belgian holiday calendar. */
+    private const array BELGIANS = ['hugo', 'ines'];
 
     /** Leaves left « à estimer » although time is entered on them. */
     private const array TO_ESTIMATE = ['Notifications'];
@@ -111,6 +119,8 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
     public function __construct(
         private readonly UserPasswordHasherInterface $passwordHasher,
         private readonly ClockInterface $clock,
+        private readonly LegalHolidays $legalHolidays,
+        private readonly HolidayManager $holidayManager,
     ) {
     }
 
@@ -125,6 +135,7 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
 
         $this->loadPeople($manager, $firstWeek);
         $this->loadProjects($manager);
+        $this->loadReplacementDays($manager, $firstWeek, $today);
         $manager->flush();
 
         $support = $this->getReference(ProjectFixtures::SUPPORT, Lot::class);
@@ -145,7 +156,8 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
         foreach (self::people() as $key => [$firstName, $lastName, $role, , $quarters, , , $change]) {
             $email = \sprintf('%s.%s@example.com', $key, u($lastName)->ascii()->lower()->toString());
             /** @var non-empty-string $email */
-            $user = new User()->setEmail($email)->setFirstName($firstName)->setLastName($lastName)->setRole($role);
+            $user = new User()->setEmail($email)->setFirstName($firstName)->setLastName($lastName)->setRole($role)
+                ->setHolidayCalendar(\in_array($key, self::BELGIANS, true) ? HolidayCalendar::Belgium : HolidayCalendar::France);
             $user->setPassword($this->passwordHasher->hashPassword($user, 'password'));
             $manager->persist($user);
             $this->people[$key] = $user;
@@ -160,6 +172,30 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
 
         $this->people['louis'] = $this->getReference(AppFixtures::LEAD, User::class);
         $this->people['paula'] = $this->getReference(AppFixtures::PROD, User::class);
+    }
+
+    /**
+     * A Belgian legal holiday falling on a weekend is replaced by the next working day that is not a holiday.
+     */
+    private function loadReplacementDays(ObjectManager $manager, Week $firstWeek, \DateTimeImmutable $today): void
+    {
+        $legalHolidays = [];
+        for ($year = (int) $firstWeek->monday->format('Y'); $year <= (int) $today->format('Y'); ++$year) {
+            $legalHolidays += $this->legalHolidays->forYear(HolidayCalendar::Belgium, $year);
+        }
+
+        foreach (array_keys($legalHolidays) as $day) {
+            $holiday = new \DateTimeImmutable($day);
+            if ($holiday < $firstWeek->monday || $holiday >= $today || (int) $holiday->format('N') < 6) {
+                continue;
+            }
+
+            $replacement = $holiday->modify('next monday');
+            while (isset($legalHolidays[$replacement->format('Y-m-d')])) {
+                $replacement = $replacement->modify('+1 weekday');
+            }
+            $manager->persist(HolidayAdjustment::added(HolidayCalendar::Belgium, $replacement, \sprintf('Remplacement du %s', $holiday->format('d/m'))));
+        }
     }
 
     private function loadProjects(ObjectManager $manager): void
@@ -231,9 +267,13 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
 
             $weeklyQuarters = null !== $change && $weekIndex >= $change[1] ? $change[0] : $quarters;
             $leaves = $this->activeLeaves($team, $weekIndex);
+            $publicHolidays = $this->holidayManager->holidaysOf($person, $week);
             foreach ($week->days() as $day) {
                 if ($day >= $today) {
                     break;
+                }
+                if (isset($publicHolidays[$day->format('Y-m-d')])) {
+                    continue;
                 }
 
                 $capacity = $this->dayCapacity((int) $day->format('N'), $weeklyQuarters, $dayOff);

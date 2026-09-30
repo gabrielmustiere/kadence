@@ -8,11 +8,15 @@ use App\Model\Quarters;
 
 final readonly class TimesheetDay
 {
+    /**
+     * @param non-empty-string|null $holiday the label of the holiday falling on this day
+     */
     public function __construct(
         public \DateTimeImmutable $date,
         public int $quarters,
         public bool $today,
         public bool $forgotten,
+        public ?string $holiday,
     ) {
     }
 

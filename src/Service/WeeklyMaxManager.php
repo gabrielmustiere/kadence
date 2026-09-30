@@ -6,6 +6,7 @@ namespace App\Service;
 
 use App\Entity\User;
 use App\Entity\WeeklyMax;
+use App\Model\Quarters;
 use App\Model\Week;
 use App\Repository\WeeklyMaxRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -30,6 +31,16 @@ final readonly class WeeklyMaxManager
         }
 
         return $this->weeklyMaxRepository->findInEffectAt($user, $week->monday)?->getQuarters() ?? self::DEFAULT_QUARTERS;
+    }
+
+    /**
+     * The maximum of the week once its holidays are left out: never more than a full day per day that is not a holiday.
+     *
+     * @return int<0, 20>
+     */
+    public function capFor(User $user, Week $week, int $holidayCount): int
+    {
+        return max(0, min($this->quartersFor($user, $week), Quarters::PER_DAY * (5 - $holidayCount)));
     }
 
     /**

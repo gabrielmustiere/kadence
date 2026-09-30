@@ -20,13 +20,15 @@ final readonly class TimesheetManager
         private EntityManagerInterface $entityManager,
         private TimeEntryRepository $timeEntryRepository,
         private WeeklyMaxManager $weeklyMaxManager,
+        private HolidayManager $holidayManager,
         private ClockInterface $clock,
     ) {
     }
 
     /**
      * Sets the cell of the user on this leaf and day; 0 empties it. Lowering a cell is always accepted, even on a
-     * week above a weekly maximum lowered since, so that it can still be corrected.
+     * week above a weekly maximum lowered since, so that it can still be corrected, except on a holiday: nothing is
+     * ever recorded on one.
      *
      * @throws TimeEntryRefusedException
      */
@@ -36,6 +38,12 @@ final readonly class TimesheetManager
         $this->assertRecordable($lot, $day, $quarters);
 
         $week = Week::containing($day);
+        $holidays = $this->holidayManager->holidaysOf($user, $week);
+        $holiday = $holidays[$day->format('Y-m-d')] ?? null;
+        if (null !== $holiday) {
+            throw TimeEntryRefusedException::holiday($day, $holiday);
+        }
+
         [$entry, $otherQuartersOfDay, $otherQuartersOfWeek] = $this->splitWeek($user, $lot, $day, $week);
 
         if ($quarters > ($entry?->getQuarters() ?? 0)) {
@@ -43,7 +51,7 @@ final readonly class TimesheetManager
                 throw TimeEntryRefusedException::dayFull($day, Quarters::PER_DAY - $otherQuartersOfDay);
             }
 
-            $maxQuarters = $this->weeklyMaxManager->quartersFor($user, $week);
+            $maxQuarters = $this->weeklyMaxManager->capFor($user, $week, \count($holidays));
             if ($otherQuartersOfWeek + $quarters > $maxQuarters) {
                 throw TimeEntryRefusedException::weekFull($maxQuarters, $maxQuarters - $otherQuartersOfWeek);
             }

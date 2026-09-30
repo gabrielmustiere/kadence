@@ -1,0 +1,89 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Jours fériés {{ year }} · Kadence{% endblock %}
+
+{% block body %}
+    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+            <h1 class="font-display text-2xl font-bold tracking-tight text-heading sm:text-3xl" data-test="holiday-year" data-year="{{ year }}">Jours fériés {{ year }}</h1>
+            <p class="mt-1 text-sm text-body">Les jours légaux de chaque calendrier, et les ajustements de l'entreprise : jours de remplacement ajoutés, jours fériés travaillés retirés.</p>
+        </div>
+        <nav class="flex flex-wrap items-center gap-2" aria-label="Navigation entre années">
+            {% if year > 1000 %}
+                <twig:Button as="a" size="sm" variant="outline" href="{{ path('app_holiday_year', {year: year - 1}) }}" data-test="year-prev">
+                    <twig:ux:icon name="tabler:chevron-left" class="size-4 me-1"/>
+                    {{ year - 1 }}
+                </twig:Button>
+            {% endif %}
+            <twig:Button as="a" size="sm" variant="outline" href="{{ path('app_holiday_index') }}" data-test="year-current">Cette année</twig:Button>
+            {% if year < 9999 %}
+                <twig:Button as="a" size="sm" variant="outline" href="{{ path('app_holiday_year', {year: year + 1}) }}" data-test="year-next">
+                    {{ year + 1 }}
+                    <twig:ux:icon name="tabler:chevron-right" class="size-4 ms-1"/>
+                </twig:Button>
+            {% endif %}
+        </nav>
+    </div>
+
+    <twig:Card class="mb-6" data-test="holiday-add">
+        <twig:Card:Header>
+            <twig:Card:Title as="h2">Ajouter un jour férié</twig:Card:Title>
+            <p class="mt-2 text-sm text-body">Un jour de remplacement, par exemple. Il ne vaut que pour cette date et ce calendrier.</p>
+        </twig:Card:Header>
+        <twig:Card:Content>
+            {{ form_start(form, {attr: {'data-test': 'holiday-form'}}) }}
+                {{ form_row(form.calendar) }}
+                <div class="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
+                    {{ form_row(form.day) }}
+                    {{ form_row(form.label) }}
+                </div>
+                <div class="mt-2">
+                    <twig:Button type="submit" data-test="holiday-submit">Ajouter</twig:Button>
+                </div>
+            {{ form_end(form) }}
+        </twig:Card:Content>
+    </twig:Card>
+
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {% for item in calendars %}
+            <twig:Card data-test="holiday-calendar" data-calendar="{{ item.calendar.value }}">
+                <twig:Card:Header>
+                    <twig:Card:Title as="h2">{{ item.calendar.label }}</twig:Card:Title>
+                </twig:Card:Header>
+                <twig:Card:Content>
+                    <ul class="divide-y divide-default text-sm">
+                        {% for line in item.lines %}
+                            <li class="flex items-center justify-between gap-3 py-2" data-test="holiday-line"
+                                data-day="{{ line.day|date('Y-m-d') }}"
+                                data-status="{{ line.added ? 'added' : (line.removed ? 'removed' : 'legal') }}"
+                                data-weekend="{{ line.weekend ? 'true' : 'false' }}">
+                                <span class="{{ line.removed ? 'text-body line-through' : 'text-heading' }}">
+                                    <strong class="font-semibold">{{ line.day|weekday }} {{ line.day|date('d/m') }}</strong>
+                                    <span data-test="holiday-label">{{ line.label }}</span>
+                                </span>
+                                <span class="flex shrink-0 items-center gap-2">
+                                    {% if line.weekend %}<twig:Badge variant="alternative" border="bordered">Week-end</twig:Badge>{% endif %}
+                                    {% if line.added %}<twig:Badge variant="brand">Ajouté</twig:Badge>{% endif %}
+                                    {% if line.removed %}<twig:Badge variant="warning">Retiré</twig:Badge>{% endif %}
+                                    {% if line.adjustment %}
+                                        <form method="post" action="{{ path('app_holiday_cancel', {id: line.adjustment.id}) }}">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('holiday-adjustment-' ~ line.adjustment.id) }}">
+                                            <twig:Button type="submit" size="xs" variant="outline" data-test="holiday-cancel">Annuler</twig:Button>
+                                        </form>
+                                    {% elseif not line.weekend %}
+                                        <form method="post" action="{{ path('app_holiday_remove') }}">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('holiday-remove') }}">
+                                            <input type="hidden" name="calendar" value="{{ item.calendar.value }}">
+                                            <input type="hidden" name="day" value="{{ line.day|date('Y-m-d') }}">
+                                            <twig:Button type="submit" size="xs" variant="outline-danger" data-test="holiday-remove">Retirer</twig:Button>
+                                        </form>
+                                    {% endif %}
+                                </span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </twig:Card:Content>
+            </twig:Card>
+        {% endfor %}
+    </div>
+{% endblock %}

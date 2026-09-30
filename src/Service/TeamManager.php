@@ -84,7 +84,8 @@ final readonly class TeamManager
             ->setFirstName(self::required($input->firstName))
             ->setLastName(self::required($input->lastName))
             ->setEmail(self::required($input->email))
-            ->setRole($input->role ?? throw new \LogicException('A validated team member input has a role.'));
+            ->setRole($input->role ?? throw new \LogicException('A validated team member input has a role.'))
+            ->setHolidayCalendar($input->holidayCalendar ?? throw new \LogicException('A validated team member input has a holiday calendar.'));
 
         $this->weeklyMaxManager->change(
             $user,

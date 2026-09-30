@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Service;
 
 use App\Entity\User;
+use App\Enum\Type\HolidayCalendar;
 use App\Model\Timesheet\TimesheetCell;
 use App\Model\Timesheet\TimesheetDay;
 use App\Model\Timesheet\TimesheetRow;
@@ -109,15 +110,45 @@ final class TimesheetBuilderTest extends KernelTestCase
         self::assertSame([false, false, false, false, false], array_map(static fn (TimesheetDay $day): bool => $day->forgotten, $this->build($user)->days));
     }
 
+    public function testHolidaysOfThePersonsCalendarAreLockedNamedNeverForgottenAndLeftOutOfTheWeeklyMaximum(): void
+    {
+        $lot = $this->createLot($this->createProject());
+        $fullTime = $this->createUser();
+        $partTime = $this->createUser();
+        $this->createWeeklyMax($partTime, '2026-07-13', 18);
+        $this->createTimeEntry($fullTime, $lot, '2026-07-13', 4);
+
+        $grid = $this->build($fullTime, [], '2026-W29');
+
+        self::assertSame([null, 'Fête nationale', null, null, null], array_map(static fn (TimesheetDay $day): ?string => $day->holiday, $grid->days));
+        self::assertSame([false, false, true, true, true], array_map(static fn (TimesheetDay $day): bool => $day->forgotten, $grid->days));
+        self::assertSame([false, true, false, false, false], array_map(static fn (TimesheetCell $cell): bool => $cell->locked, $grid->rows[0]->cells));
+        self::assertFalse($grid->rows[0]->cells[1]->isSelectable(1));
+        self::assertSame(16, $grid->maxQuarters);
+        self::assertSame(16, $this->build($partTime, [], '2026-W29')->maxQuarters);
+    }
+
+    public function testAHolidayOfTheOtherCalendarIsAnOrdinaryDay(): void
+    {
+        $belgian = $this->createUser(holidayCalendar: HolidayCalendar::Belgium);
+        $lot = $this->createLot($this->createProject());
+
+        $grid = $this->build($belgian, [(int) $lot->getId()], '2026-W29');
+
+        self::assertSame([null, null, null, null, null], array_map(static fn (TimesheetDay $day): ?string => $day->holiday, $grid->days));
+        self::assertSame([false, false, false, false, false], array_map(static fn (TimesheetCell $cell): bool => $cell->locked, $grid->rows[0]->cells));
+        self::assertSame(20, $grid->maxQuarters);
+    }
+
     /**
      * @param list<int> $addedLotIds
      */
-    private function build(User $user, array $addedLotIds = []): WeekGrid
+    private function build(User $user, array $addedLotIds = [], string $week = '2026-W40'): WeekGrid
     {
         $builder = self::getContainer()->get(TimesheetBuilder::class);
         \assert($builder instanceof TimesheetBuilder);
 
-        return $builder->build($user, Week::fromIso('2026-W40'), $addedLotIds);
+        return $builder->build($user, Week::fromIso($week), $addedLotIds);
     }
 
     /**
