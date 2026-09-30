@@ -47,6 +47,15 @@
       "date": "2026-09-30",
       "type": "Sync",
       "description": "Plan réaligné sur le livré (chargeur en requêtes constantes au lieu de 4, deux migrations, Unique avec normaliseur, findAllQuartersByUser, PlannedMember sans calendrier, RoadmapBuilderTest contre la base, requêtes constantes vérifiées dans RoadmapControllerTest, fichiers ajoutés au périmètre dont Timesheet.html.twig, critères de sortie attestés cochés) ; pitch déjà aligné en cours de route ; backlog : ligne date-fin-projetee en clôture en cours, C2.4, C4.4 et règle « période prévue » éditées, notes des lignes voisines enrichies."
+    },
+    {
+      "date": "2026-09-30",
+      "type": "Livraison",
+      "description": "Story livrée par le commit 8891ea6 (feat(roadmap)) ; suite complète verte avant commit : 296 tests PHPUnit et 31 E2E."
     }
-  ]
+  ],
+  "delivery": {
+    "release": null,
+    "commit": "8891ea6"
+  }
 }
