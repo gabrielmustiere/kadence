@@ -10,6 +10,16 @@ Chaque version porte un **titre** et distingue les **évolutions fonctionnelles*
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-09-30 — Menu d'administration
+
+### ✨ Fonctionnel
+- **Section Administration** — Projets, Équipe et Jours fériés sont regroupés dans une section « Administration » en bas du menu, à part de Tableau de bord et Ma semaine. Chacun n'y voit que ce que son rôle autorise, et le découpage est le même sur téléphone.
+- **Page courante signalée** — l'entrée du menu de la page affichée est mise en évidence, y compris sur la fiche d'un projet, d'un lot ou d'une personne.
+- **Accueil réorganisé** — les raccourcis du quotidien d'abord, puis un bloc « Administration » ; la direction y trouve désormais un raccourci vers les jours fériés.
+
+### 🔧 Technique
+- **Menu factorisé** — les entrées du menu passent par un composant commun, et l'entrée active se déduit de la page affichée.
+
 ## [0.4.0] - 2026-09-30 — Jours fériés français et belges
 
 ### ✨ Fonctionnel
@@ -68,7 +78,8 @@ Chaque version porte un **titre** et distingue les **évolutions fonctionnelles*
 - **Connexion rapide en dev** — choix d'un compte de fixtures sur la page de connexion, uniquement en environnement de développement.
 - **Nettoyage du template d'amorçage** — suppression de la page design system et de la route de test d'e-mail.
 
-[Unreleased]: https://github.com/gabrielmustiere/kadence/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/gabrielmustiere/kadence/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/gabrielmustiere/kadence/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/gabrielmustiere/kadence/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/gabrielmustiere/kadence/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/gabrielmustiere/kadence/compare/v0.1.0...v0.2.0
