@@ -47,6 +47,15 @@
       "date": "2026-09-30",
       "type": "Sync",
       "description": "Doc réalignée sur le livré : plan mis à jour (HolidayAdditionType / HolidayAdditionInput, route de retrait sans année, années 1000–9999, adjustmentAt(), jeton neutral-tertiary, WeekGrid et isHoliday() retirés du périmètre, trait PurgesHolidayAdjustments et CreatesUsers ajoutés, convention de test et risque associé) ; pitch conforme ; stack.md enrichi (extensions PHP, ext-calendar en production) ; backlog : C4.3 annotée, convention transverse « jours fériés », notes rappel-saisie et capacite-equipe, ligne capacite-equipe en clôture."
+    },
+    {
+      "date": "2026-09-30",
+      "type": "Livraison",
+      "description": "Story livrée dans le commit 9d42d62 sur la branche main."
     }
-  ]
+  ],
+  "delivery": {
+    "release": null,
+    "commit": "9d42d62"
+  }
 }
