@@ -37,7 +37,7 @@
             <p class="text-body">Aucun projet pour l'instant.</p>
         </twig:Card>
     {% else %}
-        <div class="overflow-x-auto rounded-base border border-default bg-neutral-primary" style="--roadmap-weeks: {{ constant('App\\Model\\Roadmap\\RoadmapWindow::WEEK_COUNT') }}" data-test="roadmap">
+        <div class="overflow-x-auto rounded-base border border-default bg-neutral-primary" style="--roadmap-weeks: {{ constant('App\\Model\\Roadmap\\RoadmapWindow::WEEK_COUNT') }}" data-controller="roadmap" data-test="roadmap">
             <div class="min-w-[72rem]">
                 <div class="grid grid-cols-[20rem_1fr] bg-neutral-secondary-medium text-xs font-medium text-heading">
                     <div class="sticky left-0 z-10 bg-neutral-secondary-medium px-4 py-2">Projet</div>
@@ -48,7 +48,7 @@
                     </div>
                 </div>
                 {% for project in roadmap.projects %}
-                    <details class="group border-t border-default" data-test="roadmap-project" data-title="{{ project.title }}">
+                    <details class="group border-t border-default" data-roadmap-target="project" data-project-id="{{ project.project.id }}" data-action="toggle->roadmap#remember" data-test="roadmap-project" data-title="{{ project.title }}">
                         <summary class="grid cursor-pointer list-none grid-cols-[20rem_1fr] hover:bg-neutral-secondary-soft [&::-webkit-details-marker]:hidden">
                             <div class="sticky left-0 z-10 bg-neutral-primary px-4 py-3 group-hover:bg-neutral-secondary-soft">
                                 <div class="flex flex-wrap items-center gap-1.5">

@@ -91,6 +91,23 @@ test('la frise avance de quatre semaines et revient à aujourd\'hui', async ({ p
   await expect(projectRow(page).locator('[data-test="roadmap-leaf-link"]')).toHaveCount(0);
 });
 
+test('un projet déplié le reste quand on navigue dans la frise', async ({ page }) => {
+  await login(page, 'prod@example.com');
+  await page.goto('/roadmap');
+  const leaf = projectRow(page).locator('[data-test="roadmap-leaf"][data-title="Socle"]');
+  await projectRow(page).locator('summary').click();
+  await expect(leaf).toBeVisible();
+
+  await page.click('[data-test="roadmap-next"]');
+  await expect(page.locator('[data-test="roadmap-today"]')).not.toHaveAttribute('aria-current', 'page');
+  await expect(leaf).toBeVisible();
+
+  await projectRow(page).locator('summary').click();
+  await page.click('[data-test="roadmap-today"]');
+  await expect(page.locator('[data-test="roadmap-today"]')).toHaveAttribute('aria-current', 'page');
+  await expect(leaf).toBeHidden();
+});
+
 test('un lead ouvre une feuille depuis la roadmap et y revient à la même fenêtre', async ({ page }) => {
   await login(page, 'lead@example.com');
   await page.goto('/roadmap');
@@ -105,6 +122,5 @@ test('un lead ouvre une feuille depuis la roadmap et y revient à la même fenê
   await page.click('[data-test="lot-submit"]');
 
   await expect(page).toHaveURL(window);
-  await projectRow(page).locator('summary').click();
   await expect(projectRow(page).locator('[data-test="roadmap-leaf"][data-title="Socle"] [data-test="roadmap-remaining"]')).toHaveText('12 j');
 });
