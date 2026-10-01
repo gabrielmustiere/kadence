@@ -152,6 +152,7 @@ test('les crans qui dépasseraient une journée sont verrouillés', async ({ pag
 test('une ligne ajoutée par la recherche disparaît au rechargement si elle ne reçoit aucun temps', async ({ page }) => {
   await login(page, 'prod@example.com');
 
+  await page.click('[data-test="add-line-open"]');
   await page.fill('[data-test="add-line-input"]', `${project} gamma`);
   const result = page.locator('[data-test="add-line-result"]', { hasText: 'Gamma' });
   await expect(result).toBeVisible();

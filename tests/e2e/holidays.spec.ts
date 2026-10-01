@@ -57,6 +57,7 @@ test('le jour ajouté est verrouillé et nommé dans la grille, sans barre de sa
   await expect(header(page, '2030-06-10').locator('[data-test="day-holiday"]')).toHaveText('Férié · Lundi de Pentecôte');
   await expect(page.locator('[data-test="week-total"]')).toHaveText('0 j / 3 j');
 
+  await page.click('[data-test="add-line-open"]');
   await page.fill('[data-test="add-line-input"]', 'roadmap');
   await page.locator('[data-test="add-line-result"]').first().click();
   await expect(page.locator('[data-test="timesheet-row"]')).toHaveCount(1);

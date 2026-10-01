@@ -1,4 +1,5 @@
 {% set grid = this.grid %}
+{% set timesheet = this %}
 <div {{ attributes.defaults({'data-test': 'timesheet'}) }}>
     {% if error %}
         <twig:Alert variant="warning" border="bordered" class="mb-4" data-test="timesheet-error">
@@ -7,10 +8,52 @@
         </twig:Alert>
     {% endif %}
 
-    <p class="mb-3 text-sm text-body">
-        Total de la semaine :
-        <strong class="{{ grid.complete ? 'text-fg-success-strong' : 'text-heading' }}" data-test="week-total" data-complete="{{ grid.complete ? 'true' : 'false' }}">{{ grid.quarters|days }} / {{ grid.maxQuarters|days }}</strong>
-    </p>
+    <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <twig:Modal id="add-line" data-test="add-line">
+            <twig:Modal:Trigger>
+                <twig:Button data-test="add-line-open" {{ ...modal_trigger_attrs }}>
+                    <twig:ux:icon name="tabler:plus" class="size-4 me-1.5"/>
+                    Ajouter une ligne
+                </twig:Button>
+            </twig:Modal:Trigger>
+            <twig:Modal:Content class="w-full max-w-xl">
+                <twig:Modal:Header>
+                    <twig:Modal:Title>Ajouter une ligne</twig:Modal:Title>
+                </twig:Modal:Header>
+                <twig:Modal:Body>
+                    <div>
+                        <label for="timesheet-search" class="mb-1.5 block text-sm text-body">Cherchez le projet, le lot ou le sous-lot sur lequel vous avez travaillé.</label>
+                        <div class="relative">
+                            <twig:ux:icon name="tabler:search" class="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-body" aria-hidden="true"/>
+                            <input id="timesheet-search" type="search" autocomplete="off" autofocus value="{{ query }}"
+                                   placeholder="Projet, lot ou sous-lot…"
+                                   data-model="debounce(250)|query" data-test="add-line-input"
+                                   class="block w-full rounded-base border border-default-medium bg-neutral-primary py-2.5 ps-9 pe-3 text-sm text-heading shadow-xs placeholder:text-body focus:border-brand focus:ring-brand">
+                        </div>
+                        {% if not timesheet.searchTooShort %}
+                            <ul class="mt-2 max-h-80 divide-y divide-default overflow-y-auto rounded-base border border-default bg-neutral-primary" data-test="add-line-results">
+                                {% for lot in timesheet.searchResults %}
+                                    <li>
+                                        <button type="button" class="w-full px-3 py-2 text-left text-sm hover:bg-neutral-secondary-soft"
+                                                data-test="add-line-result" data-lot="{{ lot.id }}"
+                                                data-action="live#action flowbite-modal#close" data-live-action-param="addLot" data-live-lot-param="{{ lot.id }}">
+                                            {{ include('timesheet/_leaf_path.html.twig', {lot: lot}) }}
+                                        </button>
+                                    </li>
+                                {% else %}
+                                    <li class="px-3 py-2 text-sm text-body" data-test="add-line-none">Aucune feuille ne correspond.</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                </twig:Modal:Body>
+            </twig:Modal:Content>
+        </twig:Modal>
+        <p class="text-sm text-body">
+            Total de la semaine :
+            <strong class="{{ grid.complete ? 'text-fg-success-strong' : 'text-heading' }}" data-test="week-total" data-complete="{{ grid.complete ? 'true' : 'false' }}">{{ grid.quarters|days }} / {{ grid.maxQuarters|days }}</strong>
+        </p>
+    </div>
 
     <div class="mb-3 grid grid-cols-5 gap-1 md:hidden" role="tablist" aria-label="Jour affiché">
         {% for column in grid.days %}
@@ -90,28 +133,5 @@
                 {% endfor %}
             </tbody>
         </table>
-    </div>
-
-    <div class="mt-4 max-w-xl">
-        <label for="timesheet-search" class="mb-1 block text-sm font-medium text-heading">Ajouter une ligne</label>
-        <input id="timesheet-search" type="search" autocomplete="off" value="{{ query }}"
-               placeholder="Projet, lot ou sous-lot…"
-               data-model="debounce(250)|query" data-test="add-line-input"
-               class="block w-full rounded-base border border-default-medium bg-neutral-secondary-medium px-3 py-2 text-sm text-heading placeholder:text-body focus:border-brand focus:ring-brand">
-        {% if not this.searchTooShort %}
-            <ul class="mt-2 divide-y divide-default overflow-hidden rounded-base border border-default bg-neutral-primary" data-test="add-line-results">
-                {% for lot in this.searchResults %}
-                    <li>
-                        <button type="button" class="w-full px-3 py-2 text-left text-sm hover:bg-neutral-secondary-soft"
-                                data-test="add-line-result" data-lot="{{ lot.id }}"
-                                data-action="live#action" data-live-action-param="addLot" data-live-lot-param="{{ lot.id }}">
-                            {{ include('timesheet/_leaf_path.html.twig', {lot: lot}) }}
-                        </button>
-                    </li>
-                {% else %}
-                    <li class="px-3 py-2 text-sm text-body" data-test="add-line-none">Aucune feuille ne correspond.</li>
-                {% endfor %}
-            </ul>
-        {% endif %}
     </div>
 </div>
