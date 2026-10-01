@@ -41,6 +41,15 @@
       "date": "2026-10-01",
       "type": "Sync",
       "description": "Plan réaligné sur le livré : jours saisis chargés pour les seules feuilles planifiées (Approche retenue, Mécanismes mobilisés, Périmètre de RoadmapBuilder), Stratégie de test (Ascension au lieu du 1er mai, cas du 14/07, « Jours avec saisie » vérifié dans l'infobulle de dépassement), risque des jours fériés passés, critères de sortie attestés cochés (make phpunit et make playwright à attester au commit après les corrections de review) ; pitch inchangé ; aucun impact sur vision, stack et backlog (story hors backlog, roadmap enrichie dans le cadre de C6.2 et C7.1)."
+    },
+    {
+      "date": "2026-10-01",
+      "type": "Livraison",
+      "description": "Story livrée par le commit cac9662 (feat(roadmap)) ; suite complète verte avant commit : 354 tests PHPUnit et 37 E2E. Correctif des libellés de mois livré à part par le commit 678081a (fix(roadmap))."
     }
-  ]
+  ],
+  "delivery": {
+    "release": null,
+    "commit": "cac9662"
+  }
 }
