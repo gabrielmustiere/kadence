@@ -10,6 +10,13 @@ Chaque version porte un **titre** et distingue les **évolutions fonctionnelles*
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-10-01 — Écrans plus lisibles
+
+### ✨ Fonctionnel
+- **Formulaires découpés en sections** — les fiches personne, lot et projet regroupent leurs champs en sections titrées, chacune avec une phrase d'aide. Les choix exclusifs, comme le rôle ou le calendrier de jours fériés, tiennent sur une ligne.
+- **Liste Équipe allégée** — nom et e-mail réunis, nom cliquable vers la fiche, compétences et expériences sur deux lignes distinctes ; seul un badge « Désactivée » signale les comptes inactifs. Les actions tiennent sur une ligne en icônes, avec une infobulle au survol.
+- **Ajouter une ligne depuis une fenêtre** — dans « Ma semaine », le bouton « Ajouter une ligne » au-dessus de la grille ouvre la recherche ; choisir un projet, lot ou sous-lot ajoute la ligne et referme la fenêtre.
+
 ## [0.8.0] - 2026-10-01 — Tags et hiérarchie de l'équipe
 
 ### ✨ Fonctionnel
@@ -116,7 +123,8 @@ Chaque version porte un **titre** et distingue les **évolutions fonctionnelles*
 - **Connexion rapide en dev** — choix d'un compte de fixtures sur la page de connexion, uniquement en environnement de développement.
 - **Nettoyage du template d'amorçage** — suppression de la page design system et de la route de test d'e-mail.
 
-[Unreleased]: https://github.com/gabrielmustiere/kadence/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/gabrielmustiere/kadence/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/gabrielmustiere/kadence/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/gabrielmustiere/kadence/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/gabrielmustiere/kadence/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/gabrielmustiere/kadence/compare/v0.5.0...v0.6.0
