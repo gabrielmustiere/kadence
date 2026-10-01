@@ -32,7 +32,8 @@ test('la direction inscrit une personne qui choisit son mot de passe à la premi
   expect(temporaryPassword).toHaveLength(12);
 
   await page.click('[data-test="temporary-password-done"]');
-  await expect(page.locator(`[data-email="${email}"] [data-test="member-status"]`)).toHaveText('Active');
+  await expect(page.locator(`[data-email="${email}"]`)).toBeVisible();
+  await expect(page.locator(`[data-email="${email}"] [data-test="member-status"]`)).toHaveCount(0);
 
   await page.goto('/logout');
   await login(page, email, temporaryPassword);

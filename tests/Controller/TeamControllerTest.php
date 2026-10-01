@@ -78,7 +78,7 @@ final class TeamControllerTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('[data-email="lead@example.com"] [data-test="member-role"]', 'Lead');
         self::assertSelectorTextContains('[data-email="ancien@example.com"] [data-test="member-status"]', 'Désactivée');
-        self::assertSelectorTextContains('[data-email="prod@example.com"] [data-test="member-status"]', 'Active');
+        self::assertSelectorNotExists('[data-email="prod@example.com"] [data-test="member-status"]');
     }
 
     public function testRegisterShowsTemporaryPasswordOnlyOnce(): void
