@@ -10,6 +10,22 @@ Chaque version porte un **titre** et distingue les **évolutions fonctionnelles*
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-10-01 — Tags et hiérarchie de l'équipe
+
+### ✨ Fonctionnel
+- **Écran Tags** — dans l'administration, la direction tient le vocabulaire qui décrit l'équipe : compétences techniques, expériences fonctionnelles et types d'équipe. Elle les ajoute, les renomme, et les supprime après une confirmation qui annonce combien de personnes les portent.
+- **Profil d'une personne** — à l'inscription comme à la modification, la direction coche les compétences, les expériences et le type d'équipe de la personne, ou en saisit de nouveaux, qui rejoignent la liste.
+- **Manager** — chaque personne peut avoir un manager, à titre informatif. Une personne qui manage encore des personnes actives ne peut pas être désactivée, et le message nomme ces personnes.
+- **Liste Équipe enrichie** — elle affiche le type d'équipe, les tags et le manager de chacun, et se filtre par tag et par manager.
+- **Composer une équipe par compétence** — en composant l'équipe d'un lot, les leads voient les tags de chaque personne et peuvent ne garder que celles qui portent les tags choisis.
+- **Mon profil** — chacun voit ses propres tags et son manager sur sa page Mon compte.
+- **Temps saisi par personne dans la roadmap** — les bulles des tronçons réalisé et en dépassement indiquent le temps saisi par chacun, avec sa part dans l'équipe ou la mention « hors équipe ».
+- **Listes déroulantes** — leur flèche ne colle plus à la bordure.
+
+### 🔧 Technique
+- **Schéma** — nouvelles tables `tag` et `user_tag`, et manager sur les personnes. Sur une base de dev existante, `make db-reset` régénère une démonstration avec tags et hiérarchie.
+- **Base de test partagée** — les tests tournent sur la base de dev (`var/data.db`). `make phpunit` recharge les fixtures avant et après, et la démonstration est aussi chargée en test.
+
 ## [0.7.0] - 2026-09-30 — Roadmap plus lisible
 
 ### ✨ Fonctionnel
@@ -100,7 +116,8 @@ Chaque version porte un **titre** et distingue les **évolutions fonctionnelles*
 - **Connexion rapide en dev** — choix d'un compte de fixtures sur la page de connexion, uniquement en environnement de développement.
 - **Nettoyage du template d'amorçage** — suppression de la page design system et de la route de test d'e-mail.
 
-[Unreleased]: https://github.com/gabrielmustiere/kadence/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/gabrielmustiere/kadence/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/gabrielmustiere/kadence/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/gabrielmustiere/kadence/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/gabrielmustiere/kadence/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/gabrielmustiere/kadence/compare/v0.4.0...v0.5.0
