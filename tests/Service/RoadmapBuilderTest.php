@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Tests\Service;
 
 use App\Entity\Project;
+use App\Enum\Type\HolidayCalendar;
 use App\Enum\Type\RoadmapSignal;
 use App\Model\Roadmap\Roadmap;
+use App\Model\Roadmap\RoadmapBar;
 use App\Model\Roadmap\RoadmapRow;
 use App\Model\Roadmap\RoadmapTeamLine;
 use App\Model\Roadmap\RoadmapWindow;
@@ -129,6 +131,100 @@ final class RoadmapBuilderTest extends KernelTestCase
         );
     }
 
+    public function testTimeEnteredIsCutWhereAWeekGoesByWithoutEntry(): void
+    {
+        $user = $this->createUser();
+        $project = $this->createProject();
+        $leaf = $this->planLot($this->createLot($project, 10, $user), new \DateTimeImmutable('2026-09-07'), [[$user, 100]]);
+        foreach (['2026-09-07', '2026-09-08', '2026-09-09', '2026-09-10', '2026-09-11', '2026-09-21', '2026-09-22', '2026-09-23', '2026-09-24', '2026-09-25'] as $day) {
+            $this->createTimeEntry($user, $leaf, $day, 4);
+        }
+
+        $row = $this->projectRow($this->build(), $project)->children[0];
+
+        self::assertSame([['2026-09-07', '2026-09-11'], ['2026-09-21', '2026-09-25']], self::segments($row->realized));
+        self::assertNotNull($row->realized);
+        self::assertSame('2026-09-07', $row->realized->from->format('Y-m-d'));
+        self::assertSame('2026-09-25', $row->realized->to->format('Y-m-d'));
+        self::assertSame(10, $row->realizedDayCount);
+        self::assertSame([RoadmapSignal::EstimateReached], $row->signals);
+    }
+
+    public function testAWorkingDayWithoutEntryCutsTheTimeEnteredButAWeekendDoesNot(): void
+    {
+        $user = $this->createUser();
+        $project = $this->createProject();
+        $leaf = $this->planLot($this->createLot($project, 10, $user), new \DateTimeImmutable('2026-09-14'), [[$user, 100]]);
+        foreach (['2026-09-14', '2026-09-15', '2026-09-17', '2026-09-18', '2026-09-21'] as $day) {
+            $this->createTimeEntry($user, $leaf, $day, 4);
+        }
+
+        $row = $this->projectRow($this->build(), $project)->children[0];
+
+        self::assertSame([['2026-09-14', '2026-09-15'], ['2026-09-17', '2026-09-21']], self::segments($row->realized));
+        self::assertSame(5, $row->realizedDayCount);
+    }
+
+    public function testAHolidayCutsTheTimeEnteredOnlyWhenOneMemberCouldWork(): void
+    {
+        $french = $this->createUser();
+        $belgian = $this->createUser(holidayCalendar: HolidayCalendar::Belgium);
+        $former = $this->createUser();
+        $project = $this->createProject();
+        $teams = [
+            'everyone off on Ascension' => [[$french, 100], [$belgian, 50]],
+            'Belgian national day, French member' => [[$french, 50], [$belgian, 50]],
+            'Belgian national day, Belgian team' => [[$belgian, 50]],
+            'Bastille Day, French team' => [[$french, 50]],
+            'Belgian national day, former French member' => [[$former, 100], [$belgian, 25]],
+        ];
+        $days = [
+            'everyone off on Ascension' => ['2026-05-13', '2026-05-15'],
+            'Belgian national day, French member' => ['2026-07-20', '2026-07-22'],
+            'Belgian national day, Belgian team' => ['2026-07-20', '2026-07-22'],
+            'Bastille Day, French team' => ['2026-07-13', '2026-07-15'],
+            'Belgian national day, former French member' => ['2026-07-20', '2026-07-22'],
+        ];
+        foreach ($teams as $title => $members) {
+            $leaf = $this->planLot($this->createLot($project, 10, title: $title), new \DateTimeImmutable('2026-05-04'), $members);
+            foreach ($days[$title] as $day) {
+                $this->createTimeEntry($belgian, $leaf, $day, 2);
+            }
+        }
+        $former->setActive(false);
+        $this->entityManager()->flush();
+
+        $segments = [];
+        foreach ($this->projectRow($this->build(anchor: '2026-W22'), $project)->children as $row) {
+            $segments[$row->title()] = \count($row->realized->segments ?? []);
+        }
+
+        self::assertSame([
+            'everyone off on Ascension' => 1,
+            'Belgian national day, French member' => 2,
+            'Belgian national day, Belgian team' => 1,
+            'Bastille Day, French team' => 1,
+            'Belgian national day, former French member' => 2,
+        ], $segments);
+    }
+
+    public function testTimeEnteredBeyondTheEstimateIsCutTheSameWay(): void
+    {
+        $user = $this->createUser();
+        $project = $this->createProject();
+        $leaf = $this->planLot($this->createLot($project, 2, $user), new \DateTimeImmutable('2026-09-14'), [[$user, 100]]);
+        foreach (['2026-09-14', '2026-09-15', '2026-09-17', '2026-09-18', '2026-09-22'] as $day) {
+            $this->createTimeEntry($user, $leaf, $day, 4);
+        }
+
+        $row = $this->projectRow($this->build(), $project)->children[0];
+
+        self::assertSame([['2026-09-14', '2026-09-15']], self::segments($row->realized));
+        self::assertSame([['2026-09-17', '2026-09-18'], ['2026-09-22', '2026-09-22']], self::segments($row->overrun));
+        self::assertSame(2, $row->realizedDayCount);
+        self::assertSame(3, $row->overrunDayCount);
+    }
+
     public function testPlannedLeafWithoutCapacityNorEntryKeepsItsStartAndLeavesTheEndOfItsProjectUnknown(): void
     {
         $user = $this->createUser();
@@ -178,12 +274,20 @@ final class RoadmapBuilderTest extends KernelTestCase
         }
     }
 
-    private function build(bool $withOverloads = true): Roadmap
+    private function build(bool $withOverloads = true, string $anchor = '2026-W41'): Roadmap
     {
         $builder = static::getContainer()->get(RoadmapBuilder::class);
         self::assertInstanceOf(RoadmapBuilder::class, $builder);
 
-        return $builder->build(RoadmapWindow::around(Week::fromIso('2026-W41')), $withOverloads);
+        return $builder->build(RoadmapWindow::around(Week::fromIso($anchor)), $withOverloads);
+    }
+
+    /**
+     * @return list<array{string, string}> first and last day of each segment
+     */
+    private static function segments(?RoadmapBar $bar): array
+    {
+        return array_map(static fn (RoadmapBar $segment): array => [$segment->from->format('Y-m-d'), $segment->to->format('Y-m-d')], $bar->segments ?? []);
     }
 
     /**

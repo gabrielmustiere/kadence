@@ -1,0 +1,46 @@
+{
+  "version": 2,
+  "title": "Couper la partie réalisée d'une feuille sur les jours sans saisie pour montrer ses interruptions sur la roadmap",
+  "created": "2026-10-01",
+  "updated": "2026-10-01",
+  "tags": [
+    "roadmap"
+  ],
+  "changelog": [
+    {
+      "date": "2026-10-01",
+      "type": "Création",
+      "description": "Pitch initial rédigé, en évolution de la story 006 : partie réalisée (et partie au-delà de l'estimation) coupée en tronçons sur chaque jour ouvré sans saisie, jour ouvré pour au moins un membre de l'équipe actuelle (désactivés compris, jours fériés de chaque calendrier), infobulle commune enrichie du nombre de jours avec saisie, barres de cumul et partie future inchangées, visible de tous (tension principe 2 assumée)."
+    },
+    {
+      "date": "2026-10-01",
+      "type": "Planification",
+      "description": "Plan technique validé : aucun impact modèle ; jours saisis chargés par RoadmapBuilder via sumQuartersByDayForLots (+1 requête constante), découpés en tronçons par DailyCapacity::hasWorkingDayBetween sur l'équipe actuelle, fériés de la capacité étendus au plus ancien jour saisi, RoadmapWindow::segmentedBar et RoadmapBar::$segments, conteneur déclencheur unique par partie (contrainte Flowbite : un déclencheur par infobulle), compteur « Jours avec saisie » et entrée de légende ; pitch annoté (largeur réelle, légende)."
+    },
+    {
+      "date": "2026-10-01",
+      "type": "Implémentation",
+      "description": "Sept étapes du plan livrées (DailyCapacity::hasWorkingDayBetween, jours fériés depuis le plus ancien jour saisi, RoadmapWindow::segmentedBar et RoadmapBar::$segments, RoadmapBuilder::enteredParts et runs à la place de realizedBars, conteneur déclencheur et tronçons enfants, ligne « Jours avec saisie », entrée de légende, scénario E2E) ; 352 tests PHPUnit et 37 scénarios Playwright verts, /roadmap autour de 80 ms sur les données de démonstration ; écarts mineurs : Ascension (14/05) au lieu du 1er mai pour le férié commun (le 1er mai 2026 tombe un vendredi, collé au week-end), helper iso() partagé dans roadmap.spec.ts."
+    },
+    {
+      "date": "2026-10-01",
+      "type": "Implémentation",
+      "description": "Correctif hors plan à la demande de l'utilisateur : libellé du premier mois de la frise (coupé par le bord gauche) qui chevauchait le mois suivant ; seuil Roadmap::MIN_MONTH_WIDTH relevé de 4 à 9 % pour qu'un libellé avec l'année (63 px au plus) tienne sur la piste la plus étroite (832 px), deux tests ajoutés dans RoadmapWindowTest ; défaut hérité de la story 006."
+    },
+    {
+      "date": "2026-10-01",
+      "type": "Review",
+      "description": "Revue du diff (16 fichiers, correctif des libellés de mois compris) : 0 bloquant, 0 important, 2 mineurs corrigés pendant la passe (jours saisis chargés pour les seules feuilles planifiées via ScheduleResult::isPlanned, « Jours avec saisie » de l'infobulle de dépassement vérifié au rendu) ; 58 tests roadmap et 5 E2E verts. Statut : PRÊT À COMMITER."
+    },
+    {
+      "date": "2026-10-01",
+      "type": "Report",
+      "description": "Report rédigé : conformité 95 %, 12/12 critères d'acceptation (11/11 vérifié sur l'Ascension, même règle), écarts volontaires (feuilles planifiées seules dans enteredParts après review, Ascension au lieu du 1er mai dans RoadmapBuilderTest), aucun manque ; correctif des libellés de mois sorti du périmètre de la story sur décision de l'utilisateur, à commiter séparément en fix(roadmap) ; dette : volume de la requête jour par jour, couplage du seuil des mois à la largeur minimale de la frise, cause des trous inconnue avant les absences."
+    },
+    {
+      "date": "2026-10-01",
+      "type": "Sync",
+      "description": "Plan réaligné sur le livré : jours saisis chargés pour les seules feuilles planifiées (Approche retenue, Mécanismes mobilisés, Périmètre de RoadmapBuilder), Stratégie de test (Ascension au lieu du 1er mai, cas du 14/07, « Jours avec saisie » vérifié dans l'infobulle de dépassement), risque des jours fériés passés, critères de sortie attestés cochés (make phpunit et make playwright à attester au commit après les corrections de review) ; pitch inchangé ; aucun impact sur vision, stack et backlog (story hors backlog, roadmap enrichie dans le cadre de C6.2 et C7.1)."
+    }
+  ]
+}

@@ -50,6 +50,25 @@ final class DailyCapacity
     }
 
     /**
+     * Whether a day strictly between $after and $before is a working day for at least one of these people.
+     *
+     * @param list<int> $userIds
+     */
+    public function hasWorkingDayBetween(array $userIds, \DateTimeImmutable $after, \DateTimeImmutable $before): bool
+    {
+        $last = $before->format('Y-m-d');
+        for ($day = $after->setTime(0, 0)->modify('+1 day'); $day->format('Y-m-d') < $last; $day = $day->modify('+1 day')) {
+            foreach ($userIds as $userId) {
+                if ($this->isWorkingDay($userId, $day)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * @param int<25, 100> $share
      */
     public function units(int $userId, int $share, \DateTimeImmutable $day): int

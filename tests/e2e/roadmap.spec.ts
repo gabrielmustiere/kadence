@@ -2,7 +2,8 @@ import { test, expect, Page, Locator } from '@playwright/test';
 import { execFileSync } from 'node:child_process';
 
 // Le projet est créé en SQL puis planifié par le formulaire ; Paula Durand n'a aucune feuille planifiée dans les
-// fixtures, elle peut donc rejoindre l'équipe sans surcharge.
+// fixtures, elle peut donc rejoindre l'équipe sans surcharge. La feuille interrompue est saisie en SQL par l'ancien
+// collaborateur, que les autres specs n'utilisent pas.
 test.describe.configure({ mode: 'serial' });
 
 const project = `Roadmap E2E ${Date.now().toString(36)}`;
@@ -13,24 +14,48 @@ function sql(query: string) {
 
 function purge() {
   const lots = `SELECT l.id FROM lot l JOIN project p ON p.id = l.project_id WHERE p.title LIKE 'Roadmap E2E %'`;
+  sql(`DELETE FROM time_entry WHERE lot_id IN (${lots})`);
   sql(`DELETE FROM lot_member WHERE lot_id IN (${lots})`);
   sql(`DELETE FROM lot WHERE project_id IN (SELECT id FROM project WHERE title LIKE 'Roadmap E2E %')`);
   sql(`DELETE FROM project WHERE title LIKE 'Roadmap E2E %'`);
+}
+
+function iso(day: Date): string {
+  return `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
+}
+
+function nextMonday(): string {
+  const day = new Date();
+  day.setDate(day.getDate() + (((8 - day.getDay()) % 7) || 7));
+
+  return iso(day);
+}
+
+function weekDays(weeksFromNow: number): string[] {
+  const monday = new Date();
+  monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7) + 7 * weeksFromNow);
+
+  return [0, 1, 2, 3, 4].map((offset) => {
+    const day = new Date(monday);
+    day.setDate(monday.getDate() + offset);
+
+    return iso(day);
+  });
 }
 
 test.beforeAll(() => {
   purge();
   sql(`INSERT INTO project (title) VALUES ('${project}')`);
   sql(`INSERT INTO lot (title, estimate_days, project_id) SELECT 'Socle', 10, id FROM project WHERE title = '${project}'`);
+
+  const days = [...weekDays(-3), ...weekDays(-1)];
+  const leafAndFormer = `lot l JOIN project p ON p.id = l.project_id JOIN "user" u ON u.email = 'ancien@example.com'`;
+  const interrupted = `p.title = '${project}' AND l.title = 'Interrompue'`;
+  sql(`INSERT INTO lot (title, estimate_days, start_date, project_id) SELECT 'Interrompue', 10, '${days[0]}', id FROM project WHERE title = '${project}'`);
+  sql(`INSERT INTO lot_member (share, lot_id, user_id) SELECT 100, l.id, u.id FROM ${leafAndFormer} WHERE ${interrupted}`);
+  sql(`INSERT INTO time_entry (day, quarters, user_id, lot_id) SELECT d.day, 4, u.id, l.id FROM (${days.map((day) => `SELECT '${day}' AS day`).join(' UNION ALL ')}) d, ${leafAndFormer} WHERE ${interrupted}`);
 });
 test.afterAll(purge);
-
-function nextMonday(): string {
-  const day = new Date();
-  day.setDate(day.getDate() + (((8 - day.getDay()) % 7) || 7));
-
-  return `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
-}
 
 async function login(page: Page, email: string) {
   await page.context().clearCookies();
@@ -76,6 +101,27 @@ test('un lead planifie une feuille et la voit sur la roadmap', async ({ page }) 
   await expect(tooltip.locator('[data-test="roadmap-team"]')).toHaveText('Paula Durand 50 %');
   await expect(tooltip.locator('[data-test="roadmap-remaining"]')).toHaveText('10 j');
   await expect(projectRow(page).locator('summary [data-test="roadmap-bar-span"]')).toBeVisible();
+});
+
+test('une feuille interrompue montre ses tronçons et la même infobulle depuis chacun', async ({ page }) => {
+  await login(page, 'prod@example.com');
+  await page.goto('/roadmap');
+  await projectRow(page).locator('summary').click();
+  const leaf = projectRow(page).locator('[data-test="roadmap-leaf"][data-title="Interrompue"]');
+  const segments = leaf.locator('[data-test="roadmap-segment-realized"]');
+  const tooltip = leaf.locator('[data-test="roadmap-tooltip-realized"]');
+  await expect(segments).toHaveCount(2);
+  await expect(page.locator('[data-test="roadmap-legend-gap"]')).toBeVisible();
+
+  await segments.first().hover();
+  await expect(tooltip).toBeVisible();
+  await expect(tooltip.locator('[data-test="roadmap-days-entered"]')).toHaveText('10');
+  await page.mouse.move(0, 0);
+  await expect(tooltip).toBeHidden();
+
+  await segments.last().hover();
+  await expect(tooltip).toBeVisible();
+  await expect(tooltip.locator('[data-test="roadmap-days-entered"]')).toHaveText('10');
 });
 
 test('la frise avance de quatre semaines et revient à aujourd\'hui', async ({ page }) => {

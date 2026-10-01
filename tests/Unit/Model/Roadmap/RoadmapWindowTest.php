@@ -72,6 +72,48 @@ final class RoadmapWindowTest extends TestCase
         self::assertNull($window->bar(new \DateTimeImmutable('2027-06-14'), new \DateTimeImmutable('2027-07-01')));
     }
 
+    public function testSegmentedBarSpansItsRunsAndPlacesThemInPercentOfIt(): void
+    {
+        $bar = $this->window()->segmentedBar([$this->days('2026-09-07', '2026-09-11'), $this->days('2026-09-21', '2026-09-25')]);
+
+        self::assertNotNull($bar);
+        self::assertEqualsWithDelta(7 * self::DAY, $bar->left, 1e-9);
+        self::assertEqualsWithDelta(19 * self::DAY, $bar->width, 1e-9);
+        self::assertSame('2026-09-25', $bar->to->format('Y-m-d'));
+        [$first, $second] = $bar->segments;
+        self::assertEqualsWithDelta(0.0, $first->left, 1e-9);
+        self::assertEqualsWithDelta(100 * 5 / 19, $first->width, 1e-9);
+        self::assertEqualsWithDelta(100 * 14 / 19, $second->left, 1e-9);
+        self::assertEqualsWithDelta(100 * 5 / 19, $second->width, 1e-9);
+        self::assertSame('2026-09-21', $second->from->format('Y-m-d'));
+    }
+
+    public function testSegmentedBarLeavesOutTheRunsOutsideTheWindowAndIsCutAtItsEdge(): void
+    {
+        $bar = $this->window()->segmentedBar([$this->days('2026-08-03', '2026-08-07'), $this->days('2026-08-27', '2026-09-02'), $this->days('2026-09-07', '2026-09-11')]);
+
+        self::assertNotNull($bar);
+        self::assertSame(0.0, $bar->left);
+        self::assertTrue($bar->cutStart);
+        self::assertSame('2026-08-03', $bar->from->format('Y-m-d'), 'The bar keeps the whole span of its runs.');
+        self::assertCount(2, $bar->segments);
+        [$cut, $whole] = $bar->segments;
+        self::assertTrue($cut->cutStart);
+        self::assertEqualsWithDelta(0.0, $cut->left, 1e-9);
+        self::assertEqualsWithDelta(100 * 3 / 12, $cut->width, 1e-9);
+        self::assertFalse($whole->cutStart);
+        self::assertEqualsWithDelta(100 * 7 / 12, $whole->left, 1e-9);
+    }
+
+    public function testSegmentedBarWithoutRunWithinTheWindowIsNotShown(): void
+    {
+        $window = $this->window();
+
+        self::assertNull($window->segmentedBar([]));
+        self::assertNull($window->segmentedBar([$this->days('2026-08-03', '2026-08-07')]));
+        self::assertNull($window->segmentedBar([$this->days('2026-06-01', '2026-06-05'), $this->days('2027-07-05', '2027-07-09')]), 'The window falls between two runs.');
+    }
+
     public function testTodayIsPlacedOnlyWithinTheWindow(): void
     {
         $inside = new Roadmap($this->window(), new \DateTimeImmutable('2026-09-30'), []);
@@ -111,5 +153,13 @@ final class RoadmapWindowTest extends TestCase
     private function window(): RoadmapWindow
     {
         return RoadmapWindow::around(Week::fromIso('2026-W40'));
+    }
+
+    /**
+     * @return array{\DateTimeImmutable, \DateTimeImmutable}
+     */
+    private function days(string $from, string $to): array
+    {
+        return [new \DateTimeImmutable($from), new \DateTimeImmutable($to)];
     }
 }

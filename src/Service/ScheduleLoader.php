@@ -44,11 +44,13 @@ final readonly class ScheduleLoader
 
         $leaves = [];
         $plans = [];
+        $firstDay = $today->modify('monday this week');
         $lastStart = max($today, $startingAt ?? $today);
         foreach ($this->lotRepository->findLeavesForSchedule() as $leaf) {
             $lotId = (int) $leaf->getId();
             $leaves[$lotId] = $leaf;
             $plans[$lotId] = self::planOf($leaf, $summaries[$lotId] ?? null);
+            $firstDay = min($firstDay, $plans[$lotId]->firstEntryDay ?? $firstDay);
             $lastStart = max($lastStart, $leaf->getStartDate() ?? $today);
         }
 
@@ -57,7 +59,7 @@ final readonly class ScheduleLoader
             $people[(int) $user->getId()] = $user;
         }
 
-        return new ScheduleData($leaves, $plans, $people, $this->capacity($people, $today, $lastStart), $today, $this->overrunDays($plans));
+        return new ScheduleData($leaves, $plans, $people, $this->capacity($people, $firstDay, $lastStart), $today, $this->overrunDays($plans));
     }
 
     /**
@@ -132,16 +134,16 @@ final readonly class ScheduleLoader
     }
 
     /**
-     * @param array<int, User> $people
+     * @param array<int, User>   $people
+     * @param \DateTimeImmutable $firstDay the Monday of the current week, or the first day entered on a leaf if earlier
      */
-    private function capacity(array $people, \DateTimeImmutable $today, \DateTimeImmutable $lastStart): DailyCapacity
+    private function capacity(array $people, \DateTimeImmutable $firstDay, \DateTimeImmutable $lastStart): DailyCapacity
     {
-        $from = $today->modify('monday this week');
         $until = $lastStart->modify(\sprintf('+%d days', Scheduler::HORIZON_DAYS + 7));
 
         $holidays = [];
         foreach (HolidayCalendar::cases() as $calendar) {
-            $holidays[$calendar->value] = array_fill_keys(array_keys($this->holidayManager->holidaysBetween($calendar, $from, $until)), true);
+            $holidays[$calendar->value] = array_fill_keys(array_keys($this->holidayManager->holidaysBetween($calendar, $firstDay, $until)), true);
         }
 
         return new DailyCapacity(

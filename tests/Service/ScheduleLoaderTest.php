@@ -97,6 +97,18 @@ final class ScheduleLoaderTest extends KernelTestCase
         self::assertFalse($capacity->isActive((int) $former->getId()));
     }
 
+    public function testHolidaysGoBackToTheFirstDayEntered(): void
+    {
+        $french = $this->createUser();
+        $belgian = $this->createUser(holidayCalendar: HolidayCalendar::Belgium);
+        $this->createTimeEntry($french, $this->createLot($this->createProject(), 10, $french), '2026-07-06', 4);
+
+        $capacity = $this->loader()->load()->capacity;
+
+        self::assertFalse($capacity->isWorkingDay((int) $french->getId(), new \DateTimeImmutable('2026-07-14')), 'Bastille Day, after the first day entered.');
+        self::assertTrue($capacity->isWorkingDay((int) $belgian->getId(), new \DateTimeImmutable('2026-07-14')));
+    }
+
     public function testHolidaysReachAStartDateNotRecordedYet(): void
     {
         $user = $this->createUser();

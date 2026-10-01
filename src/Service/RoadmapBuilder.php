@@ -13,7 +13,10 @@ use App\Model\Roadmap\RoadmapBar;
 use App\Model\Roadmap\RoadmapRow;
 use App\Model\Roadmap\RoadmapTeamLine;
 use App\Model\Roadmap\RoadmapWindow;
+use App\Model\Schedule\DailyCapacity;
+use App\Model\Schedule\LeafPlan;
 use App\Model\Schedule\LeafSchedule;
+use App\Model\Schedule\PlannedMember;
 use App\Model\Schedule\ScheduleData;
 use App\Model\Schedule\ScheduleResult;
 use App\Repository\ProjectRepository;
@@ -38,23 +41,24 @@ final readonly class RoadmapBuilder
         $result = $this->scheduler->schedule(array_values($data->plans), $data->capacity, $data->today);
         $overloaded = $withOverloads ? $result->overloadedLots() : [];
         $teams = $this->teams($data);
+        $parts = $this->enteredParts($data, $result, $window);
 
-        $projects = array_map(fn (Project $project): RoadmapRow => $this->projectRow($project, $window, $result, $overloaded, $data->overrunDays, $teams), $this->projectRepository->findAllForList());
+        $projects = array_map(fn (Project $project): RoadmapRow => $this->projectRow($project, $window, $result, $overloaded, $parts, $teams), $this->projectRepository->findAllForList());
 
         return new Roadmap($window, $data->today, $projects);
     }
 
     /**
      * @param array<int, true>                                                $overloaded
-     * @param array<int, array{\DateTimeImmutable|null, \DateTimeImmutable}>  $overrunDays
+     * @param array<int, array{RoadmapBar|null, RoadmapBar|null, int, int}>   $parts
      * @param array<int, array{list<RoadmapTeamLine>, list<RoadmapTeamLine>}> $teams
      */
-    private function projectRow(Project $project, RoadmapWindow $window, ScheduleResult $result, array $overloaded, array $overrunDays, array $teams): RoadmapRow
+    private function projectRow(Project $project, RoadmapWindow $window, ScheduleResult $result, array $overloaded, array $parts, array $teams): RoadmapRow
     {
         $lots = [];
         foreach ($project->getLots() as $lot) {
             if (!$lot->isSubLot()) {
-                $lots[] = $lot->isLeaf() ? $this->leafRow($lot, $window, $result, $overloaded, $overrunDays, $teams) : $this->splitLotRow($lot, $window, $result, $overloaded, $overrunDays, $teams);
+                $lots[] = $lot->isLeaf() ? $this->leafRow($lot, $window, $result, $overloaded, $parts, $teams) : $this->splitLotRow($lot, $window, $result, $overloaded, $parts, $teams);
             }
         }
 
@@ -70,12 +74,12 @@ final readonly class RoadmapBuilder
 
     /**
      * @param array<int, true>                                                $overloaded
-     * @param array<int, array{\DateTimeImmutable|null, \DateTimeImmutable}>  $overrunDays
+     * @param array<int, array{RoadmapBar|null, RoadmapBar|null, int, int}>   $parts
      * @param array<int, array{list<RoadmapTeamLine>, list<RoadmapTeamLine>}> $teams
      */
-    private function splitLotRow(Lot $lot, RoadmapWindow $window, ScheduleResult $result, array $overloaded, array $overrunDays, array $teams): RoadmapRow
+    private function splitLotRow(Lot $lot, RoadmapWindow $window, ScheduleResult $result, array $overloaded, array $parts, array $teams): RoadmapRow
     {
-        $children = array_map(fn (Lot $child): RoadmapRow => $this->leafRow($child, $window, $result, $overloaded, $overrunDays, $teams), $lot->getChildren()->getValues());
+        $children = array_map(fn (Lot $child): RoadmapRow => $this->leafRow($child, $window, $result, $overloaded, $parts, $teams), $lot->getChildren()->getValues());
 
         return $this->spanRow($lot->getProject(), $lot, $children, $window, []);
     }
@@ -111,10 +115,10 @@ final readonly class RoadmapBuilder
 
     /**
      * @param array<int, true>                                                $overloaded
-     * @param array<int, array{\DateTimeImmutable|null, \DateTimeImmutable}>  $overrunDays
+     * @param array<int, array{RoadmapBar|null, RoadmapBar|null, int, int}>   $parts
      * @param array<int, array{list<RoadmapTeamLine>, list<RoadmapTeamLine>}> $teams
      */
-    private function leafRow(Lot $leaf, RoadmapWindow $window, ScheduleResult $result, array $overloaded, array $overrunDays, array $teams): RoadmapRow
+    private function leafRow(Lot $leaf, RoadmapWindow $window, ScheduleResult $result, array $overloaded, array $parts, array $teams): RoadmapRow
     {
         $lotId = (int) $leaf->getId();
         $schedule = $result->get($lotId);
@@ -134,7 +138,7 @@ final readonly class RoadmapBuilder
 
         $start = $schedule->start() ?? $leaf->getStartDate();
         $lastDay = $schedule->end() ?? $schedule->realizedTo;
-        [$realized, $overrun] = self::realizedBars($schedule, $window, $overrunDays[$lotId] ?? null);
+        [$realized, $overrun, $realizedDayCount, $overrunDayCount] = $parts[$lotId] ?? [null, null, 0, 0];
         [$realizedTeam, $overrunTeam] = $teams[$lotId] ?? [[], []];
 
         return new RoadmapRow(
@@ -152,6 +156,8 @@ final readonly class RoadmapBuilder
             signals: $signals,
             realizedTeam: $realizedTeam,
             overrunTeam: $overrunTeam,
+            realizedDayCount: $realizedDayCount,
+            overrunDayCount: $overrunDayCount,
         );
     }
 
@@ -233,26 +239,56 @@ final readonly class RoadmapBuilder
     }
 
     /**
-     * The days entered, split between the last day entered within the estimate and the day it was gone beyond.
+     * The days entered on every planned leaf with time entered, within its estimate then beyond it, each cut into runs.
      *
-     * @param array{\DateTimeImmutable|null, \DateTimeImmutable}|null $overrunDays
-     *
-     * @return array{RoadmapBar|null, RoadmapBar|null} within the estimate, then beyond it
+     * @return array<int, array{RoadmapBar|null, RoadmapBar|null, int, int}> the bars within and beyond the estimate, then
+     *                                                                       their number of days entered, by lot id
      */
-    private static function realizedBars(LeafSchedule $schedule, RoadmapWindow $window, ?array $overrunDays): array
+    private function enteredParts(ScheduleData $data, ScheduleResult $result, RoadmapWindow $window): array
     {
-        $from = $schedule->realizedFrom;
-        $to = $schedule->realizedTo;
-        if (null === $from || null === $to) {
-            return [null, null];
-        }
-        if (null === $overrunDays) {
-            return [$window->bar($from, $to), null];
+        $entered = array_keys(array_filter($data->plans, static fn (LeafPlan $plan): bool => null !== $plan->firstEntryDay && true === $result->get($plan->lotId)?->isPlanned()));
+
+        $parts = [];
+        foreach ($this->timeEntryRepository->sumQuartersByDayForLots($entered) as $lotId => $quartersByDay) {
+            $members = array_map(static fn (PlannedMember $member): int => $member->userId, $data->plans[$lotId]->members ?? []);
+            $overrunDay = ($data->overrunDays[$lotId][1] ?? null)?->format('Y-m-d');
+            $days = array_keys($quartersByDay);
+            $within = array_values(array_filter($days, static fn (string $day): bool => null === $overrunDay || $day < $overrunDay));
+            $beyond = array_values(array_filter($days, static fn (string $day): bool => null !== $overrunDay && $day >= $overrunDay));
+
+            $parts[$lotId] = [
+                $window->segmentedBar(self::runs($within, $members, $data->capacity)),
+                $window->segmentedBar(self::runs($beyond, $members, $data->capacity)),
+                \count($within),
+                \count($beyond),
+            ];
         }
 
-        [$lastDayWithin, $overrunDay] = $overrunDays;
+        return $parts;
+    }
 
-        return [null === $lastDayWithin ? null : $window->bar($from, $lastDayWithin), $window->bar($overrunDay, $to)];
+    /**
+     * Days entered make one run until a working day of one of the members goes by without any time entered.
+     *
+     * @param list<string> $days    Y-m-d, in date order
+     * @param list<int>    $members user ids
+     *
+     * @return list<array{\DateTimeImmutable, \DateTimeImmutable}> first and last day of each run
+     */
+    private static function runs(array $days, array $members, DailyCapacity $capacity): array
+    {
+        $runs = [];
+        $run = null;
+        foreach ($days as $day) {
+            $date = new \DateTimeImmutable($day);
+            if (null !== $run && $capacity->hasWorkingDayBetween($members, $run[1], $date)) {
+                $runs[] = $run;
+                $run = null;
+            }
+            $run = [$run[0] ?? $date, $date];
+        }
+
+        return null === $run ? $runs : [...$runs, $run];
     }
 
     /**

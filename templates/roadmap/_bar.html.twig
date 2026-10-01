@@ -1,15 +1,20 @@
 {#
-    A bar of the roadmap and its tooltip. Expects `row`, `bar`, `kind` (see _tooltip), `class` and `test`.
+    A bar of the roadmap and its tooltip. Expects `row`, `bar`, `kind` (see _tooltip), `class` and `test`. A bar made of
+    segments is a transparent box holding them: Flowbite keeps a single trigger per tooltip.
 #}
 {% set fade = bar.cutStart and bar.cutEnd
     ? 'linear-gradient(to right, transparent, black 12px, black calc(100% - 12px), transparent)'
     : (bar.cutStart ? 'linear-gradient(to right, transparent, black 12px)' : (bar.cutEnd ? 'linear-gradient(to left, transparent, black 12px)' : null)) %}
 {% set tooltip = 'roadmap-tooltip-' ~ (row.lot ? 'lot-' ~ row.lot.id : 'project-' ~ row.project.id) ~ '-' ~ kind %}
-<div class="absolute top-1/2 -translate-y-1/2 {{ class }} {{ bar.cutStart ? 'rounded-l-none' : '' }} {{ bar.cutEnd ? 'rounded-r-none' : '' }}"
+<div class="absolute top-1/2 -translate-y-1/2 {{ bar.segments is empty ? class : (class ~ ' bg-transparent')|tailwind_merge }} {{ bar.cutStart ? 'rounded-l-none' : '' }} {{ bar.cutEnd ? 'rounded-r-none' : '' }}"
      style="{{ bar.style }}{% if fade %}; mask-image: {{ fade }}{% endif %}"
      data-tooltip-target="{{ tooltip }}"
      data-test="{{ test }}"
      data-cut-start="{{ bar.cutStart ? 'true' : 'false' }}"
      data-cut-end="{{ bar.cutEnd ? 'true' : 'false' }}"
-     aria-hidden="true"></div>
+     aria-hidden="true">
+    {%- for segment in bar.segments %}
+        <div class="absolute inset-y-0 {{ class }} {{ segment.cutStart ? 'rounded-l-none' : '' }} {{ segment.cutEnd ? 'rounded-r-none' : '' }}" style="{{ segment.style }}" data-test="roadmap-segment-{{ kind }}"></div>
+    {%- endfor -%}
+</div>
 {{ include('roadmap/_tooltip.html.twig', {id: tooltip}) }}

@@ -75,6 +75,29 @@ final class RoadmapControllerTest extends WebTestCase
         self::assertCount(0, $row->filter('[data-test="roadmap-leaf-link"]'), 'Prod may not edit a leaf they do not own.');
     }
 
+    public function testInterruptedLeafShowsItsSegmentsInASingleBarWithItsDaysEnteredInTheTooltip(): void
+    {
+        $client = $this->clientAs('prod@example.com');
+        $alice = $this->createUser();
+        $project = $this->createProject();
+        $leaf = $this->planLot($this->createLot($project, 10, $alice, title: 'Interrompue'), new \DateTimeImmutable('2026-09-07'), [[$alice, 100]]);
+        foreach (['2026-09-07', '2026-09-08', '2026-09-09', '2026-09-10', '2026-09-11', '2026-09-21', '2026-09-22', '2026-09-23', '2026-09-24', '2026-09-25'] as $day) {
+            $this->createTimeEntry($alice, $leaf, $day, 4);
+        }
+
+        $crawler = $client->request('GET', '/roadmap');
+
+        $row = $crawler->filter(\sprintf('[data-test="roadmap-project"][data-title="%s"] [data-test="roadmap-leaf"][data-title="Interrompue"]', $project->getTitle()));
+        $bar = $row->filter('[data-test="roadmap-bar-realized"]');
+        self::assertCount(1, $bar);
+        self::assertCount(2, $bar->filter('[data-test="roadmap-segment-realized"]'));
+        $tooltip = $row->filter('[data-test="roadmap-tooltip-realized"]');
+        self::assertSame('Lun 07/09/2026 → Ven 25/09/2026', $tooltip->filter('[data-test="roadmap-tooltip-period"]')->text());
+        self::assertSame('10 j', $tooltip->filter('[data-test="roadmap-realized"]')->text());
+        self::assertSame('10', $tooltip->filter('[data-test="roadmap-days-entered"]')->text());
+        self::assertSelectorTextContains('[data-test="roadmap-legend-gap"]', 'Jour ouvré sans saisie');
+    }
+
     public function testOverrunLeafShowsByHowMuchAndThatItsEndIsUnknown(): void
     {
         $client = $this->clientAs('prod@example.com');
@@ -93,6 +116,8 @@ final class RoadmapControllerTest extends WebTestCase
         self::assertSame('1 j', $overrun->filter('[data-test="roadmap-overrun"]')->text());
         self::assertSame('+50 %', $overrun->filter('[data-test="roadmap-overrun-percent"]')->text());
         self::assertSame('Lun 05/10/2026 → Lun 05/10/2026', $overrun->filter('[data-test="roadmap-tooltip-period"]')->text());
+        self::assertSame('1', $overrun->filter('[data-test="roadmap-days-entered"]')->text());
+        self::assertSame('2', $row->filter('[data-test="roadmap-tooltip-realized"] [data-test="roadmap-days-entered"]')->text());
         self::assertSame('Jeu 01/10/2026 → Ven 02/10/2026', $row->filter('[data-test="roadmap-tooltip-realized"] [data-test="roadmap-tooltip-period"]')->text(), 'The time within the estimate ends on its last day entered, not on the day before the overrun.');
         self::assertCount(0, $row->filter('[data-test="roadmap-remaining"]'));
         self::assertCount(1, $row->filter('[data-test="roadmap-bar-realized"]'));

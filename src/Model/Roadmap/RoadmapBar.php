@@ -10,6 +10,10 @@ namespace App\Model\Roadmap;
  */
 final readonly class RoadmapBar
 {
+    /**
+     * @param list<RoadmapBar> $segments the runs of days entered that make up the bar, placed in percent of its width;
+     *                                   none when the bar is whole
+     */
     public function __construct(
         public float $left,
         public float $width,
@@ -17,6 +21,7 @@ final readonly class RoadmapBar
         public bool $cutEnd,
         public \DateTimeImmutable $from,
         public \DateTimeImmutable $to,
+        public array $segments = [],
     ) {
     }
 

@@ -74,6 +74,26 @@ final class DailyCapacityTest extends TestCase
         self::assertSame(0, $capacity->units(99, 100, $this->day('2026-10-05')));
     }
 
+    public function testWorkingDayBetweenTwoDaysIsLookedForStrictlyBetweenThem(): void
+    {
+        $capacity = $this->capacity();
+
+        self::assertFalse($capacity->hasWorkingDayBetween([self::ALICE], $this->day('2026-10-05'), $this->day('2026-10-06')), 'Two days in a row.');
+        self::assertFalse($capacity->hasWorkingDayBetween([self::ALICE], $this->day('2026-10-09'), $this->day('2026-10-12')), 'Only a weekend between a Friday and a Monday.');
+        self::assertTrue($capacity->hasWorkingDayBetween([self::ALICE], $this->day('2026-10-06'), $this->day('2026-10-08')));
+    }
+
+    public function testWorkingDayBetweenTwoDaysNeedsOnlyOnePersonToWork(): void
+    {
+        $capacity = $this->capacity(holidays: ['fr' => ['2026-10-07' => true], 'be' => ['2026-10-07' => true, '2026-10-14' => true]]);
+
+        self::assertFalse($capacity->hasWorkingDayBetween([self::ALICE, self::BRUNO], $this->day('2026-10-06'), $this->day('2026-10-08')), 'A holiday for everyone.');
+        self::assertTrue($capacity->hasWorkingDayBetween([self::ALICE, self::BRUNO], $this->day('2026-10-13'), $this->day('2026-10-15')), 'A Belgian holiday is a working day for Alice.');
+        self::assertFalse($capacity->hasWorkingDayBetween([self::BRUNO], $this->day('2026-10-13'), $this->day('2026-10-15')));
+        self::assertTrue($capacity->hasWorkingDayBetween([self::CLARA, self::BRUNO], $this->day('2026-10-13'), $this->day('2026-10-15')), 'An inactive person keeps their calendar.');
+        self::assertFalse($capacity->hasWorkingDayBetween([], $this->day('2026-10-06'), $this->day('2026-10-08')));
+    }
+
     /**
      * @param array<int, list<array{string, int<1, 20>}>> $weeklyMaxes
      * @param array<string, array<string, true>>          $holidays

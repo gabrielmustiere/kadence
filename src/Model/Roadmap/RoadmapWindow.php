@@ -72,6 +72,34 @@ final readonly class RoadmapWindow
     }
 
     /**
+     * The bar from the first to the last day of the runs, holding a segment for each run within the window; null when
+     * none of them is.
+     *
+     * @param list<array{\DateTimeImmutable, \DateTimeImmutable}> $runs first and last day of each run, in date order
+     */
+    public function segmentedBar(array $runs): ?RoadmapBar
+    {
+        if ([] === $runs) {
+            return null;
+        }
+
+        $bar = $this->bar($runs[0][0], $runs[array_key_last($runs)][1]);
+        if (null === $bar) {
+            return null;
+        }
+
+        $segments = [];
+        foreach ($runs as [$from, $to]) {
+            $run = $this->bar($from, $to);
+            if (null !== $run) {
+                $segments[] = new RoadmapBar(100 * ($run->left - $bar->left) / $bar->width, 100 * $run->width / $bar->width, $run->cutStart, $run->cutEnd, $from, $to);
+            }
+        }
+
+        return [] === $segments ? null : new RoadmapBar($bar->left, $bar->width, $bar->cutStart, $bar->cutEnd, $bar->from, $bar->to, $segments);
+    }
+
+    /**
      * Where a day falls on the window, in percent of its width.
      */
     public function position(\DateTimeImmutable $day): float
