@@ -8,7 +8,8 @@
     future: ['Restant, calculé', 'rounded-sm border border-dashed border-brand bg-brand-soft'],
     span: [row.lot ? 'Lot' : 'Projet', 'rounded-full bg-brand-medium'],
 }[kind] %}
-<div id="{{ id }}" role="tooltip" class="invisible absolute z-20 w-80 rounded-base border border-default bg-neutral-primary-soft p-3 text-xs text-body opacity-0 shadow-md transition-opacity duration-150" data-test="roadmap-tooltip-{{ kind }}">
+{% set team = {realized: row.realizedTeam, overrun: row.overrunTeam}[kind] ?? null %}
+<div id="{{ id }}" role="tooltip" class="invisible absolute z-20 {{ team is null ? 'w-80' : 'w-96' }} rounded-base border border-default bg-neutral-primary-soft p-3 text-xs text-body opacity-0 shadow-md transition-opacity duration-150" data-test="roadmap-tooltip-{{ kind }}">
     <p class="text-sm font-semibold text-heading">{{ row.title }}</p>
     <p class="mt-1 flex items-center gap-1.5"><span class="inline-block h-2.5 w-5 {{ legend[1] }}"></span>{{ legend[0] }}</p>
     <dl class="mt-2 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 border-t border-default pt-2">
@@ -29,14 +30,17 @@
             <dt>Restant</dt>
             <dd class="text-heading"><span data-test="roadmap-remaining">{{ row.remainingQuarters|days }}</span> sur {{ row.lot.estimateDays }} j estimés</dd>
         {% endif %}
-        {% if row.leaf and row.members is not empty %}
+        {% if row.leaf and (team ?? row.members) is not empty %}
             <dt>Équipe</dt>
             <dd>
                 <ul class="space-y-0.5 text-heading" data-test="roadmap-team">
-                    {% for member in row.members %}
-                        <li class="flex justify-between gap-3">
-                            <span class="{{ member.user.active ? '' : 'line-through' }}">{{ member.user.firstName }} {{ member.user.lastName }}</span>
-                            <span class="tabular-nums">{{ member.share }} %</span>
+                    {% for line in team ?? row.members %}
+                        <li class="flex justify-between gap-3" data-test="roadmap-team-line">
+                            <span class="{{ line.user.active ? '' : 'line-through' }}">{{ line.user.firstName }} {{ line.user.lastName }}</span>
+                            <span class="flex shrink-0 gap-3 tabular-nums">
+                                {% if team is not null %}<span class="min-w-10 text-right" data-test="roadmap-team-entered">{{ line.quarters|days }}</span>{% endif %}
+                                <span class="{{ team is not null ? 'min-w-16 text-right' : '' }} {{ line.share is null ? 'text-body' : '' }}">{{ line.share is null ? 'hors équipe' : line.share ~ ' %' }}</span>
+                            </span>
                         </li>
                     {% endfor %}
                 </ul>

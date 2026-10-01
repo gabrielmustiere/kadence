@@ -16,12 +16,14 @@ use App\Model\Quarters;
 final readonly class RoadmapRow
 {
     /**
-     * @param \DateTimeImmutable|null $end      the calculated end, null when it is unknown
-     * @param \DateTimeImmutable|null $lastDay  the last day the bars reach
-     * @param RoadmapBar|null         $overrun  the days entered once the estimate was gone beyond
+     * @param \DateTimeImmutable|null $end          the calculated end, null when it is unknown
+     * @param \DateTimeImmutable|null $lastDay      the last day the bars reach
+     * @param RoadmapBar|null         $overrun      the days entered once the estimate was gone beyond
      * @param list<LotMember>         $members
      * @param list<RoadmapSignal>     $signals
      * @param list<RoadmapRow>        $children
+     * @param list<RoadmapTeamLine>   $realizedTeam what each person entered within the estimate
+     * @param list<RoadmapTeamLine>   $overrunTeam  what each person entered beyond the estimate
      */
     public function __construct(
         public Project $project,
@@ -37,6 +39,8 @@ final readonly class RoadmapRow
         public array $members = [],
         public array $signals = [],
         public array $children = [],
+        public array $realizedTeam = [],
+        public array $overrunTeam = [],
     ) {
     }
 

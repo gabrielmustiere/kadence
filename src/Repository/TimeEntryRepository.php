@@ -91,6 +91,56 @@ class TimeEntryRepository extends ServiceEntityRepository
     }
 
     /**
+     * @return array<int, array<int, int>> quarters entered by each person, by lot id then user id
+     */
+    public function sumQuartersByLotAndUser(): array
+    {
+        /** @var list<array{lotId: int|string, userId: int|string, quarters: int|string}> $rows */
+        $rows = $this->createQueryBuilder('e')
+            ->select('IDENTITY(e.lot) AS lotId', 'IDENTITY(e.user) AS userId', 'SUM(e.quarters) AS quarters')
+            ->groupBy('e.lot', 'e.user')
+            ->getQuery()
+            ->getArrayResult();
+
+        $quarters = [];
+        foreach ($rows as $row) {
+            $quarters[(int) $row['lotId']][(int) $row['userId']] = (int) $row['quarters'];
+        }
+
+        return $quarters;
+    }
+
+    /**
+     * @param list<int> $lotIds
+     *
+     * @return array<int, list<array{int, int}>> user id and quarters of each entry, in the order they were entered (day,
+     *                                           then entry), by lot id
+     */
+    public function findQuartersInOrderForLots(array $lotIds): array
+    {
+        if ([] === $lotIds) {
+            return [];
+        }
+
+        /** @var list<array{lotId: int|string, userId: int|string, quarters: int|string}> $rows */
+        $rows = $this->createQueryBuilder('e')
+            ->select('IDENTITY(e.lot) AS lotId', 'IDENTITY(e.user) AS userId', 'e.quarters AS quarters')
+            ->andWhere('IDENTITY(e.lot) IN (:lots)')
+            ->setParameter('lots', $lotIds, ArrayParameterType::INTEGER)
+            ->orderBy('e.day', 'ASC')
+            ->addOrderBy('e.id', 'ASC')
+            ->getQuery()
+            ->getArrayResult();
+
+        $entries = [];
+        foreach ($rows as $row) {
+            $entries[(int) $row['lotId']][] = [(int) $row['userId'], (int) $row['quarters']];
+        }
+
+        return $entries;
+    }
+
+    /**
      * @param list<int> $lotIds
      *
      * @return array<int, array<string, int>> quarters entered each day (Y-m-d, in date order), by lot id

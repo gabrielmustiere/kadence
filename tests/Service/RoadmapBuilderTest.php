@@ -8,6 +8,7 @@ use App\Entity\Project;
 use App\Enum\Type\RoadmapSignal;
 use App\Model\Roadmap\Roadmap;
 use App\Model\Roadmap\RoadmapRow;
+use App\Model\Roadmap\RoadmapTeamLine;
 use App\Model\Roadmap\RoadmapWindow;
 use App\Model\Week;
 use App\Service\RoadmapBuilder;
@@ -102,6 +103,32 @@ final class RoadmapBuilderTest extends KernelTestCase
         self::assertSame('2026-10-05', $row->lastDay?->format('Y-m-d'));
     }
 
+    public function testEachPersonsTimeFillsTheEstimateInTheOrderItWasEnteredThenGoesBeyondIt(): void
+    {
+        $alice = $this->createUser();
+        $bob = $this->createUser();
+        $carol = $this->createUser();
+        $project = $this->createProject();
+        $leaf = $this->planLot($this->createLot($project, 2, $alice), new \DateTimeImmutable('2026-10-01'), [[$alice, 100], [$bob, 50]]);
+        $this->createTimeEntry($alice, $leaf, '2026-10-01', 4);
+        $this->createTimeEntry($carol, $leaf, '2026-10-02', 3);
+        $this->createTimeEntry($bob, $leaf, '2026-10-02', 2);
+        $this->createTimeEntry($alice, $leaf, '2026-10-05', 1);
+
+        $row = $this->projectRow($this->build(), $project)->children[0];
+
+        self::assertSame(
+            [[$alice->getId(), 100, 4], [$bob->getId(), 50, 1], [$carol->getId(), null, 3]],
+            self::team($row->realizedTeam),
+            'Bob\'s entry reaches the estimate: one quarter of it is within, the other beyond.',
+        );
+        self::assertSame(
+            [[$alice->getId(), 100, 1], [$bob->getId(), 50, 1]],
+            self::team($row->overrunTeam),
+            'Carol, outside the team, entered nothing beyond the estimate.',
+        );
+    }
+
     public function testPlannedLeafWithoutCapacityNorEntryKeepsItsStartAndLeavesTheEndOfItsProjectUnknown(): void
     {
         $user = $this->createUser();
@@ -157,6 +184,16 @@ final class RoadmapBuilderTest extends KernelTestCase
         self::assertInstanceOf(RoadmapBuilder::class, $builder);
 
         return $builder->build(RoadmapWindow::around(Week::fromIso('2026-W41')), $withOverloads);
+    }
+
+    /**
+     * @param list<RoadmapTeamLine> $team
+     *
+     * @return list<array{int|null, int|null, int}> user id, share and quarters entered
+     */
+    private static function team(array $team): array
+    {
+        return array_map(static fn (RoadmapTeamLine $line): array => [$line->user->getId(), $line->share, $line->quarters], $team);
     }
 
     private function projectRow(Roadmap $roadmap, Project $project): RoadmapRow

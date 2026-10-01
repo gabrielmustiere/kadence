@@ -27,7 +27,8 @@ use function Symfony\Component\String\u;
 /**
  * A fake software company: four projects split into lots and sub-lots, a team with part-time
  * people and two people on the Belgian holiday calendar, and six months of time entries up to yesterday, none on a
- * holiday. Test accounts get no entry in the current week, so that the end-to-end scenarios find it empty.
+ * holiday. Each week a team swarms on one leaf of its project, and its people lend a hand to another project some days.
+ * Test accounts get no entry in the current week, so that the end-to-end scenarios find it empty.
  * Deterministic: the same seed always gives the same company, relative to today.
  */
 final class DemoCompanyFixtures extends Fixture implements DependentFixtureInterface
@@ -37,6 +38,9 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
 
     /** People on the Belgian holiday calendar. */
     private const array BELGIANS = ['hugo', 'ines'];
+
+    /** Team => the team whose project it lends a hand to. */
+    private const array HELPS = ['atlas' => 'nova', 'nova' => 'orion', 'orion' => 'vega', 'vega' => 'atlas'];
 
     /** Leaves left « à estimer » although time is entered on them. */
     private const array TO_ESTIMATE = ['Notifications'];
@@ -128,6 +132,9 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
 
     /** @var array<string, list<array{Lot, int, int}>> leaves by team, with their active weeks */
     private array $leavesByTeam = [];
+
+    /** @var array<string, array<int, Lot|null>> the leaf each team swarms on, by week index */
+    private array $focus = [];
 
     /** @var array<int, int> quarters entered by lot id */
     private array $consumed = [];
@@ -291,6 +298,8 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
 
             $weeklyQuarters = null !== $change && $weekIndex >= $change[1] ? $change[0] : $quarters;
             $leaves = $this->activeLeaves($team, $weekIndex);
+            $focus = $this->focus($team, $weekIndex);
+            $helped = $this->focus(self::HELPS[$team] ?? '', $weekIndex);
             $publicHolidays = $this->holidayManager->holidaysOf($person, $week);
             foreach ($week->days() as $day) {
                 if ($day >= $today) {
@@ -301,7 +310,7 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
                 }
 
                 $capacity = $this->dayCapacity((int) $day->format('N'), $weeklyQuarters, $dayOff);
-                foreach ($this->split($capacity, $leaves, $support) as [$leaf, $dayQuarters]) {
+                foreach ($this->split($capacity, $leaves, $focus, $helped, $support) as [$leaf, $dayQuarters]) {
                     $entry = new TimeEntry($person, $leaf, $day, $dayQuarters);
                     $manager->persist($entry);
                     $this->lastEntries[(int) $leaf->getId()] = $entry;
@@ -338,7 +347,7 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
      *
      * @return list<array{Lot, int<1, 4>}>
      */
-    private function split(int $capacity, array $leaves, Lot $support): array
+    private function split(int $capacity, array $leaves, ?Lot $focus, ?Lot $helped, Lot $support): array
     {
         if (0 === $capacity) {
             return [];
@@ -349,13 +358,18 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
             $parts[] = [$support, 1];
             --$capacity;
         }
+        if (null !== $helped && $capacity >= 2 && mt_rand(1, 100) <= 40) {
+            $lent = mt_rand(1, $capacity - 1);
+            $parts[] = [$helped, $lent];
+            $capacity -= $lent;
+        }
         if ([] === $leaves) {
             $parts[] = [$support, $capacity];
 
             return self::merge($parts);
         }
 
-        $main = $leaves[mt_rand(0, \count($leaves) - 1)];
+        $main = null !== $focus && mt_rand(1, 100) <= 70 ? $focus : $leaves[mt_rand(0, \count($leaves) - 1)];
         if ($capacity >= 2 && \count($leaves) > 1 && mt_rand(1, 100) <= 35) {
             $other = $leaves[mt_rand(0, \count($leaves) - 1)];
             $first = mt_rand(1, $capacity - 1);
@@ -382,6 +396,16 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
         }
 
         return array_values(array_map(static fn (array $part): array => [$part[0], max(1, min(4, $part[1]))], $merged));
+    }
+
+    private function focus(string $team, int $weekIndex): ?Lot
+    {
+        if (!\array_key_exists($weekIndex, $this->focus[$team] ?? [])) {
+            $leaves = $this->activeLeaves($team, $weekIndex);
+            $this->focus[$team][$weekIndex] = [] === $leaves ? null : $leaves[mt_rand(0, \count($leaves) - 1)];
+        }
+
+        return $this->focus[$team][$weekIndex];
     }
 
     /**

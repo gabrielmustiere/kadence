@@ -14,6 +14,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\Clock\Test\ClockSensitiveTrait;
+use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\HttpKernel\Profiler\Profile;
 
 final class RoadmapControllerTest extends WebTestCase
@@ -97,6 +98,25 @@ final class RoadmapControllerTest extends WebTestCase
         self::assertCount(1, $row->filter('[data-test="roadmap-bar-realized"]'));
         self::assertCount(1, $row->filter('[data-test="roadmap-bar-overrun"]'));
         self::assertCount(0, $row->filter('[data-test="roadmap-bar-future"]'));
+    }
+
+    public function testTooltipsOfTheTimeEnteredSayWhatEachPersonEnteredWithinTheEstimateThenBeyondIt(): void
+    {
+        $client = $this->clientAs('prod@example.com');
+        $alice = $this->createUser();
+        $outsider = $this->createUser();
+        $project = $this->createProject();
+        $leaf = $this->planLot($this->createLot($project, 2, $alice, title: 'Renforcée'), new \DateTimeImmutable('2026-10-01'), [[$alice, 100]]);
+        $this->createTimeEntry($alice, $leaf, '2026-10-01', 4);
+        $this->createTimeEntry($outsider, $leaf, '2026-10-02', 4);
+        $this->createTimeEntry($alice, $leaf, '2026-10-05', 2);
+
+        $crawler = $client->request('GET', '/roadmap');
+
+        $row = $crawler->filter(\sprintf('[data-test="roadmap-project"][data-title="%s"] [data-test="roadmap-leaf"][data-title="Renforcée"]', $project->getTitle()));
+        $lines = static fn (string $kind): array => $row->filter(\sprintf('[data-test="roadmap-tooltip-%s"] [data-test="roadmap-team-line"]', $kind))->each(static fn (Crawler $line): string => $line->text());
+        self::assertSame(['Test User 1 j 100 %', 'Test User 1 j hors équipe'], $lines('realized'));
+        self::assertSame(['Test User 0,5 j 100 %'], $lines('overrun'));
     }
 
     public function testLeavesWithoutABarSayWhatTheyMissAndTheirProjectIsPartial(): void
