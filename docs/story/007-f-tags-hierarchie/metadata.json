@@ -44,6 +44,15 @@
       "date": "2026-10-01",
       "type": "Sync",
       "description": "Plan réaligné sur le code livré (findAllByCategory, tri par Tag::compare, findActiveWithTags, findManagers, garde de cycle « personne déjà vue », type d'équipe en libellé unique, reset Turbo du filtre, LotType et accueil au périmètre, critères de sortie cochés) ; pitch : question backlog tranchée ; backlog enrichi (C1.4, C1.5, ligne tags-hierarchie en V2)."
+    },
+    {
+      "date": "2026-10-01",
+      "type": "Livraison",
+      "description": "Story livrée dans le commit 20b1246."
     }
-  ]
+  ],
+  "delivery": {
+    "release": null,
+    "commit": "20b1246"
+  }
 }
