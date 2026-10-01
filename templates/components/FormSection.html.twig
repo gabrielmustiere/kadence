@@ -1,0 +1,20 @@
+{# @prop title string The section heading, also the accessible name of the group #}
+{# @prop description string|null A sentence under the heading explaining what the fields are for #}
+{# @block content The form rows of the section #}
+{%- props title, description = null -%}
+<div
+    role="group"
+    aria-label="{{ title }}"
+    class="{{ ('grid grid-cols-1 gap-x-8 gap-y-4 py-6 lg:grid-cols-[15rem_minmax(0,1fr)] ' ~ attributes.render('class'))|tailwind_merge }}"
+    {{ attributes }}
+>
+    <div>
+        <h2 class="text-base font-semibold text-heading">{{ title }}</h2>
+        {% if description %}
+            <p class="mt-1 text-sm text-body">{{ description }}</p>
+        {% endif %}
+    </div>
+    <div class="min-w-0">
+        {%- block content %}{% endblock -%}
+    </div>
+</div>

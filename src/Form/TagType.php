@@ -23,6 +23,7 @@ final class TagType extends AbstractType
                 'expanded' => true,
                 'choice_label' => static fn (TagCategory $category): string => $category->label(),
                 'choice_attr' => static fn (TagCategory $category): array => ['data-test' => 'tag-category-' . $category->value],
+                'attr' => ['class' => 'flex flex-wrap gap-x-5 gap-y-2'],
             ]);
         }
 

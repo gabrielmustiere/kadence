@@ -1,26 +1,32 @@
 {{ form_start(form, {attr: {'data-test': 'team-member-form'}}) }}
-    <div class="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
-        {{ form_row(form.firstName) }}
-        {{ form_row(form.lastName) }}
-    </div>
-    {{ form_row(form.email) }}
-    {{ form_row(form.role) }}
-    {{ form_row(form.holidayCalendar) }}
-    <div class="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
-        {{ form_row(form.weeklyMaxDays) }}
-        {{ form_row(form.weeklyMaxFrom) }}
-    </div>
-    <fieldset class="mt-2 border-t border-default pt-5" data-test="member-profile">
-        <legend class="sr-only">Profil</legend>
-        <p class="mb-4 text-sm text-body">Le profil aide les leads à composer l'équipe des feuilles. Cochez les tags existants ou saisissez-en de nouveaux.</p>
-        {% for pair in [[form.technicalSkills, form.newTechnicalSkills], [form.functionalExperiences, form.newFunctionalExperiences], [form.teamType, form.newTeamType]] %}
-            <div class="mb-5 grid grid-cols-1 gap-x-6 sm:grid-cols-2">
-                {{ form_row(pair[0]) }}
-                {{ form_row(pair[1]) }}
+    <div class="divide-y divide-default border-y border-default">
+        <twig:FormSection title="Identité et accès" description="Le nom affiché dans Kadence, l'e-mail de connexion et le rôle, qui fixe les droits.">
+            <div class="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
+                {{ form_row(form.firstName) }}
+                {{ form_row(form.lastName) }}
             </div>
-        {% endfor %}
-        <div class="sm:w-1/2 sm:pe-3">{{ form_row(form.manager) }}</div>
-    </fieldset>
+            {{ form_row(form.email) }}
+            {{ form_row(form.role) }}
+        </twig:FormSection>
+        <twig:FormSection title="Temps de travail" description="Les jours fériés et le maximum hebdomadaire bornent ce que la personne peut saisir.">
+            {{ form_row(form.holidayCalendar) }}
+            <div class="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
+                {{ form_row(form.weeklyMaxDays) }}
+                {{ form_row(form.weeklyMaxFrom) }}
+            </div>
+        </twig:FormSection>
+        <twig:FormSection title="Rattachement" description="L'équipe dont la personne fait partie et celle à qui elle rapporte.">
+            {{ form_row(form.teamType) }}
+            <div class="sm:w-1/2 sm:pe-3">{{ form_row(form.newTeamType) }}</div>
+            <div class="sm:w-1/2 sm:pe-3">{{ form_row(form.manager) }}</div>
+        </twig:FormSection>
+        <twig:FormSection title="Compétences" description="Elles aident les leads à composer l'équipe des feuilles. Cochez les tags existants ou saisissez-en de nouveaux." data-test="member-profile">
+            {{ form_row(form.technicalSkills) }}
+            {{ form_row(form.newTechnicalSkills) }}
+            {{ form_row(form.functionalExperiences, {row_attr: {class: 'mt-6 mb-3'}}) }}
+            {{ form_row(form.newFunctionalExperiences) }}
+        </twig:FormSection>
+    </div>
     <div class="mt-6 flex items-center gap-3">
         <twig:Button type="submit" data-test="team-member-submit">{{ submit_label }}</twig:Button>
         <a href="{{ path('app_team_index') }}" class="text-sm text-body underline hover:no-underline">Annuler</a>

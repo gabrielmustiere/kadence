@@ -73,7 +73,7 @@ final class LotType extends AbstractType
                     'attr' => ['data-test' => 'lot-start-date'],
                 ])
                 ->add('members', CollectionType::class, [
-                    'label' => 'Équipe',
+                    'label' => 'Membres',
                     'entry_type' => LotMemberType::class,
                     'entry_options' => ['label' => false, 'people' => [...$active, ...self::inactiveMembers($builder->getData())]],
                     'allow_add' => true,

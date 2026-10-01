@@ -52,6 +52,7 @@ final class TeamMemberType extends AbstractType
                 'expanded' => true,
                 'choice_label' => static fn (Role $role): string => $role->label(),
                 'choice_attr' => static fn (Role $role): array => ['data-test' => 'member-role-' . $role->value],
+                'attr' => ['class' => 'flex flex-wrap gap-x-5 gap-y-2'],
             ])
             ->add('holidayCalendar', EnumType::class, [
                 'class' => HolidayCalendar::class,
@@ -60,6 +61,7 @@ final class TeamMemberType extends AbstractType
                 'expanded' => true,
                 'choice_label' => static fn (HolidayCalendar $calendar): string => $calendar->label(),
                 'choice_attr' => static fn (HolidayCalendar $calendar): array => ['data-test' => 'member-holiday-calendar-' . $calendar->value],
+                'attr' => ['class' => 'flex flex-wrap gap-x-5 gap-y-2'],
             ])
             ->add('weeklyMaxDays', NumberType::class, [
                 'label' => 'Maximum de saisie par semaine (jours)',

@@ -24,6 +24,7 @@ final class HolidayAdditionType extends AbstractType
                 'expanded' => true,
                 'choice_label' => static fn (HolidayCalendar $calendar): string => $calendar->label(),
                 'choice_attr' => static fn (HolidayCalendar $calendar): array => ['data-test' => 'holiday-calendar-' . $calendar->value],
+                'attr' => ['class' => 'flex flex-wrap gap-x-5 gap-y-2'],
             ])
             ->add('day', DateType::class, [
                 'label' => 'Jour',

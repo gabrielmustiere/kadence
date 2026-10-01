@@ -1,37 +1,45 @@
 {{ form_start(form, {attr: {'data-test': 'lot-form'}}) }}
-    {{ form_row(form.title) }}
-    {{ form_row(form.description) }}
-    {% if form.estimateDays is defined or form.owner is defined %}
-        <div class="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
-            {% if form.estimateDays is defined %}{{ form_row(form.estimateDays) }}{% endif %}
-            {% if form.owner is defined %}{{ form_row(form.owner) }}{% endif %}
-        </div>
-    {% endif %}
-    {% if form.startDate is defined %}
-        {% set members = form.members %}
-        <fieldset class="mt-2 border-t border-default pt-5" data-test="lot-planning" data-controller="tag-filter" data-action="turbo:before-cache@document->tag-filter#reset">
-            <legend class="sr-only">Planification</legend>
-            <p class="mb-4 text-sm text-body">La date de début et l'équipe dessinent la feuille sur la roadmap. Le responsable fait toujours partie de l'équipe.</p>
-            <div class="sm:w-1/2 sm:pe-3">{{ form_row(form.startDate) }}</div>
-            <twig:TagFilter/>
-            <div data-controller="form-collection"
-                 data-form-collection-index-value="{{ members.children is empty ? 0 : max(members.children|keys) + 1 }}"
-                 data-form-collection-prototype-value="{{ include('lot/_member_row.html.twig', {member: members.vars.prototype})|e('html_attr') }}">
-                <span class="mb-2 block text-sm font-medium text-heading">{{ members.vars.label }}</span>
-                {{ form_errors(members) }}
-                <ul class="space-y-2" data-form-collection-target="collection" data-test="lot-members">
-                    {% for member in members %}
-                        {{ include('lot/_member_row.html.twig', {member: member}) }}
-                    {% endfor %}
-                </ul>
-                {% do members.setRendered %}
-                <twig:Button type="button" size="sm" variant="outline" class="mt-3" data-action="form-collection#add" data-test="lot-member-add">
-                    <twig:ux:icon name="tabler:plus" class="size-4 me-1.5"/>
-                    Ajouter un membre
-                </twig:Button>
+    <div class="divide-y divide-default border-y border-default">
+        <twig:FormSection title="Présentation">
+            {{ form_row(form.title) }}
+            {{ form_row(form.description) }}
+        </twig:FormSection>
+        {% if form.estimateDays is defined or form.owner is defined %}
+            <twig:FormSection :title="form.owner is defined ? 'Estimation et responsable' : 'Estimation'">
+                <div class="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
+                    {% if form.estimateDays is defined %}{{ form_row(form.estimateDays) }}{% endif %}
+                    {% if form.owner is defined %}{{ form_row(form.owner) }}{% endif %}
+                </div>
+            </twig:FormSection>
+        {% endif %}
+        {% if form.startDate is defined %}
+            {% set members = form.members %}
+            <div class="divide-y divide-default" data-test="lot-planning" data-controller="tag-filter" data-action="turbo:before-cache@document->tag-filter#reset">
+                <twig:FormSection title="Planification" description="La date de début et l'équipe dessinent la feuille sur la roadmap.">
+                    <div class="sm:w-1/2 sm:pe-3">{{ form_row(form.startDate) }}</div>
+                </twig:FormSection>
+                <twig:FormSection title="Équipe" description="Le responsable fait toujours partie de l'équipe.">
+                    <twig:TagFilter/>
+                    <div data-controller="form-collection"
+                         data-form-collection-index-value="{{ members.children is empty ? 0 : max(members.children|keys) + 1 }}"
+                         data-form-collection-prototype-value="{{ include('lot/_member_row.html.twig', {member: members.vars.prototype})|e('html_attr') }}">
+                        <span class="mb-2 block text-sm font-medium text-heading">{{ members.vars.label }}</span>
+                        {{ form_errors(members) }}
+                        <ul class="space-y-2" data-form-collection-target="collection" data-test="lot-members">
+                            {% for member in members %}
+                                {{ include('lot/_member_row.html.twig', {member: member}) }}
+                            {% endfor %}
+                        </ul>
+                        {% do members.setRendered %}
+                        <twig:Button type="button" size="sm" variant="outline" class="mt-3" data-action="form-collection#add" data-test="lot-member-add">
+                            <twig:ux:icon name="tabler:plus" class="size-4 me-1.5"/>
+                            Ajouter un membre
+                        </twig:Button>
+                    </div>
+                </twig:FormSection>
             </div>
-        </fieldset>
-    {% endif %}
+        {% endif %}
+    </div>
     <div class="mt-6 flex flex-wrap items-center gap-3">
         <twig:Button type="submit" data-test="lot-submit">{{ submit_label }}</twig:Button>
         {% if add_another|default(false) %}
