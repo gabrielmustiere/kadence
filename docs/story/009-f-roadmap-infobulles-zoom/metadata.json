@@ -36,6 +36,15 @@
       "date": "2026-10-01",
       "type": "Sync",
       "description": "Plan réaligné sur le livré : contrôleur d'infobulles (pointermove, cadre de la frise, turbo:before-cache) dans Approche retenue, Mécanismes mobilisés, Périmètre et Risques ; Périmètre complété (_team.html.twig, _today.html.twig, realizedQuarters() retirée et enteredQuarters(), aria-describedby, E2E de mise en cache) ; Stratégie de test (focus placé sur le titre, fermeture avant mise en cache) ; critères de sortie attestés cochés (make phpunit et make playwright à attester au commit) ; pitch inchangé ; aucun impact sur stack et backlog ; tension avec le principe 2 de la vision signalée, non réalignée."
+    },
+    {
+      "date": "2026-10-01",
+      "type": "Livraison",
+      "description": "Story livrée par le commit 5a9baf8 (feat(roadmap)) ; suite complète verte avant commit : 356 tests PHPUnit et 40 E2E, lint propre."
     }
-  ]
+  ],
+  "delivery": {
+    "release": null,
+    "commit": "5a9baf8"
+  }
 }
