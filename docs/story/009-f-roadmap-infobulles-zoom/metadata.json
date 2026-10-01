@@ -41,10 +41,15 @@
       "date": "2026-10-01",
       "type": "Livraison",
       "description": "Story livrée par le commit 5a9baf8 (feat(roadmap)) ; suite complète verte avant commit : 356 tests PHPUnit et 40 E2E, lint propre."
+    },
+    {
+      "date": "2026-10-01",
+      "type": "Release",
+      "description": "Story publiée dans la release v0.10.0 « Interruptions et zoom de la roadmap »."
     }
   ],
   "delivery": {
-    "release": null,
+    "release": "v0.10.0",
     "commit": "5a9baf8"
   }
 }

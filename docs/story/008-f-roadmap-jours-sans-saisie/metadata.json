@@ -46,10 +46,15 @@
       "date": "2026-10-01",
       "type": "Livraison",
       "description": "Story livrée par le commit cac9662 (feat(roadmap)) ; suite complète verte avant commit : 354 tests PHPUnit et 37 E2E. Correctif des libellés de mois livré à part par le commit 678081a (fix(roadmap))."
+    },
+    {
+      "date": "2026-10-01",
+      "type": "Release",
+      "description": "Story publiée dans la release v0.10.0 « Interruptions et zoom de la roadmap »."
     }
   ],
   "delivery": {
-    "release": null,
+    "release": "v0.10.0",
     "commit": "cac9662"
   }
 }
