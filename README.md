@@ -66,8 +66,7 @@ Toutes les opérations courantes passent par `make`. Lancez `make help` pour la 
 
 - **Application** : https://kadence.wip
 - **Mailpit (UI web)** : http://localhost:8027
-- **Base SQLite (dev)** : `var/data.db` — accessible via `sqlite3 var/data.db`
-- **Base SQLite (test)** : `var/data_test.db`
+- **Base SQLite (dev et test)** : `var/data.db` — accessible via `sqlite3 var/data.db`
 
 ## Identifiants de test
 

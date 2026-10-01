@@ -20,18 +20,16 @@ use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
 use Psr\Clock\ClockInterface;
-use Symfony\Component\DependencyInjection\Attribute\When;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 use function Symfony\Component\String\u;
 
 /**
- * A fake software company for the dev environment: four projects split into lots and sub-lots, a team with part-time
+ * A fake software company: four projects split into lots and sub-lots, a team with part-time
  * people and two people on the Belgian holiday calendar, and six months of time entries up to yesterday, none on a
  * holiday. Test accounts get no entry in the current week, so that the end-to-end scenarios find it empty.
  * Deterministic: the same seed always gives the same company, relative to today.
  */
-#[When(env: 'dev')]
 final class DemoCompanyFixtures extends Fixture implements DependentFixtureInterface
 {
     private const int WEEKS = 26;

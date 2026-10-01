@@ -241,18 +241,27 @@ final class TeamControllerTest extends WebTestCase
     {
         $client = $this->directorClient();
         $director = $this->fixtureUser('admin@example.com');
+        $otherDirectors = array_values(array_filter(
+            $this->userRepository()->findBy(['role' => Role::Direction, 'active' => true]),
+            static fn (User $user): bool => $user !== $director,
+        ));
+        $this->setActive($otherDirectors, false);
 
-        $this->clickRowButton($client, $director, 'member-deactivate-confirm');
-        self::assertResponseRedirects('/equipe');
-        $client->followRedirect();
-        self::assertSelectorTextContains('[role="alert"]', 'au moins un membre de la direction actif');
+        try {
+            $this->clickRowButton($client, $director, 'member-deactivate-confirm');
+            self::assertResponseRedirects('/equipe');
+            $client->followRedirect();
+            self::assertSelectorTextContains('[role="alert"]', 'au moins un membre de la direction actif');
 
-        $this->submitMemberForm($client, '/equipe/' . $director->getId() . '/modifier', ['role' => 'lead']);
-        self::assertResponseRedirects('/equipe');
+            $this->submitMemberForm($client, '/equipe/' . $director->getId() . '/modifier', ['role' => 'lead']);
+            self::assertResponseRedirects('/equipe');
 
-        $director = $this->reloadUser($director);
-        self::assertTrue($director->isActive());
-        self::assertSame(Role::Direction, $director->getRole());
+            $director = $this->reloadUser($director);
+            self::assertTrue($director->isActive());
+            self::assertSame(Role::Direction, $director->getRole());
+        } finally {
+            $this->setActive($otherDirectors, true);
+        }
     }
 
     public function testResetPasswordInvalidatesPreviousPassword(): void
@@ -323,6 +332,18 @@ final class TeamControllerTest extends WebTestCase
     {
         $crawler = $client->request('GET', '/equipe');
         $client->submit($crawler->filter('[data-email="' . $member->getEmail() . '"] [data-test="' . $button . '"]')->form());
+    }
+
+    /**
+     * @param list<User> $users
+     */
+    private function setActive(array $users, bool $active): void
+    {
+        $entityManager = $this->entityManager();
+        foreach ($users as $user) {
+            $entityManager->find(User::class, $user->getId())?->setActive($active);
+        }
+        $entityManager->flush();
     }
 
     private function fixtureUser(string $email): User

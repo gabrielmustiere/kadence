@@ -42,7 +42,7 @@ Monolithe Symfony 8.1 en PHP 8.5, rendu serveur Twig + Symfony UX (Stimulus, Tur
 
 ## Données & stockage
 
-- **Base de données** : SQLite — `var/data.db` (dev), `var/data_test.db` (test) (`.env`, `.env.test`) ; **production : _non renseigné_**
+- **Base de données** : SQLite — `var/data.db`, partagée par dev et test (`.env`) ; **production : _non renseigné_**
 - **File / queue** : table Doctrine utilisée par Messenger (même base) (`.env`, `config/packages/messenger.yaml`)
 - **Cache / sessions** : configuration Symfony par défaut (`config/packages/cache.yaml`) ; pas de service externe
 

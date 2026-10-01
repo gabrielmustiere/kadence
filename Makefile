@@ -1,5 +1,5 @@
 .PHONY: help init install update down serve serve-d stop \
-        db-create db-drop db-reset db-test db-validate migrate migration migrate-rollback fixtures cache-clear \
+        db-create db-drop db-reset db-validate migrate migration migrate-rollback fixtures cache-clear \
         phpunit phpunit-coverage phpunit-coverage-text phpunit-coverage-clover phpunit-filter \
         playwright playwright-headed playwright-ui playwright-file \
         phpstan php-cs-fix php-cs-check insights lint build quality clean
@@ -83,17 +83,12 @@ db-create: ## Crée le fichier SQLite si besoin (auto-créé au premier migrate)
 	@echo "$(BLUE)📦 Création du fichier SQLite...$(RESET)"
 	@mkdir -p var && touch var/data.db
 
-db-drop: ## Supprime les fichiers SQLite (dev + test)
-	@echo "$(YELLOW)🗑️  Suppression des fichiers SQLite...$(RESET)"
-	@rm -f var/data.db var/data_test.db
+db-drop: ## Supprime le fichier SQLite
+	@echo "$(YELLOW)🗑️  Suppression du fichier SQLite...$(RESET)"
+	@rm -f var/data.db
 
 db-reset: db-drop migrate fixtures ## Recrée la base from scratch (drop + migrate + fixtures)
 	@echo "$(GREEN)✅ Base de données réinitialisée!$(RESET)"
-
-db-test: ## Prépare la base de test (migrations + fixtures en env test)
-	@echo "$(BLUE)📦 Préparation de la base de test...$(RESET)"
-	symfony console doctrine:migrations:migrate -n --env=test
-	symfony console doctrine:fixtures:load -n --env=test
 
 db-validate: ## Valide le schéma Doctrine
 	@echo "$(BLUE)✔️  Validation du schéma Doctrine...$(RESET)"
@@ -127,30 +122,33 @@ fixtures: ## Charge les fixtures Doctrine
 ## TESTS
 ##
 
-phpunit: db-test ## Lance les tests PHPUnit (Unit + Functional)
+# Les tests écrivent dans la base de dev : on recharge les fixtures après, quel que soit le résultat.
+RELOAD_FIXTURES = status=$$?; symfony console doctrine:fixtures:load -n -q; exit $$status
+
+phpunit: migrate fixtures ## Lance les tests PHPUnit (Unit + Functional)
 	@echo "$(BLUE)🧪 Lancement des tests PHPUnit...$(RESET)"
-	symfony php bin/phpunit
+	symfony php bin/phpunit; $(RELOAD_FIXTURES)
 
-phpunit-coverage: db-test ## Tests avec couverture HTML (var/coverage/index.html)
+phpunit-coverage: migrate fixtures ## Tests avec couverture HTML (var/coverage/index.html)
 	@echo "$(BLUE)🧪 Tests avec couverture HTML...$(RESET)"
-	XDEBUG_MODE=coverage symfony php bin/phpunit --coverage-html var/coverage --coverage-filter=src
+	XDEBUG_MODE=coverage symfony php bin/phpunit --coverage-html var/coverage --coverage-filter=src; $(RELOAD_FIXTURES)
 
-phpunit-coverage-text: db-test ## Tests avec résumé couverture console (rapide)
+phpunit-coverage-text: migrate fixtures ## Tests avec résumé couverture console (rapide)
 	@echo "$(BLUE)🧪 Tests avec résumé couverture...$(RESET)"
-	XDEBUG_MODE=coverage symfony php bin/phpunit --coverage-text=php://stdout --coverage-filter=src
+	XDEBUG_MODE=coverage symfony php bin/phpunit --coverage-text=php://stdout --coverage-filter=src; $(RELOAD_FIXTURES)
 
-phpunit-coverage-clover: db-test ## Tests avec rapport clover.xml
+phpunit-coverage-clover: migrate fixtures ## Tests avec rapport clover.xml
 	@echo "$(BLUE)🧪 Tests avec rapport clover...$(RESET)"
-	XDEBUG_MODE=coverage symfony php bin/phpunit --coverage-clover var/coverage/clover.xml --coverage-filter=src
+	XDEBUG_MODE=coverage symfony php bin/phpunit --coverage-clover var/coverage/clover.xml --coverage-filter=src; $(RELOAD_FIXTURES)
 
 ifeq (phpunit-filter,$(firstword $(MAKECMDGOALS)))
   FILTER_ARG := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
   $(eval $(FILTER_ARG):;@:)
 endif
-phpunit-filter: db-test ## Lance un test par nom (ex: make phpunit-filter LoginTest)
+phpunit-filter: migrate fixtures ## Lance un test par nom (ex: make phpunit-filter LoginTest)
 	@if [ -z "$(FILTER_ARG)" ]; then echo "$(YELLOW)Usage: make phpunit-filter NomDuTest$(RESET)"; exit 1; fi
 	@echo "$(BLUE)🧪 Tests avec filtre: $(FILTER_ARG)...$(RESET)"
-	@symfony php bin/phpunit --filter "$(FILTER_ARG)"
+	@symfony php bin/phpunit --filter "$(FILTER_ARG)"; $(RELOAD_FIXTURES)
 
 playwright: ## Lance les tests E2E Playwright (headless)
 	@echo "$(BLUE)🧪 Lancement des tests Playwright...$(RESET)"

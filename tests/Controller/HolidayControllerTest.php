@@ -63,8 +63,8 @@ final class HolidayControllerTest extends WebTestCase
         self::assertSelectorExists('[data-test="nav-holidays"]');
         self::assertSame('2026', $crawler->filter('[data-test="holiday-year"]')->attr('data-year'));
         self::assertSame('fr', $crawler->filter('[data-test^="holiday-calendar-"]:checked')->attr('value'));
-        self::assertCount(11, $this->lines($crawler, 'fr'));
-        self::assertCount(10, $this->lines($crawler, 'be'));
+        self::assertCount(11, $this->lines($crawler, 'fr')->filter('[data-status="legal"]'));
+        self::assertCount(10, $this->lines($crawler, 'be')->filter('[data-status="legal"]'));
         self::assertSame(['2026-08-15', '2026-11-01'], $this->lines($crawler, 'fr')->filter('[data-weekend="true"]')->each(static fn (Crawler $line): string => (string) $line->attr('data-day')));
         self::assertCount(0, $this->lines($crawler, 'fr')->filter('[data-weekend="true"] [data-test="holiday-remove"]'));
         self::assertSame('Fête nationale', $this->line($crawler, 'be', '2026-07-21')->filter('[data-test="holiday-label"]')->text());

@@ -14,7 +14,7 @@ Kadence est l'outil interne de pilotage de production d'un éditeur logiciel (15
 
 Monolithe Symfony, rendu serveur. Stack détaillée : `docs/stack.md`.
 
-- PHP 8.5+ / Symfony 8.1, Doctrine ORM 3.7 + Migrations, SQLite (`var/data.db`, test : `var/data_test.db`)
+- PHP 8.5+ / Symfony 8.1, Doctrine ORM 3.7 + Migrations, SQLite (`var/data.db`, partagée par dev et test)
 - Symfony Messenger sur transport Doctrine (même base SQLite)
 - Front : Twig + Symfony UX (Stimulus, Turbo, Live Component, Icons, Toolkit), AssetMapper + importmap — **pas de bundler Node**
 - UI : Tailwind CSS 4, Flowbite 4, design system « Paper » (`DESIGN.md`, tokens `@theme` dans `assets/styles/app.css`, ADR 0001)
@@ -84,7 +84,7 @@ make quality                              # CS-Fixer (corrige) + PHPStan + build
 ## Pièges fréquents
 
 - **Playwright tape sur le vrai serveur** : `baseURL` = `https://kadence.wip` — `make serve` doit tourner avant `make playwright`.
-- **`make phpunit` recrée la base de test** (`db-test` : migrations + fixtures en env test) — les données de test viennent des fixtures.
+- **Dev et test partagent `var/data.db`** — `make phpunit` recharge les fixtures avant et après les tests, car ceux-ci y écrivent sans rollback : toute donnée saisie à la main en dev est perdue.
 - **Messenger est en `sync://` en test** (`.env.test`) — les messages async sont traités immédiatement dans les tests.
 
 ## Identifiants de test
