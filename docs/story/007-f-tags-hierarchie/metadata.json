@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "title": "Décrire chaque personne par ses compétences, son équipe et son manager",
+  "created": "2026-10-01",
+  "updated": "2026-10-01",
+  "tags": ["equipe", "competences", "hierarchie", "administration"],
+  "changelog": [
+    {
+      "date": "2026-10-01",
+      "type": "Création",
+      "description": "Pitch initial rédigé : référentiel de tags à trois types, attribution par la direction avec création à la volée, aide à la composition des équipes de feuille et lien hiérarchique informatif."
+    },
+    {
+      "date": "2026-10-01",
+      "type": "Planification",
+      "description": "Plan technique validé : entité Tag et ManyToMany unique, manager auto-référent, création à la volée par cases et champ texte, filtre GET de la liste Équipe et filtre Stimulus de la composition ; pitch annoté (questions ouvertes tranchées, tags et manager visibles par la personne sur Mon compte)."
+    }
+  ]
+}
