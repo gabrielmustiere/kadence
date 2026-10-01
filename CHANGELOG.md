@@ -10,6 +10,18 @@ Chaque version porte un **titre** et distingue les **évolutions fonctionnelles*
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-10-01 — Interruptions et zoom de la roadmap
+
+### ✨ Fonctionnel
+- **Interruptions visibles sur la roadmap** — la partie saisie d'une feuille est coupée en tronçons sur chaque jour ouvré sans saisie : on voit quand une feuille a été mise en pause. Un week-end ou un jour férié de toute l'équipe ne coupe pas la barre, et la légende explique le vide.
+- **Une infobulle par tronçon** — survoler un tronçon affiche sa période, le temps saisi, le nombre de jours avec saisie et ce que chacun y a saisi. Une seule infobulle s'affiche à la fois.
+- **Récapitulatif d'une feuille** — survoler son titre, ou y placer le focus au clavier, affiche ses dates, son estimé, son saisi, son restant ou son dépassement, sa période saisie et son équipe, même pour une feuille pas encore planifiée.
+- **Zoom de la frise** — les boutons « − », « + » et « 100 % » élargissent la frise jusqu'à huit fois pour lire une période dense. Le zoom garde la date au centre et reste en mémoire pendant la session.
+- **Libellés des mois** — le libellé d'un mois coupé par le bord gauche de la frise ne chevauche plus celui du mois suivant.
+
+### 🔧 Technique
+- **Infobulles de la roadmap** — un contrôleur Stimulus remplace Flowbite sur la frise et n'ouvre qu'une infobulle à la fois.
+
 ## [0.9.0] - 2026-10-01 — Écrans plus lisibles
 
 ### ✨ Fonctionnel
@@ -123,7 +135,8 @@ Chaque version porte un **titre** et distingue les **évolutions fonctionnelles*
 - **Connexion rapide en dev** — choix d'un compte de fixtures sur la page de connexion, uniquement en environnement de développement.
 - **Nettoyage du template d'amorçage** — suppression de la page design system et de la route de test d'e-mail.
 
-[Unreleased]: https://github.com/gabrielmustiere/kadence/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/gabrielmustiere/kadence/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/gabrielmustiere/kadence/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/gabrielmustiere/kadence/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/gabrielmustiere/kadence/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/gabrielmustiere/kadence/compare/v0.6.0...v0.7.0
