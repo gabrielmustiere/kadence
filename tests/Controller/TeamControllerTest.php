@@ -4,20 +4,28 @@ declare(strict_types=1);
 
 namespace App\Tests\Controller;
 
+use App\Entity\Tag;
 use App\Entity\User;
 use App\Enum\Type\HolidayCalendar;
 use App\Enum\Type\Role;
+use App\Enum\Type\TagCategory;
+use App\Repository\TagRepository;
 use App\Repository\UserRepository;
 use App\Repository\WeeklyMaxRepository;
+use App\Tests\Support\CreatesTags;
 use App\Tests\Support\CreatesTimeEntries;
 use App\Tests\Support\CreatesUsers;
+use Doctrine\Bundle\DoctrineBundle\DataCollector\DoctrineDataCollector;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\DomCrawler\Crawler;
+use Symfony\Component\HttpKernel\Profiler\Profile;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 final class TeamControllerTest extends WebTestCase
 {
+    use CreatesTags;
     use CreatesTimeEntries;
     use CreatesUsers;
 
@@ -61,7 +69,7 @@ final class TeamControllerTest extends WebTestCase
         self::assertSelectorTextContains('[data-test="user-menu-name"]', 'Paula Durand');
     }
 
-    public function testListShowsIdentityRoleAndStatusOnly(): void
+    public function testListShowsIdentityRoleAndStatus(): void
     {
         $client = $this->directorClient();
 
@@ -295,6 +303,156 @@ final class TeamControllerTest extends WebTestCase
         self::assertSelectorExists('[data-test="temporary-password"]');
     }
 
+    public function testRegisterWithTagsReusesAnExistingTagTypedIgnoringCaseAndCreatesTheOthers(): void
+    {
+        $client = $this->directorClient();
+        $existing = $this->createTag(TagCategory::TechnicalSkill);
+        $experience = $this->createTag(TagCategory::FunctionalExperience);
+        $newSkill = uniqid('Kubernetes ', true);
+        $newTeamType = uniqid('Plateforme ', true);
+        $email = uniqid('tags-', true) . '@example.com';
+
+        $this->postMemberForm($client, '/equipe/nouveau', [
+            'firstName' => 'Zoé',
+            'lastName' => 'Tags',
+            'email' => $email,
+            'functionalExperiences' => [(string) $experience->getId()],
+            'newTechnicalSkills' => mb_strtoupper($existing->getLabel()) . ', ' . $newSkill,
+            'newTeamType' => $newTeamType,
+        ]);
+        self::assertResponseRedirects();
+
+        $member = $this->userRepository()->findOneByEmail($email);
+        self::assertNotNull($member);
+        self::assertSame([$newSkill, $existing->getLabel()], self::labels($member->tagsOf(TagCategory::TechnicalSkill)), 'Kubernetes… sorts before Tag…');
+        self::assertSame([$experience->getLabel()], self::labels($member->tagsOf(TagCategory::FunctionalExperience)));
+        self::assertSame($newTeamType, $member->teamType()?->getLabel());
+        self::assertSame(1, $this->countLabel(TagCategory::TechnicalSkill, $existing->getLabel()));
+    }
+
+    public function testAnInvalidMemberFormCreatesNoTag(): void
+    {
+        $client = $this->directorClient();
+        $newSkill = uniqid('Elixir ', true);
+
+        $this->postMemberForm($client, '/equipe/nouveau', ['firstName' => 'Zoé', 'lastName' => '', 'email' => uniqid('tags-', true) . '@example.com', 'newTechnicalSkills' => $newSkill]);
+
+        self::assertResponseStatusCodeSame(422);
+        self::assertSame(0, $this->countLabel(TagCategory::TechnicalSkill, $newSkill));
+    }
+
+    public function testChoosingATeamTypeAndTypingANewOneIsRefused(): void
+    {
+        $client = $this->directorClient();
+        $member = $this->createUser();
+        $teamType = $this->createTag(TagCategory::TeamType);
+
+        $this->postMemberForm($client, '/equipe/' . $member->getId() . '/modifier', ['teamType' => (string) $teamType->getId(), 'newTeamType' => uniqid('Front ', true)]);
+
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('[data-test="team-member-form"]', 'Choisissez un type d\'équipe existant ou saisissez-en un nouveau, pas les deux.');
+        self::assertNull($this->reloadUser($member)->teamType());
+    }
+
+    public function testManagerChoicesOfferActivePeopleButNotThePersonEdited(): void
+    {
+        $client = $this->directorClient();
+        $member = $this->createUser();
+        $other = $this->createUser();
+        $former = $this->createUser()->setActive(false);
+        $this->entityManager()->flush();
+
+        $crawler = $client->request('GET', '/equipe/' . $member->getId() . '/modifier');
+
+        $choices = $crawler->filter('[data-test="member-manager"] option')->each(static fn (Crawler $option): string => (string) $option->attr('value'));
+        self::assertContains((string) $other->getId(), $choices);
+        self::assertNotContains((string) $member->getId(), $choices);
+        self::assertNotContains((string) $former->getId(), $choices);
+    }
+
+    public function testChoosingAsManagerSomeoneThePersonManagesIsRefused(): void
+    {
+        $client = $this->directorClient();
+        $manager = $this->createUser();
+        $report = $this->createUser()->setManager($manager);
+        $this->entityManager()->flush();
+
+        $this->postMemberForm($client, '/equipe/' . $manager->getId() . '/modifier', ['manager' => (string) $report->getId()]);
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('[data-test="team-member-form"]', 'formerait une boucle');
+
+        $this->postMemberForm($client, '/equipe/' . $report->getId() . '/modifier', ['manager' => '']);
+        self::assertResponseRedirects('/equipe');
+        self::assertNull($this->reloadUser($report)->getManager());
+    }
+
+    public function testDeactivatingSomeoneWhoManagesActivePeopleIsRefusedNamingThem(): void
+    {
+        $client = $this->directorClient();
+        $manager = $this->createUser();
+        $report = $this->createUser()->setFirstName('Zoé')->setLastName(uniqid('Rattachée', false))->setManager($manager);
+        $this->entityManager()->flush();
+
+        $this->clickRowButton($client, $manager, 'member-deactivate-confirm');
+        self::assertResponseRedirects('/equipe');
+        $client->followRedirect();
+
+        self::assertSelectorTextContains('[role="alert"]', 'Zoé ' . $report->getLastName());
+        self::assertTrue($this->reloadUser($manager)->isActive());
+    }
+
+    public function testDeactivatingAManagerOfDeactivatedPeopleOnlyClearsTheirManager(): void
+    {
+        $client = $this->directorClient();
+        $manager = $this->createUser();
+        $former = $this->createUser()->setManager($manager)->setActive(false);
+        $this->entityManager()->flush();
+
+        $this->clickRowButton($client, $manager, 'member-deactivate-confirm');
+        self::assertResponseRedirects('/equipe');
+
+        self::assertFalse($this->reloadUser($manager)->isActive());
+        self::assertNull($this->reloadUser($former)->getManager());
+    }
+
+    public function testListShowsTagsAndManagerAndFiltersByTagOfEachCategoryAndByDirectManager(): void
+    {
+        $client = $this->directorClient();
+        $skill = $this->createTag(TagCategory::TechnicalSkill);
+        $experience = $this->createTag(TagCategory::FunctionalExperience);
+        $teamType = $this->createTag(TagCategory::TeamType);
+        $manager = $this->createUser()->setFirstName('Zoé')->setLastName(uniqid('Manager', false));
+        $both = $this->giveTags($this->createUser()->setManager($manager), $skill, $experience, $teamType);
+        $skillOnly = $this->giveTags($this->createUser(), $skill);
+        $none = $this->createUser();
+
+        $crawler = $client->request('GET', '/equipe');
+        $row = $crawler->filter(\sprintf('[data-email="%s"]', $both->getEmail()));
+        self::assertSame($teamType->getLabel(), $row->filter('[data-test="member-team-type"]')->text());
+        self::assertSame([$skill->getLabel(), $experience->getLabel()], $row->filter('[data-test="member-tags"] [data-test="member-tag"]')->each(static fn (Crawler $tag): string => $tag->text()));
+        self::assertSame('Zoé ' . $manager->getLastName(), $row->filter('[data-test="member-manager"]')->text());
+
+        self::assertSame([$both->getEmail(), $skillOnly->getEmail()], $this->listedAmong($client, ['competence' => $skill->getId()], [$both, $skillOnly, $none]));
+        self::assertSame([$both->getEmail()], $this->listedAmong($client, ['competence' => $skill->getId(), 'experience' => $experience->getId()], [$both, $skillOnly, $none]));
+        self::assertSame([$both->getEmail()], $this->listedAmong($client, ['manager' => $manager->getId()], [$both, $skillOnly, $none]));
+
+        $crawler = $client->request('GET', '/equipe?' . http_build_query(['competence' => $skill->getId()]));
+        self::assertCount(3, $crawler->filter(\sprintf('[data-email="%s"] [data-test="member-tag"]', $both->getEmail())), 'A filtered person keeps all their tags.');
+    }
+
+    public function testTheListQueryCountDoesNotGrowWithThePeopleListed(): void
+    {
+        $client = $this->directorClient();
+        $small = $this->queryCount($client, '/equipe');
+
+        $manager = $this->createUser();
+        for ($i = 0; $i < 3; ++$i) {
+            $this->giveTags($this->createUser()->setManager($manager), $this->createTag(), $this->createTag(TagCategory::TeamType));
+        }
+
+        self::assertSame($small, $this->queryCount($client, '/equipe'));
+    }
+
     public function testStateChangeWithInvalidCsrfTokenIsRefused(): void
     {
         $client = $this->directorClient();
@@ -326,6 +484,70 @@ final class TeamControllerTest extends WebTestCase
         }
 
         $client->submit($crawler->filter('[data-test="team-member-form"]')->form($fields));
+    }
+
+    /**
+     * Posts the member form as the page renders it, with some fields replaced: unlike a crawler form, it can tick the
+     * checkboxes of tags created by the test.
+     *
+     * @param array<string, string|list<string>> $values
+     */
+    private function postMemberForm(KernelBrowser $client, string $url, array $values): void
+    {
+        $form = $client->request('GET', $url)->filter('[data-test="team-member-form"]')->form();
+        $data = $form->getPhpValues();
+        \assert(\is_array($data['team_member']));
+        $data['team_member'] = array_replace($data['team_member'], $values);
+
+        $client->request('POST', $form->getUri(), $data);
+    }
+
+    /**
+     * @param array<string, int|null> $filter
+     * @param list<User>              $among
+     *
+     * @return list<string> the e-mails of the people among these that the filtered list shows
+     */
+    private function listedAmong(KernelBrowser $client, array $filter, array $among): array
+    {
+        $crawler = $client->request('GET', '/equipe?' . http_build_query($filter));
+        self::assertResponseIsSuccessful();
+        $listed = $crawler->filter('[data-test="team-member-row"]')->each(static fn (Crawler $row): string => (string) $row->attr('data-email'));
+
+        return array_values(array_filter(array_map(static fn (User $user): string => (string) $user->getEmail(), $among), static fn (string $email): bool => \in_array($email, $listed, true)));
+    }
+
+    /**
+     * @param list<Tag> $tags
+     *
+     * @return list<string>
+     */
+    private static function labels(array $tags): array
+    {
+        return array_map(static fn (Tag $tag): string => $tag->getLabel(), $tags);
+    }
+
+    private function countLabel(TagCategory $category, string $label): int
+    {
+        $repository = self::getContainer()->get(TagRepository::class);
+        \assert($repository instanceof TagRepository);
+        $labels = array_map(mb_strtolower(...), $repository->findLabelsExcept($category, null));
+
+        return \count(array_keys($labels, mb_strtolower($label), true));
+    }
+
+    private function queryCount(KernelBrowser $client, string $url): int
+    {
+        $client->enableProfiler();
+        $client->request('GET', $url);
+        self::assertResponseIsSuccessful();
+
+        $profile = $client->getProfile();
+        self::assertInstanceOf(Profile::class, $profile);
+        $collector = $profile->getCollector('db');
+        self::assertInstanceOf(DoctrineDataCollector::class, $collector);
+
+        return $collector->getQueryCount();
     }
 
     private function clickRowButton(KernelBrowser $client, User $member, string $button): void

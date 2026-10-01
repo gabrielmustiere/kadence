@@ -1,0 +1,21 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Renommer « {{ tag.label }} » · Kadence{% endblock %}
+
+{% block body %}
+    <twig:Card>
+        <twig:Card:Header>
+            <twig:Card:Title as="h1">Renommer « {{ tag.label }} »</twig:Card:Title>
+            <p class="mt-2 text-sm text-body">{{ tag.category.label }}. Le nouveau libellé s'affiche aussitôt sur toutes les personnes qui portent ce tag.</p>
+        </twig:Card:Header>
+        <twig:Card:Content>
+            {{ form_start(form, {attr: {'data-test': 'tag-form'}}) }}
+                <div class="sm:w-1/2">{{ form_row(form.label) }}</div>
+                <div class="mt-6 flex items-center gap-3">
+                    <twig:Button type="submit" data-test="tag-submit">Renommer</twig:Button>
+                    <a href="{{ path('app_tag_index') }}" class="text-sm text-body underline hover:no-underline">Annuler</a>
+                </div>
+            {{ form_end(form) }}
+        </twig:Card:Content>
+    </twig:Card>
+{% endblock %}

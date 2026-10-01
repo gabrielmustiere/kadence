@@ -146,7 +146,7 @@ Si on ne fait rien, les équipes des feuilles restent composées par habitude, e
 - **Accès d'une personne à ses propres tags** : une personne de la prod ne voit pas les tags qu'on lui a attribués, alors que ce sont des données personnelles qui la concernent. Options : (a) jamais dans Kadence, le droit d'accès s'exerçant hors de l'outil ; (b) en lecture seule sur sa page de compte. → tranché : (b), manager compris (règles 12 à 14).
 - **Combinaison de plusieurs tags dans un filtre** (composition d'équipe et liste Équipe) : options : (a) la personne porte **tous** les tags choisis ; (b) elle en porte **au moins un** ; (c) **tous** les types choisis, mais **au moins un** tag par type (« Symfony ou React » et « Support »). → tranché : au plus un tag par type, et la personne doit porter tous les tags choisis (règles 16 et 18).
 - **Tag créé à la volée puis formulaire abandonné** : options : (a) le tag n'existe qu'une fois la personne enregistrée, donc abandonner ou échouer la saisie ne laisse aucun tag orphelin ; (b) le tag est créé dès sa saisie, même si la personne n'est pas enregistrée. → tranché : (a) (règle 10).
-- **Rattachement au backlog** : la feature n'a aucune ligne dans le backlog produit. Il faut une capacité dans « Équipe & accès » et un horizon, à poser avec `/forge:product-backlog`.
+- **Rattachement au backlog** : la feature n'a aucune ligne dans le backlog produit. Il faut une capacité dans « Équipe & accès » et un horizon, à poser avec `/forge:product-backlog`. → tranché : ligne `tags-hierarchie` ajoutée à l'horizon V2, capacités C1.4 (tags) et C1.5 (manager) dans « Équipe & accès » (sync post-livraison).
 
 ---
 

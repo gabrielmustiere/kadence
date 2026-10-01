@@ -3,7 +3,12 @@
   "title": "Décrire chaque personne par ses compétences, son équipe et son manager",
   "created": "2026-10-01",
   "updated": "2026-10-01",
-  "tags": ["equipe", "competences", "hierarchie", "administration"],
+  "tags": [
+    "equipe",
+    "competences",
+    "hierarchie",
+    "administration"
+  ],
   "changelog": [
     {
       "date": "2026-10-01",
@@ -14,6 +19,31 @@
       "date": "2026-10-01",
       "type": "Planification",
       "description": "Plan technique validé : entité Tag et ManyToMany unique, manager auto-référent, création à la volée par cases et champ texte, filtre GET de la liste Équipe et filtre Stimulus de la composition ; pitch annoté (questions ouvertes tranchées, tags et manager visibles par la personne sur Mon compte)."
+    },
+    {
+      "date": "2026-10-01",
+      "type": "Implémentation",
+      "description": "Huit étapes du plan livrées (migration, écran Tags, fiche personne, manager et refus de désactivation, filtre de la liste Équipe, filtre Stimulus de composition, carte Mon profil, fixtures de démonstration) ; écarts mineurs : relations exclues de la session, raccourci Tags sur l'accueil, liste des managers dans le filtre, tri des tags sans accents ; 339 tests PHPUnit et 35 scénarios Playwright verts."
+    },
+    {
+      "date": "2026-10-01",
+      "type": "Review",
+      "description": "Review du diff : CORRECTIONS REQUISES, 1 bloquant (filtre de composition qui perd des personnes après un retour arrière Turbo) et 7 mineurs."
+    },
+    {
+      "date": "2026-10-01",
+      "type": "Review",
+      "description": "Correctifs de review appliqués (filtre de composition vidé avant la mise en cache Turbo, tests de nombre de requêtes, findActiveWithTags, migration décrite, nettoyages) : PRÊT À COMMITER, 0 finding restant."
+    },
+    {
+      "date": "2026-10-01",
+      "type": "Report",
+      "description": "Report rédigé : conformité 90 %, 22/22 critères d'acceptation, 5 écarts volontaires et 6 ajouts consignés ; dette : rendu à 375 px non vérifié, refus d'un libellé trop long non testé, feature absente du backlog."
+    },
+    {
+      "date": "2026-10-01",
+      "type": "Sync",
+      "description": "Plan réaligné sur le code livré (findAllByCategory, tri par Tag::compare, findActiveWithTags, findManagers, garde de cycle « personne déjà vue », type d'équipe en libellé unique, reset Turbo du filtre, LotType et accueil au périmètre, critères de sortie cochés) ; pitch : question backlog tranchée ; backlog enrichi (C1.4, C1.5, ligne tags-hierarchie en V2)."
     }
   ]
 }

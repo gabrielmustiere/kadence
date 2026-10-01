@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Dto\TeamListFilter;
 use App\Dto\TeamMemberInput;
 use App\Entity\User;
 use App\Entity\WeeklyMax;
 use App\Exception\LastActiveDirectorException;
+use App\Exception\ManagerWithActiveReportsException;
+use App\Form\TeamFilterType;
 use App\Form\TeamMemberType;
 use App\Model\Week;
 use App\Repository\UserRepository;
@@ -37,10 +40,16 @@ final class TeamController extends AbstractController
     }
 
     #[Route('', name: 'app_team_index', methods: ['GET'])]
-    public function index(UserRepository $userRepository): Response
+    public function index(Request $request, UserRepository $userRepository): Response
     {
+        $filter = new TeamListFilter();
+        $filterForm = $this->createForm(TeamFilterType::class, $filter);
+        $filterForm->handleRequest($request);
+
         return $this->render('team/index.html.twig', [
-            'members' => $userRepository->findAllForTeamList(),
+            'members' => $userRepository->findForTeamList($filter),
+            'filter_form' => $filterForm,
+            'filtered' => [] !== $filter->tags() || null !== $filter->manager,
         ]);
     }
 
@@ -110,7 +119,7 @@ final class TeamController extends AbstractController
         try {
             $this->teamManager->deactivate($user);
             $this->addFlash('success', \sprintf('Le compte de %s %s est désactivé.', $user->getFirstName(), $user->getLastName()));
-        } catch (LastActiveDirectorException $exception) {
+        } catch (LastActiveDirectorException|ManagerWithActiveReportsException $exception) {
             $this->addFlash('error', $exception->getMessage());
         }
 

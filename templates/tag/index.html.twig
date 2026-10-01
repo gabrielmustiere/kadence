@@ -1,0 +1,83 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Tags · Kadence{% endblock %}
+
+{% block body %}
+    <div class="mb-6">
+        <h1 class="font-display text-2xl font-bold tracking-tight text-heading sm:text-3xl">Tags</h1>
+        <p class="mt-1 text-sm text-body">Le vocabulaire qui décrit l'équipe : compétences techniques, expériences fonctionnelles et types d'équipe, à attribuer depuis la fiche de chaque personne.</p>
+    </div>
+
+    <twig:Card class="mb-6" data-test="tag-add">
+        <twig:Card:Header>
+            <twig:Card:Title as="h2">Ajouter un tag</twig:Card:Title>
+        </twig:Card:Header>
+        <twig:Card:Content>
+            {{ form_start(form, {attr: {'data-test': 'tag-form'}}) }}
+                {{ form_row(form.category) }}
+                <div class="sm:w-1/2 sm:pe-3">{{ form_row(form.label) }}</div>
+                <div class="mt-2">
+                    <twig:Button type="submit" data-test="tag-submit">Ajouter</twig:Button>
+                </div>
+            {{ form_end(form) }}
+        </twig:Card:Content>
+    </twig:Card>
+
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {% for item in categories %}
+            <twig:Card data-test="tag-category" data-category="{{ item.category.value }}">
+                <twig:Card:Header>
+                    <twig:Card:Title as="h2">{{ item.category.pluralLabel }}</twig:Card:Title>
+                </twig:Card:Header>
+                <twig:Card:Content>
+                    {% if item.tags is empty %}
+                        <p class="text-sm text-body" data-test="tag-empty">Aucun tag pour l'instant.</p>
+                    {% else %}
+                        <ul class="divide-y divide-default text-sm">
+                            {% for tag in item.tags %}
+                                {% set count = holders[tag.id] ?? 0 %}
+                                <li class="flex items-center justify-between gap-3 py-2" data-test="tag-row" data-label="{{ tag.label }}">
+                                    <span class="min-w-0">
+                                        <span class="font-medium text-heading" data-test="tag-row-label">{{ tag.label }}</span>
+                                        <span class="block text-xs text-body" data-test="tag-holders" data-count="{{ count }}">{{ count }} {{ count > 1 ? 'personnes' : 'personne' }}</span>
+                                    </span>
+                                    <span class="flex shrink-0 items-center gap-2">
+                                        <twig:Button as="a" size="xs" variant="outline" href="{{ path('app_tag_edit', {id: tag.id}) }}" data-test="tag-rename">Renommer</twig:Button>
+                                        <twig:Modal id="delete-tag-{{ tag.id }}">
+                                            <twig:Modal:Trigger>
+                                                <twig:Button size="xs" variant="outline-danger" data-test="tag-delete" {{ ...modal_trigger_attrs }}>Supprimer</twig:Button>
+                                            </twig:Modal:Trigger>
+                                            <twig:Modal:Content>
+                                                <twig:Modal:Header>
+                                                    <twig:Modal:Title>Supprimer le tag « {{ tag.label }} » ?</twig:Modal:Title>
+                                                </twig:Modal:Header>
+                                                <twig:Modal:Body>
+                                                    <p class="text-body" data-test="tag-delete-holders">
+                                                        {% if count > 0 %}
+                                                            Il est porté par {{ count }} {{ count > 1 ? 'personnes' : 'personne' }} : il sera retiré de {{ count > 1 ? 'leur' : 'son' }} profil. La suppression ne se défait pas.
+                                                        {% else %}
+                                                            Personne ne le porte. La suppression ne se défait pas.
+                                                        {% endif %}
+                                                    </p>
+                                                </twig:Modal:Body>
+                                                <twig:Modal:Footer>
+                                                    <form method="post" action="{{ path('app_tag_delete', {id: tag.id}) }}">
+                                                        <input type="hidden" name="_token" value="{{ csrf_token('tag-' ~ tag.id) }}">
+                                                        <twig:Button type="submit" variant="danger" data-test="tag-delete-confirm">Supprimer</twig:Button>
+                                                    </form>
+                                                    <twig:Modal:Close>
+                                                        <twig:Button variant="outline" data-test="tag-delete-cancel" {{ ...modal_close_attrs }}>Annuler</twig:Button>
+                                                    </twig:Modal:Close>
+                                                </twig:Modal:Footer>
+                                            </twig:Modal:Content>
+                                        </twig:Modal>
+                                    </span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </twig:Card:Content>
+            </twig:Card>
+        {% endfor %}
+    </div>
+{% endblock %}

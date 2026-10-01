@@ -1,0 +1,20 @@
+{% set categories = this.categories %}
+<div{{ attributes.defaults({class: 'mb-4', 'data-test': 'lot-tag-filter'}) }}>
+    {% if categories is not empty %}
+        <p class="mb-2 text-sm text-body">Restreindre les personnes proposées à celles qui portent ces tags :</p>
+        <div class="flex flex-wrap gap-x-4 gap-y-2">
+            {% for item in categories %}
+                {% set id = 'tag-filter-' ~ item.category.value %}
+                <div class="w-full sm:w-48">
+                    <twig:Label for="{{ id }}" class="mb-1.5">{{ item.category.label }}</twig:Label>
+                    <twig:Select id="{{ id }}" data-tag-filter-target="filter" data-action="tag-filter#apply" data-test="lot-tag-filter-{{ item.category.value }}">
+                        <option value="">{{ item.category.allowsMany ? 'Toutes' : 'Tous' }}</option>
+                        {% for tag in item.tags %}
+                            <option value="{{ tag.id }}">{{ tag.label }}</option>
+                        {% endfor %}
+                    </twig:Select>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>

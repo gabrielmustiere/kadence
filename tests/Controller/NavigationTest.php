@@ -22,8 +22,8 @@ final class NavigationTest extends WebTestCase
     {
         $crawler = $this->clientFor('admin@example.com')->request('GET', '/');
 
-        self::assertSame(['nav-dashboard', 'nav-timesheet', 'nav-roadmap', 'nav-projects', 'nav-team', 'nav-holidays'], $this->entries($crawler->filter('#app-sidebar')));
-        self::assertSame(['nav-projects', 'nav-team', 'nav-holidays'], $this->entries($crawler->filter('[data-test="nav-admin"]')));
+        self::assertSame(['nav-dashboard', 'nav-timesheet', 'nav-roadmap', 'nav-projects', 'nav-team', 'nav-tags', 'nav-holidays'], $this->entries($crawler->filter('#app-sidebar')));
+        self::assertSame(['nav-projects', 'nav-team', 'nav-tags', 'nav-holidays'], $this->entries($crawler->filter('[data-test="nav-admin"]')));
         self::assertSelectorTextContains('[data-test="nav-admin"]', 'Administration');
         self::assertSame('Administration', $crawler->filter('#' . $crawler->filter('[data-test="nav-admin"] ul')->attr('aria-labelledby'))->text());
     }
@@ -63,6 +63,7 @@ final class NavigationTest extends WebTestCase
             '/lots/' . $lot->getId() . '/modifier' => 'nav-projects',
             '/equipe/' . $member->getId() . '/modifier' => 'nav-team',
             '/jours-feries/2031' => 'nav-holidays',
+            '/tags' => 'nav-tags',
         ];
         foreach ($pages as $url => $entry) {
             $crawler = $client->request('GET', $url);
@@ -82,7 +83,7 @@ final class NavigationTest extends WebTestCase
         self::assertSelectorExists('[data-test="home-timesheet"]');
         self::assertSelectorExists('[data-test="home-account"]');
         self::assertSelectorTextContains('[data-test="home-admin"] h2', 'Administration');
-        self::assertSame(['home-projects', 'home-team', 'home-holidays'], $this->shortcuts($crawler->filter('[data-test="home-admin"]')));
+        self::assertSame(['home-projects', 'home-team', 'home-tags', 'home-holidays'], $this->shortcuts($crawler->filter('[data-test="home-admin"]')));
 
         $crawler = $this->clientFor('prod@example.com')->request('GET', '/');
 

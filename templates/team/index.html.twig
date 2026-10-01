@@ -14,6 +14,19 @@
         </twig:Button>
     </div>
 
+    {% set categories = enum('App\\Enum\\Type\\TagCategory') %}
+    {{ form_start(filter_form, {attr: {class: 'mb-4 flex flex-wrap items-end gap-x-4 gap-y-2', 'data-test': 'team-filter'}}) }}
+        {% for field in filter_form %}
+            <div class="w-full sm:w-48">{{ form_row(field, {row_attr: {class: 'mb-0'}}) }}</div>
+        {% endfor %}
+        <div class="flex items-center gap-3 pb-0.5">
+            <twig:Button type="submit" size="sm" variant="outline" data-test="team-filter-submit">Filtrer</twig:Button>
+            {% if filtered %}
+                <a href="{{ path('app_team_index') }}" class="text-sm text-body underline hover:no-underline" data-test="team-filter-reset">Tout afficher</a>
+            {% endif %}
+        </div>
+    {{ form_end(filter_form) }}
+
     <div class="overflow-x-auto rounded-base border border-default">
         <twig:Table data-test="team-table">
             <twig:Table:Header>
@@ -21,6 +34,9 @@
                     <twig:Table:Head>Nom</twig:Table:Head>
                     <twig:Table:Head>E-mail</twig:Table:Head>
                     <twig:Table:Head>Rôle</twig:Table:Head>
+                    <twig:Table:Head>Équipe</twig:Table:Head>
+                    <twig:Table:Head>Compétences et expériences</twig:Table:Head>
+                    <twig:Table:Head>Manager</twig:Table:Head>
                     <twig:Table:Head>Statut</twig:Table:Head>
                     <twig:Table:Head><span class="sr-only">Actions</span></twig:Table:Head>
                 </twig:Table:Row>
@@ -29,9 +45,25 @@
                 {% for member in members %}
                     {% set token = csrf_token('team-member-' ~ member.id) %}
                     <twig:Table:Row data-test="team-member-row" data-email="{{ member.email }}">
-                        <twig:Table:Cell class="font-medium text-heading">{{ member.firstName }} {{ member.lastName }}</twig:Table:Cell>
+                        <twig:Table:Cell class="whitespace-nowrap font-medium text-heading">{{ member.firstName }} {{ member.lastName }}</twig:Table:Cell>
                         <twig:Table:Cell>{{ member.email }}</twig:Table:Cell>
                         <twig:Table:Cell><twig:Badge variant="gray" data-test="member-role">{{ member.role.label }}</twig:Badge></twig:Table:Cell>
+                        <twig:Table:Cell data-test="member-team-type">
+                            {% if member.teamType %}<twig:Badge variant="brand" data-test="member-tag">{{ member.teamType.label }}</twig:Badge>{% endif %}
+                        </twig:Table:Cell>
+                        <twig:Table:Cell>
+                            <div class="flex max-w-xs flex-wrap gap-1" data-test="member-tags">
+                                {% for tag in member.tagsOf(categories.TechnicalSkill) %}
+                                    <twig:Badge variant="gray" data-test="member-tag">{{ tag.label }}</twig:Badge>
+                                {% endfor %}
+                                {% for tag in member.tagsOf(categories.FunctionalExperience) %}
+                                    <twig:Badge variant="alternative" border="bordered" data-test="member-tag">{{ tag.label }}</twig:Badge>
+                                {% endfor %}
+                            </div>
+                        </twig:Table:Cell>
+                        <twig:Table:Cell class="whitespace-nowrap" data-test="member-manager">
+                            {% if member.manager %}{{ member.manager.firstName }} {{ member.manager.lastName }}{% endif %}
+                        </twig:Table:Cell>
                         <twig:Table:Cell>
                             {% if member.active %}
                                 <twig:Badge variant="success" data-test="member-status">Active</twig:Badge>
@@ -97,6 +129,10 @@
                                 {% endif %}
                             </div>
                         </twig:Table:Cell>
+                    </twig:Table:Row>
+                {% else %}
+                    <twig:Table:Row>
+                        <twig:Table:Cell colspan="8" class="text-center text-body" data-test="team-empty">Personne ne correspond à ces filtres.</twig:Table:Cell>
                     </twig:Table:Row>
                 {% endfor %}
             </twig:Table:Body>

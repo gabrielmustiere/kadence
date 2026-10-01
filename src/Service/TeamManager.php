@@ -7,7 +7,9 @@ namespace App\Service;
 use App\Dto\TeamMemberInput;
 use App\Entity\User;
 use App\Enum\Type\Role;
+use App\Enum\Type\TagCategory;
 use App\Exception\LastActiveDirectorException;
+use App\Exception\ManagerWithActiveReportsException;
 use App\Model\Week;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -21,6 +23,7 @@ final readonly class TeamManager
         private UserPasswordHasherInterface $passwordHasher,
         private TemporaryPasswordGenerator $temporaryPasswordGenerator,
         private WeeklyMaxManager $weeklyMaxManager,
+        private TagManager $tagManager,
     ) {
     }
 
@@ -49,10 +52,22 @@ final readonly class TeamManager
         $this->entityManager->flush();
     }
 
+    /**
+     * A manager shown is always active: the people already deactivated who name this person lose their manager.
+     */
     public function deactivate(User $user): void
     {
         $this->assertIsNotLastActiveDirector($user);
 
+        $reports = $this->userRepository->findReportsOf($user);
+        $activeReports = array_values(array_filter($reports, static fn (User $report): bool => $report->isActive()));
+        if ([] !== $activeReports) {
+            throw new ManagerWithActiveReportsException($user, $activeReports);
+        }
+
+        foreach ($reports as $report) {
+            $report->setManager(null);
+        }
         $user->setActive(false);
         $this->entityManager->flush();
     }
@@ -85,7 +100,16 @@ final readonly class TeamManager
             ->setLastName(self::required($input->lastName))
             ->setEmail(self::required($input->email))
             ->setRole($input->role ?? throw new \LogicException('A validated team member input has a role.'))
-            ->setHolidayCalendar($input->holidayCalendar ?? throw new \LogicException('A validated team member input has a holiday calendar.'));
+            ->setHolidayCalendar($input->holidayCalendar ?? throw new \LogicException('A validated team member input has a holiday calendar.'))
+            ->replaceTags([
+                ...$input->technicalSkills,
+                ...$this->tagManager->resolve(TagCategory::TechnicalSkill, TagManager::split($input->newTechnicalSkills)),
+                ...$input->functionalExperiences,
+                ...$this->tagManager->resolve(TagCategory::FunctionalExperience, TagManager::split($input->newFunctionalExperiences)),
+                ...(null === $input->teamType ? [] : [$input->teamType]),
+                ...$this->tagManager->resolve(TagCategory::TeamType, [$input->newTeamType ?? '']),
+            ])
+            ->setManager($input->manager);
 
         $this->weeklyMaxManager->change(
             $user,

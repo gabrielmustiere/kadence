@@ -48,7 +48,7 @@ final class LotType extends AbstractType
             ]);
         }
 
-        $active = true === $options['with_owner'] || true === $options['with_planning'] ? $this->userRepository->findActiveForOwnerChoice() : [];
+        $active = true === $options['with_owner'] || true === $options['with_planning'] ? $this->userRepository->findActiveWithTags() : [];
 
         if (true === $options['with_owner']) {
             $currentOwner = $options['current_owner'];

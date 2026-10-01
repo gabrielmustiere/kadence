@@ -5,13 +5,18 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Service;
 
 use App\Dto\TeamMemberInput;
+use App\Entity\Tag;
 use App\Entity\User;
 use App\Entity\WeeklyMax;
 use App\Enum\Type\Role;
+use App\Enum\Type\TagCategory;
 use App\Exception\LastActiveDirectorException;
+use App\Exception\ManagerWithActiveReportsException;
 use App\Model\Week;
+use App\Repository\TagRepository;
 use App\Repository\UserRepository;
 use App\Repository\WeeklyMaxRepository;
+use App\Service\TagManager;
 use App\Service\TeamManager;
 use App\Service\TemporaryPasswordGenerator;
 use App\Service\WeeklyMaxManager;
@@ -92,6 +97,56 @@ final class TeamManagerTest extends TestCase
         self::assertFalse($prod->isActive());
     }
 
+    public function testDeactivatingSomeoneWhoStillManagesActivePeopleIsRefusedNamingThem(): void
+    {
+        $manager = $this->user(Role::Lead)->setFirstName('Julien')->setLastName('Moreau');
+        $camille = $this->user(Role::Prod)->setFirstName('Camille')->setLastName('Roux')->setManager($manager);
+        $thomas = $this->user(Role::Prod)->setFirstName('Thomas')->setLastName('Girard')->setManager($manager);
+        $former = $this->user(Role::Prod)->setActive(false)->setManager($manager);
+
+        try {
+            $this->teamManager(reports: [$camille, $former, $thomas])->deactivate($manager);
+            self::fail('Deactivating a manager of active people is refused.');
+        } catch (ManagerWithActiveReportsException $exception) {
+            self::assertStringStartsWith('Julien Moreau manage encore Camille Roux et Thomas Girard :', $exception->getMessage());
+        }
+
+        self::assertTrue($manager->isActive());
+        self::assertSame($manager, $former->getManager());
+    }
+
+    public function testDeactivatingAManagerOfDeactivatedPeopleOnlyClearsTheirManager(): void
+    {
+        $manager = $this->user(Role::Lead);
+        $former = $this->user(Role::Prod)->setActive(false)->setManager($manager);
+
+        $this->teamManager(reports: [$former])->deactivate($manager);
+
+        self::assertFalse($manager->isActive());
+        self::assertNull($former->getManager());
+    }
+
+    public function testUpdateSetsTheTagsTheNewOnesTypedAndTheManager(): void
+    {
+        $member = $this->user(Role::Prod);
+        $symfony = new Tag(TagCategory::TechnicalSkill, 'Symfony');
+        $back = new Tag(TagCategory::TeamType, 'Back');
+        $manager = $this->user(Role::Lead);
+        $input = $this->input(Role::Prod);
+        $input->technicalSkills = [$symfony];
+        $input->newTechnicalSkills = 'Go';
+        $input->newFunctionalExperiences = 'Paie, Facturation';
+        $input->teamType = $back;
+        $input->manager = $manager;
+
+        $this->teamManager()->update($member, $input);
+
+        self::assertSame(['Go', 'Symfony'], array_map(static fn (Tag $tag): string => $tag->getLabel(), $member->tagsOf(TagCategory::TechnicalSkill)));
+        self::assertSame(['Facturation', 'Paie'], array_map(static fn (Tag $tag): string => $tag->getLabel(), $member->tagsOf(TagCategory::FunctionalExperience)));
+        self::assertSame($back, $member->teamType());
+        self::assertSame($manager, $member->getManager());
+    }
+
     public function testDemotingLastActiveDirectorIsRefused(): void
     {
         $director = $this->user(Role::Direction);
@@ -146,10 +201,14 @@ final class TeamManagerTest extends TestCase
         self::assertFalse($user->mustChangePassword());
     }
 
-    private function teamManager(?EntityManagerInterface $entityManager = null, int $activeDirectors = 1): TeamManager
+    /**
+     * @param list<User> $reports the people naming as manager whoever is deactivated
+     */
+    private function teamManager(?EntityManagerInterface $entityManager = null, int $activeDirectors = 1, array $reports = []): TeamManager
     {
         $userRepository = $this->createStub(UserRepository::class);
         $userRepository->method('countActiveDirectors')->willReturn($activeDirectors);
+        $userRepository->method('findReportsOf')->willReturn($reports);
 
         $passwordHasher = $this->createStub(UserPasswordHasherInterface::class);
         $passwordHasher->method('hashPassword')->willReturnCallback(
@@ -164,6 +223,7 @@ final class TeamManagerTest extends TestCase
             $passwordHasher,
             new TemporaryPasswordGenerator(),
             new WeeklyMaxManager($entityManager, $this->createStub(WeeklyMaxRepository::class)),
+            new TagManager($entityManager, $this->createStub(TagRepository::class), $userRepository),
         );
     }
 

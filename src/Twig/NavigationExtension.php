@@ -16,6 +16,7 @@ final class NavigationExtension
         'projects' => ['app_project_', 'app_lot_'],
         'team' => ['app_team_'],
         'holidays' => ['app_holiday_'],
+        'tags' => ['app_tag_'],
     ];
 
     #[AsTwigFunction('nav_section')]

@@ -9,10 +9,11 @@
     {% endif %}
     {% if form.startDate is defined %}
         {% set members = form.members %}
-        <fieldset class="mt-2 border-t border-default pt-5" data-test="lot-planning">
+        <fieldset class="mt-2 border-t border-default pt-5" data-test="lot-planning" data-controller="tag-filter" data-action="turbo:before-cache@document->tag-filter#reset">
             <legend class="sr-only">Planification</legend>
             <p class="mb-4 text-sm text-body">La date de début et l'équipe dessinent la feuille sur la roadmap. Le responsable fait toujours partie de l'équipe.</p>
             <div class="sm:w-1/2 sm:pe-3">{{ form_row(form.startDate) }}</div>
+            <twig:TagFilter/>
             <div data-controller="form-collection"
                  data-form-collection-index-value="{{ members.children is empty ? 0 : max(members.children|keys) + 1 }}"
                  data-form-collection-prototype-value="{{ include('lot/_member_row.html.twig', {member: members.vars.prototype})|e('html_attr') }}">

@@ -35,6 +35,8 @@ final class NavigationExtensionTest extends TestCase
         yield 'member edit' => ['app_team_edit', 'team'];
         yield 'current year' => ['app_holiday_index', 'holidays'];
         yield 'another year' => ['app_holiday_year', 'holidays'];
+        yield 'tag list' => ['app_tag_index', 'tags'];
+        yield 'tag rename' => ['app_tag_edit', 'tags'];
         yield 'account' => ['app_account_password', null];
         yield 'login' => ['app_login', null];
         yield 'no route' => [null, null];

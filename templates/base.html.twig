@@ -103,6 +103,9 @@
                     <twig:NavLink href="{{ path('app_team_index') }}" icon="tabler:users" :active="nav == 'team'" data-test="nav-team">Équipe</twig:NavLink>
                 </li>
                 <li>
+                    <twig:NavLink href="{{ path('app_tag_index') }}" icon="tabler:tags" :active="nav == 'tags'" data-test="nav-tags">Tags</twig:NavLink>
+                </li>
+                <li>
                     <twig:NavLink href="{{ path('app_holiday_index') }}" icon="tabler:calendar-off" :active="nav == 'holidays'" data-test="nav-holidays">Jours fériés</twig:NavLink>
                 </li>
                 {% endif %}

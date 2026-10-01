@@ -4,7 +4,10 @@ namespace App\Entity;
 
 use App\Enum\Type\HolidayCalendar;
 use App\Enum\Type\Role;
+use App\Enum\Type\TagCategory;
 use App\Repository\UserRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -46,6 +49,22 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column]
     private ?string $password = null;
+
+    /** @var Collection<int, Tag> at most one tag of a category that does not allow many */
+    #[ORM\ManyToMany(targetEntity: Tag::class)]
+    #[ORM\JoinTable(name: 'user_tag')]
+    #[ORM\JoinColumn(name: 'user_id', nullable: false)]
+    #[ORM\InverseJoinColumn(name: 'tag_id', nullable: false)]
+    private Collection $tags;
+
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(name: 'manager_id')]
+    private ?User $manager = null;
+
+    public function __construct()
+    {
+        $this->tags = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -127,6 +146,72 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    /**
+     * @return list<Tag> in alphabetical order
+     */
+    public function tagsOf(TagCategory $category): array
+    {
+        $tags = array_values(array_filter($this->tags->toArray(), static fn (Tag $tag): bool => $tag->getCategory() === $category));
+        usort($tags, Tag::compare(...));
+
+        return $tags;
+    }
+
+    public function teamType(): ?Tag
+    {
+        return $this->tagsOf(TagCategory::TeamType)[0] ?? null;
+    }
+
+    /**
+     * @param iterable<Tag> $tags
+     */
+    public function replaceTags(iterable $tags): static
+    {
+        $kept = [];
+        foreach ($tags as $tag) {
+            $kept[spl_object_id($tag)] = $tag;
+        }
+
+        foreach (TagCategory::cases() as $category) {
+            $count = \count(array_filter($kept, static fn (Tag $tag): bool => $tag->getCategory() === $category));
+            if (!$category->allowsMany() && $count > 1) {
+                throw new \LogicException(\sprintf('A person carries at most one tag of the category « %s ».', $category->label()));
+            }
+        }
+
+        foreach ($this->tags as $tag) {
+            if (!isset($kept[spl_object_id($tag)])) {
+                $this->tags->removeElement($tag);
+            }
+        }
+        foreach ($kept as $tag) {
+            if (!$this->tags->contains($tag)) {
+                $this->tags->add($tag);
+            }
+        }
+
+        return $this;
+    }
+
+    public function removeTag(Tag $tag): static
+    {
+        $this->tags->removeElement($tag);
+
+        return $this;
+    }
+
+    public function getManager(): ?User
+    {
+        return $this->manager;
+    }
+
+    public function setManager(?User $manager): static
+    {
+        $this->manager = $manager;
+
+        return $this;
+    }
+
     public function mustChangePassword(): bool
     {
         return $this->mustChangePassword;
@@ -177,6 +262,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $data = (array) $this;
         $data["\0" . self::class . "\0password"] = null !== $this->password ? hash('crc32c', $this->password) : null;
+        // The user is refreshed from the database on every request: its relations would only weigh the session down with
+        // Doctrine collections and proxies.
+        unset($data["\0" . self::class . "\0tags"], $data["\0" . self::class . "\0manager"]);
 
         return $data;
     }

@@ -14,14 +14,19 @@ final class TitleComparison
      */
     public static function isTaken(string $title, array $existingTitles): bool
     {
-        $needle = mb_strtolower(trim($title));
+        $needle = self::normalize($title);
 
         foreach ($existingTitles as $existingTitle) {
-            if (mb_strtolower(trim($existingTitle)) === $needle) {
+            if (self::normalize($existingTitle) === $needle) {
                 return true;
             }
         }
 
         return false;
+    }
+
+    public static function normalize(string $title): string
+    {
+        return mb_strtolower(trim($title));
     }
 }

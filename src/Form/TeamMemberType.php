@@ -5,9 +5,15 @@ declare(strict_types=1);
 namespace App\Form;
 
 use App\Dto\TeamMemberInput;
+use App\Entity\Tag;
+use App\Entity\User;
 use App\Enum\Type\HolidayCalendar;
 use App\Enum\Type\Role;
+use App\Enum\Type\TagCategory;
+use App\Repository\TagRepository;
+use App\Repository\UserRepository;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\EnumType;
@@ -18,6 +24,12 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 final class TeamMemberType extends AbstractType
 {
+    public function __construct(
+        private readonly TagRepository $tagRepository,
+        private readonly UserRepository $userRepository,
+    ) {
+    }
+
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
@@ -64,12 +76,66 @@ final class TeamMemberType extends AbstractType
                 'input' => 'datetime_immutable',
                 'attr' => ['data-test' => 'member-weekly-max-from'],
             ]);
+
+        $this
+            ->addTags($builder, 'technicalSkills', TagCategory::TechnicalSkill)
+            ->addNewTags($builder, 'newTechnicalSkills', 'member-new-technical-skills', 'Nouvelles compétences techniques', 'Séparées par des virgules, par exemple « Kubernetes, Go ». Elles rejoignent la liste des tags.')
+            ->addTags($builder, 'functionalExperiences', TagCategory::FunctionalExperience)
+            ->addNewTags($builder, 'newFunctionalExperiences', 'member-new-functional-experiences', 'Nouvelles expériences fonctionnelles', 'Séparées par des virgules, par exemple « Paie, Facturation ». Elles rejoignent la liste des tags.')
+            ->addTags($builder, 'teamType', TagCategory::TeamType)
+            ->addNewTags($builder, 'newTeamType', 'member-new-team-type', 'Nouveau type d\'équipe', 'Un seul, s\'il manque à la liste ci-dessus. Il la rejoint.');
+
+        $memberId = $builder->getData() instanceof TeamMemberInput ? $builder->getData()->id : null;
+        $builder->add('manager', ChoiceType::class, [
+            'label' => 'Manager',
+            'help' => 'La personne à qui elle rapporte. Purement informatif : cela n\'ouvre aucun droit.',
+            'required' => false,
+            'placeholder' => 'Aucun',
+            'choices' => array_values(array_filter(
+                $this->userRepository->findActiveWithTags(),
+                static fn (User $user): bool => null === $memberId || $user->getId() !== $memberId,
+            )),
+            'choice_value' => static fn (?User $user): ?int => $user?->getId(),
+            'choice_label' => static fn (User $user): string => \sprintf('%s %s', $user->getFirstName(), $user->getLastName()),
+            'attr' => ['data-test' => 'member-manager'],
+        ]);
     }
 
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
             'data_class' => TeamMemberInput::class,
+            'error_mapping' => ['teamTypeUnambiguous' => 'newTeamType'],
         ]);
+    }
+
+    private function addTags(FormBuilderInterface $builder, string $field, TagCategory $category): self
+    {
+        $builder->add($field, ChoiceType::class, [
+            'label' => $category->allowsMany() ? $category->pluralLabel() : $category->label(),
+            'choices' => $this->tagRepository->findByCategory($category),
+            'choice_value' => static fn (?Tag $tag): ?int => $tag?->getId(),
+            'choice_label' => static fn (Tag $tag): string => $tag->getLabel(),
+            'choice_attr' => static fn (Tag $tag): array => ['data-test' => 'member-tag', 'data-label' => $tag->getLabel()],
+            'multiple' => $category->allowsMany(),
+            'expanded' => true,
+            'required' => false,
+            'placeholder' => $category->allowsMany() ? null : 'Aucun',
+            'attr' => ['class' => 'flex flex-wrap gap-x-5 gap-y-2', 'data-test' => 'member-tags-' . $category->value],
+        ]);
+
+        return $this;
+    }
+
+    private function addNewTags(FormBuilderInterface $builder, string $field, string $dataTest, string $label, string $help): self
+    {
+        $builder->add($field, TextType::class, [
+            'label' => $label,
+            'required' => false,
+            'help' => $help,
+            'attr' => ['autocomplete' => 'off', 'data-test' => $dataTest],
+        ]);
+
+        return $this;
     }
 }

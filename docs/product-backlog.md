@@ -2,7 +2,7 @@
 
 > Carte des capacités fonctionnelles et backlog priorisé dérivé de `docs/vision.md`.
 
-_Document vivant — enrichi/édité au fil du cycle de vie, refondu lors d'un pivot. Date de dernière mise à jour : 2026-09-30._
+_Document vivant — enrichi/édité au fil du cycle de vie, refondu lors d'un pivot. Date de dernière mise à jour : 2026-10-01._
 
 ## Changelog
 
@@ -15,12 +15,13 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
 | 2026-09-29 | Éditer | C3.1, C4.1, P1, règle transverse « saisie », ligne `saisie-quotidienne` | Sync post-livraison de la story 003-f-saisie-quotidienne : saisie au quart de journée ; maximum de saisie hebdomadaire historisé avancé depuis C4.1 |
 | 2026-09-30 | Éditer | C4.3, convention transverse « jours fériés », notes `rappel-saisie` et `capacite-equipe` | Sync post-livraison de la story 004-f-jours-feries : jours fériés France et Belgique posés (calendrier par personne, ajustements de la direction, saisie verrouillée) ; restent les fermetures |
 | 2026-09-30 | Éditer | C2.4, C4.4, règle transverse « période prévue », ligne `jalons-dates-annoncees`, notes `jalons-dates-annoncees`, `alerte-derive`, `affectation-sous-projets`, `roadmap-interne` et `charge-vs-capacite` | Sync post-livraison de la story 006-f-roadmap-planification : période prévue calculée (date de début posée, fin calculée sur le restant et la capacité), équipe et parts par feuille avec refus de surcharge, page Roadmap sans date annoncée ; lignes `affectation-sous-projets` et `roadmap-interne` recouvertes en partie |
+| 2026-10-01 | Enrichir | D1, C1.4, C1.5, règle transverse « profil », ligne `tags-hierarchie`, note `charge-vs-capacite` | Sync post-livraison de la story 007-f-tags-hierarchie, cadrée hors backlog : tags des personnes (compétences techniques, expériences fonctionnelles, type d'équipe) tenus par la direction et visibles en composition d'équipe, manager informatif ; ligne ajoutée en V2 |
 
 ## Domaines fonctionnels
 
 | # | Domaine | Résumé en une ligne |
 |---|---------|---------------------|
-| D1 | Équipe & accès | Qui utilise l'outil et avec quel rôle (direction, lead, prod) |
+| D1 | Équipe & accès | Qui utilise l'outil, avec quel rôle (direction, lead, prod), et le profil de chacun (compétences, équipe, manager) |
 | D2 | Projets & estimations | Projets découpés en lots et sous-lots, responsables, estimation déclarative, dates prévues et annoncées |
 | D3 | Saisie des temps | Déclaration quotidienne du temps passé et discipline de saisie |
 | D4 | Capacité | Temps de travail réellement disponible et sa répartition sur les lots et sous-lots |
@@ -35,6 +36,8 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
 - **C1.1** — La direction peut inscrire une personne et lui attribuer un rôle (direction, lead, prod).
 - **C1.2** — La direction peut désactiver une personne qui quitte l'équipe, en conservant son historique, et la réactiver à son retour.
 - **C1.3** — Une personne peut se connecter et ne voit que ce que son rôle autorise.
+- **C1.4** — La direction peut décrire chaque personne par des tags (compétences techniques, expériences fonctionnelles, type d'équipe) tirés d'un référentiel qu'elle administre, pour que les leads composent l'équipe d'une feuille en connaissant les compétences. Posée par la story `007-f-tags-hierarchie`.
+- **C1.5** — La direction peut désigner le manager de chaque personne, à titre informatif : être manager n'ouvre aucun droit. Posée par la story `007-f-tags-hierarchie`.
 
 ### D2 — Projets & estimations
 
@@ -145,6 +148,7 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
 - **Lead** : gère tous les projets, lots, sous-lots et affectations (pas seulement les siens — petite structure).
 - **Prod** : gère sa propre saisie et ses absences, consulte les projets et la roadmap.
 - **Responsable d'une feuille** : toute personne active, quel que soit son rôle ; il modifie le titre, la description et l'estimation de sa feuille, et rien d'autre de la structure du projet.
+- **Profil (tags et manager)** : tenu par la direction seule. Les leads voient les tags dans la composition de l'équipe d'une feuille, et chacun voit les siens et son manager sur sa page Mon compte. Être manager n'ouvre aucun droit (principe 2).
 - **Pas de lecture individuelle** (principe 2 de la vision) : le consommé n'est visible qu'agrégé par feuille, lot ou projet ; le détail des temps d'une personne n'est visible que par elle-même ; la charge individuelle n'apparaît que dans les vues de planification ; le taux de saisie n'est jamais présenté par personne.
 
 ### Workflows et états
@@ -201,7 +205,7 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
   - Pas encore cadrée
   - C5.2, C5.3 · P3, P5 · dép. `consomme-vs-estime`, `jalons-dates-annoncees` · Vision : irritant « dépassements tardifs », hypothèse H2
 
-### V2 — Court terme post-lancement (planifier, rendre la roadmap lisible) · `0/7 livrées`
+### V2 — Court terme post-lancement (planifier, rendre la roadmap lisible) · `0/8 livrées`
 
 - [ ] `capacite-equipe` — Permettre de déclarer temps de travail, temps partiels, absences, jours fériés et fermetures, pour connaître la capacité réelle.
   - Story `004-f-jours-feries` · **clôture en cours**
@@ -224,6 +228,9 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
 - [ ] `archivage-projets` — Permettre à un lead d'archiver un projet terminé pour alléger la liste de saisie.
   - Pas encore cadrée
   - C2.6 · P2 · dép. `projets-sous-projets` · Vision : principe 1
+- [ ] `tags-hierarchie` — Permettre à la direction de décrire chaque personne par ses compétences, son expérience, son type d'équipe et son manager, pour aider les leads à composer l'équipe des feuilles.
+  - Story `007-f-tags-hierarchie` · **clôture en cours**
+  - C1.4, C1.5 · P2 · dép. `acces-roles` · Vision : audience (direction, leads), principe 2 (tags binaires et descriptifs, manager sans droit)
 
 ### V3 — Long terme · `0/2 livrées`
 
@@ -241,7 +248,7 @@ _(dérivé — recalculé à chaque passe, ne pas maintenir à la main)_
 ### Capacités par horizon
 
 - **MVP** — livrées : C1.1, C1.2, C1.3, C2.1, C2.2, C2.3 · planifiées : C2.4, C2.5, C3.1, C3.2, C3.3, C3.4, C3.5, C5.1, C5.2, C5.3, C7.2
-- **V2** — livrées : — · planifiées : C2.6, C4.1, C4.2, C4.3, C4.4, C6.1, C6.2, C6.3, C7.1, C7.3
+- **V2** — livrées : — · planifiées : C1.4, C1.5, C2.6, C4.1, C4.2, C4.3, C4.4, C6.1, C6.2, C6.3, C7.1, C7.3
 - **V3** — livrées : — · planifiées : C5.4
 
 ### Capacités non couvertes (à challenger)
@@ -267,7 +274,7 @@ _(dérivé — recalculé à chaque passe, ne pas maintenir à la main)_
 - `alerte-derive` : définir le « rythme prévu » (estimation étalée sur la période prévue, désormais calculée ?) et le seuil d'alerte ; la roadmap (story 006) signale déjà une feuille « en dépassement » et colore les jours saisis au-delà de l'estimation ; l'efficacité de l'alerte est exactement ce que teste H2. L'estimation étant révisable après saisie, trancher si le rythme se calcule sur l'estimation initiale ou révisée.
 - `affectation-sous-projets` : C4.4 est posée par la story 006 (équipe et parts par feuille, refus de surcharge), rattachée à `date-fin-projetee`. La ligne est à fusionner ou à retirer ; une part variable dans le temps n'a pas été retenue.
 - `roadmap-interne` : la page Roadmap existe (story 006, frise des feuilles avec fin calculée). Reste à y poser la date annoncée à côté de la fin calculée (principe 4) et à lister les jalons à venir.
-- `charge-vs-capacite` : la story 006 calcule déjà la charge de chaque personne jour par jour (refus et signal « à replanifier » au-delà de 100 %). Reste la vue semaine par semaine. Une feuille en dépassement ne charge plus son équipe : à reprendre avec `consomme-vs-estime`. Les absences ne sont pas encore déduites de la capacité.
+- `charge-vs-capacite` : la story 006 calcule déjà la charge de chaque personne jour par jour (refus et signal « à replanifier » au-delà de 100 %). Reste la vue semaine par semaine. Une feuille en dépassement ne charge plus son équipe : à reprendre avec `consomme-vs-estime`. Les absences ne sont pas encore déduites de la capacité. La capacité par compétence ou par type d'équipe, écartée de la story 007, peut s'appuyer sur ses tags : trancher le cas d'une personne qui porte plusieurs compétences.
 - `acces-roles` : → tranché et livré (v0.1.0) : comptes e-mail / mot de passe gérés dans Kadence, sans SSO.
 - Avant déploiement du MVP : cadrage social et données personnelles (information des salariés, CSE selon l'effectif) — hors outil, mais bloquant pour le lancement.
 - Écarts non retenus à ce stade (vision) : simulation « et si », affectation suggérée.

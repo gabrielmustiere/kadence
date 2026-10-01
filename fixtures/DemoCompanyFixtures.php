@@ -8,11 +8,13 @@ use App\Entity\HolidayAdjustment;
 use App\Entity\Lot;
 use App\Entity\LotMember;
 use App\Entity\Project;
+use App\Entity\Tag;
 use App\Entity\TimeEntry;
 use App\Entity\User;
 use App\Entity\WeeklyMax;
 use App\Enum\Type\HolidayCalendar;
 use App\Enum\Type\Role;
+use App\Enum\Type\TagCategory;
 use App\Model\Week;
 use App\Service\HolidayManager;
 use App\Service\LegalHolidays;
@@ -44,6 +46,36 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
 
     /** Leaves left « à estimer » although time is entered on them. */
     private const array TO_ESTIMATE = ['Notifications'];
+
+    /**
+     * Person key => team type, technical skills, functional experiences. The test accounts carry no tag, so that the
+     * end-to-end scenarios start from a known profile.
+     */
+    private const array PROFILES = [
+        'helene' => ['Produit', [], ['Paie', 'Ressources humaines']],
+        'julien' => ['Back', ['Symfony', 'PHP', 'PostgreSQL'], ['Paie']],
+        'camille' => ['Back', ['Symfony', 'PHP', 'Docker'], ['Paie', 'Ressources humaines']],
+        'thomas' => ['Front', ['React', 'TypeScript'], ['Paie']],
+        'lea' => ['QA', ['Playwright'], ['Paie', 'Facturation']],
+        'sophie' => ['Mobile', ['React Native', 'TypeScript'], ['Mobilité']],
+        'hugo' => ['Mobile', ['React Native'], ['Mobilité']],
+        'emma' => ['Front', ['React', 'TypeScript', 'Figma'], ['Mobilité']],
+        'chloe' => ['Back', ['Symfony', 'API REST'], ['Mobilité', 'Intégrations partenaires']],
+        'karim' => ['Back', ['Symfony', 'API REST', 'PostgreSQL'], ['Facturation', 'Intégrations partenaires']],
+        'nathan' => ['Back', ['PHP', 'API REST', 'Docker'], ['Facturation']],
+        'lucas' => ['Back', ['Symfony', 'PostgreSQL'], ['Facturation']],
+        'ines' => ['QA', ['Playwright', 'API REST'], ['Intégrations partenaires']],
+        'maxime' => ['Front', ['React', 'TypeScript'], ['Gestion documentaire']],
+    ];
+
+    /** Person key => their manager: Hélène heads the leads, each lead their team. */
+    private const array MANAGERS = [
+        'julien' => 'helene', 'sophie' => 'helene', 'karim' => 'helene', 'louis' => 'helene',
+        'camille' => 'julien', 'thomas' => 'julien', 'lea' => 'julien',
+        'hugo' => 'sophie', 'emma' => 'sophie', 'chloe' => 'sophie',
+        'nathan' => 'karim', 'lucas' => 'karim', 'ines' => 'karim',
+        'maxime' => 'louis', 'paula' => 'louis',
+    ];
 
     /**
      * The team of the running leaves, owner first: they start on the week of their first entry. Thomas is loaded at
@@ -130,6 +162,9 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
     /** @var array<string, User> */
     private array $people = [];
 
+    /** @var array<string, array<string, Tag>> by category value, then label */
+    private array $tags = [];
+
     /** @var array<string, list<array{Lot, int, int}>> leaves by team, with their active weeks */
     private array $leavesByTeam = [];
 
@@ -163,6 +198,7 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
         }
 
         $this->loadPeople($manager, $firstWeek);
+        $this->loadProfiles($manager);
         $this->loadProjects($manager);
         $this->loadReplacementDays($manager, $firstWeek, $today);
         $manager->flush();
@@ -202,6 +238,37 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
 
         $this->people['louis'] = $this->getReference(AppFixtures::LEAD, User::class);
         $this->people['paula'] = $this->getReference(AppFixtures::PROD, User::class);
+    }
+
+    private function loadProfiles(ObjectManager $manager): void
+    {
+        foreach (self::PROFILES as $key => [$teamType, $skills, $experiences]) {
+            $tags = [$this->tag($manager, TagCategory::TeamType, $teamType)];
+            foreach ($skills as $label) {
+                $tags[] = $this->tag($manager, TagCategory::TechnicalSkill, $label);
+            }
+            foreach ($experiences as $label) {
+                $tags[] = $this->tag($manager, TagCategory::FunctionalExperience, $label);
+            }
+            $this->people[$key]->replaceTags($tags);
+        }
+
+        foreach (self::MANAGERS as $key => $managerKey) {
+            $this->people[$key]->setManager($this->people[$managerKey]);
+        }
+    }
+
+    /**
+     * @param non-empty-string $label
+     */
+    private function tag(ObjectManager $manager, TagCategory $category, string $label): Tag
+    {
+        if (!isset($this->tags[$category->value][$label])) {
+            $this->tags[$category->value][$label] = new Tag($category, $label);
+            $manager->persist($this->tags[$category->value][$label]);
+        }
+
+        return $this->tags[$category->value][$label];
     }
 
     /**

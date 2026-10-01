@@ -8,20 +8,25 @@ use App\Entity\Lot;
 use App\Entity\LotMember;
 use App\Entity\Project;
 use App\Entity\User;
+use App\Enum\Type\TagCategory;
 use App\Repository\TimeEntryRepository;
 use App\Repository\UserRepository;
 use App\Tests\Support\CreatesProjects;
+use App\Tests\Support\CreatesTags;
 use App\Tests\Support\CreatesTimeEntries;
 use App\Tests\Support\CreatesUsers;
+use Doctrine\Bundle\DoctrineBundle\DataCollector\DoctrineDataCollector;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\Clock\Test\ClockSensitiveTrait;
+use Symfony\Component\HttpKernel\Profiler\Profile;
 
 final class LotControllerTest extends WebTestCase
 {
     use ClockSensitiveTrait;
     use CreatesProjects;
+    use CreatesTags;
     use CreatesTimeEntries;
     use CreatesUsers;
 
@@ -364,6 +369,59 @@ final class LotControllerTest extends WebTestCase
         self::assertSame([[$lead->getId(), 50]], $this->team($this->reloadLot($lot)), 'The owner keeps the share they had.');
     }
 
+    public function testTheLeadSeesTheTagsOfEachPersonOfferedForTheTeamAndCanFilterOnThem(): void
+    {
+        $client = $this->clientAs('lead@example.com');
+        $skill = $this->createTag(TagCategory::TechnicalSkill);
+        $experience = $this->createTag(TagCategory::FunctionalExperience);
+        $teamType = $this->createTag(TagCategory::TeamType);
+        $member = $this->giveTags($this->createUser(), $skill, $experience, $teamType);
+        $untagged = $this->createUser();
+        $lot = $this->planLot($this->createLot($this->createProject(), 5), new \DateTimeImmutable('2026-10-05'), [[$member, 100]]);
+
+        $crawler = $client->request('GET', '/lots/' . $lot->getId() . '/modifier');
+
+        $option = $crawler->filter(\sprintf('[data-test="lot-member-row"] [data-test="lot-member-user"] option[value="%d"]', $member->getId()));
+        self::assertSame(\sprintf('Test User — %s · %s · %s', $teamType->getLabel(), $skill->getLabel(), $experience->getLabel()), $option->text());
+        self::assertEqualsCanonicalizing([(string) $skill->getId(), (string) $experience->getId(), (string) $teamType->getId()], explode(' ', (string) $option->attr('data-tags')));
+        $untaggedOption = $crawler->filter(\sprintf('[data-test="lot-member-row"] [data-test="lot-member-user"] option[value="%d"]', $untagged->getId()));
+        self::assertSame('Test User', $untaggedOption->text());
+        self::assertSame('', $untaggedOption->attr('data-tags'));
+
+        self::assertSame('tag-filter', $crawler->filter('[data-test="lot-planning"]')->attr('data-controller'));
+        self::assertCount(1, $crawler->filter(\sprintf('[data-test="lot-tag-filter-competence"] option[value="%d"]', $skill->getId())));
+        self::assertCount(1, $crawler->filter(\sprintf('[data-test="lot-tag-filter-equipe"] option[value="%d"]', $teamType->getId())));
+    }
+
+    public function testTheTeamChoicesQueryCountDoesNotGrowWithTheTaggedPeopleOffered(): void
+    {
+        $client = $this->clientAs('lead@example.com');
+        $lot = $this->planLot($this->createLot($this->createProject(), 5), new \DateTimeImmutable('2026-10-05'), [[$this->createUser(), 100]]);
+        $url = '/lots/' . $lot->getId() . '/modifier';
+        // The first request shares the entity manager that created the lot, and skews the count: measure from the second.
+        $client->request('GET', $url);
+        $small = $this->queryCount($client, $url);
+
+        for ($i = 0; $i < 3; ++$i) {
+            $this->giveTags($this->createUser(), $this->createTag(), $this->createTag(TagCategory::FunctionalExperience));
+        }
+
+        self::assertSame($small, $this->queryCount($client, $url));
+    }
+
+    public function testAnOwnerWhoIsNotALeadSeesNoTeamNorTags(): void
+    {
+        $client = $this->clientAs('prod@example.com');
+        $leaf = $this->createLot($this->createProject(), 4, $this->fixtureUser('prod@example.com'));
+        $this->giveTags($this->createUser(), $this->createTag());
+
+        $client->request('GET', '/lots/' . $leaf->getId() . '/modifier');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorNotExists('[data-test="lot-member-user"]');
+        self::assertSelectorNotExists('[data-test="lot-tag-filter"]');
+    }
+
     public function testOnlyActivePeopleAreOfferedAsMembersBesidesADeactivatedMemberAlreadyInTheTeam(): void
     {
         $client = $this->clientAs('lead@example.com');
@@ -620,6 +678,20 @@ final class LotControllerTest extends WebTestCase
         self::assertInstanceOf(Lot::class, $reloaded);
 
         return $reloaded;
+    }
+
+    private function queryCount(KernelBrowser $client, string $url): int
+    {
+        $client->enableProfiler();
+        $client->request('GET', $url);
+        self::assertResponseIsSuccessful();
+
+        $profile = $client->getProfile();
+        self::assertInstanceOf(Profile::class, $profile);
+        $collector = $profile->getCollector('db');
+        self::assertInstanceOf(DoctrineDataCollector::class, $collector);
+
+        return $collector->getQueryCount();
     }
 
     private function clientAs(string $email): KernelBrowser
