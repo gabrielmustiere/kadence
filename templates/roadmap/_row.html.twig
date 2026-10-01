@@ -2,13 +2,16 @@
     A lot or a leaf of the roadmap, and the sub-lots of a split lot. Expects `row`, `roadmap` and `depth`.
 #}
 {% set lot = row.lot %}
+{% set recap = row.leaf ? 'roadmap-recap-lot-' ~ lot.id : null %}
 <div class="grid grid-cols-[20rem_1fr] border-t border-default" data-test="{{ row.leaf ? 'roadmap-leaf' : 'roadmap-lot' }}" data-title="{{ row.title }}">
     <div class="sticky left-0 z-10 bg-neutral-primary px-4 py-2 {{ depth > 1 ? 'ps-12' : 'ps-8' }}">
         <div class="flex flex-wrap items-center gap-1.5">
             {% if row.leaf and is_granted('LOT_EDIT', lot) %}
-                <a href="{{ path('app_lot_edit', {id: lot.id, roadmap: roadmap.window.anchor.iso}) }}" class="text-sm font-medium text-heading hover:underline" data-test="roadmap-leaf-link">{{ row.title }}</a>
+                <a href="{{ path('app_lot_edit', {id: lot.id, roadmap: roadmap.window.anchor.iso}) }}" class="text-sm font-medium text-heading hover:underline" aria-describedby="{{ recap }}" data-roadmap-tooltip="{{ recap }}" data-test="roadmap-leaf-link">{{ row.title }}</a>
+            {% elseif row.leaf %}
+                <span class="text-sm font-medium text-heading" tabindex="0" aria-describedby="{{ recap }}" data-roadmap-tooltip="{{ recap }}" data-test="roadmap-leaf-title">{{ row.title }}</span>
             {% else %}
-                <span class="text-sm {{ row.leaf ? 'font-medium' : 'font-semibold' }} text-heading">{{ row.title }}</span>
+                <span class="text-sm font-semibold text-heading">{{ row.title }}</span>
             {% endif %}
             {% for signal in row.signals %}
                 <twig:Badge variant="{{ signal.variant }}" data-test="signal-{{ signal.value }}">{{ signal.label }}{% if signal is same as(constant('App\\Enum\\Type\\RoadmapSignal::Overrun')) %} +{{ row.overrunPercent }} %{% endif %}</twig:Badge>
@@ -18,6 +21,7 @@
     <div class="roadmap-track relative min-h-12">
         {{ include('roadmap/_today.html.twig') }}
         {% if row.leaf %}
+            {{ include('roadmap/_recap.html.twig') }}
             {% if row.realized %}{{ include('roadmap/_bar.html.twig', {bar: row.realized, kind: 'realized', class: 'h-4 rounded-sm bg-brand', test: 'roadmap-bar-realized'}) }}{% endif %}
             {% if row.overrun %}{{ include('roadmap/_bar.html.twig', {bar: row.overrun, kind: 'overrun', class: 'h-4 rounded-sm bg-danger', test: 'roadmap-bar-overrun'}) }}{% endif %}
             {% if row.future %}{{ include('roadmap/_bar.html.twig', {bar: row.future, kind: 'future', class: 'h-4 rounded-sm border border-dashed border-brand bg-brand-soft', test: 'roadmap-bar-future'}) }}{% endif %}

@@ -39,6 +39,11 @@ final class RoadmapControllerTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('[data-test="roadmap-period"]', 'Du 07/09/2026 au 20/06/2027');
         self::assertSelectorExists('[data-test="roadmap-today"][aria-current="page"]');
+        self::assertSelectorTextSame('[data-test="roadmap-zoom-level"]', '×1');
+        foreach (['roadmap-zoom-out', 'roadmap-zoom-in', 'roadmap-zoom-reset'] as $button) {
+            self::assertSelectorExists(\sprintf('button[data-test="%s"][data-action^="roadmap#zoom"]', $button));
+        }
+        self::assertSelectorExists('[data-controller="roadmap"][data-roadmap-center-value="10.4530"]', 'A zoomed track opens on today, 30 days into the window.');
     }
 
     /**
@@ -66,16 +71,26 @@ final class RoadmapControllerTest extends WebTestCase
         self::assertCount(1, $row->filter('[data-test="roadmap-bar-realized"]'));
         self::assertCount(1, $row->filter('[data-test="roadmap-bar-future"]'));
         $realized = $row->filter('[data-test="roadmap-tooltip-realized"]');
-        self::assertSame('1 j', $realized->filter('[data-test="roadmap-realized"]')->text());
+        self::assertSame('1 j', $realized->filter('[data-test="roadmap-run-entered"]')->text());
         self::assertSame('Lun 05/10/2026 → Lun 05/10/2026', $realized->filter('[data-test="roadmap-tooltip-period"]')->text());
         $future = $row->filter('[data-test="roadmap-tooltip-future"]');
         self::assertSame('9 j', $future->filter('[data-test="roadmap-remaining"]')->text());
         self::assertSame('Jeu 08/10/2026 → Mar 20/10/2026', $future->filter('[data-test="roadmap-tooltip-period"]')->text());
         self::assertSame('Test User 100 %', $future->filter('[data-test="roadmap-team"]')->text());
+        self::assertSame($future->attr('id'), $row->filter('[data-test="roadmap-bar-future"]')->attr('data-roadmap-tooltip'));
         self::assertCount(0, $row->filter('[data-test="roadmap-leaf-link"]'), 'Prod may not edit a leaf they do not own.');
+
+        $recap = $row->filter('[data-test="roadmap-recap"]');
+        self::assertSame($recap->attr('id'), $row->filter('[data-test="roadmap-leaf-title"]')->attr('data-roadmap-tooltip'));
+        self::assertSame('0', $row->filter('[data-test="roadmap-leaf-title"]')->attr('tabindex'));
+        self::assertSame(
+            ['Lun 05/10/2026', 'Mar 20/10/2026', '10 j', '1 j', '9 j', 'Lun 05/10/2026 → Lun 05/10/2026', '1', 'Test User 1 j 100 %'],
+            array_map(static fn (string $field): string => $recap->filter(\sprintf('[data-test="%s"]', $field))->text(), ['roadmap-recap-start', 'roadmap-recap-end', 'roadmap-recap-estimate', 'roadmap-recap-entered', 'roadmap-recap-remaining', 'roadmap-recap-period', 'roadmap-days-entered', 'roadmap-recap-team']),
+        );
+        self::assertCount(0, $crawler->filter('[data-test="roadmap"] [data-tooltip-target]'), 'The tooltips of the roadmap no longer go through Flowbite.');
     }
 
-    public function testInterruptedLeafShowsItsSegmentsInASingleBarWithItsDaysEnteredInTheTooltip(): void
+    public function testInterruptedLeafHasATooltipPerSegmentAndARecapOfTheWholeLeaf(): void
     {
         $client = $this->clientAs('prod@example.com');
         $alice = $this->createUser();
@@ -90,11 +105,18 @@ final class RoadmapControllerTest extends WebTestCase
         $row = $crawler->filter(\sprintf('[data-test="roadmap-project"][data-title="%s"] [data-test="roadmap-leaf"][data-title="Interrompue"]', $project->getTitle()));
         $bar = $row->filter('[data-test="roadmap-bar-realized"]');
         self::assertCount(1, $bar);
-        self::assertCount(2, $bar->filter('[data-test="roadmap-segment-realized"]'));
-        $tooltip = $row->filter('[data-test="roadmap-tooltip-realized"]');
-        self::assertSame('Lun 07/09/2026 → Ven 25/09/2026', $tooltip->filter('[data-test="roadmap-tooltip-period"]')->text());
-        self::assertSame('10 j', $tooltip->filter('[data-test="roadmap-realized"]')->text());
-        self::assertSame('10', $tooltip->filter('[data-test="roadmap-days-entered"]')->text());
+        self::assertNull($bar->attr('data-roadmap-tooltip'), 'The box of the segments shows no tooltip of its own.');
+        $segments = $bar->filter('[data-test="roadmap-segment-realized"]');
+        $tooltips = $row->filter('[data-test="roadmap-tooltip-realized"]');
+        self::assertSame($tooltips->each(static fn (Crawler $tooltip): ?string => $tooltip->attr('id')), $segments->each(static fn (Crawler $segment): ?string => $segment->attr('data-roadmap-tooltip')));
+        self::assertSame(
+            [['Lun 07/09/2026 → Ven 11/09/2026', '5 j', '5', 'Test User 5 j 100 %'], ['Lun 21/09/2026 → Ven 25/09/2026', '5 j', '5', 'Test User 5 j 100 %']],
+            $tooltips->each(static fn (Crawler $tooltip): array => array_map(static fn (string $field): string => $tooltip->filter(\sprintf('[data-test="%s"]', $field))->text(), ['roadmap-tooltip-period', 'roadmap-run-entered', 'roadmap-days-entered', 'roadmap-team'])),
+        );
+        $recap = $row->filter('[data-test="roadmap-recap"]');
+        self::assertSame('10 j', $recap->filter('[data-test="roadmap-recap-entered"]')->text());
+        self::assertSame('Lun 07/09/2026 → Ven 25/09/2026', $recap->filter('[data-test="roadmap-recap-period"]')->text());
+        self::assertSame('10', $recap->filter('[data-test="roadmap-days-entered"]')->text());
         self::assertSelectorTextContains('[data-test="roadmap-legend-gap"]', 'Jour ouvré sans saisie');
     }
 
@@ -112,20 +134,24 @@ final class RoadmapControllerTest extends WebTestCase
 
         $row = $crawler->filter(\sprintf('[data-test="roadmap-project"][data-title="%s"] [data-test="roadmap-leaf"][data-title="Dépassée"]', $project->getTitle()));
         self::assertSame('en dépassement +50 %', $row->filter('[data-test="signal-overrun"]')->text());
+        $recap = $row->filter('[data-test="roadmap-recap"]');
+        self::assertSame('1 j', $recap->filter('[data-test="roadmap-overrun"]')->text());
+        self::assertSame('+50 %', $recap->filter('[data-test="roadmap-overrun-percent"]')->text());
+        self::assertSame('inconnue, estimation à réviser', $recap->filter('[data-test="roadmap-recap-end"]')->text());
+        self::assertSame('3 j', $recap->filter('[data-test="roadmap-recap-entered"]')->text());
         $overrun = $row->filter('[data-test="roadmap-tooltip-overrun"]');
-        self::assertSame('1 j', $overrun->filter('[data-test="roadmap-overrun"]')->text());
-        self::assertSame('+50 %', $overrun->filter('[data-test="roadmap-overrun-percent"]')->text());
+        self::assertSame('1 j', $overrun->filter('[data-test="roadmap-run-entered"]')->text());
         self::assertSame('Lun 05/10/2026 → Lun 05/10/2026', $overrun->filter('[data-test="roadmap-tooltip-period"]')->text());
         self::assertSame('1', $overrun->filter('[data-test="roadmap-days-entered"]')->text());
         self::assertSame('2', $row->filter('[data-test="roadmap-tooltip-realized"] [data-test="roadmap-days-entered"]')->text());
         self::assertSame('Jeu 01/10/2026 → Ven 02/10/2026', $row->filter('[data-test="roadmap-tooltip-realized"] [data-test="roadmap-tooltip-period"]')->text(), 'The time within the estimate ends on its last day entered, not on the day before the overrun.');
-        self::assertCount(0, $row->filter('[data-test="roadmap-remaining"]'));
+        self::assertCount(0, $row->filter('[data-test="roadmap-remaining"], [data-test="roadmap-recap-remaining"]'));
         self::assertCount(1, $row->filter('[data-test="roadmap-bar-realized"]'));
         self::assertCount(1, $row->filter('[data-test="roadmap-bar-overrun"]'));
         self::assertCount(0, $row->filter('[data-test="roadmap-bar-future"]'));
     }
 
-    public function testTooltipsOfTheTimeEnteredSayWhatEachPersonEnteredWithinTheEstimateThenBeyondIt(): void
+    public function testTooltipOfASegmentSaysWhatEachPersonEnteredOnIt(): void
     {
         $client = $this->clientAs('prod@example.com');
         $alice = $this->createUser();
@@ -160,6 +186,12 @@ final class RoadmapControllerTest extends WebTestCase
         self::assertCount(1, $projectRow->filter('[data-title="Sans début"] [data-test="signal-without_start"]'));
         self::assertCount(1, $projectRow->filter('[data-title="Sans équipe"] [data-test="signal-without_team"]'));
         self::assertCount(0, $projectRow->filter('[data-test^="roadmap-bar-"]'));
+        $recap = static fn (string $title, string $field): string => $projectRow->filter(\sprintf('[data-title="%s"] [data-test="roadmap-recap"] [data-test="%s"]', $title, $field))->text();
+        self::assertSame('à estimer', $recap('À estimer', 'roadmap-recap-estimate'));
+        self::assertSame('sans début', $recap('Sans début', 'roadmap-recap-start'));
+        self::assertSame('non calculée', $recap('Sans début', 'roadmap-recap-end'));
+        self::assertSame('aucune saisie', $recap('Sans début', 'roadmap-recap-period'));
+        self::assertSame('sans équipe', $recap('Sans équipe', 'roadmap-recap-team'));
         self::assertCount(1, $crawler->filter('[data-test="roadmap-project"][data-title="Évolution du portail"] [data-test="signal-unsplit"]'));
     }
 

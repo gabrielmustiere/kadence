@@ -48,6 +48,21 @@ final class ScheduleLoaderTest extends KernelTestCase
         self::assertSame($bruno, $data->people[(int) $bruno->getId()]);
     }
 
+    public function testDaysEnteredCountADayOnceWhoeverEnteredTimeOnIt(): void
+    {
+        $alice = $this->createUser();
+        $bruno = $this->createUser();
+        $leaf = $this->createLot($this->createProject(), 10, $alice);
+        $this->createTimeEntry($alice, $leaf, '2026-10-05', 4);
+        $this->createTimeEntry($bruno, $leaf, '2026-10-05', 2);
+        $this->createTimeEntry($bruno, $leaf, '2026-10-06', 2);
+
+        $plan = $this->loader()->load()->plans[(int) $leaf->getId()];
+
+        self::assertSame(2, $plan->enteredDayCount);
+        self::assertSame(2, $plan->withPlanning(40, null, [])->enteredDayCount);
+    }
+
     public function testOverrunDaysAreTheLastDayWithinTheEstimateAndTheDayTheTimeEnteredWentBeyondIt(): void
     {
         $alice = $this->createUser();

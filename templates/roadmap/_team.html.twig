@@ -1,0 +1,15 @@
+{#
+    The team of a leaf in a tooltip. Expects `lines` and `entered`: time lines (RoadmapTeamLine) with what each person
+    entered when `entered` is true, the members of the leaf (LotMember) with their share only otherwise.
+#}
+<ul class="space-y-0.5 text-heading" data-test="roadmap-team">
+    {% for line in lines %}
+        <li class="flex justify-between gap-3" data-test="roadmap-team-line">
+            <span class="{{ line.user.active ? '' : 'line-through' }}">{{ line.user.firstName }} {{ line.user.lastName }}</span>
+            <span class="flex shrink-0 gap-3 tabular-nums">
+                {% if entered %}<span class="min-w-10 text-right" data-test="roadmap-team-entered">{{ line.quarters|days }}</span>{% endif %}
+                <span class="{{ entered ? 'min-w-16 text-right' : '' }} {{ line.share is null ? 'text-body' : '' }}">{{ line.share is null ? 'hors équipe' : line.share ~ ' %' }}</span>
+            </span>
+        </li>
+    {% endfor %}
+</ul>

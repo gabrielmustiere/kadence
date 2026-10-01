@@ -1,0 +1,53 @@
+{#
+    The recap of a leaf, shown by roadmap-tooltip when its title is hovered or focused. Expects `row`.
+#}
+{% set lot = row.lot %}
+{% set start = row.start ?? lot.startDate %}
+<div id="roadmap-recap-lot-{{ lot.id }}" role="tooltip" hidden class="pointer-events-none z-30 w-96 rounded-base border border-default bg-neutral-primary-soft p-3 text-xs text-body shadow-md" data-test="roadmap-recap">
+    <p class="text-sm font-semibold text-heading">{{ row.title }}</p>
+    <dl class="mt-2 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 border-t border-default pt-2">
+        <dt>Début</dt>
+        <dd class="text-heading" data-test="roadmap-recap-start">{{ start ? start|weekday ~ ' ' ~ start|date('d/m/Y') : 'sans début' }}</dd>
+        <dt>Fin</dt>
+        <dd class="text-heading" data-test="roadmap-recap-end">
+            {%- if row.end -%}
+                {{ row.end|weekday }} {{ row.end|date('d/m/Y') }}
+            {%- elseif row.isEndUnknown -%}
+                inconnue{{ row.overrunQuarters > 0 ? ', estimation à réviser' : '' }}
+            {%- else -%}
+                non calculée
+            {%- endif -%}
+        </dd>
+        <dt>Estimé</dt>
+        <dd class="text-heading" data-test="roadmap-recap-estimate">{{ lot.estimateDays is null ? 'à estimer' : lot.estimateDays ~ ' j' }}</dd>
+        <dt>Saisi</dt>
+        <dd class="text-heading" data-test="roadmap-recap-entered">{{ row.enteredQuarters|days }}</dd>
+        {% if row.overrunQuarters > 0 %}
+            <dt>Dépassement</dt>
+            <dd class="text-heading"><span class="font-medium text-fg-danger-strong"><span data-test="roadmap-overrun">{{ row.overrunQuarters|days }}</span> (<span data-test="roadmap-overrun-percent">+{{ row.overrunPercent }} %</span>)</span></dd>
+        {% elseif row.remainingQuarters is not null %}
+            <dt>Restant</dt>
+            <dd class="text-heading" data-test="roadmap-recap-remaining">{{ row.remainingQuarters|days }}</dd>
+        {% endif %}
+        <dt>Période saisie</dt>
+        <dd class="whitespace-nowrap text-heading" data-test="roadmap-recap-period">
+            {%- if row.enteredFrom and row.enteredTo -%}
+                {{ row.enteredFrom|weekday }} {{ row.enteredFrom|date('d/m/Y') }} → {{ row.enteredTo|weekday }} {{ row.enteredTo|date('d/m/Y') }}
+            {%- else -%}
+                aucune saisie
+            {%- endif -%}
+        </dd>
+        <dt>Jours avec saisie</dt>
+        <dd class="text-heading" data-test="roadmap-days-entered">{{ row.enteredDayCount }}</dd>
+        <dt>Équipe</dt>
+        <dd data-test="roadmap-recap-team">
+            {%- if row.team is not empty -%}
+                {{ include('roadmap/_team.html.twig', {lines: row.team, entered: true}) }}
+            {%- elseif row.members is not empty -%}
+                {{ include('roadmap/_team.html.twig', {lines: row.members, entered: false}) }}
+            {%- else -%}
+                <span class="text-heading">sans équipe</span>
+            {%- endif -%}
+        </dd>
+    </dl>
+</div>

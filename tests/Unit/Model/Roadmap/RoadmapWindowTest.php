@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Model\Roadmap;
 
 use App\Model\Roadmap\Roadmap;
+use App\Model\Roadmap\RoadmapRun;
 use App\Model\Roadmap\RoadmapWindow;
 use App\Model\Week;
 use PHPUnit\Framework\TestCase;
@@ -81,11 +82,12 @@ final class RoadmapWindowTest extends TestCase
         self::assertEqualsWithDelta(19 * self::DAY, $bar->width, 1e-9);
         self::assertSame('2026-09-25', $bar->to->format('Y-m-d'));
         [$first, $second] = $bar->segments;
-        self::assertEqualsWithDelta(0.0, $first->left, 1e-9);
-        self::assertEqualsWithDelta(100 * 5 / 19, $first->width, 1e-9);
-        self::assertEqualsWithDelta(100 * 14 / 19, $second->left, 1e-9);
-        self::assertEqualsWithDelta(100 * 5 / 19, $second->width, 1e-9);
-        self::assertSame('2026-09-21', $second->from->format('Y-m-d'));
+        self::assertEqualsWithDelta(0.0, $first->bar->left, 1e-9);
+        self::assertEqualsWithDelta(100 * 5 / 19, $first->bar->width, 1e-9);
+        self::assertEqualsWithDelta(100 * 14 / 19, $second->bar->left, 1e-9);
+        self::assertEqualsWithDelta(100 * 5 / 19, $second->bar->width, 1e-9);
+        self::assertSame('2026-09-21', $second->run->from->format('Y-m-d'));
+        self::assertSame(20, $second->run->quarters, 'The segment keeps its run.');
     }
 
     public function testSegmentedBarLeavesOutTheRunsOutsideTheWindowAndIsCutAtItsEdge(): void
@@ -98,11 +100,12 @@ final class RoadmapWindowTest extends TestCase
         self::assertSame('2026-08-03', $bar->from->format('Y-m-d'), 'The bar keeps the whole span of its runs.');
         self::assertCount(2, $bar->segments);
         [$cut, $whole] = $bar->segments;
-        self::assertTrue($cut->cutStart);
-        self::assertEqualsWithDelta(0.0, $cut->left, 1e-9);
-        self::assertEqualsWithDelta(100 * 3 / 12, $cut->width, 1e-9);
-        self::assertFalse($whole->cutStart);
-        self::assertEqualsWithDelta(100 * 7 / 12, $whole->left, 1e-9);
+        self::assertTrue($cut->bar->cutStart);
+        self::assertEqualsWithDelta(0.0, $cut->bar->left, 1e-9);
+        self::assertEqualsWithDelta(100 * 3 / 12, $cut->bar->width, 1e-9);
+        self::assertSame('2026-08-27', $cut->run->from->format('Y-m-d'), 'A cut segment keeps the whole span of its run.');
+        self::assertFalse($whole->bar->cutStart);
+        self::assertEqualsWithDelta(100 * 7 / 12, $whole->bar->left, 1e-9);
     }
 
     public function testSegmentedBarWithoutRunWithinTheWindowIsNotShown(): void
@@ -155,11 +158,8 @@ final class RoadmapWindowTest extends TestCase
         return RoadmapWindow::around(Week::fromIso('2026-W40'));
     }
 
-    /**
-     * @return array{\DateTimeImmutable, \DateTimeImmutable}
-     */
-    private function days(string $from, string $to): array
+    private function days(string $from, string $to): RoadmapRun
     {
-        return [new \DateTimeImmutable($from), new \DateTimeImmutable($to)];
+        return new RoadmapRun(new \DateTimeImmutable($from), new \DateTimeImmutable($to), 20, 5);
     }
 }

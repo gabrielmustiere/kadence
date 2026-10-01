@@ -1,6 +1,7 @@
 {#
-    A bar of the roadmap and its tooltip. Expects `row`, `bar`, `kind` (see _tooltip), `class` and `test`. A bar made of
-    segments is a transparent box holding them: Flowbite keeps a single trigger per tooltip.
+    A bar of the roadmap and its tooltips, shown by roadmap-tooltip. Expects `row`, `bar`, `kind` (see _tooltip), `class`
+    and `test`. A bar made of segments is a box holding them, each segment with its own tooltip. The tooltips stay out
+    of the box, whose transform would otherwise become their reference for a fixed position.
 #}
 {% set fade = bar.cutStart and bar.cutEnd
     ? 'linear-gradient(to right, transparent, black 12px, black calc(100% - 12px), transparent)'
@@ -8,13 +9,17 @@
 {% set tooltip = 'roadmap-tooltip-' ~ (row.lot ? 'lot-' ~ row.lot.id : 'project-' ~ row.project.id) ~ '-' ~ kind %}
 <div class="absolute top-1/2 -translate-y-1/2 {{ bar.segments is empty ? class : (class ~ ' bg-transparent')|tailwind_merge }} {{ bar.cutStart ? 'rounded-l-none' : '' }} {{ bar.cutEnd ? 'rounded-r-none' : '' }}"
      style="{{ bar.style }}{% if fade %}; mask-image: {{ fade }}{% endif %}"
-     data-tooltip-target="{{ tooltip }}"
+     {% if bar.segments is empty %}data-roadmap-tooltip="{{ tooltip }}"{% endif %}
      data-test="{{ test }}"
      data-cut-start="{{ bar.cutStart ? 'true' : 'false' }}"
      data-cut-end="{{ bar.cutEnd ? 'true' : 'false' }}"
      aria-hidden="true">
     {%- for segment in bar.segments %}
-        <div class="absolute inset-y-0 {{ class }} {{ segment.cutStart ? 'rounded-l-none' : '' }} {{ segment.cutEnd ? 'rounded-r-none' : '' }}" style="{{ segment.style }}" data-test="roadmap-segment-{{ kind }}"></div>
+        <div class="absolute inset-y-0 {{ class }} {{ segment.bar.cutStart ? 'rounded-l-none' : '' }} {{ segment.bar.cutEnd ? 'rounded-r-none' : '' }}" style="{{ segment.bar.style }}" data-roadmap-tooltip="{{ tooltip }}-{{ loop.index }}" data-test="roadmap-segment-{{ kind }}"></div>
     {%- endfor -%}
 </div>
-{{ include('roadmap/_tooltip.html.twig', {id: tooltip}) }}
+{% for segment in bar.segments %}
+    {{ include('roadmap/_tooltip.html.twig', {id: tooltip ~ '-' ~ loop.index, bar: segment.run, run: segment.run}) }}
+{% else %}
+    {{ include('roadmap/_tooltip.html.twig', {id: tooltip}) }}
+{% endfor %}

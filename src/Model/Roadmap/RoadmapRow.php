@@ -16,16 +16,17 @@ use App\Model\Quarters;
 final readonly class RoadmapRow
 {
     /**
-     * @param \DateTimeImmutable|null $end              the calculated end, null when it is unknown
-     * @param \DateTimeImmutable|null $lastDay          the last day the bars reach
-     * @param RoadmapBar|null         $overrun          the days entered once the estimate was gone beyond
+     * @param \DateTimeImmutable|null $end             the calculated end, null when it is unknown
+     * @param \DateTimeImmutable|null $lastDay         the last day the bars reach
+     * @param RoadmapBar|null         $overrun         the days entered once the estimate was gone beyond
      * @param list<LotMember>         $members
      * @param list<RoadmapSignal>     $signals
      * @param list<RoadmapRow>        $children
-     * @param list<RoadmapTeamLine>   $realizedTeam     what each person entered within the estimate
-     * @param list<RoadmapTeamLine>   $overrunTeam      what each person entered beyond the estimate
-     * @param int                     $realizedDayCount days with time entered within the estimate
-     * @param int                     $overrunDayCount  days with time entered beyond the estimate
+     * @param \DateTimeImmutable|null $enteredFrom     first day entered on the leaf
+     * @param \DateTimeImmutable|null $enteredTo       last day entered on the leaf
+     * @param int                     $enteredDayCount days with time entered on the leaf
+     * @param list<RoadmapTeamLine>   $team            the members with their share and what they entered on the leaf,
+     *                                                 then the people outside the team who entered time on it
      */
     public function __construct(
         public Project $project,
@@ -41,10 +42,10 @@ final readonly class RoadmapRow
         public array $members = [],
         public array $signals = [],
         public array $children = [],
-        public array $realizedTeam = [],
-        public array $overrunTeam = [],
-        public int $realizedDayCount = 0,
-        public int $overrunDayCount = 0,
+        public ?\DateTimeImmutable $enteredFrom = null,
+        public ?\DateTimeImmutable $enteredTo = null,
+        public int $enteredDayCount = 0,
+        public array $team = [],
     ) {
     }
 
@@ -56,6 +57,14 @@ final readonly class RoadmapRow
     public function isLeaf(): bool
     {
         return null !== $this->lot && $this->lot->isLeaf();
+    }
+
+    /**
+     * Time entered on the leaf, whoever entered it.
+     */
+    public function enteredQuarters(): int
+    {
+        return array_sum(array_map(static fn (RoadmapTeamLine $line): int => $line->quarters, $this->team));
     }
 
     /**
@@ -78,19 +87,6 @@ final readonly class RoadmapRow
         }
 
         return max(1, (int) round(100 * $overrun / ($estimate * Quarters::PER_DAY)));
-    }
-
-    /**
-     * Time entered within the estimate, null while « à estimer ».
-     */
-    public function realizedQuarters(): ?int
-    {
-        $estimate = $this->lot?->getEstimateDays();
-        if (null === $estimate || null === $this->remainingQuarters) {
-            return null;
-        }
-
-        return $estimate * Quarters::PER_DAY - max(0, $this->remainingQuarters);
     }
 
     public function isEndUnknown(): bool

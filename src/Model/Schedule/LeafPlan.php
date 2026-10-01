@@ -18,6 +18,7 @@ final readonly class LeafPlan
         public ?\DateTimeImmutable $lastEntryDay,
         public ?\DateTimeImmutable $startDate,
         public array $members,
+        public int $enteredDayCount = 0,
     ) {
     }
 
@@ -26,6 +27,6 @@ final readonly class LeafPlan
      */
     public function withPlanning(?int $estimateQuarters, ?\DateTimeImmutable $startDate, array $members): self
     {
-        return new self($this->lotId, $estimateQuarters, $this->consumedQuarters, $this->firstEntryDay, $this->lastEntryDay, $startDate, $members);
+        return new self($this->lotId, $estimateQuarters, $this->consumedQuarters, $this->firstEntryDay, $this->lastEntryDay, $startDate, $members, $this->enteredDayCount);
     }
 }

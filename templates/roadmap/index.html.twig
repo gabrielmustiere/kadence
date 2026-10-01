@@ -5,12 +5,14 @@
 {% block title %}Roadmap · Kadence{% endblock %}
 
 {% block body %}
+    <div data-controller="roadmap" data-roadmap-center-value="{{ (roadmap.todayPosition ?? window.position(window.anchor.monday))|number_format(4, '.', '') }}">
     <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
             <h1 class="font-display text-2xl font-bold tracking-tight text-heading sm:text-3xl">Roadmap</h1>
             <p class="mt-1 text-sm text-body">La chronologie de chaque projet : ce qui a été saisi, puis ce qui reste, réparti sur la capacité de l'équipe.</p>
         </div>
-        <nav class="flex shrink-0 gap-2" aria-label="Période affichée">
+        <div class="flex shrink-0 flex-wrap items-center gap-3">
+        <nav class="flex gap-2" aria-label="Période affichée">
             <twig:Button as="a" size="sm" variant="outline" href="{{ path('app_roadmap_week', {week: window.previous.iso}) }}" data-test="roadmap-previous">
                 <twig:ux:icon name="tabler:chevron-left" class="size-4 me-1"/>
                 4 semaines
@@ -21,6 +23,17 @@
                 <twig:ux:icon name="tabler:chevron-right" class="size-4 ms-1"/>
             </twig:Button>
         </nav>
+        <div class="flex items-center gap-1" role="group" aria-label="Zoom de la frise">
+            <twig:Button type="button" size="icon-sm" variant="outline" class="disabled:cursor-not-allowed disabled:opacity-50" aria-label="Dézoomer la frise" data-roadmap-target="zoomOut" data-action="roadmap#zoomOut" data-test="roadmap-zoom-out">
+                <twig:ux:icon name="tabler:minus" class="size-4"/>
+            </twig:Button>
+            <span class="min-w-8 text-center text-sm tabular-nums text-heading" aria-live="polite" data-roadmap-target="zoomLevel" data-test="roadmap-zoom-level">×1</span>
+            <twig:Button type="button" size="icon-sm" variant="outline" class="disabled:cursor-not-allowed disabled:opacity-50" aria-label="Zoomer la frise" data-roadmap-target="zoomIn" data-action="roadmap#zoomIn" data-test="roadmap-zoom-in">
+                <twig:ux:icon name="tabler:plus" class="size-4"/>
+            </twig:Button>
+            <twig:Button type="button" size="sm" variant="outline" class="disabled:cursor-not-allowed disabled:opacity-50" data-roadmap-target="zoomReset" data-action="roadmap#zoomReset" data-test="roadmap-zoom-reset">100 %</twig:Button>
+        </div>
+        </div>
     </div>
 
     <div class="mb-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-body" data-test="roadmap-legend">
@@ -38,11 +51,11 @@
             <p class="text-body">Aucun projet pour l'instant.</p>
         </twig:Card>
     {% else %}
-        <div class="overflow-x-auto rounded-base border border-default bg-neutral-primary" style="--roadmap-weeks: {{ constant('App\\Model\\Roadmap\\RoadmapWindow::WEEK_COUNT') }}" data-controller="roadmap" data-test="roadmap">
-            <div class="min-w-[72rem]">
+        <div class="overflow-x-auto rounded-base border border-default bg-neutral-primary" style="--roadmap-weeks: {{ constant('App\\Model\\Roadmap\\RoadmapWindow::WEEK_COUNT') }}; --roadmap-zoom: 1" data-roadmap-target="scroller" data-controller="roadmap-tooltip" data-action="pointerover->roadmap-tooltip#show pointermove->roadmap-tooltip#show pointerout->roadmap-tooltip#leave focusin->roadmap-tooltip#show focusout->roadmap-tooltip#leave scroll->roadmap-tooltip#hide scroll@window->roadmap-tooltip#hide keydown.esc@window->roadmap-tooltip#hide turbo:before-cache@document->roadmap-tooltip#hide" data-test="roadmap">
+            <div style="min-width: calc(20rem + max(52rem, 100% - 20rem) * var(--roadmap-zoom))">
                 <div class="grid grid-cols-[20rem_1fr] bg-neutral-secondary-medium text-xs font-medium text-heading">
                     <div class="sticky left-0 z-10 bg-neutral-secondary-medium px-4 py-2">Projet</div>
-                    <div class="relative h-8" data-test="roadmap-months">
+                    <div class="relative h-8" data-roadmap-target="track" data-test="roadmap-months">
                         {% for month in roadmap.months %}
                             <span class="absolute top-2 whitespace-nowrap border-l border-default-medium ps-1" style="left: {{ month[1]|number_format(4, '.', '') }}%">{{ month[0] }}</span>
                         {% endfor %}
@@ -75,4 +88,5 @@
             </div>
         </div>
     {% endif %}
+    </div>
 {% endblock %}

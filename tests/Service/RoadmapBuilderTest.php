@@ -10,6 +10,8 @@ use App\Enum\Type\RoadmapSignal;
 use App\Model\Roadmap\Roadmap;
 use App\Model\Roadmap\RoadmapBar;
 use App\Model\Roadmap\RoadmapRow;
+use App\Model\Roadmap\RoadmapRun;
+use App\Model\Roadmap\RoadmapSegment;
 use App\Model\Roadmap\RoadmapTeamLine;
 use App\Model\Roadmap\RoadmapWindow;
 use App\Model\Week;
@@ -105,7 +107,7 @@ final class RoadmapBuilderTest extends KernelTestCase
         self::assertSame('2026-10-05', $row->lastDay?->format('Y-m-d'));
     }
 
-    public function testEachPersonsTimeFillsTheEstimateInTheOrderItWasEnteredThenGoesBeyondIt(): void
+    public function testEachRunTellsWhatEachPersonEnteredOnItAndTheDayTheEstimateIsGoneBeyondCountsWholeBeyondIt(): void
     {
         $alice = $this->createUser();
         $bob = $this->createUser();
@@ -119,16 +121,40 @@ final class RoadmapBuilderTest extends KernelTestCase
 
         $row = $this->projectRow($this->build(), $project)->children[0];
 
+        [$within] = self::runs($row->realized);
+        self::assertSame([4, 1], [$within->quarters, $within->dayCount]);
+        self::assertSame([[$alice->getId(), 100, 4], [$bob->getId(), 50, 0]], self::team($within->team));
+        [$beyond] = self::runs($row->overrun);
+        self::assertSame(['2026-10-02', '2026-10-05'], [$beyond->from->format('Y-m-d'), $beyond->to->format('Y-m-d')]);
+        self::assertSame([6, 2], [$beyond->quarters, $beyond->dayCount], 'Bob\'s quarter still within the estimate counts in the run of the day the estimate was gone beyond.');
         self::assertSame(
-            [[$alice->getId(), 100, 4], [$bob->getId(), 50, 1], [$carol->getId(), null, 3]],
-            self::team($row->realizedTeam),
-            'Bob\'s entry reaches the estimate: one quarter of it is within, the other beyond.',
+            [[$alice->getId(), 100, 1], [$bob->getId(), 50, 2], [$carol->getId(), null, 3]],
+            self::team($beyond->team),
+            'Carol, outside the team, comes after the members.',
         );
-        self::assertSame(
-            [[$alice->getId(), 100, 1], [$bob->getId(), 50, 1]],
-            self::team($row->overrunTeam),
-            'Carol, outside the team, entered nothing beyond the estimate.',
-        );
+        self::assertSame(10, $within->quarters + $beyond->quarters, 'The runs add up to the time entered on the leaf.');
+    }
+
+    public function testLeafRecapsWhatWasEnteredOnItWhetherPlannedOrNot(): void
+    {
+        $alice = $this->createUser();
+        $bob = $this->createUser();
+        $project = $this->createProject();
+        $planned = $this->planLot($this->createLot($project, 5, $alice), new \DateTimeImmutable('2026-09-28'), [[$alice, 100]]);
+        $this->createTimeEntry($alice, $planned, '2026-09-28', 4);
+        $this->createTimeEntry($bob, $planned, '2026-09-28', 2);
+        $this->createTimeEntry($alice, $planned, '2026-10-01', 4);
+        $unplanned = $this->createLot($project, 5, $alice);
+        $this->createTimeEntry($alice, $unplanned, '2026-09-30', 4);
+
+        [$plannedRow, $unplannedRow] = $this->projectRow($this->build(), $project)->children;
+
+        self::assertSame(['2026-09-28', '2026-10-01', 2], [$plannedRow->enteredFrom?->format('Y-m-d'), $plannedRow->enteredTo?->format('Y-m-d'), $plannedRow->enteredDayCount]);
+        self::assertSame([[$alice->getId(), 100, 8], [$bob->getId(), null, 2]], self::team($plannedRow->team));
+        self::assertSame([RoadmapSignal::WithoutStart], $unplannedRow->signals);
+        self::assertNull($unplannedRow->realized);
+        self::assertSame(['2026-09-30', '2026-09-30', 1], [$unplannedRow->enteredFrom?->format('Y-m-d'), $unplannedRow->enteredTo?->format('Y-m-d'), $unplannedRow->enteredDayCount]);
+        self::assertSame([[$alice->getId(), 100, 4]], self::team($unplannedRow->team));
     }
 
     public function testTimeEnteredIsCutWhereAWeekGoesByWithoutEntry(): void
@@ -146,7 +172,8 @@ final class RoadmapBuilderTest extends KernelTestCase
         self::assertNotNull($row->realized);
         self::assertSame('2026-09-07', $row->realized->from->format('Y-m-d'));
         self::assertSame('2026-09-25', $row->realized->to->format('Y-m-d'));
-        self::assertSame(10, $row->realizedDayCount);
+        self::assertSame([[20, 5], [20, 5]], array_map(static fn (RoadmapRun $run): array => [$run->quarters, $run->dayCount], self::runs($row->realized)));
+        self::assertSame(10, $row->enteredDayCount);
         self::assertSame([RoadmapSignal::EstimateReached], $row->signals);
     }
 
@@ -162,7 +189,7 @@ final class RoadmapBuilderTest extends KernelTestCase
         $row = $this->projectRow($this->build(), $project)->children[0];
 
         self::assertSame([['2026-09-14', '2026-09-15'], ['2026-09-17', '2026-09-21']], self::segments($row->realized));
-        self::assertSame(5, $row->realizedDayCount);
+        self::assertSame(5, $row->enteredDayCount);
     }
 
     public function testAHolidayCutsTheTimeEnteredOnlyWhenOneMemberCouldWork(): void
@@ -221,8 +248,8 @@ final class RoadmapBuilderTest extends KernelTestCase
 
         self::assertSame([['2026-09-14', '2026-09-15']], self::segments($row->realized));
         self::assertSame([['2026-09-17', '2026-09-18'], ['2026-09-22', '2026-09-22']], self::segments($row->overrun));
-        self::assertSame(2, $row->realizedDayCount);
-        self::assertSame(3, $row->overrunDayCount);
+        self::assertSame([2, 2, 1], array_map(static fn (RoadmapRun $run): int => $run->dayCount, [...self::runs($row->realized), ...self::runs($row->overrun)]));
+        self::assertSame(5, $row->enteredDayCount);
     }
 
     public function testPlannedLeafWithoutCapacityNorEntryKeepsItsStartAndLeavesTheEndOfItsProjectUnknown(): void
@@ -287,7 +314,15 @@ final class RoadmapBuilderTest extends KernelTestCase
      */
     private static function segments(?RoadmapBar $bar): array
     {
-        return array_map(static fn (RoadmapBar $segment): array => [$segment->from->format('Y-m-d'), $segment->to->format('Y-m-d')], $bar->segments ?? []);
+        return array_map(static fn (RoadmapRun $run): array => [$run->from->format('Y-m-d'), $run->to->format('Y-m-d')], self::runs($bar));
+    }
+
+    /**
+     * @return list<RoadmapRun>
+     */
+    private static function runs(?RoadmapBar $bar): array
+    {
+        return array_map(static fn (RoadmapSegment $segment): RoadmapRun => $segment->run, $bar->segments ?? []);
     }
 
     /**

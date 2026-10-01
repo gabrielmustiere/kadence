@@ -71,20 +71,21 @@ class TimeEntryRepository extends ServiceEntityRepository
     }
 
     /**
-     * @return array<int, array{int, string, string}> quarters entered, first and last day entered (Y-m-d), by lot id
+     * @return array<int, array{int, string, string, int}> quarters entered, first and last day entered (Y-m-d) and number of
+     *                                                     days entered, by lot id
      */
     public function summarizeByLot(): array
     {
-        /** @var list<array{lotId: int|string, quarters: int|string, first: string, last: string}> $rows */
+        /** @var list<array{lotId: int|string, quarters: int|string, first: string, last: string, days: int|string}> $rows */
         $rows = $this->createQueryBuilder('e')
-            ->select('IDENTITY(e.lot) AS lotId', 'SUM(e.quarters) AS quarters', 'MIN(e.day) AS first', 'MAX(e.day) AS last')
+            ->select('IDENTITY(e.lot) AS lotId', 'SUM(e.quarters) AS quarters', 'MIN(e.day) AS first', 'MAX(e.day) AS last', 'COUNT(DISTINCT e.day) AS days')
             ->groupBy('e.lot')
             ->getQuery()
             ->getArrayResult();
 
         $summaries = [];
         foreach ($rows as $row) {
-            $summaries[(int) $row['lotId']] = [(int) $row['quarters'], $row['first'], $row['last']];
+            $summaries[(int) $row['lotId']] = [(int) $row['quarters'], $row['first'], $row['last'], (int) $row['days']];
         }
 
         return $summaries;
@@ -108,36 +109,6 @@ class TimeEntryRepository extends ServiceEntityRepository
         }
 
         return $quarters;
-    }
-
-    /**
-     * @param list<int> $lotIds
-     *
-     * @return array<int, list<array{int, int}>> user id and quarters of each entry, in the order they were entered (day,
-     *                                           then entry), by lot id
-     */
-    public function findQuartersInOrderForLots(array $lotIds): array
-    {
-        if ([] === $lotIds) {
-            return [];
-        }
-
-        /** @var list<array{lotId: int|string, userId: int|string, quarters: int|string}> $rows */
-        $rows = $this->createQueryBuilder('e')
-            ->select('IDENTITY(e.lot) AS lotId', 'IDENTITY(e.user) AS userId', 'e.quarters AS quarters')
-            ->andWhere('IDENTITY(e.lot) IN (:lots)')
-            ->setParameter('lots', $lotIds, ArrayParameterType::INTEGER)
-            ->orderBy('e.day', 'ASC')
-            ->addOrderBy('e.id', 'ASC')
-            ->getQuery()
-            ->getArrayResult();
-
-        $entries = [];
-        foreach ($rows as $row) {
-            $entries[(int) $row['lotId']][] = [(int) $row['userId'], (int) $row['quarters']];
-        }
-
-        return $entries;
     }
 
     /**
@@ -167,6 +138,36 @@ class TimeEntryRepository extends ServiceEntityRepository
         }
 
         return $days;
+    }
+
+    /**
+     * @param list<int> $lotIds
+     *
+     * @return array<int, array<string, array<int, int>>> quarters entered by each person each day (Y-m-d, in date order),
+     *                                                    by lot id
+     */
+    public function sumQuartersByDayAndUserForLots(array $lotIds): array
+    {
+        if ([] === $lotIds) {
+            return [];
+        }
+
+        /** @var list<array{lotId: int|string, day: \DateTimeImmutable, userId: int|string, quarters: int|string}> $rows */
+        $rows = $this->createQueryBuilder('e')
+            ->select('IDENTITY(e.lot) AS lotId', 'e.day AS day', 'IDENTITY(e.user) AS userId', 'SUM(e.quarters) AS quarters')
+            ->andWhere('IDENTITY(e.lot) IN (:lots)')
+            ->setParameter('lots', $lotIds, ArrayParameterType::INTEGER)
+            ->groupBy('e.lot', 'e.day', 'e.user')
+            ->orderBy('e.day', 'ASC')
+            ->getQuery()
+            ->getArrayResult();
+
+        $quarters = [];
+        foreach ($rows as $row) {
+            $quarters[(int) $row['lotId']][$row['day']->format('Y-m-d')][(int) $row['userId']] = (int) $row['quarters'];
+        }
+
+        return $quarters;
     }
 
     public function sumQuartersForLotId(int $lotId): int

@@ -116,7 +116,7 @@ final readonly class ScheduleLoader
     }
 
     /**
-     * @param array{int, string, string}|null $summary quarters entered, first and last day entered
+     * @param array{int, string, string, int}|null $summary quarters entered, first and last day entered, days entered
      */
     private static function planOf(Lot $leaf, ?array $summary): LeafPlan
     {
@@ -130,6 +130,7 @@ final readonly class ScheduleLoader
             null === $summary ? null : new \DateTimeImmutable($summary[2]),
             $leaf->getStartDate(),
             self::plannedMembers(array_map(static fn (LotMember $member): array => [$member->getUser(), $member->getShare()], $leaf->getMembers()->getValues())),
+            $summary[3] ?? 0,
         );
     }
 

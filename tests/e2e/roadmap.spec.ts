@@ -48,10 +48,10 @@ test.beforeAll(() => {
   sql(`INSERT INTO project (title) VALUES ('${project}')`);
   sql(`INSERT INTO lot (title, estimate_days, project_id) SELECT 'Socle', 10, id FROM project WHERE title = '${project}'`);
 
-  const days = [...weekDays(-3), ...weekDays(-1)];
+  const days = [...weekDays(-3), weekDays(-2)[2], ...weekDays(-1)];
   const leafAndFormer = `lot l JOIN project p ON p.id = l.project_id JOIN "user" u ON u.email = 'ancien@example.com'`;
   const interrupted = `p.title = '${project}' AND l.title = 'Interrompue'`;
-  sql(`INSERT INTO lot (title, estimate_days, start_date, project_id) SELECT 'Interrompue', 10, '${days[0]}', id FROM project WHERE title = '${project}'`);
+  sql(`INSERT INTO lot (title, estimate_days, start_date, project_id) SELECT 'Interrompue', 12, '${days[0]}', id FROM project WHERE title = '${project}'`);
   sql(`INSERT INTO lot_member (share, lot_id, user_id) SELECT 100, l.id, u.id FROM ${leafAndFormer} WHERE ${interrupted}`);
   sql(`INSERT INTO time_entry (day, quarters, user_id, lot_id) SELECT d.day, 4, u.id, l.id FROM (${days.map((day) => `SELECT '${day}' AS day`).join(' UNION ALL ')}) d, ${leafAndFormer} WHERE ${interrupted}`);
 });
@@ -103,25 +103,90 @@ test('un lead planifie une feuille et la voit sur la roadmap', async ({ page }) 
   await expect(projectRow(page).locator('summary [data-test="roadmap-bar-span"]')).toBeVisible();
 });
 
-test('une feuille interrompue montre ses tronçons et la même infobulle depuis chacun', async ({ page }) => {
+test('chaque tronçon a son infobulle, une seule à la fois, et le titre donne le récap de la feuille', async ({ page }) => {
   await login(page, 'prod@example.com');
   await page.goto('/roadmap');
   await projectRow(page).locator('summary').click();
   const leaf = projectRow(page).locator('[data-test="roadmap-leaf"][data-title="Interrompue"]');
   const segments = leaf.locator('[data-test="roadmap-segment-realized"]');
-  const tooltip = leaf.locator('[data-test="roadmap-tooltip-realized"]');
-  await expect(segments).toHaveCount(2);
-  await expect(page.locator('[data-test="roadmap-legend-gap"]')).toBeVisible();
+  const shown = page.locator('[role="tooltip"]:visible');
+  await expect(segments).toHaveCount(3);
 
-  await segments.first().hover();
-  await expect(tooltip).toBeVisible();
-  await expect(tooltip.locator('[data-test="roadmap-days-entered"]')).toHaveText('10');
+  for (const [index, days] of [[0, '5'], [1, '1'], [2, '5']] as const) {
+    await segments.nth(index).hover();
+    await expect(shown).toHaveCount(1);
+    await expect(shown.locator('[data-test="roadmap-days-entered"]')).toHaveText(days);
+    await expect(shown.locator('[data-test="roadmap-team"]')).toHaveText(/Arthur Petit/);
+  }
+
+  const first = await segments.nth(0).boundingBox();
+  const second = await segments.nth(1).boundingBox();
+  const bar = leaf.locator('[data-test="roadmap-bar-realized"]');
+  const box = await bar.boundingBox();
+  await bar.hover({ position: { x: (first!.x + first!.width + second!.x) / 2 - box!.x, y: box!.height / 2 } });
+  await expect(shown).toHaveCount(0);
+
+  await leaf.locator('[data-test="roadmap-leaf-title"]').hover();
+  await expect(shown).toHaveCount(1);
+  await expect(shown).toHaveAttribute('data-test', 'roadmap-recap');
+  await expect(shown.locator('[data-test="roadmap-days-entered"]')).toHaveText('11');
+  await expect(shown.locator('[data-test="roadmap-recap-entered"]')).toHaveText('11 j');
+});
+
+test('le récap d\'une feuille s\'ouvre au clavier', async ({ page }) => {
+  await login(page, 'prod@example.com');
+  await page.goto('/roadmap');
+  await projectRow(page).locator('summary').click();
+  const leaf = projectRow(page).locator('[data-test="roadmap-leaf"][data-title="Interrompue"]');
+
+  await leaf.locator('[data-test="roadmap-leaf-title"]').focus();
+  await expect(leaf.locator('[data-test="roadmap-recap"]')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(leaf.locator('[data-test="roadmap-recap"]')).toBeHidden();
+});
+
+test('une infobulle ouverte se ferme avant que Turbo ne mette la page en cache', async ({ page }) => {
+  await login(page, 'prod@example.com');
+  await page.goto('/roadmap');
+  await projectRow(page).locator('summary').click();
   await page.mouse.move(0, 0);
-  await expect(tooltip).toBeHidden();
+  await projectRow(page).locator('[data-test="roadmap-leaf"][data-title="Interrompue"] [data-test="roadmap-leaf-title"]').focus();
+  await expect(page.locator('[role="tooltip"]:visible')).toHaveCount(1);
 
-  await segments.last().hover();
-  await expect(tooltip).toBeVisible();
-  await expect(tooltip.locator('[data-test="roadmap-days-entered"]')).toHaveText('10');
+  await page.evaluate(() => document.dispatchEvent(new Event('turbo:before-cache')));
+  await expect(page.locator('[role="tooltip"]:visible')).toHaveCount(0);
+});
+
+test('la frise se zoome de ×1 à ×8, garde son palier en naviguant et rouvre sur aujourd\'hui', async ({ page }) => {
+  await login(page, 'prod@example.com');
+  await page.goto('/roadmap');
+  await projectRow(page).locator('summary').click();
+  const level = page.locator('[data-test="roadmap-zoom-level"]');
+  const zoomIn = page.locator('[data-test="roadmap-zoom-in"]');
+  await expect(level).toHaveText('×1');
+  await expect(page.locator('[data-test="roadmap-zoom-out"]')).toBeDisabled();
+
+  for (const expected of ['×2', '×4', '×8']) {
+    await zoomIn.click();
+    await expect(level).toHaveText(expected);
+  }
+  await expect(zoomIn).toBeDisabled();
+  const oneDay = projectRow(page).locator('[data-test="roadmap-leaf"][data-title="Interrompue"] [data-test="roadmap-segment-realized"]').nth(1);
+  expect((await oneDay.boundingBox())!.width).toBeGreaterThanOrEqual(20);
+
+  await page.click('[data-test="roadmap-next"]');
+  await expect(page).toHaveURL(/\/roadmap\/\d{4}-W\d{2}$/);
+  await expect(level).toHaveText('×8');
+  await page.click('[data-test="roadmap-today"]');
+  await expect(page).toHaveURL(/\/roadmap$/);
+  await expect(level).toHaveText('×8');
+  const scroller = await page.locator('[data-test="roadmap"]').boundingBox();
+  const today = await page.locator('[data-test="roadmap-today-line"]').first().boundingBox();
+  expect(today!.x).toBeGreaterThan(scroller!.x + 320);
+  expect(today!.x).toBeLessThan(scroller!.x + scroller!.width);
+
+  await page.click('[data-test="roadmap-zoom-reset"]');
+  await expect(level).toHaveText('×1');
 });
 
 test('la frise avance de quatre semaines et revient à aujourd\'hui', async ({ page }) => {

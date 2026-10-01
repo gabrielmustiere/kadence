@@ -1,0 +1,41 @@
+{
+  "version": 2,
+  "title": "Détailler chaque tronçon et chaque feuille dans les infobulles de la roadmap, et zoomer la frise pour les survoler",
+  "created": "2026-10-01",
+  "updated": "2026-10-01",
+  "tags": [
+    "roadmap"
+  ],
+  "changelog": [
+    {
+      "date": "2026-10-01",
+      "type": "Création",
+      "description": "Pitch initial rédigé, en prolongement de la story 008 : infobulle par tronçon (période, saisi, jours avec saisie, équipe avec le temps de chacun sur le tronçon, visible de tous, tension principe 2 assumée), jour de franchissement compté en entier dans son tronçon au-delà de l'estimation, récapitulatif de toute feuille au survol ou au focus de son titre, une seule infobulle à la fois, infobulle de la partie restante et barres de cumul inchangées, zoom horizontal par paliers ×1 à ×8 à fenêtre constante, centré sur la même date et mémorisé pour la session."
+    },
+    {
+      "date": "2026-10-01",
+      "type": "Planification",
+      "description": "Plan technique validé : aucun impact modèle ; temps par feuille, jour et personne (sumQuartersByDayAndUserForLots) et jours distincts dans summarizeByLot (LeafPlan::enteredDayCount) ; RoadmapRun et RoadmapSegment pour le détail des tronçons, champs de récapitulatif sur RoadmapRow ; découpage par personne dans et au-delà de l'estimation retiré (beyondEstimate, findQuartersInOrderForLots, realizedTeam, overrunTeam) ; infobulles de la roadmap passées de Flowbite à un contrôleur Stimulus délégué (une seule visible, placée par Popper) ; zoom par variable CSS dans roadmap_controller.js, mémorisé en sessionStorage ; pitch annoté (tactile par émulation du survol, seuil des mois inchangé)."
+    },
+    {
+      "date": "2026-10-01",
+      "type": "Implémentation",
+      "description": "Six étapes du plan livrées (jours distincts et temps par feuille, jour et personne, RoadmapRun et RoadmapSegment, récapitulatif sur RoadmapRow, contrôleur Stimulus roadmap-tooltip à la place de Flowbite, récapitulatif sur le titre, zoom ×1 à ×8 en variable CSS et sessionStorage, E2E) ; 356 tests PHPUnit et 39 E2E verts ; écarts : partiel _team.html.twig partagé par infobulles et récapitulatif, RoadmapRow::enteredQuarters(), data-test sur le repère « aujourd'hui », infobulles bornées au cadre de la frise (preventOverflow) et réaffichées au mouvement du pointeur après un défilement ; HTML de /roadmap à 333 Ko (513 Ko sur une fenêtre dense), 26 à 32 Ko une fois compressé."
+    },
+    {
+      "date": "2026-10-01",
+      "type": "Review",
+      "description": "Revue du diff : 0 bloquant, 0 important, 3 mineurs corrigés pendant la passe (fermeture des infobulles sur turbo:before-cache avec E2E déterministe, realizedQuarters() orphelin retiré, aria-describedby vers le récap) ; un point d'abord classé important (infobulle figée après retour arrière) reclassé en mineur de robustesse, le défaut n'ayant pas été reproduit (premier constat dû à un survol légitime) ; 44 tests roadmap et 8 E2E verts. Statut : PRÊT À COMMITER."
+    },
+    {
+      "date": "2026-10-01",
+      "type": "Report",
+      "description": "Report rédigé : conformité 95 %, 15/15 critères d'acceptation (date au centre au zoom vérifiée à la recette), écarts volontaires (infobulles bornées au cadre de la frise et réaffichées au mouvement du pointeur, fermeture sur turbo:before-cache, realizedQuarters() retirée, aria-describedby, focus() en E2E), ajouts (_team.html.twig, data-test du repère aujourd'hui, E2E de mise en cache), aucun manque ; dette : poids du HTML brut (compression en production), volume de la requête par jour et personne, seuil des mois au zoom."
+    },
+    {
+      "date": "2026-10-01",
+      "type": "Sync",
+      "description": "Plan réaligné sur le livré : contrôleur d'infobulles (pointermove, cadre de la frise, turbo:before-cache) dans Approche retenue, Mécanismes mobilisés, Périmètre et Risques ; Périmètre complété (_team.html.twig, _today.html.twig, realizedQuarters() retirée et enteredQuarters(), aria-describedby, E2E de mise en cache) ; Stratégie de test (focus placé sur le titre, fermeture avant mise en cache) ; critères de sortie attestés cochés (make phpunit et make playwright à attester au commit) ; pitch inchangé ; aucun impact sur stack et backlog ; tension avec le principe 2 de la vision signalée, non réalignée."
+    }
+  ]
+}
