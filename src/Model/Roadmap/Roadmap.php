@@ -8,8 +8,11 @@ final readonly class Roadmap
 {
     private const array MONTHS = [1 => 'janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
 
-    /** A month cut by the left edge is left unlabelled when less of it than this (in percent) is shown. */
-    private const float MIN_MONTH_WIDTH = 4.0;
+    /**
+     * A month cut by the left edge is left unlabelled when less of it than this (in percent) is shown: its label, year
+     * included, takes up to 63px, i.e. 8% of the narrowest track (72rem of table less the 20rem label column).
+     */
+    private const float MIN_MONTH_WIDTH = 9.0;
 
     /**
      * @param list<RoadmapRow> $projects

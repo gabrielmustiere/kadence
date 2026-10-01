@@ -92,6 +92,22 @@ final class RoadmapWindowTest extends TestCase
         self::assertSame('juin', $months[array_key_last($months)][0]);
     }
 
+    public function testCutMonthTooNarrowForItsLabelLeavesTheYearToTheNextMonth(): void
+    {
+        $months = new Roadmap(RoadmapWindow::around(Week::fromIso('2026-W08')), new \DateTimeImmutable('2026-02-18'), [])->months();
+
+        self::assertSame('févr. 2026', $months[0][0], 'Only 13 days of January are shown, too few for « janv. 2026 ».');
+        self::assertEqualsWithDelta(13 * self::DAY, $months[0][1], 1e-9);
+    }
+
+    public function testCutMonthWideEnoughKeepsItsLabelAtTheLeftEdge(): void
+    {
+        $months = new Roadmap(RoadmapWindow::around(Week::fromIso('2026-W06')), new \DateTimeImmutable('2026-02-04'), [])->months();
+
+        self::assertSame(['janv. 2026', 0.0], $months[0]);
+        self::assertSame('févr.', $months[1][0]);
+    }
+
     private function window(): RoadmapWindow
     {
         return RoadmapWindow::around(Week::fromIso('2026-W40'));
