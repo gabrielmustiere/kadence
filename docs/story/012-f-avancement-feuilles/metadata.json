@@ -46,10 +46,15 @@
       "date": "2026-10-02",
       "type": "Livraison",
       "description": "Story livrée par le commit 453c957 (feat(lot)) ; suite verte avant commit : 487 tests PHPUnit, lint propre, progress.spec.ts et roadmap.spec.ts (45 E2E verts à l'implémentation)."
+    },
+    {
+      "date": "2026-10-02",
+      "type": "Release",
+      "description": "Story publiée dans la release v0.13.0 « Avancement des feuilles »."
     }
   ],
   "delivery": {
-    "release": null,
+    "release": "v0.13.0",
     "commit": "453c957"
   }
 }
