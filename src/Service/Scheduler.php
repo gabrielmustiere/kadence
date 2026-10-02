@@ -47,20 +47,20 @@ final readonly class Scheduler
         $teamToReview = array_any($plan->members, static fn (PlannedMember $member): bool => !$capacity->isActive($member->userId));
 
         $schedule = static fn (?\DateTimeImmutable $futureFrom = null, ?\DateTimeImmutable $futureTo = null, bool $lateStart = false, bool $exhausted = false, bool $toReview = false): LeafSchedule => new LeafSchedule(
-            $plan->lotId,
-            $plan->firstEntryDay,
-            $plan->lastEntryDay,
-            $futureFrom,
-            $futureTo,
-            $remaining,
-            null === $remaining,
-            null === $plan->startDate,
-            [] === $plan->members,
-            $lateStart,
-            $exhausted,
-            $teamToReview || $toReview,
-            $overrun,
-            $plan->progress,
+            lotId: $plan->lotId,
+            realizedFrom: $plan->firstEntryDay,
+            realizedTo: $plan->lastEntryDay,
+            futureFrom: $futureFrom,
+            futureTo: $futureTo,
+            remainingQuarters: $remaining,
+            toEstimate: null === $remaining,
+            withoutStart: null === $plan->startDate,
+            withoutTeam: [] === $plan->members,
+            lateStart: $lateStart,
+            exhausted: $exhausted,
+            teamToReview: $teamToReview || $toReview,
+            overrunQuarters: $overrun,
+            progress: $plan->progress,
         );
 
         if (null === $remaining || null === $plan->startDate || [] === $plan->members) {

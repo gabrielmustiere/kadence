@@ -49,7 +49,9 @@ final class PlanningFitsCapacityValidator extends ConstraintValidator
             return;
         }
 
-        $current = null === $replacedId ? new LeafPlan(0, null, 0, null, null, null, []) : $data->plans[$replacedId];
+        $current = null === $replacedId
+            ? new LeafPlan(lotId: 0, estimateQuarters: null, consumedQuarters: 0, firstEntryDay: null, lastEntryDay: null, startDate: null, members: [])
+            : $data->plans[$replacedId];
         $estimate = null === $value->estimateDays ? null : $value->estimateDays * Quarters::PER_DAY;
         $before = $current->withPlanning($estimate, $current->startDate, $current->members);
         $after = $current->withPlanning($estimate, $value->startDate, $members);
