@@ -10,6 +10,7 @@ use App\Enum\Type\Role;
 use App\Enum\Type\TagCategory;
 use App\Exception\LastActiveDirectorException;
 use App\Exception\ManagerWithActiveReportsException;
+use App\Model\TagLabels;
 use App\Model\Week;
 use App\Model\WeeklyMaximum;
 use App\Repository\UserRepository;
@@ -104,9 +105,9 @@ final readonly class TeamManager
             ->setHolidayCalendar($input->holidayCalendar ?? throw new \LogicException('A validated team member input has a holiday calendar.'))
             ->replaceTags([
                 ...$input->technicalSkills,
-                ...$this->tagManager->resolve(TagCategory::TechnicalSkill, TagManager::split($input->newTechnicalSkills)),
+                ...$this->tagManager->resolve(TagCategory::TechnicalSkill, TagLabels::split($input->newTechnicalSkills)),
                 ...$input->functionalExperiences,
-                ...$this->tagManager->resolve(TagCategory::FunctionalExperience, TagManager::split($input->newFunctionalExperiences)),
+                ...$this->tagManager->resolve(TagCategory::FunctionalExperience, TagLabels::split($input->newFunctionalExperiences)),
                 ...(null === $input->teamType ? [] : [$input->teamType]),
                 ...$this->tagManager->resolve(TagCategory::TeamType, [$input->newTeamType ?? '']),
             ])

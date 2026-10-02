@@ -15,13 +15,6 @@ use PHPUnit\Framework\TestCase;
 
 final class TagManagerTest extends TestCase
 {
-    public function testSplitTrimsLabelsAndDropsBlanksAndDuplicatesIgnoringCase(): void
-    {
-        self::assertSame(['Symfony', 'react'], TagManager::split(' Symfony, , react ,symfony,React '));
-        self::assertSame([], TagManager::split(null));
-        self::assertSame([], TagManager::split(' , '));
-    }
-
     public function testCreateTrimsTheLabelAndSavesTheTag(): void
     {
         $entityManager = $this->createMock(EntityManagerInterface::class);

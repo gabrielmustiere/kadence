@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Validator;
 
-use App\Service\TagManager;
+use App\Model\TagLabels;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 use Symfony\Component\Validator\Exception\UnexpectedTypeException;
@@ -26,7 +26,7 @@ final class TagLabelListValidator extends ConstraintValidator
             throw new UnexpectedValueException($value, 'string');
         }
 
-        foreach (TagManager::split($value) as $label) {
+        foreach (TagLabels::split($value) as $label) {
             if (mb_strlen($label) > TagLabelList::MAX_LENGTH) {
                 $this->context->buildViolation($constraint->message)
                     ->setParameter('{{ label }}', $label)

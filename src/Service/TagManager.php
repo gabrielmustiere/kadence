@@ -6,9 +6,9 @@ namespace App\Service;
 
 use App\Entity\Tag;
 use App\Enum\Type\TagCategory;
+use App\Model\TitleComparison;
 use App\Repository\TagRepository;
 use App\Repository\UserRepository;
-use App\Validator\TitleComparison;
 use Doctrine\ORM\EntityManagerInterface;
 
 final readonly class TagManager
@@ -79,22 +79,6 @@ final readonly class TagManager
         }
 
         return array_values($tags);
-    }
-
-    /**
-     * @return list<non-empty-string> the comma-separated labels, trimmed, without blanks nor duplicates (case ignored)
-     */
-    public static function split(?string $labels): array
-    {
-        $split = [];
-        foreach (explode(',', $labels ?? '') as $label) {
-            $label = trim($label);
-            if ('' !== $label) {
-                $split[TitleComparison::normalize($label)] ??= $label;
-            }
-        }
-
-        return array_values($split);
     }
 
     /**

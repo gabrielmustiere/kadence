@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Validator;
+namespace App\Model;
 
 /**
  * Case-insensitive comparison done in PHP: SQLite's LOWER() only folds ASCII letters (« Été » ≠ « été »).
