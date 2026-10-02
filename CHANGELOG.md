@@ -10,6 +10,18 @@ Chaque version porte un **titre** et distingue les **évolutions fonctionnelles*
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-10-02 — Fiche d'une personne
+
+### ✨ Fonctionnel
+- **Fiche d'une personne** — chaque personne a une fiche consultable par tous : on l'ouvre en cliquant sur un nom dans la timeline de la fiche d'un projet, par « Ma fiche » dans le menu du compte, ou depuis la liste Équipe.
+- **Temps saisi par projet** — la fiche résume le temps que la personne a saisi sur chaque projet, du plus récent au plus ancien.
+- **Frise de la personne** — une ligne par feuille où elle a saisi ou dont elle fait partie de l'équipe, avec ses seuls blocs de travail et ses affectations à venir marquées de sa part.
+- **Charge et disponibilité** — la direction, les leads et la personne elle-même voient sa charge jour par jour, les jours au-delà de 100 %, sa charge au prochain jour ouvré et la date à partir de laquelle elle est libre (« inconnue » tant qu'une de ses feuilles n'a pas de fin calculée), ainsi que son rôle et ses tags ; la direction et la personne voient aussi son manager.
+- **À venir et journal** — la timeline liste ses affectations à venir, puis tous ses blocs de travail du plus récent au plus ancien, mois par mois.
+
+### 🔧 Technique
+- **Briques partagées et droits par donnée** — signaux des feuilles, découpage des tronçons et partiels de la frise sont partagés entre la roadmap, la fiche d'un projet et celle d'une personne ; un voter dédié décide de ce que chacun voit, et la charge n'est calculée que pour un lecteur autorisé.
+
 ## [0.11.0] - 2026-10-02 — Fiche d'un projet
 
 ### ✨ Fonctionnel
@@ -146,7 +158,8 @@ Chaque version porte un **titre** et distingue les **évolutions fonctionnelles*
 - **Connexion rapide en dev** — choix d'un compte de fixtures sur la page de connexion, uniquement en environnement de développement.
 - **Nettoyage du template d'amorçage** — suppression de la page design system et de la route de test d'e-mail.
 
-[Unreleased]: https://github.com/gabrielmustiere/kadence/compare/v0.11.0...HEAD
+[Unreleased]: https://github.com/gabrielmustiere/kadence/compare/v0.12.0...HEAD
+[0.12.0]: https://github.com/gabrielmustiere/kadence/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/gabrielmustiere/kadence/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/gabrielmustiere/kadence/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/gabrielmustiere/kadence/compare/v0.8.0...v0.9.0
