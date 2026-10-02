@@ -42,10 +42,15 @@
       "date": "2026-10-02",
       "type": "Livraison",
       "description": "Story livrée par le commit a92b42a (feat(roadmap)) ; suite complète verte avant commit : 395 tests PHPUnit et 42 E2E, lint propre."
+    },
+    {
+      "date": "2026-10-02",
+      "type": "Release",
+      "description": "Story publiée dans la release v0.11.0 « Fiche d'un projet »."
     }
   ],
   "delivery": {
-    "release": null,
+    "release": "v0.11.0",
     "commit": "a92b42a"
   }
 }
