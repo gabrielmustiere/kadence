@@ -78,10 +78,7 @@ final readonly class RoadmapBuilder
     private static function leavesOf(Project $project): array
     {
         $leaves = [];
-        foreach ($project->getLots() as $lot) {
-            if ($lot->isSubLot()) {
-                continue;
-            }
+        foreach ($project->topLevelLots() as $lot) {
             foreach ($lot->isLeaf() ? [$lot] : $lot->getChildren() as $leaf) {
                 $leaves[(int) $leaf->getId()] = $leaf;
             }
@@ -122,12 +119,10 @@ final readonly class RoadmapBuilder
      */
     private function projectRow(Project $project, RoadmapWindow $window, ScheduleResult $result, array $overloaded, array $parts, array $recaps): RoadmapRow
     {
-        $lots = [];
-        foreach ($project->getLots() as $lot) {
-            if (!$lot->isSubLot()) {
-                $lots[] = $lot->isLeaf() ? $this->leafRow($lot, $window, $result, $overloaded, $parts, $recaps) : $this->splitLotRow($lot, $window, $result, $overloaded, $parts, $recaps);
-            }
-        }
+        $lots = array_map(
+            fn (Lot $lot): RoadmapRow => $lot->isLeaf() ? $this->leafRow($lot, $window, $result, $overloaded, $parts, $recaps) : $this->splitLotRow($lot, $window, $result, $overloaded, $parts, $recaps),
+            $project->topLevelLots(),
+        );
 
         $leaves = array_merge(...array_map(static fn (RoadmapRow $row): array => $row->isLeaf() ? [$row] : $row->children, $lots));
         $signals = match (true) {

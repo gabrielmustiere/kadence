@@ -45,15 +45,8 @@ final readonly class ProjectRollup
      */
     private function rollUp(Project $project, array $quartersByLot, array $declarationsByLot): ProjectSummary
     {
-        $lots = [];
-        $subLotCount = 0;
-        foreach ($project->getLots() as $lot) {
-            if ($lot->isSubLot()) {
-                ++$subLotCount;
-                continue;
-            }
-            $lots[] = $this->summarizeLot($lot, $quartersByLot, $declarationsByLot);
-        }
+        $lots = array_map(fn (Lot $lot): LotSummary => $this->summarizeLot($lot, $quartersByLot, $declarationsByLot), $project->topLevelLots());
+        $subLotCount = $project->getLots()->count() - \count($lots);
 
         [$estimateDays, $toEstimate, $toAssign, $toReassign, $entered, $remaining, $overrun, $progressPoints] = self::sum($lots);
 

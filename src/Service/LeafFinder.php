@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Entity\Lot;
-use App\Model\Timesheet\LeafOrder;
+use App\Model\LeafOrder;
 use App\Repository\LotRepository;
 
 use function Symfony\Component\String\u;

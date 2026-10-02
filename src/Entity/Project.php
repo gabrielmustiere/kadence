@@ -74,6 +74,14 @@ class Project
         return $this->lots;
     }
 
+    /**
+     * @return list<Lot> its lots, sub-lots aside
+     */
+    public function topLevelLots(): array
+    {
+        return array_values(array_filter($this->lots->toArray(), static fn (Lot $lot): bool => !$lot->isSubLot()));
+    }
+
     public function addLot(Lot $lot): static
     {
         if (!$this->lots->contains($lot)) {
