@@ -120,8 +120,8 @@ final readonly class TimesheetManager
             $this->entityManager->persist(new TimeEntry($user, $lot, $day, $quarters));
         }
 
-        if (0 < $quarters && null === $lot->getInitialEstimateDays()) {
-            $lot->setInitialEstimateDays($lot->getEstimateDays());
+        if (0 < $quarters) {
+            $lot->freezeInitialEstimate();
         }
 
         $this->entityManager->flush();

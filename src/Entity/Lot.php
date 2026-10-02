@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use App\Exception\LotDepthException;
 use App\Repository\LotRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -59,8 +60,18 @@ class Lot
     #[ORM\OrderBy(['id' => 'ASC'])]
     private Collection $members;
 
+    /**
+     * @throws LotDepthException when the parent is itself a sub-lot
+     */
     public function __construct(Project $project, ?self $parent = null)
     {
+        if (true === $parent?->isSubLot()) {
+            throw new LotDepthException();
+        }
+        if (null !== $parent && $parent->project !== $project) {
+            throw new \LogicException('A sub-lot belongs to the project of its lot.');
+        }
+
         $this->project = $project;
         $this->parent = $parent;
         $this->children = new ArrayCollection();
@@ -103,13 +114,11 @@ class Lot
         return $this->children;
     }
 
-    public function addChild(self $child): static
+    private function addChild(self $child): void
     {
         if (!$this->children->contains($child)) {
             $this->children->add($child);
         }
-
-        return $this;
     }
 
     public function removeChild(self $child): static
@@ -168,6 +177,17 @@ class Lot
     public function setInitialEstimateDays(?int $initialEstimateDays): static
     {
         $this->initialEstimateDays = $initialEstimateDays;
+
+        return $this;
+    }
+
+    /**
+     * To call whenever the leaf carries time entered: the estimate in force becomes its initial estimate, unless it
+     * already has one.
+     */
+    public function freezeInitialEstimate(): static
+    {
+        $this->initialEstimateDays ??= $this->estimateDays;
 
         return $this;
     }

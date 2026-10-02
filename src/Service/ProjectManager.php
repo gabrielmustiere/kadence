@@ -10,7 +10,6 @@ use App\Entity\Lot;
 use App\Entity\LotMember;
 use App\Entity\Project;
 use App\Entity\User;
-use App\Exception\LotDepthException;
 use App\Exception\LotHasTimeEntriesException;
 use App\Repository\LotProgressRepository;
 use App\Repository\TimeEntryRepository;
@@ -73,17 +72,16 @@ final readonly class ProjectManager
      */
     public function addSubLot(Lot $parent, LotInput $input): Lot
     {
-        if ($parent->isSubLot()) {
-            throw new LotDepthException();
-        }
-
         $takesOver = $parent->isLeaf();
         $hasTime = $takesOver && $this->timeEntryRepository->existsForLots([$parent]);
 
         $subLot = new Lot($parent->getProject(), $parent);
         $this->applyLot($subLot, $input);
         if ($takesOver) {
-            $subLot->setInitialEstimateDays($parent->getInitialEstimateDays() ?? ($hasTime ? $subLot->getEstimateDays() : null));
+            $subLot->setInitialEstimateDays($parent->getInitialEstimateDays());
+        }
+        if ($hasTime) {
+            $subLot->freezeInitialEstimate();
         }
         $this->clearLeafData($parent);
 
@@ -187,9 +185,8 @@ final readonly class ProjectManager
             ->setStartDate($input->startDate);
         self::applyMembers($lot, $input->effectiveMembers());
 
-        if (null === $lot->getInitialEstimateDays() && null !== $lot->getEstimateDays() && null !== $lot->getId()
-            && $this->timeEntryRepository->existsForLots([$lot])) {
-            $lot->setInitialEstimateDays($lot->getEstimateDays());
+        if ($this->timeEntryRepository->existsForLots([$lot])) {
+            $lot->freezeInitialEstimate();
         }
     }
 
