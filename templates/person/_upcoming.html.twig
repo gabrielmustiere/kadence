@@ -1,0 +1,31 @@
+{#
+    What is coming for the person: the leaves of their teams not over yet, by first day of their future part. Expects
+    `page`.
+#}
+{% if page.upcoming is empty %}
+    <twig:Card data-test="person-upcoming-empty">
+        <p class="text-body">Aucune affectation à venir.</p>
+    </twig:Card>
+{% else %}
+    <ul class="max-w-3xl divide-y divide-default rounded-base border border-default bg-neutral-primary-soft text-sm" data-test="person-upcoming">
+        {% for row in page.upcoming %}
+            <li class="p-3" data-test="person-upcoming-entry" data-leaf="{{ row.leafPath }}">
+                <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                    <p class="font-medium text-heading">
+                        <a href="{{ path('app_roadmap_project', {id: row.lot.project.id}) }}" class="hover:underline" data-test="person-project-link">{{ row.lot.project.title }}</a>
+                        · {{ row.leafPath }}
+                    </p>
+                    {% if row.start and row.end %}
+                        <p class="whitespace-nowrap text-body" data-test="person-upcoming-period">{{ row.start|weekday }} {{ row.start|date('d/m/Y') }} → {{ row.end|weekday }} {{ row.end|date('d/m/Y') }}</p>
+                    {% endif %}
+                </div>
+                <p class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-body">
+                    <span><span class="font-medium tabular-nums text-heading" data-test="person-upcoming-share">{{ row.share }} %</span> de sa capacité</span>
+                    {% for signal in row.signals %}
+                        <twig:Badge variant="{{ signal.variant }}" data-test="signal-{{ signal.value }}">{{ signal.label }}</twig:Badge>
+                    {% endfor %}
+                </p>
+            </li>
+        {% endfor %}
+    </ul>
+{% endif %}

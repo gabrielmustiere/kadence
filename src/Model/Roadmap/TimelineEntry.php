@@ -41,13 +41,8 @@ final readonly class TimelineEntry
         return $entries;
     }
 
-    /**
-     * « Lot · Sous-lot » for a sub-lot, the title of the lot otherwise.
-     */
     public function leafPath(): string
     {
-        $parent = $this->leaf->getParent();
-
-        return (null === $parent ? '' : $parent->getTitle() . ' · ') . $this->leaf->getTitle();
+        return LeafPath::of($this->leaf);
     }
 }

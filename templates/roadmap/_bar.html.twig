@@ -1,7 +1,8 @@
 {#
     A bar of the roadmap and its tooltips, shown by roadmap-tooltip. Expects `row`, `bar`, `kind` (see _tooltip), `class`
-    and `test`. A bar made of segments is a box holding them, each segment with its own tooltip. The tooltips stay out
-    of the box, whose transform would otherwise become their reference for a fixed position.
+    and `test`; `tooltip_template` replaces roadmap/_tooltip.html.twig. A bar made of segments is a box holding them,
+    each segment with its own tooltip. The tooltips stay out of the box, whose transform would otherwise become their
+    reference for a fixed position.
 #}
 {% set fade = bar.cutStart and bar.cutEnd
     ? 'linear-gradient(to right, transparent, black 12px, black calc(100% - 12px), transparent)'
@@ -19,7 +20,7 @@
     {%- endfor -%}
 </div>
 {% for segment in bar.segments %}
-    {{ include('roadmap/_tooltip.html.twig', {id: tooltip ~ '-' ~ loop.index, bar: segment.run, run: segment.run}) }}
+    {{ include(tooltip_template ?? 'roadmap/_tooltip.html.twig', {id: tooltip ~ '-' ~ loop.index, bar: segment.run, run: segment.run}) }}
 {% else %}
-    {{ include('roadmap/_tooltip.html.twig', {id: tooltip}) }}
+    {{ include(tooltip_template ?? 'roadmap/_tooltip.html.twig', {id: tooltip}) }}
 {% endfor %}

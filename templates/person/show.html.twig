@@ -1,0 +1,154 @@
+{% extends 'base.html.twig' %}
+
+{% set roadmap = page.roadmap %}
+{% set planning = is_granted('PERSON_PLANNING', person) %}
+{% set load = page.load %}
+
+{% block title %}{{ person.firstName }} {{ person.lastName }} · Kadence{% endblock %}
+
+{% block body %}
+    <div class="mb-6 flex flex-wrap items-center gap-3">
+        <h1 class="font-display text-2xl font-bold tracking-tight text-heading sm:text-3xl" data-test="person-heading">{{ person.firstName }} {{ person.lastName }}</h1>
+        {% if not person.active %}
+            <twig:Badge variant="alternative" border="bordered" data-test="person-inactive">désactivée</twig:Badge>
+        {% endif %}
+    </div>
+
+    {% if planning or is_granted('PERSON_MANAGER', person) %}
+        {% set categories = enum('App\\Enum\\Type\\TagCategory') %}
+        <dl class="mb-8 grid grid-cols-1 gap-x-6 gap-y-3 rounded-base border border-default bg-neutral-primary-soft p-4 text-sm sm:grid-cols-[auto_1fr]" data-test="person-profile">
+            {% if planning %}
+                <dt class="font-medium text-heading">Rôle</dt>
+                <dd class="text-heading" data-test="person-role">{{ person.role.label }}</dd>
+                {% for category in categories.cases() %}
+                    <dt class="font-medium text-heading">{{ category.allowsMany ? category.pluralLabel : category.label }}</dt>
+                    <dd class="flex flex-wrap gap-1" data-test="person-tags-{{ category.value }}">
+                        {% for tag in person.tagsOf(category) %}
+                            <twig:Badge variant="gray" data-test="person-tag">{{ tag.label }}</twig:Badge>
+                        {% else %}
+                            <span class="text-body">{{ category.allowsMany ? 'Aucune' : 'Aucun' }}</span>
+                        {% endfor %}
+                    </dd>
+                {% endfor %}
+            {% endif %}
+            {% if is_granted('PERSON_MANAGER', person) %}
+                <dt class="font-medium text-heading">Manager</dt>
+                <dd data-test="person-manager">
+                    {% if person.manager %}
+                        <span class="text-heading">{{ person.manager.firstName }} {{ person.manager.lastName }}</span>
+                    {% else %}
+                        <span class="text-body">Aucun</span>
+                    {% endif %}
+                </dd>
+            {% endif %}
+            {% if planning %}
+                <dt class="font-medium text-heading">Charge</dt>
+                <dd class="text-heading" data-test="person-load">
+                    {% if load is null %}
+                        <span class="text-body">Désactivée, aucune charge</span>
+                    {% elseif load.nextDay %}
+                        <span class="font-semibold {{ load.nextDayPercent > 100 ? 'text-fg-danger-strong' : '' }}" data-test="person-load-next">{{ load.nextDayPercent }} %</span>
+                        <span class="text-body">au prochain jour ouvré, {{ load.nextDay|weekday }} {{ load.nextDay|date('d/m/Y') }}</span>
+                    {% endif %}
+                </dd>
+                {% if load is not null %}
+                    <dt class="font-medium text-heading">Libre à partir du</dt>
+                    <dd class="text-heading" data-test="person-free-from">
+                        {%- if load.unknownEnds is not empty -%}
+                            inconnue <span class="text-body">({% for row in load.unknownEnds %}{{ row.lot.project.title }} · {{ row.leafPath }}{{ loop.last ? '' : ', ' }}{% endfor %})</span>
+                        {%- elseif load.freeFrom -%}
+                            {{ load.freeFrom|weekday }} {{ load.freeFrom|date('d/m/Y') }}
+                        {%- else -%}
+                            <span class="text-body">aucune affectation à venir</span>
+                        {%- endif -%}
+                    </dd>
+                {% endif %}
+            {% endif %}
+        </dl>
+    {% endif %}
+
+    <section class="mb-8">
+        <h2 class="mb-3 font-display text-lg font-semibold text-heading">Temps saisi par projet</h2>
+        {% set entered = page.enteredProjects %}
+        {% if entered is empty %}
+            <twig:Card data-test="person-projects-empty">
+                <p class="text-body">Aucun temps saisi.</p>
+            </twig:Card>
+        {% else %}
+            <ul class="max-w-xl divide-y divide-default rounded-base border border-default bg-neutral-primary-soft text-sm" data-test="person-projects">
+                {% for item in entered %}
+                    <li class="flex justify-between gap-3 px-3 py-2" data-test="person-project" data-title="{{ item.project.title }}">
+                        <a href="{{ path('app_roadmap_project', {id: item.project.id}) }}" class="font-medium text-heading hover:underline" data-test="person-project-link">{{ item.project.title }}</a>
+                        <span class="tabular-nums text-heading" data-test="person-project-entered">{{ item.enteredQuarters|days }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </section>
+
+    <section class="mb-8" {% if page.dated %}data-controller="roadmap" data-roadmap-remember-value="false" data-roadmap-center-value="{{ roadmap.centerPosition|number_format(4, '.', '') }}"{% endif %}>
+        <div class="mb-3 flex flex-wrap items-end justify-between gap-3">
+            <h2 class="font-display text-lg font-semibold text-heading">Frise</h2>
+            {% if page.dated %}
+                {{ include('roadmap/_zoom.html.twig') }}
+            {% endif %}
+        </div>
+        {% if page.dated %}
+            {{ include('roadmap/_legend.html.twig', {future_label: 'Affectation à venir', with_span: false, with_overload: load is not null}) }}
+            {% embed 'roadmap/_frieze.html.twig' %}
+                {% block rows %}
+                    {% if load is not null %}
+                        <div class="grid grid-cols-[20rem_1fr] border-t border-default" data-test="person-load-row">
+                            <div class="sticky left-0 z-10 bg-neutral-primary px-4 py-3">
+                                <span class="font-semibold text-heading">Charge</span>
+                            </div>
+                            <div class="roadmap-track relative min-h-10">
+                                {{ include('roadmap/_today.html.twig') }}
+                                {% for span in load.spans %}
+                                    <div class="absolute top-1/2 flex h-5 -translate-y-1/2 items-center overflow-hidden rounded-sm border {{ span.overload ? 'border-danger-subtle bg-danger-soft text-fg-danger-strong' : 'border-brand-subtle bg-brand-softer text-fg-brand-strong' }}"
+                                         style="{{ span.bar.style }}"
+                                         data-roadmap-tooltip="person-load-{{ loop.index }}"
+                                         data-test="person-load-span"
+                                         data-percent="{{ span.percent }}"
+                                         aria-hidden="true">
+                                        <span class="ps-1 text-xs font-medium tabular-nums">{{ span.percent }} %</span>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% for span in load.spans %}
+                            {{ include('person/_tooltip.html.twig', {id: 'person-load-' ~ loop.index, kind: 'load', span: span}) }}
+                        {% endfor %}
+                    {% endif %}
+                    {% for item in page.projects %}
+                        <div class="grid grid-cols-[20rem_1fr] border-t border-default" data-test="person-project-row" data-title="{{ item.project.title }}">
+                            <div class="sticky left-0 z-10 bg-neutral-primary px-4 py-3">
+                                <a href="{{ path('app_roadmap_project', {id: item.project.id}) }}" class="font-semibold text-heading hover:underline" data-test="person-project-link">{{ item.project.title }}</a>
+                            </div>
+                            <div class="roadmap-track relative min-h-10">
+                                {{ include('roadmap/_today.html.twig') }}
+                            </div>
+                        </div>
+                        {% for row in item.rows %}
+                            {{ include('person/_row.html.twig', {row: row}) }}
+                        {% endfor %}
+                    {% endfor %}
+                {% endblock %}
+            {% endembed %}
+        {% else %}
+            <twig:Card data-test="person-no-frieze">
+                <p class="text-body">Aucun temps saisi ni aucune affectation planifiée : rien à placer sur la frise.</p>
+            </twig:Card>
+        {% endif %}
+    </section>
+
+    <section>
+        <h2 class="mb-3 font-display text-lg font-semibold text-heading">Timeline</h2>
+        <h3 class="mb-3 font-display text-base font-semibold text-heading">À venir</h3>
+        <div class="mb-8">
+            {{ include('person/_upcoming.html.twig') }}
+        </div>
+        <h3 class="mb-3 font-display text-base font-semibold text-heading">Journal</h3>
+        {{ include('roadmap/_timeline.html.twig', {with_team: false, with_project: true, empty_message: "Aucun temps saisi."}) }}
+    </section>
+{% endblock %}

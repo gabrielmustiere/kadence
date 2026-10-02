@@ -35,9 +35,7 @@ final readonly class RoadmapRunCutter
                 continue;
             }
 
-            $overrunDay = ($data->overrunDays[$lotId][1] ?? null)?->format('Y-m-d');
-            $within = array_filter($quartersByDay, static fn (string $day): bool => null === $overrunDay || $day < $overrunDay, \ARRAY_FILTER_USE_KEY);
-            $beyond = array_filter($quartersByDay, static fn (string $day): bool => null !== $overrunDay && $day >= $overrunDay, \ARRAY_FILTER_USE_KEY);
+            [$within, $beyond] = self::split($quartersByDay, $data->overrunDays[$lotId][1] ?? null);
 
             $members = array_map(static fn (PlannedMember $member): int => $member->userId, $data->plans[$lotId]->members ?? []);
             if ([] === $members) {
@@ -48,6 +46,45 @@ final readonly class RoadmapRunCutter
         }
 
         return $runs;
+    }
+
+    /**
+     * The days the person entered on each leaf, within its estimate then beyond it, each cut on the working days of the
+     * person alone.
+     *
+     * @return array<int, array{list<RoadmapRun>, list<RoadmapRun>}> the runs within and beyond the estimate, by lot id
+     */
+    public function cutFor(ScheduleData $data, int $userId): array
+    {
+        $runs = [];
+        foreach ($this->timeEntryRepository->sumQuartersByLotAndDayForUser($userId) as $lotId => $quartersByDay) {
+            $leaf = $data->leaves[$lotId] ?? null;
+            if (null === $leaf) {
+                continue;
+            }
+
+            $byUser = array_map(static fn (int $quarters): array => [$userId => $quarters], $quartersByDay);
+            [$within, $beyond] = self::split($byUser, $data->overrunDays[$lotId][1] ?? null);
+            $runs[$lotId] = [self::runs($within, [$userId], $leaf, $data), self::runs($beyond, [$userId], $leaf, $data)];
+        }
+
+        return $runs;
+    }
+
+    /**
+     * @param array<string, array<int, int>> $quartersByDay
+     *
+     * @return array{array<string, array<int, int>>, array<string, array<int, int>>} the days before, then from, the day the
+     *                                                                               time entered went beyond the estimate
+     */
+    private static function split(array $quartersByDay, ?\DateTimeImmutable $overrunDay): array
+    {
+        $day = $overrunDay?->format('Y-m-d');
+
+        return [
+            array_filter($quartersByDay, static fn (string $date): bool => null === $day || $date < $day, \ARRAY_FILTER_USE_KEY),
+            array_filter($quartersByDay, static fn (string $date): bool => null !== $day && $date >= $day, \ARRAY_FILTER_USE_KEY),
+        ];
     }
 
     /**

@@ -52,6 +52,17 @@ final class ScheduleResult
     }
 
     /**
+     * @return array<string, int> summed shares by day (Y-m-d, in date order)
+     */
+    public function loadsOf(int $userId): array
+    {
+        $loads = $this->loads[$userId] ?? [];
+        ksort($loads);
+
+        return $loads;
+    }
+
+    /**
      * @return list<int>
      */
     public function contributorsAt(int $userId, string $day): array

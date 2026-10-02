@@ -2,7 +2,7 @@
 
 > Pitch en une phrase : Kadence est l'outil interne de pilotage de production de notre éditeur logiciel (15 à 40 personnes), qui permet à la direction et aux leads de savoir à date ce que l'équipe peut encore absorber et quand chaque projet sera livré, à partir d'une saisie quotidienne des temps et d'estimations déclaratives sur des projets découpés en lots et sous-lots.
 
-_Document vivant — enrichi au fil du cycle de vie, refondu lors d'un pivot stratégique. Date de dernière mise à jour : 2026-09-29._
+_Document vivant — enrichi au fil du cycle de vie, refondu lors d'un pivot stratégique. Date de dernière mise à jour : 2026-10-02._
 
 ## Changelog
 
@@ -13,6 +13,7 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
 | 2026-09-28 | Création | — | Vision initiale |
 | 2026-09-29 | Édition ciblée | Principes produit | Principe 3 : découpage projet → lot → sous-lot, l'estimation vit au niveau le plus fin (cadrage de la story projets, lots et sous-lots) |
 | 2026-09-29 | Édition ciblée | Pitch, audience, positionnement, métriques, anti-objectifs, hypothèses H2 et H3, horizons, notes | Vocabulaire réaligné sur lot / sous-lot ; H2 : l'estimation révisable (initiale conservée) devient la règle, le repli devient un reste à faire déclaré |
+| 2026-10-02 | Édition ciblée | Principe 2, anti-objectifs, risques externes | Sync post-livraison de la story 011-f-fiche-collaborateur : la fiche d'une personne rend son travail saisi lisible de tous, y compris pour préparer un point individuel (contradiction assumée au cadrage) ; le principe 2 et l'anti-objectif « évaluation individuelle » sont reformulés autour de l'absence de comparaison, de classement et d'indicateur de productivité ; le cadre social mentionne la fiche |
 
 ## Le problème
 
@@ -99,7 +100,7 @@ Mesure directement le problème : les dates annoncées sont-elles encore des par
 ## Principes produit
 
 1. **Saisir sa journée prend moins d'une minute** — toute feature qui alourdit la saisie quotidienne est refusée, quelle que soit la valeur de la donnée supplémentaire. Toute la chaîne repose sur une saisie fiable et fraîche.
-2. **On pilote des projets et une capacité, jamais des personnes** — la charge individuelle sert à planifier (qui est disponible quand), jamais à comparer, classer ou évaluer. Aucune vue de productivité individuelle. C'est la condition d'une saisie honnête.
+2. **On pilote des projets et une capacité, on ne compare ni ne classe jamais les personnes** — la charge individuelle sert à planifier (qui est disponible quand), jamais à comparer ou à classer. Le travail saisi de chacun est lisible de tous, projet par projet et sur la fiche de chaque personne, y compris pour préparer un point individuel ; aucune vue ne compare, ne classe ni ne mesure la productivité des personnes (moyennes, ratios, taux de saisie individuel). C'est la condition d'une saisie honnête.
 3. **Pas de granularité sous le sous-lot, jamais de tâche** — un projet se découpe en lots, eux-mêmes découpables en sous-lots, et pas au-delà. L'estimation est déclarative et vit au niveau le plus fin de ce découpage (le sous-lot, ou le lot s'il n'en a pas). Un besoin qui exige de descendre à la tâche est hors périmètre.
 4. **Une date annoncée s'affiche toujours à côté de sa date projetée** — l'écart est visible, jamais masqué. L'outil ne remplace pas l'engagement humain, il le confronte au calcul.
 
@@ -108,7 +109,7 @@ Mesure directement le problème : les dates annoncées sont-elles encore des par
 Ce qu'on **refuse explicitement** de faire, et pourquoi :
 
 - **Gestion de tâches** — l'outil ne gère ni tâches ni tickets ; il ne concurrence pas un outil de tickets et reste au niveau projet / lot / sous-lot.
-- **Évaluation individuelle** — aucune mesure de productivité par personne (cf. principe 2).
+- **Mesure de productivité individuelle** — aucun indicateur de productivité par personne, aucune comparaison ni aucun classement (cf. principe 2) ; la fiche d'une personne montre son travail saisi et ses affectations, jamais une note.
 - **Facturation, devis, comptabilité** — on pilote du temps et des dates, pas de l'argent.
 - **Accès clients / roadmap publique** — la roadmap est interne (direction + prod).
 - **Intégrations au départ** (forge, SIRH, agenda…) — saisie native d'abord ; une intégration ne se fait qu'en réponse à un irritant prouvé.
@@ -125,7 +126,7 @@ Ce qu'on **refuse explicitement** de faire, et pourquoi :
 
 ## Risques externes
 
-- **Cadre social et données personnelles** : un outil de suivi des temps des salariés traite des données personnelles et peut être perçu comme un dispositif de contrôle de l'activité. Information préalable des salariés et, selon l'effectif, consultation du CSE à prévoir avant déploiement ; le principe 2 doit être explicite dans la communication. Mitigation : cadrer le déploiement avec la direction / les RH avant le lancement.
+- **Cadre social et données personnelles** : un outil de suivi des temps des salariés traite des données personnelles et peut être perçu comme un dispositif de contrôle de l'activité. Information préalable des salariés et, selon l'effectif, consultation du CSE à prévoir avant déploiement ; le principe 2 doit être explicite dans la communication. La fiche d'une personne, qui rend son travail saisi lisible de tous et sert aussi aux points individuels, entre dans ce cadre. Mitigation : cadrer le déploiement avec la direction / les RH avant le lancement.
 - **Rejet par l'équipe** : si la saisie est perçue comme du flicage ou une corvée, l'hypothèse 1 tombe et toute la chaîne avec. Mitigation : principes 1 et 2, affichés et tenus.
 
 ## Horizons

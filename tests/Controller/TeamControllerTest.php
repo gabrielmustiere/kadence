@@ -81,6 +81,18 @@ final class TeamControllerTest extends WebTestCase
         self::assertSelectorNotExists('[data-email="prod@example.com"] [data-test="member-status"]');
     }
 
+    public function testEachMemberLeadsToTheirPage(): void
+    {
+        $client = $this->directorClient();
+        $member = $this->createUser();
+
+        $crawler = $client->request('GET', '/equipe');
+
+        $link = $crawler->filter(\sprintf('[data-email="%s"] [data-test="member-person"]', $member->getEmail()));
+        self::assertSame('/personnes/' . $member->getId(), $link->attr('href'));
+        self::assertSame('Fiche de Test User', $link->attr('aria-label'));
+    }
+
     public function testRegisterShowsTemporaryPasswordOnlyOnce(): void
     {
         $client = $this->directorClient();

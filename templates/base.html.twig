@@ -55,6 +55,12 @@
                                 <twig:ux:icon name="tabler:user" class="w-4 h-4"/> Mon compte
                             </a>
                         </li>
+                        <li>
+                            <a href="{{ path('app_person', {id: app.user.id}) }}" data-test="nav-person"
+                               class="flex items-center gap-2 py-2 px-4 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                                <twig:ux:icon name="tabler:file-description" class="w-4 h-4"/> Ma fiche
+                            </a>
+                        </li>
                     </ul>
                     <ul class="py-1">
                         <li>

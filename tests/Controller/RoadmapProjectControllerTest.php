@@ -183,6 +183,23 @@ final class RoadmapProjectControllerTest extends WebTestCase
         self::assertCount(0, $entries->eq(1)->filter('[data-test="timeline-entry-overrun"]'));
     }
 
+    public function testNamesOfTheTimelineLeadToThePageOfEachPersonButNotThoseOfTheTooltips(): void
+    {
+        $client = $this->clientAs('prod@example.com');
+        $project = $this->createExample();
+        $carol = $this->createUser();
+        $api = $project->getLots()->first();
+        self::assertNotFalse($api);
+        $this->createTimeEntry($carol, $api, '2026-09-25', 1);
+
+        $crawler = $client->request('GET', $this->url($project));
+
+        $links = $crawler->filter('[data-test="timeline-entry"]')->first()->filter('[data-test="person-link"]');
+        self::assertSame(2, $links->count(), 'The member, then Carol outside the team.');
+        self::assertSame('/personnes/' . $carol->getId(), $links->last()->attr('href'));
+        self::assertCount(0, $crawler->filter('[role="tooltip"] a'));
+    }
+
     public function testComesBackToTheWeekOfTheRoadmapItWasOpenedFrom(): void
     {
         $client = $this->clientAs('lead@example.com');

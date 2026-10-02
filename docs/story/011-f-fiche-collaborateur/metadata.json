@@ -1,0 +1,41 @@
+{
+  "version": 2,
+  "title": "Consulter la fiche d'une personne : sa charge, ses affectations à venir et la timeline de tout son travail saisi",
+  "created": "2026-10-02",
+  "updated": "2026-10-02",
+  "tags": [
+    "fiche-collaborateur"
+  ],
+  "changelog": [
+    {
+      "date": "2026-10-02",
+      "type": "Création",
+      "description": "Pitch initial rédigé : fiche de consultation d'une personne, ouverte à toute personne connectée en lecture seule, depuis les noms sur la roadmap et la fiche projet, l'administration de l'équipe et « Ma fiche » ; en-tête avec temps saisi par projet, profil et charge actuelle (« libre à partir du … », « inconnue » si une affectation n'a pas de fin calculée) réservés ; frise d'une ligne par feuille avec la seule part de la personne (tronçons saisis, affectations à venir avec sa part), ligne de charge réservée aux leads, à la direction et à soi, bornes et zoom de la fiche projet ; timeline « À venir » puis journal de ses tronçons par mois ; contradiction assumée avec le principe 2 et l'anti-objectif « évaluation individuelle » (usage point individuel), vision à réaligner par /vision ; cadrée hors backlog."
+    },
+    {
+      "date": "2026-10-02",
+      "type": "Planification",
+      "description": "Plan technique validé : aucun impact modèle ; PersonRoadmapBuilder distinct de RoadmapBuilder (limite de complexité), qui planifie toutes les feuilles et retient celles de la personne (saisies ou membre, LeafOrder) ; RoadmapRunCutter::cutFor() (ses tronçons coupés sur ses jours ouvrés, une requête sumQuartersByLotAndDayForUser()), ScheduleResult::loadsOf(), RoadmapSignal::of() extraite ; modèles PersonRoadmap, PersonProject, PersonLeafRow, PersonLoad (plages fusionnées, charge du prochain jour ouvré, libre à partir du, fins inconnues), LoadSpan ; PersonVoter (PERSON_PLANNING, PERSON_MANAGER), charge non calculée sans droit ; route app_person /personnes/{id} sans entrée de menu active ; templates person/ avec _frieze embarquée, _bar paramétré (tooltip_template), _timeline paramétré, _team avec liens ; « Ma fiche » et icône dans la liste Équipe ; pitch annoté (règle 1 : noms en lien hors infobulles, règle 8 : charge au prochain jour ouvré, règle 16 : feuilles à fin inconnue dans « À venir », critère de la charge, questions infobulles et téléphone tranchées)."
+    },
+    {
+      "date": "2026-10-02",
+      "type": "Implémentation",
+      "description": "Six étapes du plan livrées (socle RoadmapSignal::of(), ScheduleResult::loadsOf(), sumQuartersByLotAndDayForUser() et RoadmapRunCutter::cutFor() ; PersonRoadmapBuilder et modèles Person ; PersonVoter, PersonController et templates person/ ; noms en lien dans la timeline de la fiche projet, « Ma fiche », icône de la liste Équipe ; E2E ; QA) ; 433 tests PHPUnit et 44 E2E verts, lint propre ; écarts : libellé « Lot · Sous-lot » extrait dans LeafPath (partagé par TimelineEntry et PersonLeafRow), RoadmapRunCutter::split() partagé par cut() et cutFor(), légende de la frise écrite dans person/show.html.twig au lieu de _legend.html.twig (entrées différentes), PersonLoad::unknownEnds en PersonLeafRow, part suivie de « de sa capacité » dans « À venir », test NavigationTest::testTheAccountMenuLeadsToMyPage ajouté ; questions ouvertes du plan tranchées (icône tabler:file-description, libellé « Charge »)."
+    },
+    {
+      "date": "2026-10-02",
+      "type": "Review",
+      "description": "Revue du diff : 0 bloquant, 0 important, 3 mineurs corrigés pendant la passe (légende de la frise mutualisée dans _legend.html.twig avec future_label, with_span et with_overload ; assertion E2E trompeuse sur la charge d'une personne désactivée retirée ; mise en évidence de la surcharge vérifiée en fonctionnel) ; lint propre, PersonControllerTest, RoadmapProjectControllerTest, RoadmapControllerTest, person.spec.ts et roadmap.spec.ts verts. Statut : PRÊT À COMMITER."
+    },
+    {
+      "date": "2026-10-02",
+      "type": "Report",
+      "description": "Report rédigé : conformité 95 %, 17/17 critères d'acceptation, écarts volontaires (PersonLoad::unknownEnds en PersonLeafRow, résolveur d'entité par défaut dans PersonController, signaux toujours affichés dans « À venir », _legend.html.twig paramétrée suite au mineur ARCHI de la review), ajouts (LeafPath, RoadmapRunCutter::split(), test « Ma fiche », assertion de surcharge), aucun manque ; dette hors review : vision non réalignée (critique avant mise en service), backlog et règle « pas de lecture individuelle » à reprendre par /sync, « libre à partir du … » inconnue sans clôture, infobulle d'affectation non vérifiée sur le HTML ; décompte de fichiers corrigé dans review.md (18 nouveaux)."
+    },
+    {
+      "date": "2026-10-02",
+      "type": "Sync",
+      "description": "Plan réaligné sur le livré : LeafPath.php créé et TimelineEntry.php modifié (Périmètre, étape 2), RoadmapRunCutter::split(), _legend.html.twig paramétrée (Mécanismes mobilisés, Périmètre, étape 3), résolveur d'entité par défaut au lieu de #[MapEntity], PersonLoad::unknownEnds en PersonLeafRow, « À venir » avec part « de sa capacité » et signaux, icône tabler:file-description, test NavigationTest dédié ; critères de sortie attestés cochés ; pitch : règle 16 (signaux toujours affichés, feuilles sans début à la fin), règle 22 (personne désactivée sans charge), alignement vision annoté ; product-backlog : D1 et C1.6 ajoutées, C6.3 annotée, règles transverses « profil » et « lecture individuelle sans comparaison » éditées, notes jalons-dates-annoncees et charge-vs-capacite, ligne fiche-collaborateur ajoutée en V2 (clôture en cours) ; vision : principe 2, anti-objectif « mesure de productivité individuelle » et cadre social édités ; stack inchangée."
+    }
+  ]
+}

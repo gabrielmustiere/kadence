@@ -193,7 +193,7 @@ final readonly class RoadmapBuilder
             return new RoadmapRow($leaf->getProject(), $leaf);
         }
 
-        $signals = self::signalsOf($schedule);
+        $signals = RoadmapSignal::of($schedule);
         if (isset($overloaded[$lotId])) {
             $signals[] = RoadmapSignal::ToReplan;
         }
@@ -282,23 +282,5 @@ final readonly class RoadmapBuilder
         }
 
         return $parts;
-    }
-
-    /**
-     * @return list<RoadmapSignal>
-     */
-    private static function signalsOf(LeafSchedule $schedule): array
-    {
-        $flags = [
-            [RoadmapSignal::ToEstimate, $schedule->toEstimate],
-            [RoadmapSignal::WithoutStart, $schedule->withoutStart],
-            [RoadmapSignal::WithoutTeam, $schedule->withoutTeam],
-            [RoadmapSignal::LateStart, $schedule->lateStart],
-            [RoadmapSignal::EstimateReached, $schedule->isEstimateReached()],
-            [RoadmapSignal::Overrun, $schedule->isOverrun()],
-            [RoadmapSignal::TeamToReview, $schedule->teamToReview],
-        ];
-
-        return array_values(array_map(static fn (array $flag): RoadmapSignal => $flag[0], array_filter($flags, static fn (array $flag): bool => $flag[1])));
     }
 }

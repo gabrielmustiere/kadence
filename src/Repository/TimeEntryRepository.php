@@ -170,6 +170,29 @@ class TimeEntryRepository extends ServiceEntityRepository
         return $quarters;
     }
 
+    /**
+     * @return array<int, array<string, int>> quarters entered by the person each day (Y-m-d, in date order), by lot id
+     */
+    public function sumQuartersByLotAndDayForUser(int $userId): array
+    {
+        /** @var list<array{lotId: int|string, day: \DateTimeImmutable, quarters: int|string}> $rows */
+        $rows = $this->createQueryBuilder('e')
+            ->select('IDENTITY(e.lot) AS lotId', 'e.day AS day', 'SUM(e.quarters) AS quarters')
+            ->andWhere('IDENTITY(e.user) = :user')
+            ->setParameter('user', $userId)
+            ->groupBy('e.lot', 'e.day')
+            ->orderBy('e.day', 'ASC')
+            ->getQuery()
+            ->getArrayResult();
+
+        $quarters = [];
+        foreach ($rows as $row) {
+            $quarters[(int) $row['lotId']][$row['day']->format('Y-m-d')] = (int) $row['quarters'];
+        }
+
+        return $quarters;
+    }
+
     public function sumQuartersForLotId(int $lotId): int
     {
         $sum = $this->createQueryBuilder('e')

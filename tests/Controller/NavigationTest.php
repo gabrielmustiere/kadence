@@ -71,9 +71,22 @@ final class NavigationTest extends WebTestCase
             self::assertSame([$entry], $this->currentEntries($crawler), $url);
         }
 
-        $crawler = $client->request('GET', '/mon-compte/mot-de-passe');
+        foreach (['/mon-compte/mot-de-passe', '/personnes/' . $member->getId()] as $url) {
+            $crawler = $client->request('GET', $url);
+            self::assertResponseIsSuccessful($url);
+            self::assertSame([], $this->currentEntries($crawler), $url);
+        }
+    }
+
+    public function testTheAccountMenuLeadsToMyPage(): void
+    {
+        $client = $this->clientFor('prod@example.com');
+        $crawler = $client->request('GET', '/');
+
+        $crawler = $client->click($crawler->filter('[data-test="nav-person"]')->link());
+
         self::assertResponseIsSuccessful();
-        self::assertSame([], $this->currentEntries($crawler));
+        self::assertSelectorTextSame('[data-test="person-heading"]', $crawler->filter('[data-test="user-menu-name"]')->text());
     }
 
     public function testTheHomePageGroupsTheAdministrationShortcutsByRole(): void

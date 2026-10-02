@@ -1,0 +1,34 @@
+{#
+    The details of a bar of the page of a person, shown by roadmap-tooltip on hover. Expects `id` and `kind`: realized
+    and overrun for a run of the person (`row`, `run`), future for their share of the future part of a leaf (`row`,
+    `bar`), load for a span of their load (`span`).
+#}
+{% set legend = {
+    realized: ['Saisi', 'rounded-sm bg-brand'],
+    overrun: ["Saisi au-delà de l'estimation", 'rounded-sm bg-danger'],
+    future: ['Affectation à venir', 'rounded-sm border border-dashed border-brand bg-brand-soft'],
+    load: ['Charge', 'rounded-sm border border-brand-subtle bg-brand-softer'],
+}[kind] %}
+{% set period = kind == 'load' ? span : (kind == 'future' ? bar : run) %}
+<div id="{{ id }}" role="tooltip" hidden class="pointer-events-none z-30 w-80 rounded-base border border-default bg-neutral-primary-soft p-3 text-xs text-body shadow-md" data-test="person-tooltip-{{ kind }}">
+    <p class="text-sm font-semibold text-heading">{{ kind == 'load' ? 'Charge' : row.lot.project.title ~ ' · ' ~ row.leafPath }}</p>
+    <p class="mt-1 flex items-center gap-1.5"><span class="inline-block h-2.5 w-5 {{ legend[1] }}"></span>{{ legend[0] }}</p>
+    <dl class="mt-2 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 border-t border-default pt-2">
+        <dt>Période</dt>
+        <dd class="whitespace-nowrap text-heading" data-test="person-tooltip-period">
+            {{ period.from|weekday }} {{ period.from|date('d/m/Y') }} → {{ period.to|weekday }} {{ period.to|date('d/m/Y') }}
+        </dd>
+        {% if kind == 'load' %}
+            <dt>Charge</dt>
+            <dd class="{{ span.overload ? 'font-semibold text-fg-danger-strong' : 'text-heading' }}" data-test="person-tooltip-load">{{ span.percent }} %</dd>
+        {% elseif kind == 'future' %}
+            <dt>Part</dt>
+            <dd class="text-heading" data-test="person-tooltip-share">{{ row.share }} %</dd>
+        {% else %}
+            <dt>Saisi</dt>
+            <dd class="text-heading" data-test="person-tooltip-entered">{{ run.quarters|days }}</dd>
+            <dt>Jours avec saisie</dt>
+            <dd class="text-heading" data-test="person-tooltip-days">{{ run.dayCount }}</dd>
+        {% endif %}
+    </dl>
+</div>

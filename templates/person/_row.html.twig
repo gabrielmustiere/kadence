@@ -1,0 +1,24 @@
+{#
+    A leaf on the frieze of a person: their runs, then their share of its future part. Expects `row` (PersonLeafRow) and
+    `roadmap`.
+#}
+<div class="grid grid-cols-[20rem_1fr] border-t border-default" data-test="person-leaf" data-title="{{ row.leafPath }}">
+    <div class="sticky left-0 z-10 bg-neutral-primary px-4 py-2 ps-8">
+        <div class="flex flex-wrap items-center gap-1.5">
+            <span class="text-sm font-medium text-heading">{{ row.leafPath }}</span>
+            {% for signal in row.signals %}
+                <twig:Badge variant="{{ signal.variant }}" data-test="signal-{{ signal.value }}">{{ signal.label }}</twig:Badge>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="roadmap-track relative min-h-12">
+        {{ include('roadmap/_today.html.twig') }}
+        {% set bars = {tooltip_template: 'person/_tooltip.html.twig'} %}
+        {% if row.realized %}{{ include('roadmap/_bar.html.twig', bars|merge({bar: row.realized, kind: 'realized', class: 'h-4 rounded-sm bg-brand', test: 'person-bar-realized'})) }}{% endif %}
+        {% if row.overrun %}{{ include('roadmap/_bar.html.twig', bars|merge({bar: row.overrun, kind: 'overrun', class: 'h-4 rounded-sm bg-danger', test: 'person-bar-overrun'})) }}{% endif %}
+        {% if row.future %}
+            {{ include('roadmap/_bar.html.twig', bars|merge({bar: row.future, kind: 'future', class: 'h-4 rounded-sm border border-dashed border-brand bg-brand-soft', test: 'person-bar-future'})) }}
+            <span class="pointer-events-none absolute top-1/2 -translate-y-1/2 ps-1.5 text-xs font-medium tabular-nums text-fg-brand-strong" style="left: {{ row.future.left|number_format(4, '.', '') }}%" aria-hidden="true" data-test="person-bar-share">{{ row.share }} %</span>
+        {% endif %}
+    </div>
+</div>

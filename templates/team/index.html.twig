@@ -92,6 +92,9 @@
                         </twig:Table:Cell>
                         <twig:Table:Cell class="px-4">
                             <div class="flex justify-end gap-1">
+                                <twig:Button as="a" size="icon-xs" variant="outline" class="text-heading" href="{{ path('app_person', {id: member.id}) }}" data-tooltip="Fiche" aria-label="Fiche de {{ member.firstName }} {{ member.lastName }}" data-test="member-person">
+                                    <twig:ux:icon name="tabler:file-description" class="size-4"/>
+                                </twig:Button>
                                 <twig:Button as="a" size="icon-xs" variant="outline" class="text-heading" href="{{ path('app_team_edit', {id: member.id}) }}" data-tooltip="Modifier" aria-label="Modifier {{ member.firstName }} {{ member.lastName }}" data-test="member-edit">
                                     <twig:ux:icon name="tabler:pencil" class="size-4"/>
                                 </twig:Button>
