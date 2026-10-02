@@ -10,6 +10,18 @@ Chaque version porte un **titre** et distingue les **évolutions fonctionnelles*
 
 ## [Unreleased]
 
+## [0.13.1] - 2026-10-02 — Cases cochées & socle consolidé
+
+### ✨ Fonctionnel
+- **Cases à cocher et boutons radio** — une case cochée ou un bouton radio sélectionné s'affiche de nouveau clairement, aux couleurs de l'application, dans tous les formulaires.
+
+### 🔧 Technique
+- **Intégrité des données garantie par la base** — la base refuse d'effacer une feuille ou un projet sur lesquels du temps vient d'être saisi, au lieu de laisser des saisies orphelines ; les migrations restent possibles sur une base remplie.
+- **Règles des lots portées par l'entité** — la profondeur des sous-lots, leur rattachement au bon projet et le gel de l'estimation initiale ne sont plus dispersés dans les services.
+- **Dépendances entre couches assainies** — le modèle ne dépend plus d'aucun service, et services et validateurs ne dépendent plus les uns des autres.
+- **Résumé de projet chargé par un seul service** — les contrôleurs ne l'assemblent plus eux-mêmes, et l'historique d'avancement s'y lit sans requête supplémentaire.
+- **Lisibilité et typage** — planification de toutes les feuilles en un appel, arguments nommés pour les plans de feuille, `declare(strict_types=1)` imposé à tout fichier PHP.
+
 ## [0.13.0] - 2026-10-02 — Avancement des feuilles
 
 ### ✨ Fonctionnel
@@ -170,7 +182,8 @@ Chaque version porte un **titre** et distingue les **évolutions fonctionnelles*
 - **Connexion rapide en dev** — choix d'un compte de fixtures sur la page de connexion, uniquement en environnement de développement.
 - **Nettoyage du template d'amorçage** — suppression de la page design system et de la route de test d'e-mail.
 
-[Unreleased]: https://github.com/gabrielmustiere/kadence/compare/v0.13.0...HEAD
+[Unreleased]: https://github.com/gabrielmustiere/kadence/compare/v0.13.1...HEAD
+[0.13.1]: https://github.com/gabrielmustiere/kadence/compare/v0.13.0...v0.13.1
 [0.13.0]: https://github.com/gabrielmustiere/kadence/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/gabrielmustiere/kadence/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/gabrielmustiere/kadence/compare/v0.10.0...v0.11.0
