@@ -8,6 +8,7 @@ use App\Model\Schedule\DailyCapacity;
 use App\Model\Schedule\LeafPlan;
 use App\Model\Schedule\LeafSchedule;
 use App\Model\Schedule\PlannedMember;
+use App\Model\Schedule\ScheduleData;
 use App\Model\Schedule\ScheduleResult;
 
 /**
@@ -31,6 +32,11 @@ final readonly class Scheduler
         }
 
         return $result;
+    }
+
+    public function scheduleAll(ScheduleData $data): ScheduleResult
+    {
+        return $this->schedule(array_values($data->plans), $data->capacity, $data->today);
     }
 
     public function scheduleLeaf(LeafPlan $plan, DailyCapacity $capacity, \DateTimeImmutable $today): LeafSchedule

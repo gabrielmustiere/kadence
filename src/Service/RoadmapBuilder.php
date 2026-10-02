@@ -40,7 +40,7 @@ final readonly class RoadmapBuilder
     public function build(RoadmapWindow $window, bool $withOverloads): Roadmap
     {
         $data = $this->scheduleLoader->load();
-        $result = $this->scheduler->schedule(array_values($data->plans), $data->capacity, $data->today);
+        $result = $this->scheduler->scheduleAll($data);
         $overloaded = $withOverloads ? $result->overloadedLots() : [];
         $recaps = $this->recaps($data);
         $entered = array_keys(array_filter($data->plans, static fn (LeafPlan $plan): bool => null !== $plan->firstEntryDay && true === $result->get($plan->lotId)?->isPlanned()));
@@ -60,7 +60,7 @@ final readonly class RoadmapBuilder
     public function buildProject(Project $project, bool $withOverloads): ProjectRoadmap
     {
         $data = $this->scheduleLoader->load();
-        $result = $this->scheduler->schedule(array_values($data->plans), $data->capacity, $data->today);
+        $result = $this->scheduler->scheduleAll($data);
         $overloaded = $withOverloads ? $result->overloadedLots() : [];
         $leaves = self::leavesOf($project);
         $runs = $this->runCutter->cut($data, array_keys(array_filter($leaves, static fn (Lot $leaf): bool => null !== ($data->plans[(int) $leaf->getId()]->firstEntryDay ?? null))));

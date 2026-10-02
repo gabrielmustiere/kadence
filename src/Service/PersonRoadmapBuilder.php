@@ -40,7 +40,7 @@ final readonly class PersonRoadmapBuilder
     public function build(User $person, bool $withOverloads, bool $withLoad): PersonRoadmap
     {
         $data = $this->scheduleLoader->load();
-        $result = $this->scheduler->schedule(array_values($data->plans), $data->capacity, $data->today);
+        $result = $this->scheduler->scheduleAll($data);
         $userId = (int) $person->getId();
         $runs = $this->runCutter->cutFor($data, $userId);
         $shares = self::sharesOf($data, $userId);
