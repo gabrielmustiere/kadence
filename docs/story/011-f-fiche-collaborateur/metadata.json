@@ -41,10 +41,15 @@
       "date": "2026-10-02",
       "type": "Livraison",
       "description": "Story livrée par le commit d94c769 (feat(person)) ; suite complète verte avant commit : 433 tests PHPUnit et 44 E2E, lint propre."
+    },
+    {
+      "date": "2026-10-02",
+      "type": "Release",
+      "description": "Story publiée dans la release v0.12.0 « Fiche d'une personne »."
     }
   ],
   "delivery": {
-    "release": null,
+    "release": "v0.12.0",
     "commit": "d94c769"
   }
 }
