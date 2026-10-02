@@ -13,7 +13,7 @@
             {%- if row.end -%}
                 {{ row.end|weekday }} {{ row.end|date('d/m/Y') }}
             {%- elseif row.isEndUnknown -%}
-                inconnue{{ row.overrunQuarters > 0 ? ', estimation à réviser' : '' }}
+                inconnue{% if row.hasSignal(constant('App\\Enum\\Type\\RoadmapSignal::ProgressToRefresh')) %}, avancement à actualiser{% elseif row.overrunQuarters > 0 %}, estimation à réviser{% endif %}
             {%- else -%}
                 non calculée
             {%- endif -%}
@@ -25,9 +25,13 @@
         {% if row.overrunQuarters > 0 %}
             <dt>Dépassement</dt>
             <dd class="text-heading"><span class="font-medium text-fg-danger-strong"><span data-test="roadmap-overrun">{{ row.overrunQuarters|days }}</span> (<span data-test="roadmap-overrun-percent">+{{ row.overrunPercent }} %</span>)</span></dd>
-        {% elseif row.remainingQuarters is not null %}
+        {% endif %}
+        {% if row.remainingQuarters is not null and (row.overrunQuarters == 0 or row.remainingQuarters > 0) %}
             <dt>Restant</dt>
             <dd class="text-heading" data-test="roadmap-recap-remaining">{{ row.remainingQuarters|days }}</dd>
+        {% endif %}
+        {% if row.progress %}
+            {{ include('roadmap/_progress.html.twig') }}
         {% endif %}
         <dt>Période saisie</dt>
         <dd class="whitespace-nowrap text-heading" data-test="roadmap-recap-period">

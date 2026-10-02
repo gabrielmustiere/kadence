@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Model;
 
 use App\Entity\Lot;
+use App\Entity\LotProgress;
+use App\Model\Schedule\LeafProgress;
 
 final readonly class LotSummary
 {
@@ -14,8 +16,13 @@ final readonly class LotSummary
      * @param int              $toAssign          leaves without an owner
      * @param int              $toReassign        leaves whose owner has been deactivated
      * @param bool             $hasTime           time is entered on the lot or one of its sub-lots
-     * @param int              $remainingQuarters what is left of the estimate of its leaves, never offset by an overrun
+     * @param int              $remainingQuarters what is left to do on its leaves, from their progress when one is in
+     *                                            force, never offset by an overrun
      * @param int              $overrunQuarters   what is entered beyond the estimate of its leaves, never offset by what is left
+     * @param int              $progressPoints    the progress of its estimated leaves weighted by their estimate, in
+     *                                            percent × quarters
+     * @param LotProgress|null $progress          the last progress declared on the leaf
+     * @param int|null         $projectedQuarters what the leaf will have cost once done, when a progress is in force
      */
     public function __construct(
         public Lot $lot,
@@ -28,7 +35,26 @@ final readonly class LotSummary
         public int $enteredQuarters = 0,
         public int $remainingQuarters = 0,
         public int $overrunQuarters = 0,
+        public int $progressPoints = 0,
+        public ?LotProgress $progress = null,
+        public ?int $projectedQuarters = null,
     ) {
+    }
+
+    /**
+     * The progress of its estimated leaves, weighted by their estimate; null while none is estimated.
+     */
+    public function progressPercent(): ?int
+    {
+        return LeafProgress::weightedPercent($this->progressPoints, $this->estimateDays);
+    }
+
+    /**
+     * How far the projected cost of the leaf goes beyond its estimate, below 0 when it stays under; null without progress.
+     */
+    public function projectedGapQuarters(): ?int
+    {
+        return null === $this->projectedQuarters ? null : $this->projectedQuarters - $this->estimateDays * Quarters::PER_DAY;
     }
 
     public function isPartial(): bool

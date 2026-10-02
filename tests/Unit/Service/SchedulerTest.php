@@ -7,6 +7,7 @@ namespace App\Tests\Unit\Service;
 use App\Enum\Type\HolidayCalendar;
 use App\Model\Schedule\DailyCapacity;
 use App\Model\Schedule\LeafPlan;
+use App\Model\Schedule\LeafProgress;
 use App\Model\Schedule\LeafSchedule;
 use App\Model\Schedule\PlannedMember;
 use App\Service\Scheduler;
@@ -115,9 +116,68 @@ final class SchedulerTest extends TestCase
         self::assertTrue($schedule->isOverrun());
         self::assertFalse($schedule->isEstimateReached());
         self::assertFalse($schedule->hasFuture());
-        self::assertSame(-2, $schedule->remainingQuarters);
+        self::assertSame(0, $schedule->remainingQuarters);
+        self::assertSame(2, $schedule->overrunQuarters);
         self::assertNull($schedule->end());
         self::assertSame('2026-09-28', $schedule->start()?->format('Y-m-d'));
+    }
+
+    public function testProgressExtrapolatesTheRemainingAndPushesTheEndByFiveWorkingDays(): void
+    {
+        $withoutProgress = $this->scheduleOf($this->plan(20, [self::ALICE => 100], consumedQuarters: 40, firstEntry: '2026-09-14', lastEntry: '2026-09-25'));
+        $withProgress = $this->scheduleOf($this->plan(20, [self::ALICE => 100], consumedQuarters: 40, firstEntry: '2026-09-14', lastEntry: '2026-09-25', progress: $this->progress(40, 40, 60)));
+
+        $this->assertFuture('2026-10-05', '2026-10-16', $withoutProgress);
+        $this->assertFuture('2026-10-05', '2026-10-23', $withProgress);
+        self::assertSame(60, $withProgress->remainingQuarters);
+    }
+
+    public function testTimeEnteredSinceTheProgressUsesUpWhatIsLeft(): void
+    {
+        $schedule = $this->scheduleOf($this->plan(20, [self::ALICE => 100], consumedQuarters: 52, firstEntry: '2026-09-14', lastEntry: '2026-10-01', progress: $this->progress(40, 40, 60)));
+
+        self::assertSame(48, $schedule->remainingQuarters);
+        $this->assertFuture('2026-10-05', '2026-10-20', $schedule);
+    }
+
+    public function testRevisedEstimateDoesNotMoveALeafWithAProgress(): void
+    {
+        $progress = $this->progress(40, 40, 60);
+
+        $this->assertFuture('2026-10-05', '2026-10-23', $this->scheduleOf($this->plan(30, [self::ALICE => 100], consumedQuarters: 40, firstEntry: '2026-09-14', lastEntry: '2026-09-25', progress: $progress)));
+    }
+
+    public function testOverrunLeafWithAProgressGetsAnEnd(): void
+    {
+        $schedule = $this->scheduleOf($this->plan(10, [self::ALICE => 100], consumedQuarters: 48, firstEntry: '2026-09-14', lastEntry: '2026-10-01', progress: $this->progress(80, 48, 12)));
+
+        self::assertTrue($schedule->isOverrun());
+        self::assertSame(8, $schedule->overrunQuarters);
+        self::assertSame(12, $schedule->remainingQuarters);
+        $this->assertFuture('2026-10-05', '2026-10-07', $schedule);
+        self::assertSame('2026-10-07', $schedule->end()?->format('Y-m-d'));
+    }
+
+    public function testLeafDeclaredCompleteEndsOnItsLastDayEntered(): void
+    {
+        $schedule = $this->scheduleOf($this->plan(20, [self::ALICE => 100], consumedQuarters: 40, firstEntry: '2026-09-14', lastEntry: '2026-10-01', start: '2026-09-14', progress: $this->progress(100, 40, 0)));
+
+        self::assertTrue($schedule->isCompleted());
+        self::assertFalse($schedule->isEstimateReached());
+        self::assertFalse($schedule->isProgressToRefresh());
+        self::assertFalse($schedule->hasFuture());
+        self::assertSame('2026-10-01', $schedule->end()?->format('Y-m-d'));
+    }
+
+    public function testProgressUsedUpIsToRefreshAndHasNoEnd(): void
+    {
+        $schedule = $this->scheduleOf($this->plan(20, [self::ALICE => 100], consumedQuarters: 44, firstEntry: '2026-09-14', lastEntry: '2026-10-01', start: '2026-09-14', progress: $this->progress(50, 20, 20)));
+
+        self::assertTrue($schedule->isProgressToRefresh());
+        self::assertFalse($schedule->isEstimateReached());
+        self::assertFalse($schedule->isCompleted());
+        self::assertSame(0, $schedule->remainingQuarters);
+        self::assertNull($schedule->end());
     }
 
     public function testDeactivatedMemberNoLongerCountsAndTheTeamIsToReview(): void
@@ -189,7 +249,7 @@ final class SchedulerTest extends TestCase
     /**
      * @param array<int, int<25, 100>> $members share by user id
      */
-    private function plan(?int $estimateDays, array $members, int $consumedQuarters = 0, ?string $firstEntry = null, ?string $lastEntry = null, ?string $start = self::MONDAY, int $lotId = 1): LeafPlan
+    private function plan(?int $estimateDays, array $members, int $consumedQuarters = 0, ?string $firstEntry = null, ?string $lastEntry = null, ?string $start = self::MONDAY, int $lotId = 1, ?LeafProgress $progress = null): LeafPlan
     {
         return new LeafPlan(
             $lotId,
@@ -199,7 +259,18 @@ final class SchedulerTest extends TestCase
             null === $lastEntry ? null : new \DateTimeImmutable($lastEntry),
             null === $start ? null : new \DateTimeImmutable($start),
             array_map(static fn (int $userId, int $share): PlannedMember => new PlannedMember($userId, $share), array_keys($members), array_values($members)),
+            progress: $progress,
         );
+    }
+
+    /**
+     * @param int<1, 100> $percent
+     * @param int<0, max> $enteredQuarters
+     * @param int<0, max> $remainingQuarters
+     */
+    private function progress(int $percent, int $enteredQuarters, int $remainingQuarters): LeafProgress
+    {
+        return new LeafProgress($percent, new \DateTimeImmutable('2026-09-25'), $enteredQuarters, $remainingQuarters);
     }
 
     private function scheduleOf(LeafPlan $plan, ?DailyCapacity $capacity = null, string $today = self::TODAY): LeafSchedule

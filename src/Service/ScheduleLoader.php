@@ -6,13 +6,16 @@ namespace App\Service;
 
 use App\Entity\Lot;
 use App\Entity\LotMember;
+use App\Entity\LotProgress;
 use App\Entity\User;
 use App\Enum\Type\HolidayCalendar;
 use App\Model\Quarters;
 use App\Model\Schedule\DailyCapacity;
 use App\Model\Schedule\LeafPlan;
+use App\Model\Schedule\LeafProgress;
 use App\Model\Schedule\PlannedMember;
 use App\Model\Schedule\ScheduleData;
+use App\Repository\LotProgressRepository;
 use App\Repository\LotRepository;
 use App\Repository\TimeEntryRepository;
 use App\Repository\UserRepository;
@@ -27,6 +30,7 @@ final readonly class ScheduleLoader
     public function __construct(
         private LotRepository $lotRepository,
         private TimeEntryRepository $timeEntryRepository,
+        private LotProgressRepository $lotProgressRepository,
         private WeeklyMaxRepository $weeklyMaxRepository,
         private UserRepository $userRepository,
         private HolidayManager $holidayManager,
@@ -41,6 +45,7 @@ final readonly class ScheduleLoader
     {
         $today = $this->clock->now()->setTime(0, 0);
         $summaries = $this->timeEntryRepository->summarizeByLot();
+        $declarations = $this->lotProgressRepository->findCurrentByLot();
 
         $leaves = [];
         $plans = [];
@@ -49,7 +54,7 @@ final readonly class ScheduleLoader
         foreach ($this->lotRepository->findLeavesForSchedule() as $leaf) {
             $lotId = (int) $leaf->getId();
             $leaves[$lotId] = $leaf;
-            $plans[$lotId] = self::planOf($leaf, $summaries[$lotId] ?? null);
+            $plans[$lotId] = self::planOf($leaf, $summaries[$lotId] ?? null, $declarations[$lotId] ?? null);
             $firstDay = min($firstDay, $plans[$lotId]->firstEntryDay ?? $firstDay);
             $lastStart = max($lastStart, $leaf->getStartDate() ?? $today);
         }
@@ -118,7 +123,7 @@ final readonly class ScheduleLoader
     /**
      * @param array{int, string, string, int}|null $summary quarters entered, first and last day entered, days entered
      */
-    private static function planOf(Lot $leaf, ?array $summary): LeafPlan
+    private static function planOf(Lot $leaf, ?array $summary, ?LotProgress $declaration): LeafPlan
     {
         $estimateDays = $leaf->getEstimateDays();
 
@@ -131,6 +136,7 @@ final readonly class ScheduleLoader
             $leaf->getStartDate(),
             self::plannedMembers(array_map(static fn (LotMember $member): array => [$member->getUser(), $member->getShare()], $leaf->getMembers()->getValues())),
             $summary[3] ?? 0,
+            null === $declaration || null === $estimateDays ? null : LeafProgress::fromDeclaration($declaration),
         );
     }
 

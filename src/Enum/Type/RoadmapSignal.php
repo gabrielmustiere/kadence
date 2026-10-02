@@ -14,6 +14,8 @@ enum RoadmapSignal: string
     case LateStart = 'late_start';
     case EstimateReached = 'estimate_reached';
     case Overrun = 'overrun';
+    case Completed = 'completed';
+    case ProgressToRefresh = 'progress_to_refresh';
     case TeamToReview = 'team_to_review';
     case ToReplan = 'to_replan';
     case PartialPlanning = 'partial_planning';
@@ -28,6 +30,8 @@ enum RoadmapSignal: string
             self::LateStart => 'démarrage en retard',
             self::EstimateReached => 'estimation atteinte',
             self::Overrun => 'en dépassement',
+            self::Completed => 'terminée à 100 %',
+            self::ProgressToRefresh => 'avancement à actualiser',
             self::TeamToReview => 'équipe à revoir',
             self::ToReplan => 'à replanifier',
             self::PartialPlanning => 'planning partiel',
@@ -49,6 +53,8 @@ enum RoadmapSignal: string
             [self::LateStart, $schedule->lateStart],
             [self::EstimateReached, $schedule->isEstimateReached()],
             [self::Overrun, $schedule->isOverrun()],
+            [self::Completed, $schedule->isCompleted()],
+            [self::ProgressToRefresh, $schedule->isProgressToRefresh()],
             [self::TeamToReview, $schedule->teamToReview],
         ];
 
@@ -61,9 +67,9 @@ enum RoadmapSignal: string
     public function variant(): string
     {
         return match ($this) {
-            self::ToEstimate, self::LateStart => 'warning',
+            self::ToEstimate, self::LateStart, self::ProgressToRefresh => 'warning',
             self::Overrun, self::TeamToReview, self::ToReplan => 'danger',
-            self::EstimateReached, self::WithoutStart, self::WithoutTeam, self::PartialPlanning, self::Unsplit => 'gray',
+            self::EstimateReached, self::Completed, self::WithoutStart, self::WithoutTeam, self::PartialPlanning, self::Unsplit => 'gray',
         };
     }
 }

@@ -33,4 +33,28 @@
             {% endif %}
         {% endif %}
     </twig:Table:Cell>
+    <twig:Table:Cell class="whitespace-nowrap" data-test="consumption-progress">
+        {% if leaf is not null %}
+            {% if line.progress and line.progress.percent > 0 %}
+                {{ line.progress.percent }} %
+                <span class="block text-xs text-body">au {{ line.progress.declaredOn|date('d/m') }}</span>
+            {% else %}
+                <span class="text-body">—</span>
+            {% endif %}
+        {% elseif line.progressPercent is not null %}
+            {{ line.progressPercent }} %
+            {% if line.isPartial %}<span class="block text-xs text-body" data-test="consumption-progress-partial">partiel</span>{% endif %}
+        {% else %}
+            <span class="text-body">—</span>
+        {% endif %}
+    </twig:Table:Cell>
+    <twig:Table:Cell class="whitespace-nowrap" data-test="consumption-projected">
+        {% if leaf is not null and line.projectedQuarters is not null %}
+            {% set gap = line.projectedGapQuarters %}
+            {{ line.projectedQuarters|days }}
+            {% if gap != 0 %}<span class="{{ gap > 0 ? 'font-medium text-fg-danger-strong' : 'text-body' }}">({{ gap > 0 ? '+' }}{{ gap|days }})</span>{% endif %}
+        {% else %}
+            <span class="text-body">—</span>
+        {% endif %}
+    </twig:Table:Cell>
 </twig:Table:Row>

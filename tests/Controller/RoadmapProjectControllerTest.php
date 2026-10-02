@@ -7,6 +7,7 @@ namespace App\Tests\Controller;
 use App\Entity\Project;
 use App\Entity\User;
 use App\Repository\UserRepository;
+use App\Tests\Support\CreatesProgress;
 use App\Tests\Support\CreatesProjects;
 use App\Tests\Support\CreatesTimeEntries;
 use App\Tests\Support\CreatesUsers;
@@ -21,6 +22,7 @@ use Symfony\Component\HttpKernel\Profiler\Profile;
 final class RoadmapProjectControllerTest extends WebTestCase
 {
     use ClockSensitiveTrait;
+    use CreatesProgress;
     use CreatesProjects;
     use CreatesTimeEntries;
     use CreatesUsers;
@@ -97,6 +99,37 @@ final class RoadmapProjectControllerTest extends WebTestCase
         self::assertSame('5 j de dépassement', $crawler->filter('[data-test="consumption-row"][data-title="Dépassé"] [data-test="consumption-overrun"]')->text());
         self::assertCount(0, $crawler->filter('[data-test="consumption-row"][data-title="Dépassé"] [data-test="consumption-remaining"]'));
         self::assertSame(['3 j', '5 j'], [$crawler->filter('[data-test="project-page-remaining"]')->text(), $crawler->filter('[data-test="project-page-overrun"]')->text()]);
+    }
+
+    public function testProgressRulesWhatIsLeftAndShowsTheProjectedCostAndTheDeclarationsOfEachLeaf(): void
+    {
+        $client = $this->clientAs('prod@example.com');
+        $project = $this->createExample();
+
+        $client->request('GET', $this->url($project));
+        self::assertSelectorExists('[data-test="progress-history-empty"]');
+
+        $login = $project->getLots()->filter(static fn ($lot): bool => 'Login' === $lot->getTitle())->first();
+        self::assertNotFalse($login);
+        $author = $this->createUser();
+        $this->createProgress($login, $author, '2026-10-01', 20, 12);
+        $this->createProgress($login, $author, '2026-10-05', 25, 12);
+
+        $crawler = $client->request('GET', $this->url($project));
+
+        self::assertSame(['9 j', 'Mar 20/10/2026'], [$crawler->filter('[data-test="project-page-remaining"]')->text(), $crawler->filter('[data-test="project-page-end"]')->text()]);
+        self::assertSame(['8 j', '3 j', '9 j'], self::consumption($crawler)['Login']);
+        $progress = static fn (string $title, string $field): string => $crawler->filter(\sprintf('[data-test="consumption-row"][data-title="%s"] [data-test="consumption-%s"]', $title, $field))->text();
+        self::assertSame(['25 % au 05/10', '12 j (+4 j)'], [$progress('Login', 'progress'), $progress('Login', 'projected')]);
+        self::assertSame(['—', '—'], [$progress('API', 'progress'), $progress('API', 'projected')]);
+        self::assertSame('25 %', $progress('Front', 'progress'));
+        self::assertSame('67 %', $progress('Projet', 'progress'), '10 j entered on API weigh 100 %, Login 25 % of its 8 j.');
+
+        $history = $crawler->filter('[data-test="progress-history-leaf"][data-title="Login"]');
+        self::assertStringContainsString('Front · Login', $history->text());
+        self::assertSame(['Lun 05/10/2026 25 % Test User', 'Jeu 01/10/2026 20 % Test User'], $history->filter('[data-test="progress-history-entry"]')->each(static fn (Crawler $entry): string => $entry->text()));
+        self::assertCount(1, $crawler->filter('[data-test="progress-history-leaf"]'));
+        self::assertCount(0, $crawler->filter('main form'), 'The progress is declared from the page of the project, not from here.');
     }
 
     public function testLeafToEstimateIsPartOfTheTableAndOfTheTimelineWithoutABarOnTheFrieze(): void

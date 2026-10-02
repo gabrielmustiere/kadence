@@ -1,0 +1,31 @@
+{#
+    The progress declared on each leaf of the project, in the order of its split, the latest declaration first.
+    Expects `summary` and `declarations`, the declarations by lot id.
+#}
+{% set leaves = [] %}
+{% for lotSummary in summary.lots %}
+    {% set leaves = leaves|merge(lotSummary.lot.leaf ? [lotSummary.lot] : lotSummary.children|map(child => child.lot)) %}
+{% endfor %}
+{% set declared = leaves|filter(leaf => declarations[leaf.id] is defined) %}
+{% if declared is empty %}
+    <twig:Card data-test="progress-history-empty">
+        <p class="text-body">Aucun avancement n'a encore été déclaré sur ce projet.</p>
+    </twig:Card>
+{% else %}
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" data-test="progress-history">
+        {% for leaf in declared %}
+            <div class="rounded-base border border-default bg-neutral-primary-soft p-4" data-test="progress-history-leaf" data-title="{{ leaf.title }}">
+                <p class="text-sm font-semibold text-heading">{{ leaf.parent ? leaf.parent.title ~ ' · ' }}{{ leaf.title }}</p>
+                <ol class="mt-2 space-y-1 text-sm">
+                    {% for declaration in declarations[leaf.id] %}
+                        <li class="flex items-baseline justify-between gap-3" data-test="progress-history-entry">
+                            <span class="text-body">{{ declaration.declaredOn|weekday }} {{ declaration.declaredOn|date('d/m/Y') }}</span>
+                            <span class="font-medium text-heading">{{ declaration.percent }} %</span>
+                            <span class="min-w-0 truncate text-body">{{ declaration.author.firstName }} {{ declaration.author.lastName }}</span>
+                        </li>
+                    {% endfor %}
+                </ol>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}

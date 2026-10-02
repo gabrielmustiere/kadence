@@ -9,6 +9,7 @@ use App\Entity\Project;
 use App\Entity\User;
 use App\Exception\LotHasTimeEntriesException;
 use App\Form\ProjectType;
+use App\Repository\LotProgressRepository;
 use App\Repository\ProjectRepository;
 use App\Repository\TimeEntryRepository;
 use App\Service\ProjectManager;
@@ -62,10 +63,10 @@ final class ProjectController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_project_show', requirements: ['id' => '\d+'], methods: ['GET'])]
-    public function show(#[MapEntity(expr: 'repository.findOneForDetail(id)')] Project $project, TimeEntryRepository $timeEntryRepository): Response
+    public function show(#[MapEntity(expr: 'repository.findOneForDetail(id)')] Project $project, TimeEntryRepository $timeEntryRepository, LotProgressRepository $lotProgressRepository): Response
     {
         return $this->render('project/show.html.twig', [
-            'summary' => $this->projectRollup->summarize($project, $timeEntryRepository->sumQuartersByLot($project)),
+            'summary' => $this->projectRollup->summarize($project, $timeEntryRepository->sumQuartersByLot($project), $lotProgressRepository->findForProjectByLot($project)),
         ]);
     }
 

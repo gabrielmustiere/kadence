@@ -6,6 +6,7 @@ namespace App\Tests\Controller;
 
 use App\Entity\User;
 use App\Repository\UserRepository;
+use App\Tests\Support\CreatesProgress;
 use App\Tests\Support\CreatesProjects;
 use App\Tests\Support\CreatesTimeEntries;
 use App\Tests\Support\CreatesUsers;
@@ -20,6 +21,7 @@ use Symfony\Component\HttpKernel\Profiler\Profile;
 final class RoadmapControllerTest extends WebTestCase
 {
     use ClockSensitiveTrait;
+    use CreatesProgress;
     use CreatesProjects;
     use CreatesTimeEntries;
     use CreatesUsers;
@@ -149,6 +151,40 @@ final class RoadmapControllerTest extends WebTestCase
         self::assertCount(1, $row->filter('[data-test="roadmap-bar-realized"]'));
         self::assertCount(1, $row->filter('[data-test="roadmap-bar-overrun"]'));
         self::assertCount(0, $row->filter('[data-test="roadmap-bar-future"]'));
+    }
+
+    public function testProgressShowsInTheTooltipAndRecapOfALeafAndItsSignalsToEveryone(): void
+    {
+        $client = $this->clientAs('prod@example.com');
+        $alice = $this->createUser();
+        $project = $this->createProject();
+        $declared = $this->planLot($this->createLot($project, 10, $alice, title: 'Avancée'), new \DateTimeImmutable('2026-10-05'), [[$alice, 100]]);
+        $this->createTimeEntry($alice, $declared, '2026-10-05', 4);
+        $this->createTimeEntry($alice, $declared, '2026-10-06', 4);
+        $this->createProgress($declared, $alice, '2026-10-06', 10, 8);
+        $complete = $this->planLot($this->createLot($project, 2, $alice, title: 'Terminée'), new \DateTimeImmutable('2026-09-28'), [[$alice, 100]]);
+        $this->createTimeEntry($alice, $complete, '2026-09-28', 4);
+        $this->createProgress($complete, $alice, '2026-09-28', 100, 4);
+        $toRefresh = $this->planLot($this->createLot($project, 5, $alice, title: 'À actualiser'), new \DateTimeImmutable('2026-09-29'), [[$alice, 100]]);
+        $this->createTimeEntry($alice, $toRefresh, '2026-09-29', 4);
+        $this->createProgress($toRefresh, $alice, '2026-09-29', 50, 4);
+        $this->createTimeEntry($alice, $toRefresh, '2026-09-30', 4);
+
+        $crawler = $client->request('GET', '/roadmap');
+
+        $leaf = static fn (string $title): Crawler => $crawler->filter(\sprintf('[data-test="roadmap-project"][data-title="%s"] [data-test="roadmap-leaf"][data-title="%s"]', $project->getTitle(), $title));
+        $future = $leaf('Avancée')->filter('[data-test="roadmap-tooltip-future"]');
+        self::assertSame(
+            ['18 j', '10 % au 06/10', '20 j pour 10 j estimés (+10 j)'],
+            array_map(static fn (string $field): string => $future->filter(\sprintf('[data-test="%s"]', $field))->text(), ['roadmap-remaining', 'roadmap-progress', 'roadmap-projected']),
+        );
+        $recap = $leaf('Avancée')->filter('[data-test="roadmap-recap"]');
+        self::assertSame(['Lun 02/11/2026', '18 j', '10 % au 06/10'], [$recap->filter('[data-test="roadmap-recap-end"]')->text(), $recap->filter('[data-test="roadmap-recap-remaining"]')->text(), $recap->filter('[data-test="roadmap-progress"]')->text()]);
+
+        self::assertSame('terminée à 100 %', $leaf('Terminée')->filter('[data-test="signal-completed"]')->text());
+        self::assertSame('Lun 28/09/2026', $leaf('Terminée')->filter('[data-test="roadmap-recap-end"]')->text());
+        self::assertSame('avancement à actualiser', $leaf('À actualiser')->filter('[data-test="signal-progress_to_refresh"]')->text());
+        self::assertSame('inconnue, avancement à actualiser', $leaf('À actualiser')->filter('[data-test="roadmap-recap-end"]')->text());
     }
 
     public function testTooltipOfASegmentSaysWhatEachPersonEnteredOnIt(): void

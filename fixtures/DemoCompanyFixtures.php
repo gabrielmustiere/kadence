@@ -7,6 +7,7 @@ namespace DataFixtures;
 use App\Entity\HolidayAdjustment;
 use App\Entity\Lot;
 use App\Entity\LotMember;
+use App\Entity\LotProgress;
 use App\Entity\Project;
 use App\Entity\Tag;
 use App\Entity\TimeEntry;
@@ -15,6 +16,7 @@ use App\Entity\WeeklyMax;
 use App\Enum\Type\HolidayCalendar;
 use App\Enum\Type\Role;
 use App\Enum\Type\TagCategory;
+use App\Model\Schedule\LeafProgress;
 use App\Model\Week;
 use App\Service\HolidayManager;
 use App\Service\LegalHolidays;
@@ -46,6 +48,12 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
 
     /** Leaves left « à estimer » although time is entered on them. */
     private const array TO_ESTIMATE = ['Notifications'];
+
+    /** A running leaf behind its estimate: its progress declarations, days before today then percent, the latest last. */
+    private const array PROGRESS_HISTORY = ['Bulletins' => [[21, 30], [7, 40], [0, 45]]];
+
+    /** A running leaf whose progress, declared two weeks ago when a quarter of its time was entered, is used up since. */
+    private const string PROGRESS_TO_REFRESH = 'Documentation';
 
     /**
      * Person key => team type, technical skills, functional experiences. The test accounts carry no tag, so that the
@@ -209,6 +217,7 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
         }
         $this->estimate();
         $this->plan($firstWeek, $today);
+        $this->declareProgress($manager, $today);
         $manager->flush();
     }
 
@@ -553,6 +562,52 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
         [$title, $estimateDays, $team] = self::LATE_START;
         $late = $this->leaves[$title]->setEstimateDays($estimateDays)->setStartDate(Week::containing($today)->monday->modify('-2 weeks'));
         $this->staff($late, $team);
+    }
+
+    /**
+     * Besides the leaves of PROGRESS_HISTORY and PROGRESS_TO_REFRESH, the first finished leaf a day or more over its
+     * estimate gets an end again at 90 %, and the first one that consumed exactly its estimate is declared complete.
+     * The time entered is read before the last entries were trimmed to whole days: a leaf that consumed exactly its
+     * estimate is declared on its estimate.
+     */
+    private function declareProgress(ObjectManager $manager, \DateTimeImmutable $today): void
+    {
+        $declare = function (Lot $leaf, int $daysAgo, int $percent, int $entered) use ($manager, $today): void {
+            $percent = max(1, min(100, $percent));
+            $entered = max(0, $entered);
+            $remaining = LeafProgress::anchoredRemaining($percent, $entered, ($leaf->getEstimateDays() ?? 0) * 4);
+            $author = $leaf->getOwner() ?? $this->people['helene'];
+            $manager->persist(new LotProgress($leaf, $author, $today->modify(\sprintf('-%d days', $daysAgo)), $percent, $entered, $remaining));
+        };
+        $consumed = fn (Lot $leaf): int => $this->consumed[(int) $leaf->getId()] ?? 0;
+
+        foreach (self::PROGRESS_HISTORY as $title => $declarations) {
+            $leaf = $this->leaves[$title];
+            foreach ($declarations as [$daysAgo, $percent]) {
+                $declare($leaf, $daysAgo, $percent, intdiv($consumed($leaf) * (100 - 2 * $daysAgo), 100));
+            }
+        }
+        $toRefresh = $this->leaves[self::PROGRESS_TO_REFRESH];
+        $declare($toRefresh, 14, 50, intdiv($consumed($toRefresh), 4));
+
+        $overrun = null;
+        $complete = null;
+        foreach ($this->leavesByTeam as $leaves) {
+            foreach ($leaves as [$leaf, , $lastWeek]) {
+                $estimate = $leaf->getEstimateDays();
+                if ($lastWeek >= self::WEEKS || null === $estimate || \in_array($leaf->getTitle(), self::TO_ESTIMATE, true)) {
+                    continue;
+                }
+                $overrun ??= $consumed($leaf) >= ($estimate + 1) * 4 ? $leaf : null;
+                $complete ??= intdiv($consumed($leaf), 4) === $estimate ? $leaf : null;
+            }
+        }
+        if (null !== $overrun) {
+            $declare($overrun, 0, 90, $consumed($overrun));
+        }
+        if (null !== $complete) {
+            $declare($complete, 0, 100, (int) $complete->getEstimateDays() * 4);
+        }
     }
 
     /**

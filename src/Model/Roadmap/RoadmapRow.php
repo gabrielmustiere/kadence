@@ -9,6 +9,7 @@ use App\Entity\LotMember;
 use App\Entity\Project;
 use App\Enum\Type\RoadmapSignal;
 use App\Model\Quarters;
+use App\Model\Schedule\LeafProgress;
 
 /**
  * A line of the roadmap: a project or a split lot with the span of its leaves, or a leaf with its past and future parts.
@@ -27,6 +28,8 @@ final readonly class RoadmapRow
      * @param int                     $enteredDayCount days with time entered on the leaf
      * @param list<RoadmapTeamLine>   $team            the members with their share and what they entered on the leaf,
      *                                                 then the people outside the team who entered time on it
+     * @param int                     $overrunQuarters time entered beyond the estimate, 0 within it
+     * @param LeafProgress|null       $progress        the progress in force on the leaf
      */
     public function __construct(
         public Project $project,
@@ -46,6 +49,8 @@ final readonly class RoadmapRow
         public ?\DateTimeImmutable $enteredTo = null,
         public int $enteredDayCount = 0,
         public array $team = [],
+        public int $overrunQuarters = 0,
+        public ?LeafProgress $progress = null,
     ) {
     }
 
@@ -68,25 +73,34 @@ final readonly class RoadmapRow
     }
 
     /**
-     * Time entered beyond the estimate, 0 when within it.
-     */
-    public function overrunQuarters(): int
-    {
-        return max(0, -($this->remainingQuarters ?? 0));
-    }
-
-    /**
      * Time entered beyond the estimate in percent of it, rounded but never down to 0 % once overrun; null within it.
      */
     public function overrunPercent(): ?int
     {
         $estimate = $this->lot?->getEstimateDays();
-        $overrun = $this->overrunQuarters();
-        if (null === $estimate || 0 === $overrun) {
+        if (null === $estimate || 0 === $this->overrunQuarters) {
             return null;
         }
 
-        return max(1, (int) round(100 * $overrun / ($estimate * Quarters::PER_DAY)));
+        return max(1, (int) round(100 * $this->overrunQuarters / ($estimate * Quarters::PER_DAY)));
+    }
+
+    /**
+     * What the leaf will have cost once done, according to the progress in force; null without one.
+     */
+    public function projectedQuarters(): ?int
+    {
+        return null === $this->progress ? null : $this->enteredQuarters() + ($this->remainingQuarters ?? 0);
+    }
+
+    /**
+     * How far the projected cost of the leaf goes beyond its estimate, below 0 when it stays under; null without progress.
+     */
+    public function projectedGapQuarters(): ?int
+    {
+        $projected = $this->projectedQuarters();
+
+        return null === $projected ? null : $projected - ($this->lot?->getEstimateDays() ?? 0) * Quarters::PER_DAY;
     }
 
     public function isEndUnknown(): bool

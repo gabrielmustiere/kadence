@@ -14,6 +14,7 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
 | 2026-09-29 | Édition ciblée | Principes produit | Principe 3 : découpage projet → lot → sous-lot, l'estimation vit au niveau le plus fin (cadrage de la story projets, lots et sous-lots) |
 | 2026-09-29 | Édition ciblée | Pitch, audience, positionnement, métriques, anti-objectifs, hypothèses H2 et H3, horizons, notes | Vocabulaire réaligné sur lot / sous-lot ; H2 : l'estimation révisable (initiale conservée) devient la règle, le repli devient un reste à faire déclaré |
 | 2026-10-02 | Édition ciblée | Principe 2, anti-objectifs, risques externes | Sync post-livraison de la story 011-f-fiche-collaborateur : la fiche d'une personne rend son travail saisi lisible de tous, y compris pour préparer un point individuel (contradiction assumée au cadrage) ; le principe 2 et l'anti-objectif « évaluation individuelle » sont reformulés autour de l'absence de comparaison, de classement et d'indicateur de productivité ; le cadre social mentionne la fiche |
+| 2026-10-02 | Édition ciblée | Hypothèse H2, audience (leads) | Sync post-livraison de la story 012-f-avancement-feuilles : le repli de H2 est posé en coexistence avant que H2 soit tranchée — un lead, la direction ou le responsable peut déclarer l'avancement d'une feuille, dont le restant est alors extrapolé du rythme observé ; une feuille sans avancement garde le calcul estimé − consommé, ce qui permet de comparer les deux |
 
 ## Le problème
 
@@ -38,7 +39,7 @@ L'équipe travaille essentiellement sur l'évolution de nos propres logiciels (r
 Deux usages distincts, portés par deux rôles :
 
 - **Direction** — arbitre les priorités et s'engage sur des dates. A besoin de lire la roadmap (dates annoncées vs projetées) et de voir les surcharges à venir avant de dire oui.
-- **Leads / chefs de projet** — pilotent au quotidien. Découpent les projets en lots et sous-lots et en déclarent les estimations, suivent le consommé, réagissent aux alertes de dérive.
+- **Leads / chefs de projet** — pilotent au quotidien. Découpent les projets en lots et sous-lots et en déclarent les estimations, suivent le consommé, déclarent l'avancement des feuilles, réagissent aux alertes de dérive.
 - **Volume cible** : quelques personnes (direction + leads) sur un effectif de 15 à 40.
 - **Ce qui les bloque aujourd'hui** : l'information existe en morceaux dans le tableur, mais personne n'a la vue consolidée à date sans refaire le calcul à la main.
 
@@ -120,7 +121,7 @@ Ce qu'on **refuse explicitement** de faire, et pourquoi :
 | # | Hypothèse | Comment l'invalider | Statut |
 |---|-----------|---------------------|--------|
 | 1 | 15 à 40 personnes tiennent une saisie quotidienne ≥ 90 % si elle prend moins d'une minute | Mesurer le taux de saisie à 48 h dès le premier mois d'usage | À tester |
-| 2 | Le rythme de consommation (consommé vs estimé, rapporté à l'avancement dans le temps) suffit à détecter les dépassements assez tôt, sans reste à faire déclaré — l'estimation reste révisable (jamais sous le consommé, l'initiale conservée) | Sur 3 mois, comparer la date de première alerte à la date de dépassement effectif de l'estimation initiale ; si l'alerte arrive trop tard, repli sur un reste à faire déclaré par le responsable | À tester |
+| 2 | Le rythme de consommation (consommé vs estimé, rapporté à l'avancement dans le temps) suffit à détecter les dépassements assez tôt, sans reste à faire déclaré — l'estimation reste révisable (jamais sous le consommé, l'initiale conservée). Le repli est disponible sans être imposé : un avancement déclaré sur une feuille (par un lead, la direction ou son responsable) remplace son restant par une extrapolation du rythme observé | Sur 3 mois, comparer la date de première alerte à la date de dépassement effectif de l'estimation initiale, et la fin calculée des feuilles avec et sans avancement déclaré à leur fin réelle ; si l'alerte arrive trop tard, généraliser l'avancement déclaré | À tester |
 | 3 | Des estimations déclaratives au niveau le plus fin du découpage (lot ou sous-lot) sont assez fines pour projeter des dates de fin crédibles | Comparer dates projetées et dates réelles sur les premiers jalons livrés | À tester |
 | 4 | La baseline de la North Star est mesurable sur 3 mois (assez de jalons livrés pour être significative) | Compter les jalons échus sur la période ; si trop peu, allonger la fenêtre de baseline | À tester |
 

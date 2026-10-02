@@ -1,5 +1,6 @@
 {#
-    Time entered against the estimate of each lot and sub-lot, then of the project. Expects `summary`.
+    Time entered against the estimate of each lot and sub-lot, then of the project, with their progress. Expects
+    `summary`.
 #}
 <div class="overflow-x-auto rounded-base border border-default">
     <twig:Table data-test="consumption">
@@ -9,6 +10,8 @@
                 <twig:Table:Head>Estimé</twig:Table:Head>
                 <twig:Table:Head>Saisi</twig:Table:Head>
                 <twig:Table:Head>Restant ou dépassement</twig:Table:Head>
+                <twig:Table:Head>Avancement</twig:Table:Head>
+                <twig:Table:Head>Projeté</twig:Table:Head>
             </twig:Table:Row>
         </twig:Table:Header>
         <twig:Table:Body>

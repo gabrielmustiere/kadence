@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Service;
 
+use App\Dto\LotInput;
 use App\Entity\Project;
 use App\Enum\Type\HolidayCalendar;
 use App\Enum\Type\RoadmapSignal;
@@ -18,7 +19,9 @@ use App\Model\Roadmap\RoadmapWindow;
 use App\Model\Roadmap\TimelineEntry;
 use App\Model\Roadmap\TimelineMonth;
 use App\Model\Week;
+use App\Service\ProjectManager;
 use App\Service\RoadmapBuilder;
+use App\Tests\Support\CreatesProgress;
 use App\Tests\Support\CreatesProjects;
 use App\Tests\Support\CreatesTimeEntries;
 use App\Tests\Support\CreatesUsers;
@@ -28,6 +31,7 @@ use Symfony\Component\Clock\Test\ClockSensitiveTrait;
 final class RoadmapBuilderTest extends KernelTestCase
 {
     use ClockSensitiveTrait;
+    use CreatesProgress;
     use CreatesProjects;
     use CreatesTimeEntries;
     use CreatesUsers;
@@ -93,7 +97,7 @@ final class RoadmapBuilderTest extends KernelTestCase
         [$overrunRow, $reachedRow] = $row->children;
 
         self::assertSame([RoadmapSignal::Overrun], $overrunRow->signals);
-        self::assertSame(2, $overrunRow->overrunQuarters());
+        self::assertSame(2, $overrunRow->overrunQuarters);
         self::assertSame(50, $overrunRow->overrunPercent());
         self::assertNull($overrunRow->end);
         self::assertTrue($overrunRow->isEndUnknown());
@@ -108,6 +112,101 @@ final class RoadmapBuilderTest extends KernelTestCase
 
         self::assertNull($row->end, 'A project with a leaf without end has no end either.');
         self::assertSame('2026-10-05', $row->lastDay?->format('Y-m-d'));
+    }
+
+    public function testProgressGivesAnOverrunLeafAnEndAndTellsWhatIsCompleteOrToRefresh(): void
+    {
+        $user = $this->createUser();
+        $project = $this->createProject();
+        $overrun = $this->planLot($this->createLot($project, 1, $user), new \DateTimeImmutable('2026-10-01'), [[$user, 100]]);
+        $this->createTimeEntry($user, $overrun, '2026-10-01', 4);
+        $this->createTimeEntry($user, $overrun, '2026-10-02', 2);
+        $this->createProgress($overrun, $user, '2026-10-02', 80, 6);
+        $complete = $this->planLot($this->createLot($project, 2, $user), new \DateTimeImmutable('2026-10-05'), [[$user, 100]]);
+        $this->createTimeEntry($user, $complete, '2026-10-05', 4);
+        $this->createProgress($complete, $user, '2026-10-05', 100, 4);
+        $toRefresh = $this->planLot($this->createLot($project, 5, $user), new \DateTimeImmutable('2026-10-05'), [[$user, 100]]);
+        $this->createTimeEntry($user, $toRefresh, '2026-10-05', 4);
+        $this->createProgress($toRefresh, $user, '2026-10-05', 50, 4);
+        $this->createTimeEntry($user, $toRefresh, '2026-10-06', 4);
+
+        $row = $this->projectRow($this->build(), $project);
+        [$overrunRow, $completeRow, $toRefreshRow] = $row->children;
+
+        self::assertSame([RoadmapSignal::Overrun], $overrunRow->signals);
+        self::assertSame(2, $overrunRow->overrunQuarters);
+        self::assertSame(2, $overrunRow->remainingQuarters);
+        self::assertSame(80, $overrunRow->progress?->percent);
+        self::assertSame(8, $overrunRow->projectedQuarters());
+        self::assertSame('2026-10-08', $overrunRow->end?->format('Y-m-d'));
+
+        self::assertSame([RoadmapSignal::Completed], $completeRow->signals);
+        self::assertSame('2026-10-05', $completeRow->end?->format('Y-m-d'));
+        self::assertNull($completeRow->future);
+
+        self::assertSame([RoadmapSignal::ProgressToRefresh], $toRefreshRow->signals);
+        self::assertTrue($toRefreshRow->isEndUnknown());
+        self::assertNull($row->end, 'A progress to refresh leaves the end of its project unknown.');
+    }
+
+    public function testAProgressThatPushesAnEndIntoAnotherLeafOfThePersonIsToReplan(): void
+    {
+        $user = $this->createUser();
+        $project = $this->createProject();
+        $declared = $this->planLot($this->createLot($project, 10, $user), new \DateTimeImmutable('2026-10-05'), [[$user, 100]]);
+        $this->createTimeEntry($user, $declared, '2026-10-05', 4);
+        $this->createTimeEntry($user, $declared, '2026-10-06', 4);
+        $next = $this->planLot($this->createLot($project, 5, $user), new \DateTimeImmutable('2026-10-20'), [[$user, 100]]);
+        self::assertSame([[], []], array_map(static fn (RoadmapRow $row): array => $row->signals, $this->projectRow($this->build(), $project)->children));
+
+        $this->createProgress($declared, $user, '2026-10-06', 10, 8);
+
+        [$declaredRow, $nextRow] = $this->projectRow($this->build(), $project)->children;
+        self::assertSame([RoadmapSignal::ToReplan], $declaredRow->signals);
+        self::assertSame([RoadmapSignal::ToReplan], $nextRow->signals);
+        self::assertSame((int) $next->getId(), $nextRow->lot?->getId());
+    }
+
+    public function testANewDeclarationLiftsTheProgressToRefresh(): void
+    {
+        $user = $this->createUser();
+        $project = $this->createProject();
+        $leaf = $this->planLot($this->createLot($project, 5, $user), new \DateTimeImmutable('2026-10-05'), [[$user, 100]]);
+        $this->createTimeEntry($user, $leaf, '2026-10-05', 4);
+        $this->createProgress($leaf, $user, '2026-10-05', 50, 4);
+        $this->createTimeEntry($user, $leaf, '2026-10-06', 4);
+        self::assertSame([RoadmapSignal::ProgressToRefresh], $this->projectRow($this->build(), $project)->children[0]->signals);
+
+        $this->createProgress($leaf, $user, '2026-10-07', 60, 8);
+
+        $row = $this->projectRow($this->build(), $project)->children[0];
+        self::assertSame([], $row->signals);
+        self::assertSame(6, $row->remainingQuarters);
+        self::assertSame('2026-10-09', $row->end?->format('Y-m-d'));
+    }
+
+    public function testFirstSubLotTakesOverTheProgressAndTheBarOfItsLot(): void
+    {
+        $user = $this->createUser();
+        $project = $this->createProject();
+        $lot = $this->planLot($this->createLot($project, 10, $user), new \DateTimeImmutable('2026-10-05'), [[$user, 100]]);
+        $this->createTimeEntry($user, $lot, '2026-10-05', 4);
+        $this->createProgress($lot, $user, '2026-10-05', 20, 4);
+        $before = $this->projectRow($this->build(), $project)->children[0];
+
+        $input = LotInput::forSubLotOf($lot);
+        $input->title = 'Modèle';
+        $projectManager = self::getContainer()->get(ProjectManager::class);
+        \assert($projectManager instanceof ProjectManager);
+        $projectManager->addSubLot($lot, $input);
+        // The bulk move leaves the declarations already in memory on their former lot, as a new request would not.
+        $this->entityManager()->clear();
+
+        $after = $this->projectRow($this->build(), $project)->children[0]->children[0];
+        self::assertSame('Modèle', $after->title());
+        self::assertSame(20, $after->progress?->percent);
+        self::assertEquals([$before->start, $before->end, $before->remainingQuarters], [$after->start, $after->end, $after->remainingQuarters]);
+        self::assertEquals($before->future, $after->future);
     }
 
     public function testEachRunTellsWhatEachPersonEnteredOnItAndTheDayTheEstimateIsGoneBeyondCountsWholeBeyondIt(): void

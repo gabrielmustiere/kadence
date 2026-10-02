@@ -71,6 +71,11 @@
             {{ include('roadmap/_consumption.html.twig') }}
         </section>
 
+        <section class="mb-8">
+            <h2 class="mb-3 font-display text-lg font-semibold text-heading">Avancements déclarés</h2>
+            {{ include('roadmap/_progress_history.html.twig') }}
+        </section>
+
         <section class="mb-8" {% if page.dated %}data-controller="roadmap" data-roadmap-remember-value="false" data-roadmap-center-value="{{ roadmap.centerPosition|number_format(4, '.', '') }}"{% endif %}>
             <div class="mb-3 flex flex-wrap items-end justify-between gap-3">
                 <h2 class="font-display text-lg font-semibold text-heading">Frise</h2>

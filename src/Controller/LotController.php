@@ -7,18 +7,22 @@ namespace App\Controller;
 use App\Dto\LotInput;
 use App\Entity\Lot;
 use App\Entity\Project;
+use App\Entity\User;
 use App\Exception\LotHasTimeEntriesException;
+use App\Exception\LotProgressRefusedException;
 use App\Form\LotType;
 use App\Model\Quarters;
 use App\Model\Week;
 use App\Repository\TimeEntryRepository;
 use App\Security\Voter\LotVoter;
+use App\Service\LotProgressManager;
 use App\Service\ProjectManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 final class LotController extends AbstractController
@@ -134,5 +138,24 @@ final class LotController extends AbstractController
         }
 
         return $this->redirectToRoute('app_project_show', ['id' => $projectId]);
+    }
+
+    #[Route('/lots/{id}/avancement', name: 'app_lot_progress', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function progress(Request $request, Lot $lot, #[CurrentUser] User $user, LotProgressManager $lotProgressManager): Response
+    {
+        $this->denyAccessUnlessGranted(LotVoter::PROGRESS, $lot);
+        $payload = $request->getPayload();
+        if (!$this->isCsrfTokenValid('lot-progress-' . $lot->getId(), $payload->getString('_token'))) {
+            throw $this->createAccessDeniedException('Jeton CSRF invalide.');
+        }
+
+        try {
+            $declaration = $lotProgressManager->declare($lot, $payload->getInt('percent'), $user);
+            $this->addFlash('success', \sprintf('Avancement de « %s » : %d %%.', $lot->getTitle(), $declaration->getPercent()));
+        } catch (LotProgressRefusedException $exception) {
+            $this->addFlash('error', $exception->getMessage());
+        }
+
+        return $this->redirectToRoute('app_project_show', ['id' => $lot->getProject()->getId()]);
     }
 }

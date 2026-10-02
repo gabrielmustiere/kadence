@@ -211,6 +211,8 @@ final readonly class RoadmapBuilder
                 enteredTo: $schedule->realizedTo,
                 enteredDayCount: $enteredDayCount,
                 team: $team,
+                overrunQuarters: $schedule->overrunQuarters,
+                progress: $schedule->progress,
             );
         }
 
@@ -234,6 +236,8 @@ final readonly class RoadmapBuilder
             enteredTo: $schedule->realizedTo,
             enteredDayCount: $enteredDayCount,
             team: $team,
+            overrunQuarters: $schedule->overrunQuarters,
+            progress: $schedule->progress,
         );
     }
 

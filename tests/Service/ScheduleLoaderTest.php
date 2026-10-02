@@ -7,6 +7,7 @@ namespace App\Tests\Service;
 use App\Enum\Type\HolidayCalendar;
 use App\Model\Schedule\DailyCapacity;
 use App\Service\ScheduleLoader;
+use App\Tests\Support\CreatesProgress;
 use App\Tests\Support\CreatesProjects;
 use App\Tests\Support\CreatesTimeEntries;
 use App\Tests\Support\CreatesUsers;
@@ -16,6 +17,7 @@ use Symfony\Component\Clock\Test\ClockSensitiveTrait;
 final class ScheduleLoaderTest extends KernelTestCase
 {
     use ClockSensitiveTrait;
+    use CreatesProgress;
     use CreatesProjects;
     use CreatesTimeEntries;
     use CreatesUsers;
@@ -46,6 +48,39 @@ final class ScheduleLoaderTest extends KernelTestCase
         self::assertSame([[$alice->getId(), 100], [$bruno->getId(), 50]], array_map(static fn ($member): array => [$member->userId, $member->share], $plan->members));
         self::assertSame($leaf, $data->leaves[(int) $leaf->getId()]);
         self::assertSame($bruno, $data->people[(int) $bruno->getId()]);
+    }
+
+    public function testPlanCarriesTheLastProgressDeclaredButNoneAtZeroPercent(): void
+    {
+        $alice = $this->createUser();
+        $project = $this->createProject();
+        $declared = $this->createLot($project, 10, $alice);
+        $this->createTimeEntry($alice, $declared, '2026-10-05', 4);
+        $this->createProgress($declared, $alice, '2026-10-05', 40, 4);
+        $this->createProgress($declared, $alice, '2026-10-06', 50, 4);
+        $withdrawn = $this->createLot($project, 10, $alice);
+        $this->createProgress($withdrawn, $alice, '2026-10-05', 40, 0);
+        $this->createProgress($withdrawn, $alice, '2026-10-06', 0, 0);
+
+        $plans = $this->loader()->load()->plans;
+        $progress = $plans[(int) $declared->getId()]->progress;
+
+        self::assertNotNull($progress);
+        self::assertSame(50, $progress->percent);
+        self::assertSame('2026-10-06', $progress->declaredOn->format('Y-m-d'));
+        self::assertSame(4, $progress->remainingQuarters);
+        self::assertNull($plans[(int) $withdrawn->getId()]->progress);
+    }
+
+    public function testALeafBackToEstimateHasNoProgressInForce(): void
+    {
+        $alice = $this->createUser();
+        $leaf = $this->createLot($this->createProject(), 10, $alice);
+        $this->createProgress($leaf, $alice, '2026-10-05', 30, 0);
+        $leaf->setEstimateDays(null);
+        $this->entityManager()->flush();
+
+        self::assertNull($this->loader()->load()->plans[(int) $leaf->getId()]->progress);
     }
 
     public function testDaysEnteredCountADayOnceWhoeverEnteredTimeOnIt(): void

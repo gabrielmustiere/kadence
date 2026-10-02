@@ -18,6 +18,7 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
 | 2026-10-01 | Enrichir | D1, C1.4, C1.5, règle transverse « profil », ligne `tags-hierarchie`, note `charge-vs-capacite` | Sync post-livraison de la story 007-f-tags-hierarchie, cadrée hors backlog : tags des personnes (compétences techniques, expériences fonctionnelles, type d'équipe) tenus par la direction et visibles en composition d'équipe, manager informatif ; ligne ajoutée en V2 |
 | 2026-10-02 | Enrichir | C5.1, C7.4, règle transverse « pas de lecture individuelle », ligne `consomme-vs-estime` | Sync post-livraison de la story 010-f-fiche-projet : fiche de consultation de chaque projet, ouverte à tous, avec le consommé face à l'estimé (restant et dépassement cumulés séparément), une frise sur toute sa durée et la timeline de ses tronçons ; le temps saisi par chacun sur une feuille ou un tronçon est visible de tous depuis les stories 009 et 010 (tension avec le principe 2 assumée) |
 | 2026-10-02 | Enrichir | D1, C1.6, C6.3, règles transverses « profil » et « pas de lecture individuelle », ligne `fiche-collaborateur`, notes `jalons-dates-annoncees` et `charge-vs-capacite` | Sync post-livraison de la story 011-f-fiche-collaborateur, cadrée hors backlog : fiche de consultation de chaque personne, ouverte à tous (temps par projet, tronçons, affectations à venir), charge et profil réservés ; la règle « pas de lecture individuelle » devient « lecture individuelle sans comparaison » (contradiction avec le principe 2 assumée au cadrage) ; ligne ajoutée en V2 |
+| 2026-10-02 | Enrichir | C5.5, C6.2, P3, règles transverses « responsable » et « estimation déclarative », ligne `avancement-feuilles`, notes `alerte-derive`, `jalons-dates-annoncees` et `charge-vs-capacite` | Sync post-livraison de la story 012-f-avancement-feuilles, cadrée hors backlog : avancement en % d'une feuille estimée déclaré par un lead, la direction ou son responsable ; restant extrapolé du rythme observé et ancré à la déclaration, qui alimente la fin calculée ; coût projeté, avancement cumulé et historique sur la fiche projet ; ligne ajoutée en V2 |
 
 ## Domaines fonctionnels
 
@@ -72,11 +73,12 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
 - **C5.2** — Le système peut alerter le responsable quand le rythme de consommation d'une feuille dépasse le rythme prévu sur sa période.
 - **C5.3** — La direction peut consulter la liste des feuilles en dérive.
 - **C5.4** — La direction peut consulter l'écart entre estimation initiale et réalisé des feuilles clôturées (pour mesurer la qualité d'estimation).
+- **C5.5** — Un lead, la direction ou le responsable d'une feuille estimée peut en déclarer l'avancement (0 à 100 % par pas de 5 %) : son restant est alors extrapolé du rythme observé à la déclaration, puis diminué du temps saisi depuis ; la fiche projet montre le coût projeté face à l'estimation, l'avancement cumulé des lots et du projet, et l'historique des déclarations. Posée par la story `012-f-avancement-feuilles`.
 
 ### D6 — Prévision
 
 - **C6.1** — La direction et les leads peuvent consulter la charge face à la capacité de l'équipe, semaine par semaine.
-- **C6.2** — Le système peut calculer la date de fin projetée d'une feuille à partir de son restant (estimé − consommé) et de la capacité qui lui est affectée.
+- **C6.2** — Le système peut calculer la date de fin projetée d'une feuille à partir de son restant (estimé − consommé, ou issu de l'avancement déclaré depuis la story `012-f-avancement-feuilles`) et de la capacité qui lui est affectée.
 - **C6.3** — Un lead peut repérer les semaines où une personne est en surcharge, pour replanifier. La fiche d'une personne (story `011-f-fiche-collaborateur`) montre déjà sa charge jour par jour et ses jours au-delà de 100 % ; reste la vue de l'équipe.
 
 ### D7 — Roadmap
@@ -108,7 +110,7 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
 
 - **Acteur** : lead (et direction si une date doit bouger).
 - **Déclencheur** : alerte de rythme de consommation (C5.2).
-- **Étapes** : C5.2 → C5.1 → C4.4 (réaffecter) et/ou C7.2 (réannoncer).
+- **Étapes** : C5.2 → C5.1 → C5.5 (déclarer l'avancement) → C4.4 (réaffecter) et/ou C7.2 (réannoncer).
 - **État final** : la dérive est traitée ou assumée, et la date annoncée reflète la réalité.
 - **Fréquence** : hebdomadaire.
 
@@ -151,7 +153,7 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
 - **Direction** : tous les droits (équipe, projets, capacité, dates annoncées, indicateurs).
 - **Lead** : gère tous les projets, lots, sous-lots et affectations (pas seulement les siens — petite structure).
 - **Prod** : gère sa propre saisie et ses absences, consulte les projets et la roadmap.
-- **Responsable d'une feuille** : toute personne active, quel que soit son rôle ; il modifie le titre, la description et l'estimation de sa feuille, et rien d'autre de la structure du projet.
+- **Responsable d'une feuille** : toute personne active, quel que soit son rôle ; il modifie le titre, la description et l'estimation de sa feuille et en déclare l'avancement (story 012), et rien d'autre de la structure du projet.
 - **Profil (tags et manager)** : tenu par la direction seule. Les leads voient les tags dans la composition de l'équipe d'une feuille, et chacun voit les siens et son manager sur sa page Mon compte. Sur la fiche d'une personne, la direction et les leads voient son rôle et ses tags, la direction son manager, et chacun voit les siens sur sa propre fiche (story 011). Être manager n'ouvre aucun droit (principe 2).
 - **Lecture individuelle sans comparaison** (principe 2 de la vision) : le consommé est agrégé par feuille, lot ou projet ; la saisie jour par jour d'une personne (Ma semaine) n'est visible que par elle-même ; sur la roadmap et la fiche d'un projet, chacun voit le temps saisi par chaque personne sur une feuille ou un tronçon de travail (stories 009 et 010) ; la fiche d'une personne rend lisibles de tous son temps saisi par projet et ses tronçons de travail sur toute son histoire, y compris pour préparer un point individuel (story 011) ; aucune vue ne compare, ne classe ni ne mesure la productivité des personnes ; la charge individuelle n'est visible que des leads, de la direction et de la personne elle-même ; le taux de saisie n'est jamais présenté par personne.
 
@@ -167,7 +169,7 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
 - **Période prévue ≠ date annoncée** : la période prévue (de la date de début posée à la fin calculée sur le restant et la capacité de l'équipe) sert au rythme de consommation et à la planification ; la date annoncée est un engagement.
 - **Historisation des annonces** : une date annoncée n'est jamais écrasée ; chaque réannonce est conservée.
 - **Référence North Star** : un jalon est « tenu » s'il est livré à ± 1 semaine de sa **première** date annoncée. Réannoncer ne rattrape pas un jalon.
-- **Estimation déclarative, révisable sous condition** : l'estimation d'une feuille se modifie librement tant qu'aucun temps n'y est saisi ; ensuite, elle reste révisable mais jamais en dessous du consommé, et l'estimation en vigueur au premier temps saisi est conservée comme **estimation initiale** (référence de la qualité d'estimation). Le restant = estimé − consommé.
+- **Estimation déclarative, révisable sous condition** : l'estimation d'une feuille se modifie librement tant qu'aucun temps n'y est saisi ; ensuite, elle reste révisable mais jamais en dessous du consommé, et l'estimation en vigueur au premier temps saisi est conservée comme **estimation initiale** (référence de la qualité d'estimation). Le restant = estimé − consommé, sauf quand un avancement est déclaré sur la feuille : il est alors extrapolé du rythme observé à la déclaration (consommé × (100 − %) / %, ou estimé × (100 − %) sans temps saisi), puis diminué du temps saisi depuis ; réviser l'estimation ne le déplace plus (story 012).
 - **Hors projet** : support, maintenance, réunions, formation sont des projets comme les autres, estimés par période.
 
 ### Exigences réglementaires
@@ -209,7 +211,7 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
   - Pas encore cadrée
   - C5.2, C5.3 · P3, P5 · dép. `consomme-vs-estime`, `jalons-dates-annoncees` · Vision : irritant « dépassements tardifs », hypothèse H2
 
-### V2 — Court terme post-lancement (planifier, rendre la roadmap lisible) · `0/9 livrées`
+### V2 — Court terme post-lancement (planifier, rendre la roadmap lisible) · `0/10 livrées`
 
 - [ ] `capacite-equipe` — Permettre de déclarer temps de travail, temps partiels, absences, jours fériés et fermetures, pour connaître la capacité réelle.
   - Story `004-f-jours-feries` · **clôture en cours**
@@ -238,6 +240,9 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
 - [ ] `fiche-collaborateur` — Permettre à chacun de consulter la fiche d'une personne (travail saisi, affectations à venir, charge réservée aux leads et à la direction), pour composer les équipes en connaissant la disponibilité de chacun.
   - Story `011-f-fiche-collaborateur` · **clôture en cours**
   - C1.6, C6.3 · P2, P3 · dép. `saisie-quotidienne`, `date-fin-projetee`, `tags-hierarchie` · Vision : irritant « planning intenable », principe 2 (lecture individuelle sans comparaison)
+- [ ] `avancement-feuilles` — Permettre à un lead, à la direction ou au responsable de déclarer l'avancement d'une feuille, pour recaler sa fin calculée sur le rythme réellement observé et voir son coût projeté face à l'estimation.
+  - Story `012-f-avancement-feuilles` · **clôture en cours**
+  - C5.5, C6.2 · P3 · dép. `date-fin-projetee`, `consomme-vs-estime` · Vision : irritant « dépassements découverts trop tard », hypothèses H2 et H3
 
 ### V3 — Long terme · `0/2 livrées`
 
@@ -255,7 +260,7 @@ _(dérivé — recalculé à chaque passe, ne pas maintenir à la main)_
 ### Capacités par horizon
 
 - **MVP** — livrées : C1.1, C1.2, C1.3, C2.1, C2.2, C2.3 · planifiées : C2.4, C2.5, C3.1, C3.2, C3.3, C3.4, C3.5, C5.1, C5.2, C5.3, C7.2
-- **V2** — livrées : — · planifiées : C1.4, C1.5, C1.6, C2.6, C4.1, C4.2, C4.3, C4.4, C6.1, C6.2, C6.3, C7.1, C7.3
+- **V2** — livrées : — · planifiées : C1.4, C1.5, C1.6, C2.6, C4.1, C4.2, C4.3, C4.4, C5.5, C6.1, C6.2, C6.3, C7.1, C7.3
 - **V3** — livrées : — · planifiées : C5.4
 
 ### Capacités non couvertes (à challenger)
@@ -266,7 +271,7 @@ _(dérivé — recalculé à chaque passe, ne pas maintenir à la main)_
 
 - **P1 — Saisir sa journée** : entièrement supporté en MVP.
 - **P2 — Lancer un projet** : partiellement supporté en MVP (C2.1, C2.2, C2.3 livrées ; C2.4 à venir ; C4.4 et C6.2 en V2).
-- **P3 — Réagir à une dérive** : partiellement supporté en MVP (réaffectation C4.4 en V2 ; réannonce C7.2 disponible).
+- **P3 — Réagir à une dérive** : partiellement supporté en MVP (réaffectation C4.4 et avancement déclaré C5.5 en V2 ; réannonce C7.2 disponible).
 - **P4 — S'engager sur une date** : partiellement supporté en MVP (C6.1, C6.2, C7.1 en V2 ; annonce C2.4/C7.2 disponible).
 - **P5 — Revue de pilotage** : partiellement supporté en MVP (C7.1 et C6.1 en V2 ; dérives C5.3 et taux de saisie C3.5 disponibles).
 - **P6 — Ajuster la capacité** : partiellement supporté en MVP (C1.1/C1.2 livrées ; C4.1–C4.3 et C6.1 en V2).
@@ -277,11 +282,11 @@ _(dérivé — recalculé à chaque passe, ne pas maintenir à la main)_
 - `saisie-quotidienne` : le « moins d'une minute » est un critère d'acceptation à rendre mesurable ; penser à la saisie d'une journée passée (C3.3) sans alourdir le cas nominal. Web responsive (anti-objectif : pas d'app mobile native). La saisie se fait sur les feuilles : le découpage en sous-lots allonge la liste (principe 1 sous tension). Appliquer le gel puis la révision bornée de l'estimation, le blocage des suppressions dès qu'un temps est saisi, et trancher le sort des temps d'un lot qui reçoit son premier sous-lot (questions ouvertes de la story 002).
 - `rappel-saisie` : canal du rappel à définir (e-mail, notification…) sans intégration externe au départ ; le taux affiché doit rester global (principe 2). Les jours ouvrés d'une personne excluent les jours fériés de son calendrier (story 004) : ne pas rappeler ni compter un jour férié.
 - `capacite-equipe` : les jours fériés sont livrés par la story 004 ; restent le temps de travail détaillé, les absences et les fermetures. Les ajustements de jours fériés ne servent pas aux fermetures (hors scope de la story 004). La livraison de la story 004 cochera la ligne : la découper si l'avancement doit rester exact.
-- `jalons-dates-annoncees` : la période prévue est désormais calculée (story 006) ; reste la date annoncée, historisée, et la clôture. La première date annoncée fait foi pour la North Star. Le jalon est porté par une feuille. Sans clôture, une feuille terminée paraît « estimation atteinte » ou « en dépassement » sur la roadmap, une feuille en dépassement rend inconnue la fin de son projet, et « libre à partir du … » sur la fiche de chaque membre de son équipe (story 011).
-- `alerte-derive` : définir le « rythme prévu » (estimation étalée sur la période prévue, désormais calculée ?) et le seuil d'alerte ; la roadmap (story 006) signale déjà une feuille « en dépassement » et colore les jours saisis au-delà de l'estimation ; l'efficacité de l'alerte est exactement ce que teste H2. L'estimation étant révisable après saisie, trancher si le rythme se calcule sur l'estimation initiale ou révisée.
+- `jalons-dates-annoncees` : la période prévue est désormais calculée (story 006) ; reste la date annoncée, historisée, et la clôture. La première date annoncée fait foi pour la North Star. Le jalon est porté par une feuille. Sans clôture, une feuille terminée paraît « estimation atteinte » ou « en dépassement » sur la roadmap, une feuille en dépassement rend inconnue la fin de son projet, et « libre à partir du … » sur la fiche de chaque membre de son équipe (story 011). Déclarer son avancement (story 012) rend une fin à une feuille en dépassement ; « terminée à 100 % » n'est pas une clôture, et une feuille dont l'avancement est à actualiser rend elle aussi la fin de son projet inconnue.
+- `alerte-derive` : définir le « rythme prévu » (estimation étalée sur la période prévue, désormais calculée ?) et le seuil d'alerte ; la roadmap (story 006) signale déjà une feuille « en dépassement » et colore les jours saisis au-delà de l'estimation ; l'efficacité de l'alerte est exactement ce que teste H2. L'estimation étant révisable après saisie, trancher si le rythme se calcule sur l'estimation initiale ou révisée. La fiche projet montre déjà, pour une feuille dont l'avancement est déclaré (story 012), son coût projeté face à l'estimation : c'est le repli de H2, posé en coexistence avec le rythme de consommation ; l'alerte peut s'appuyer dessus.
 - `affectation-sous-projets` : C4.4 est posée par la story 006 (équipe et parts par feuille, refus de surcharge), rattachée à `date-fin-projetee`. La ligne est à fusionner ou à retirer ; une part variable dans le temps n'a pas été retenue.
 - `roadmap-interne` : la page Roadmap existe (story 006, frise des feuilles avec fin calculée). Reste à y poser la date annoncée à côté de la fin calculée (principe 4) et à lister les jalons à venir.
-- `charge-vs-capacite` : la story 006 calcule déjà la charge de chaque personne jour par jour (refus et signal « à replanifier » au-delà de 100 %), et la fiche d'une personne (story 011) l'affiche, avec ses surcharges et « libre à partir du … », aux leads, à la direction et à la personne. Reste la vue de l'équipe semaine par semaine. Une feuille en dépassement ne charge plus son équipe : à reprendre avec `consomme-vs-estime`. Les absences ne sont pas encore déduites de la capacité. La capacité par compétence ou par type d'équipe, écartée de la story 007, peut s'appuyer sur ses tags : trancher le cas d'une personne qui porte plusieurs compétences.
+- `charge-vs-capacite` : la story 006 calcule déjà la charge de chaque personne jour par jour (refus et signal « à replanifier » au-delà de 100 %), et la fiche d'une personne (story 011) l'affiche, avec ses surcharges et « libre à partir du … », aux leads, à la direction et à la personne. Reste la vue de l'équipe semaine par semaine. Une feuille en dépassement ne charge plus son équipe, sauf si son avancement est déclaré (story 012) : sa partie future la charge alors de nouveau. Les absences ne sont pas encore déduites de la capacité. La capacité par compétence ou par type d'équipe, écartée de la story 007, peut s'appuyer sur ses tags : trancher le cas d'une personne qui porte plusieurs compétences.
 - `acces-roles` : → tranché et livré (v0.1.0) : comptes e-mail / mot de passe gérés dans Kadence, sans SSO.
 - Avant déploiement du MVP : cadrage social et données personnelles (information des salariés, CSE selon l'effectif) — hors outil, mais bloquant pour le lancement.
 - Écarts non retenus à ce stade (vision) : simulation « et si », affectation suggérée.

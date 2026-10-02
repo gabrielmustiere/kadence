@@ -51,14 +51,42 @@ final class LotVoterTest extends TestCase
         self::assertSame(VoterInterface::ACCESS_DENIED, $this->vote($this->user(1), $this->leaf(null)));
     }
 
-    private function vote(User $user, Lot $lot, bool $isLead = false): int
+    public function testLeadMayDeclareTheProgressOfAnyEstimatedLeaf(): void
+    {
+        self::assertSame(VoterInterface::ACCESS_GRANTED, $this->vote($this->user(1), $this->leaf(null)->setEstimateDays(5), isLead: true, attribute: LotVoter::PROGRESS));
+    }
+
+    public function testActiveOwnerMayDeclareTheProgressOfTheirEstimatedLeaf(): void
+    {
+        $owner = $this->user(1);
+
+        self::assertSame(VoterInterface::ACCESS_GRANTED, $this->vote($owner, $this->leaf($owner)->setEstimateDays(5), attribute: LotVoter::PROGRESS));
+    }
+
+    public function testOthersMayNotDeclareTheProgressOfALeaf(): void
+    {
+        $owner = $this->user(1)->setActive(false);
+
+        self::assertSame(VoterInterface::ACCESS_DENIED, $this->vote($owner, $this->leaf($owner)->setEstimateDays(5), attribute: LotVoter::PROGRESS));
+        self::assertSame(VoterInterface::ACCESS_DENIED, $this->vote($this->user(2), $this->leaf($this->user(1))->setEstimateDays(5), attribute: LotVoter::PROGRESS));
+    }
+
+    public function testNobodyDeclaresTheProgressOfASplitLotOrOfALeafToEstimate(): void
+    {
+        $owner = $this->user(1);
+
+        self::assertSame(VoterInterface::ACCESS_DENIED, $this->vote($owner, $this->splitLot(), isLead: true, attribute: LotVoter::PROGRESS));
+        self::assertSame(VoterInterface::ACCESS_DENIED, $this->vote($owner, $this->leaf($owner), isLead: true, attribute: LotVoter::PROGRESS));
+    }
+
+    private function vote(User $user, Lot $lot, bool $isLead = false, string $attribute = LotVoter::EDIT): int
     {
         $accessDecisionManager = $this->createStub(AccessDecisionManagerInterface::class);
         $accessDecisionManager->method('decide')->willReturn($isLead);
         $token = $this->createStub(TokenInterface::class);
         $token->method('getUser')->willReturn($user);
 
-        return new LotVoter($accessDecisionManager)->vote($token, $lot, [LotVoter::EDIT]);
+        return new LotVoter($accessDecisionManager)->vote($token, $lot, [$attribute]);
     }
 
     private function leaf(?User $owner): Lot

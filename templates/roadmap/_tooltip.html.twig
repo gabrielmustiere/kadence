@@ -23,6 +23,10 @@
             <dd class="text-heading" data-test="roadmap-run-entered">{{ run.quarters|days }}</dd>
             <dt>Jours avec saisie</dt>
             <dd class="text-heading" data-test="roadmap-days-entered">{{ run.dayCount }}</dd>
+        {% elseif kind == 'future' and row.progress %}
+            <dt>Restant</dt>
+            <dd class="text-heading" data-test="roadmap-remaining">{{ row.remainingQuarters|days }}</dd>
+            {{ include('roadmap/_progress.html.twig') }}
         {% elseif kind == 'future' %}
             <dt>Restant</dt>
             <dd class="text-heading"><span data-test="roadmap-remaining">{{ row.remainingQuarters|days }}</span> sur {{ row.lot.estimateDays }} j estimés</dd>

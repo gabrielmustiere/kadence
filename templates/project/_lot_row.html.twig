@@ -37,6 +37,13 @@
             <span class="mt-0.5 block whitespace-nowrap text-xs text-body" data-test="initial-estimate">initiale {{ lot.initialEstimateDays }} j</span>
         {% endif %}
     </twig:Table:Cell>
+    <twig:Table:Cell data-test="lot-progress-cell">
+        {% if lot.leaf %}
+            {{ include('project/_progress.html.twig') }}
+        {% else %}
+            <span class="text-body">—</span>
+        {% endif %}
+    </twig:Table:Cell>
     <twig:Table:Cell>
         <div class="flex flex-wrap justify-end gap-2">
             {% if is_granted('LOT_EDIT', lot) %}

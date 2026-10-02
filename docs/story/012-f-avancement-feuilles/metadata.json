@@ -1,0 +1,46 @@
+{
+  "version": 2,
+  "title": "Déclarer l'avancement d'une feuille pour recaler sa fin calculée sur le rythme réellement observé",
+  "created": "2026-10-02",
+  "updated": "2026-10-02",
+  "tags": [
+    "avancement"
+  ],
+  "changelog": [
+    {
+      "date": "2026-10-02",
+      "type": "Création",
+      "description": "Pitch initial rédigé : avancement facultatif en % (pas de 5 %) déclaré sur une feuille estimée par les leads, la direction et son responsable depuis la page de gestion du projet ; restant extrapolé du rythme observé (saisi × (100 − %) / %, ou estimé × (100 − %) sans temps saisi) ancré à la déclaration puis diminué des temps saisis ensuite, qui alimente la fin calculée de la story 006 ; estimation révisée sans effet sur la fin ; signaux « terminée à 100 % » et « avancement à actualiser » (fin inconnue) ; dépassement qui retrouve une fin ; coût projeté face à l'estimation et historique des déclarations sur la fiche projet (lecture seule conservée), cumul pondéré par l'estimation, infobulle de la roadmap ; H2 sous tension assumée en coexistence, à reformuler par /vision ; cadrée hors backlog."
+    },
+    {
+      "date": "2026-10-02",
+      "type": "Planification",
+      "description": "Plan technique validé : entité d'historique LotProgress (table lot_progress, unique lot_id + declared_on, saisi et restant ancrés, rien sur Lot) et LotProgressRepository (findCurrentByLot, findForProjectByLot, moveToLot, deleteForLots, deleteForProject) ; formule unique dans le modèle pur LeafProgress (anchoredRemaining, remainingAfter), partagée par Scheduler et ProjectRollup ; LeafSchedule et RoadmapRow découplent le dépassement (overrunQuarters explicite, restant jamais négatif, estimateExhausted → exhausted) ; signaux Completed et ProgressToRefresh dans RoadmapSignal ; LotProgressManager::declare() (ancrage, remplacement du jour, refus de 100 % sans temps via LotProgressRefusedException) ; LotVoter::PROGRESS ; action POST app_lot_progress avec CSRF et formulaire inline sur la page de gestion ; colonnes Avancement et Projeté, section « Avancements déclarés » sur la fiche projet, infobulle et récapitulatif de la roadmap ; transfert des déclarations par ProjectManager ; pitch annoté (règle 16 : 100 % refusé sans temps, règle 22 : restant issu de l'avancement sur la fiche projet, règle 7 de la story 010 amendée ; deux critères ajoutés ; questions ouvertes tranchées)."
+    },
+    {
+      "date": "2026-10-02",
+      "type": "Implémentation",
+      "description": "Sept étapes du plan livrées (LotProgress, LotProgressRepository, migration Version20261002124240 et LeafProgress ; LotProgressManager, LotVoter::PROGRESS et transfert des déclarations par ProjectManager ; restant issu de l'avancement dans Scheduler et ScheduleLoader, dépassement découplé dans LeafSchedule et RoadmapRow, signaux Completed et ProgressToRefresh ; ProjectRollup avec restant, projeté et avancement cumulé ; colonne Avancement et action app_lot_progress sur la page de gestion ; colonnes Avancement et Projeté, section « Avancements déclarés », infobulle et récapitulatif de la roadmap ; démo et E2E) ; 481 tests PHPUnit et 45 E2E verts, lint propre ; écarts : pas de 5 % validé par LotProgressManager (flash) au lieu d'un 400, deleteForLots() réutilisé au lieu de deleteForProject() et suppressions transactionnelles, detach() extrait de deleteLot() et leafSummary() de summarizeLeaf() (complexité PHPStan), cumul pondéré porté par LeafProgress::pointsOf() et weightedPercent(), partiel roadmap/_progress.html.twig partagé par l'infobulle et le récapitulatif, colonne de la page de gestion testée dans LotProgressControllerTest plutôt que ProjectControllerTest, trois tests existants adaptés à la nouvelle API du dépassement, une feuille déclarée à 100 % ne retrouve jamais de restant (règle 16 du pitch préférée à la règle 11, repéré à la vérification visuelle) ; questions ouvertes du plan tranchées (select prérempli à 0 %, cumul « — » sans feuille estimée)."
+    },
+    {
+      "date": "2026-10-02",
+      "type": "Review",
+      "description": "Revue du diff : 0 bloquant, 1 important (avancement resté en vigueur sur une feuille repassée « à estimer »), 4 mineurs (écart projeté calculé dans deux templates, déclarations simultanées le même jour, trois critères d'acceptation sans test direct, libellé du critère 4). Statut : CORRECTIONS REQUISES."
+    },
+    {
+      "date": "2026-10-02",
+      "type": "Review",
+      "description": "Findings corrigés pendant la passe : avancement mis en vigueur sur une feuille estimée seulement (ScheduleLoader, ProjectRollup), écart projeté porté par LotSummary::projectedGapQuarters() et RoadmapRow::projectedGapQuarters(), déclaration concurrente du jour refusée avec message (LotProgressRefusedException::declaredMeanwhile()), trois critères d'acceptation couverts dans RoadmapBuilderTest (surcharge passive, signal levé, bascule), critère 4 du pitch reformulé ; 487 tests PHPUnit, progress.spec.ts et roadmap.spec.ts verts, lint propre. Statut : PRÊT À COMMITER."
+    },
+    {
+      "date": "2026-10-02",
+      "type": "Report",
+      "description": "Report rédigé : conformité 93 %, 20/20 critères d'acceptation, neuf écarts volontaires (pas de 5 % validé par le service, deleteForLots() réutilisé et suppressions transactionnelles, detach() et leafSummary() extraits, cumul et écart projeté portés par LeafProgress et les résumés, rien ne revient après 100 % (règle 16 préférée à la règle 11), avancement en vigueur sur une feuille estimée seulement, déclaration concurrente refusée, trois tests existants adaptés à overrunQuarters, colonne testée dans LotProgressControllerTest), deux ajouts (partiel roadmap/_progress.html.twig, test unitaire du refus concurrent), rien de non implémenté ; dette : vision, backlog et règle 7 de la story 010 à réaligner par /sync, boutons d'action sur trois lignes de la page de gestion, critère 9 sans test isolé ; suite E2E complète non rejouée après la review."
+    },
+    {
+      "date": "2026-10-02",
+      "type": "Sync",
+      "description": "Pitch réaligné : règle 1 (feuille repassée « à estimer » sans avancement en vigueur), règle 7 (déclaration concurrente refusée), règle 11 (exception de la feuille à 100 %), règle 16 (aucun restant rendu après une correction), alignement vision annoté ; plan réaligné : approche (refus et portée de l'avancement), mécanismes (deleteForProject() retiré, transactions, messages de refus), modèles calculés (projectedGapQuarters(), pointsOf(), weightedPercent()), périmètre (templates/roadmap/_progress.html.twig et tests/Unit/Service/LotProgressManagerTest.php ajoutés, ProjectControllerTest retiré, rôles mis à jour), stratégie de test, critères de sortie cochés et annotés ; product-backlog : C5.5 ajoutée, C6.2, P3, règles « responsable » et « estimation déclarative » éditées, ligne avancement-feuilles ajoutée en V2 (clôture en cours), notes alerte-derive, jalons-dates-annoncees et charge-vs-capacite ; vision : hypothèse H2 et audience des leads éditées ; stack inchangée."
+    }
+  ]
+}

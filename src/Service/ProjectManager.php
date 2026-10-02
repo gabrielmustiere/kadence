@@ -12,6 +12,7 @@ use App\Entity\Project;
 use App\Entity\User;
 use App\Exception\LotDepthException;
 use App\Exception\LotHasTimeEntriesException;
+use App\Repository\LotProgressRepository;
 use App\Repository\TimeEntryRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -20,6 +21,7 @@ final readonly class ProjectManager
     public function __construct(
         private EntityManagerInterface $entityManager,
         private TimeEntryRepository $timeEntryRepository,
+        private LotProgressRepository $lotProgressRepository,
     ) {
     }
 
@@ -46,8 +48,11 @@ final readonly class ProjectManager
             throw new LotHasTimeEntriesException($project->getTitle());
         }
 
-        $this->entityManager->remove($project);
-        $this->entityManager->flush();
+        $this->entityManager->wrapInTransaction(function () use ($project): void {
+            $this->lotProgressRepository->deleteForLots($project->getLots()->getValues());
+            $this->entityManager->remove($project);
+            $this->entityManager->flush();
+        });
     }
 
     public function addLot(Project $project, LotInput $input): Lot
@@ -64,7 +69,7 @@ final readonly class ProjectManager
     /**
      * The estimate, owner, start date and team of a lot receiving its first sub-lot move to that sub-lot: the input
      * is expected to carry them (see LotInput::forSubLotOf()), and the lot, no longer a leaf, loses them. Its time
-     * entries and initial estimate move along.
+     * entries, progress declarations and initial estimate move along.
      */
     public function addSubLot(Lot $parent, LotInput $input): Lot
     {
@@ -82,11 +87,14 @@ final readonly class ProjectManager
         }
         $this->clearLeafData($parent);
 
-        $this->entityManager->wrapInTransaction(function () use ($parent, $subLot, $hasTime): void {
+        $this->entityManager->wrapInTransaction(function () use ($parent, $subLot, $takesOver, $hasTime): void {
             $this->entityManager->persist($subLot);
             $this->entityManager->flush();
             if ($hasTime) {
                 $this->timeEntryRepository->moveToLot($parent, $subLot);
+            }
+            if ($takesOver) {
+                $this->lotProgressRepository->moveToLot($parent, $subLot);
             }
         });
 
@@ -101,7 +109,7 @@ final readonly class ProjectManager
 
     /**
      * Removing the last sub-lot of a lot turns the lot back into a leaf that takes over the sub-lot's estimate, owner,
-     * start date and team.
+     * start date, team and progress declarations.
      */
     public function deleteLot(Lot $lot): void
     {
@@ -109,20 +117,28 @@ final readonly class ProjectManager
             throw new LotHasTimeEntriesException($lot->getTitle());
         }
 
-        $parent = $lot->getParent();
-        if (null !== $parent) {
-            $parent->removeChild($lot);
-            if ($parent->isLeaf()) {
-                $parent
-                    ->setEstimateDays($lot->getEstimateDays())
-                    ->setOwner($lot->getOwner())
-                    ->setInitialEstimateDays($lot->getInitialEstimateDays())
-                    ->setStartDate($lot->getStartDate());
-                foreach ($lot->getMembers() as $member) {
-                    new LotMember($parent, $member->getUser(), $member->getShare());
-                }
+        $takenBackBy = $this->detach($lot);
+
+        $this->entityManager->wrapInTransaction(function () use ($lot, $takenBackBy): void {
+            if (null !== $takenBackBy) {
+                $this->lotProgressRepository->moveToLot($lot, $takenBackBy);
+            } else {
+                $this->lotProgressRepository->deleteForLots([$lot, ...$lot->getChildren()->getValues()]);
             }
-        }
+            $this->entityManager->remove($lot);
+            $this->entityManager->flush();
+        });
+    }
+
+    /**
+     * Takes the lot and its sub-lots out of the project and the lot out of its parent.
+     *
+     * @return Lot|null the parent turned back into a leaf, if any
+     */
+    private function detach(Lot $lot): ?Lot
+    {
+        $parent = $lot->getParent();
+        $parent?->removeChild($lot);
 
         $project = $lot->getProject();
         foreach ($lot->getChildren() as $child) {
@@ -130,8 +146,20 @@ final readonly class ProjectManager
         }
         $project->removeLot($lot);
 
-        $this->entityManager->remove($lot);
-        $this->entityManager->flush();
+        if (null === $parent || !$parent->isLeaf()) {
+            return null;
+        }
+
+        $parent
+            ->setEstimateDays($lot->getEstimateDays())
+            ->setOwner($lot->getOwner())
+            ->setInitialEstimateDays($lot->getInitialEstimateDays())
+            ->setStartDate($lot->getStartDate());
+        foreach ($lot->getMembers() as $member) {
+            new LotMember($parent, $member->getUser(), $member->getShare());
+        }
+
+        return $parent;
     }
 
     private function applyProject(Project $project, ProjectInput $input): void

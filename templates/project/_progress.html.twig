@@ -1,0 +1,26 @@
+{#
+    The progress of a leaf on the page of its project: the form to declare it for whoever may, the progress in force
+    otherwise. Expects `summary`, the summary of the leaf.
+#}
+{% set lot = summary.lot %}
+{% set declaration = summary.progress %}
+{% if is_granted('LOT_PROGRESS', lot) %}
+    <form method="post" action="{{ path('app_lot_progress', {id: lot.id}) }}" class="flex items-center gap-2" data-test="progress-form">
+        <input type="hidden" name="_token" value="{{ csrf_token('lot-progress-' ~ lot.id) }}">
+        <label for="progress-{{ lot.id }}" class="sr-only">Avancement de « {{ lot.title }} »</label>
+        <twig:Select id="progress-{{ lot.id }}" name="percent" class="w-24 py-1.5" data-test="progress-select">
+            {% for percent in constant('App\\Entity\\LotProgress::PERCENTS') %}
+                <option value="{{ percent }}" {{ percent == (declaration.percent ?? 0) ? 'selected' }}>{{ percent }} %</option>
+            {% endfor %}
+        </twig:Select>
+        <twig:Button type="submit" size="xs" variant="outline" data-test="progress-submit">Enregistrer</twig:Button>
+    </form>
+    {% if declaration %}
+        <span class="mt-0.5 block whitespace-nowrap text-xs text-body" data-test="progress-declared-on">déclaré le {{ declaration.declaredOn|date('d/m') }}</span>
+    {% endif %}
+{% elseif declaration and declaration.percent > 0 %}
+    <span class="whitespace-nowrap" data-test="progress">{{ declaration.percent }} %</span>
+    <span class="mt-0.5 block whitespace-nowrap text-xs text-body" data-test="progress-declared-on">au {{ declaration.declaredOn|date('d/m') }}</span>
+{% else %}
+    <span class="text-body" data-test="progress-none">—</span>
+{% endif %}

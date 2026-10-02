@@ -12,7 +12,8 @@ use App\Model\Schedule\ScheduleResult;
 
 /**
  * Works out the chronology of each leaf: the past is the time entered, the future spreads the remaining time over the
- * capacity of the team, working day after working day, from tomorrow or from the start date if later.
+ * capacity of the team, working day after working day, from tomorrow or from the start date if later. The remaining
+ * time follows the progress declared on the leaf, if any.
  */
 final readonly class Scheduler
 {
@@ -35,7 +36,8 @@ final readonly class Scheduler
     public function scheduleLeaf(LeafPlan $plan, DailyCapacity $capacity, \DateTimeImmutable $today): LeafSchedule
     {
         $today = $today->setTime(0, 0);
-        $remaining = null === $plan->estimateQuarters ? null : $plan->estimateQuarters - $plan->consumedQuarters;
+        $remaining = self::remainingOf($plan);
+        $overrun = null === $plan->estimateQuarters ? 0 : max(0, $plan->consumedQuarters - $plan->estimateQuarters);
         $teamToReview = array_any($plan->members, static fn (PlannedMember $member): bool => !$capacity->isActive($member->userId));
 
         $schedule = static fn (?\DateTimeImmutable $futureFrom = null, ?\DateTimeImmutable $futureTo = null, bool $lateStart = false, bool $exhausted = false, bool $toReview = false): LeafSchedule => new LeafSchedule(
@@ -51,6 +53,8 @@ final readonly class Scheduler
             $lateStart,
             $exhausted,
             $teamToReview || $toReview,
+            $overrun,
+            $plan->progress,
         );
 
         if (null === $remaining || null === $plan->startDate || [] === $plan->members) {
@@ -58,7 +62,7 @@ final readonly class Scheduler
         }
 
         $lateStart = $plan->startDate < $today && null === $plan->firstEntryDay;
-        if ($remaining <= 0) {
+        if (0 === $remaining) {
             return $schedule(lateStart: $lateStart, exhausted: true);
         }
 
@@ -82,6 +86,18 @@ final readonly class Scheduler
         }
 
         return $schedule($first, null, $lateStart, toReview: true);
+    }
+
+    /**
+     * What is left to do: from the progress in force when one is declared, else the estimate minus the consumed time.
+     */
+    private static function remainingOf(LeafPlan $plan): ?int
+    {
+        if (null === $plan->estimateQuarters) {
+            return null;
+        }
+
+        return max(0, $plan->progress?->remainingAfter($plan->consumedQuarters) ?? $plan->estimateQuarters - $plan->consumedQuarters);
     }
 
     /**
