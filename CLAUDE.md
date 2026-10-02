@@ -65,6 +65,7 @@ make playwright                           # Playwright (E2E, headless)
 make playwright-file tests/e2e/login.spec.ts  # Un test E2E ciblé
 make lint                                 # CS-Fixer (dry-run) + PHPStan — lecture seule
 make quality                              # CS-Fixer (corrige) + PHPStan + build
+./deploy.sh                               # Déploie main sur kadence.mustiere.fr (⚠️ reset base + fixtures)
 ```
 
 ## Conventions

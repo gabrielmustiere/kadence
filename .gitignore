@@ -46,3 +46,7 @@ node_modules
 /playwright/.auth/
 .playwright-mcp
 /drivers/
+
+# Déploiement : secrets et cible locale (voir les .example)
+/environments/prod/.env
+/environments/prod/.env.script

@@ -72,6 +72,18 @@ Toutes les opérations courantes passent par `make`. Lancez `make help` pour la 
 
 - `admin@example.com` / `password` (ROLE_USER)
 
+## Déploiement
+
+Démo publique sur https://kadence.mustiere.fr, déployée sur `srv-lwskvm` (`31.207.38.222`) : conteneur FrankenPHP (`docker/Dockerfile`) derrière le Caddy de l'hôte, base SQLite dans un volume Docker.
+
+```bash
+cp environments/prod/.env.example environments/prod/.env              # puis renseigner APP_SECRET
+cp environments/prod/.env.script.example environments/prod/.env.script
+./deploy.sh
+```
+
+Le script déploie la branche `main` poussée sur GitHub (pas le working tree local). **La base est réinitialisée avec les fixtures à chaque déploiement** (cible `seed` de l'image, seule à embarquer les dépendances de dev) : toute saisie faite sur la démo est perdue.
+
 ## Design system & composants
 
 Le projet embarque le design system **"Paper"** — tokens (couleurs, typographies Roboto/Montserrat/PT Mono, radius, spacing) documentés dans [`DESIGN.md`](DESIGN.md), variables `@theme` exposées dans `assets/styles/app.css`.

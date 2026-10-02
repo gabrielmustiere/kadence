@@ -19,12 +19,21 @@ services:
     App\:
         resource: '../src/'
 
-    DataFixtures\:
-        resource: '../fixtures'
-
     # SQLite enforces foreign keys only when asked to, on each connection. SQLite only, like
     # App\EventListener\DeferForeignKeysInMigrations: both go when the database changes.
     Doctrine\DBAL\Driver\AbstractSQLiteDriver\Middleware\EnableForeignKeys: ~
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+# DataFixtures\ n'est autoloadé qu'avec les dépendances de dev (autoload-dev) : absent de l'image de prod.
+when@dev: &fixtures
+    services:
+        _defaults:
+            autowire: true
+            autoconfigure: true
+
+        DataFixtures\:
+            resource: '../fixtures'
+
+when@test: *fixtures

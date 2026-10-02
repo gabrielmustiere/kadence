@@ -1,0 +1,44 @@
+name: kadence
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
+services:
+
+  app:
+    build:
+      context: ../..
+      dockerfile: docker/Dockerfile
+      target: app
+    ports:
+      - "127.0.0.1:9017:80"
+    env_file:
+      - .env
+    volumes:
+      - data:/app/var/data
+    restart: always
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "-o", "/dev/null", "http://127.0.0.1/login"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  seed:
+    build:
+      context: ../..
+      dockerfile: docker/Dockerfile
+      target: seed
+    profiles: [seed]
+    env_file:
+      - .env
+    volumes:
+      - data:/app/var/data
+    logging: *default-logging
+
+volumes:
+  data:
