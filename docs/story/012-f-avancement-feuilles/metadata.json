@@ -41,6 +41,15 @@
       "date": "2026-10-02",
       "type": "Sync",
       "description": "Pitch réaligné : règle 1 (feuille repassée « à estimer » sans avancement en vigueur), règle 7 (déclaration concurrente refusée), règle 11 (exception de la feuille à 100 %), règle 16 (aucun restant rendu après une correction), alignement vision annoté ; plan réaligné : approche (refus et portée de l'avancement), mécanismes (deleteForProject() retiré, transactions, messages de refus), modèles calculés (projectedGapQuarters(), pointsOf(), weightedPercent()), périmètre (templates/roadmap/_progress.html.twig et tests/Unit/Service/LotProgressManagerTest.php ajoutés, ProjectControllerTest retiré, rôles mis à jour), stratégie de test, critères de sortie cochés et annotés ; product-backlog : C5.5 ajoutée, C6.2, P3, règles « responsable » et « estimation déclarative » éditées, ligne avancement-feuilles ajoutée en V2 (clôture en cours), notes alerte-derive, jalons-dates-annoncees et charge-vs-capacite ; vision : hypothèse H2 et audience des leads éditées ; stack inchangée."
+    },
+    {
+      "date": "2026-10-02",
+      "type": "Livraison",
+      "description": "Story livrée par le commit 453c957 (feat(lot)) ; suite verte avant commit : 487 tests PHPUnit, lint propre, progress.spec.ts et roadmap.spec.ts (45 E2E verts à l'implémentation)."
     }
-  ]
+  ],
+  "delivery": {
+    "release": null,
+    "commit": "453c957"
+  }
 }
