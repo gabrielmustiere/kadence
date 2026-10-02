@@ -37,6 +37,15 @@
       "date": "2026-10-02",
       "type": "Sync",
       "description": "Plan réaligné sur le livré : découpage en tronçons dans RoadmapRunCutter et RoadmapTeamLine::forLeaf() (Approche retenue, Mécanismes mobilisés, Alternatives écartées, Périmètre, Ordre d'exécution, Risques), propriété ProjectRoadmap::project, TimelineEntry::ofLeaves(), _consumption_row.html.twig, Week::tryFromIso() et LotController, lien-icône superposé hors du <summary>, test de l'icône dans RoadmapProjectControllerTest, stratégie de test complétée (largeur minimale, projet de 57 semaines, WeekTest) ; critères de sortie attestés cochés ; pitch inchangé ; product-backlog : ligne consomme-vs-estime en clôture en cours, C5.1 annotée, C7.4 ajoutée, règle transverse « pas de lecture individuelle » éditée (temps par personne et par tronçon visible de tous depuis les stories 009 et 010) ; stack et vision inchangées."
+    },
+    {
+      "date": "2026-10-02",
+      "type": "Livraison",
+      "description": "Story livrée par le commit a92b42a (feat(roadmap)) ; suite complète verte avant commit : 395 tests PHPUnit et 42 E2E, lint propre."
     }
-  ]
+  ],
+  "delivery": {
+    "release": null,
+    "commit": "a92b42a"
+  }
 }
