@@ -11,18 +11,19 @@ use App\Model\Schedule\LeafProgress;
 final readonly class LotSummary
 {
     /**
-     * @param list<LotSummary> $children
-     * @param int              $toEstimate        leaves without an estimate, the lot itself included when it is a leaf
-     * @param int              $toAssign          leaves without an owner
-     * @param int              $toReassign        leaves whose owner has been deactivated
-     * @param bool             $hasTime           time is entered on the lot or one of its sub-lots
-     * @param int              $remainingQuarters what is left to do on its leaves, from their progress when one is in
-     *                                            force, never offset by an overrun
-     * @param int              $overrunQuarters   what is entered beyond the estimate of its leaves, never offset by what is left
-     * @param int              $progressPoints    the progress of its estimated leaves weighted by their estimate, in
-     *                                            percent × quarters
-     * @param LotProgress|null $progress          the last progress declared on the leaf
-     * @param int|null         $projectedQuarters what the leaf will have cost once done, when a progress is in force
+     * @param list<LotSummary>  $children
+     * @param int               $toEstimate        leaves without an estimate, the lot itself included when it is a leaf
+     * @param int               $toAssign          leaves without an owner
+     * @param int               $toReassign        leaves whose owner has been deactivated
+     * @param bool              $hasTime           time is entered on the lot or one of its sub-lots
+     * @param int               $remainingQuarters what is left to do on its leaves, from their progress when one is in
+     *                                             force, never offset by an overrun
+     * @param int               $overrunQuarters   what is entered beyond the estimate of its leaves, never offset by what is left
+     * @param int               $progressPoints    the progress of its estimated leaves weighted by their estimate, in
+     *                                             percent × quarters
+     * @param LotProgress|null  $progress          the last progress declared on the leaf, none while « à estimer »
+     * @param int|null          $projectedQuarters what the leaf will have cost once done, when a progress is in force
+     * @param list<LotProgress> $declarations      every progress declared on the leaf, the latest first
      */
     public function __construct(
         public Lot $lot,
@@ -38,6 +39,7 @@ final readonly class LotSummary
         public int $progressPoints = 0,
         public ?LotProgress $progress = null,
         public ?int $projectedQuarters = null,
+        public array $declarations = [],
     ) {
     }
 

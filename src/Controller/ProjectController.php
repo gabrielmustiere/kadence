@@ -9,9 +9,7 @@ use App\Entity\Project;
 use App\Entity\User;
 use App\Exception\LotHasTimeEntriesException;
 use App\Form\ProjectType;
-use App\Repository\LotProgressRepository;
 use App\Repository\ProjectRepository;
-use App\Repository\TimeEntryRepository;
 use App\Service\ProjectManager;
 use App\Service\ProjectRollup;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
@@ -39,7 +37,7 @@ final class ProjectController extends AbstractController
         #[MapQueryParameter(name: 'mes-responsabilites')] bool $mine = false,
     ): Response {
         return $this->render('project/index.html.twig', [
-            'projects' => array_map($this->projectRollup->summarize(...), $projectRepository->findAllForList($mine ? $user : null)),
+            'projects' => array_map($this->projectRollup->outline(...), $projectRepository->findAllForList($mine ? $user : null)),
             'mine' => $mine,
         ]);
     }
@@ -63,10 +61,10 @@ final class ProjectController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_project_show', requirements: ['id' => '\d+'], methods: ['GET'])]
-    public function show(#[MapEntity(expr: 'repository.findOneForDetail(id)')] Project $project, TimeEntryRepository $timeEntryRepository, LotProgressRepository $lotProgressRepository): Response
+    public function show(#[MapEntity(expr: 'repository.findOneForDetail(id)')] Project $project): Response
     {
         return $this->render('project/show.html.twig', [
-            'summary' => $this->projectRollup->summarize($project, $timeEntryRepository->sumQuartersByLot($project), $lotProgressRepository->findForProjectByLot($project)),
+            'summary' => $this->projectRollup->summarize($project),
         ]);
     }
 

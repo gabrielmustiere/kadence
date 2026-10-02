@@ -7,8 +7,6 @@ namespace App\Controller;
 use App\Entity\Project;
 use App\Model\Roadmap\RoadmapWindow;
 use App\Model\Week;
-use App\Repository\LotProgressRepository;
-use App\Repository\TimeEntryRepository;
 use App\Service\ProjectRollup;
 use App\Service\RoadmapBuilder;
 use Psr\Clock\ClockInterface;
@@ -47,16 +45,11 @@ final class RoadmapController extends AbstractController
     public function project(
         #[MapEntity(expr: 'repository.findOneForDetail(id)')] Project $project,
         ProjectRollup $projectRollup,
-        TimeEntryRepository $timeEntryRepository,
-        LotProgressRepository $lotProgressRepository,
         #[MapQueryParameter] ?string $roadmap = null,
     ): Response {
-        $declarations = $lotProgressRepository->findForProjectByLot($project);
-
         return $this->render('roadmap/project.html.twig', [
             'page' => $this->roadmapBuilder->buildProject($project, $this->isGranted('ROLE_LEAD')),
-            'summary' => $projectRollup->summarize($project, $timeEntryRepository->sumQuartersByLot($project), $declarations),
-            'declarations' => $declarations,
+            'summary' => $projectRollup->summarize($project),
             'back' => null === $roadmap ? null : Week::tryFromIso($roadmap),
         ]);
     }

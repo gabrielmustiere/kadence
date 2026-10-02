@@ -8,6 +8,8 @@ use App\Entity\Lot;
 use App\Entity\LotProgress;
 use App\Entity\Project;
 use App\Entity\User;
+use App\Repository\LotProgressRepository;
+use App\Repository\TimeEntryRepository;
 use App\Service\ProjectRollup;
 use PHPUnit\Framework\TestCase;
 
@@ -21,7 +23,7 @@ final class ProjectRollupTest extends TestCase
         $this->lot($project, 5, $this->user(), $split);
         $this->lot($project, 10, $this->user());
 
-        $summary = new ProjectRollup()->summarize($project);
+        $summary = $this->rollup()->outline($project);
 
         self::assertSame(18, $summary->estimateDays);
         self::assertCount(2, $summary->lots);
@@ -39,7 +41,7 @@ final class ProjectRollupTest extends TestCase
         $this->lot($project, 3, $this->user(), $split);
         $this->lot($project, null, $this->user(), $split);
 
-        $summary = new ProjectRollup()->summarize($project);
+        $summary = $this->rollup()->outline($project);
 
         self::assertSame(3, $summary->estimateDays);
         self::assertSame(1, $summary->toEstimate);
@@ -55,7 +57,7 @@ final class ProjectRollupTest extends TestCase
         $this->lot($project, 2, $this->user(active: false));
         $this->lot($project, 2, $this->user());
 
-        $summary = new ProjectRollup()->summarize($project);
+        $summary = $this->rollup()->outline($project);
 
         self::assertSame(1, $summary->toAssign);
         self::assertSame(1, $summary->toReassign);
@@ -68,15 +70,30 @@ final class ProjectRollupTest extends TestCase
         $split = $this->lot($project, 40, $this->user());
         $this->lot($project, 3, $this->user(), $split);
 
-        $summary = new ProjectRollup()->summarize($project);
+        $summary = $this->rollup()->outline($project);
 
         self::assertSame(3, $summary->estimateDays);
         self::assertSame(0, $summary->toAssign);
     }
 
+    public function testAnOutlineReadsNeitherTheTimeEnteredNorTheProgressDeclared(): void
+    {
+        $project = new Project()->setTitle('Kadence');
+        $this->lot($project, 10, $this->user(), id: 1);
+        $timeEntryRepository = $this->createMock(TimeEntryRepository::class);
+        $timeEntryRepository->expects($this->never())->method('sumQuartersByLot');
+        $lotProgressRepository = $this->createMock(LotProgressRepository::class);
+        $lotProgressRepository->expects($this->never())->method('findForProjectByLot');
+
+        $outline = new ProjectRollup($timeEntryRepository, $lotProgressRepository)->outline($project);
+
+        self::assertSame(10, $outline->estimateDays);
+        self::assertSame([0, 0], [$outline->enteredQuarters, $outline->progressPoints]);
+    }
+
     public function testProjectWithoutLotIsUnsplit(): void
     {
-        $summary = new ProjectRollup()->summarize(new Project()->setTitle('Portail'));
+        $summary = $this->rollup()->outline(new Project()->setTitle('Portail'));
 
         self::assertTrue($summary->isUnsplit());
         self::assertSame(0, $summary->estimateDays);
@@ -89,8 +106,8 @@ final class ProjectRollupTest extends TestCase
         $split = $this->lot($project, null, null);
         $this->lot($project, 3, $this->user(), $split);
 
-        $withoutTime = new ProjectRollup()->summarize($project);
-        $withTime = new ProjectRollup()->summarize($project, [0 => 2]);
+        $withoutTime = $this->rollup()->summarize($project);
+        $withTime = $this->rollup([0 => 2])->summarize($project);
 
         self::assertFalse($withoutTime->hasTime);
         self::assertFalse($withoutTime->lots[0]->hasTime);
@@ -105,7 +122,7 @@ final class ProjectRollupTest extends TestCase
         $this->lot($project, 10, $this->user(), id: 1);
         $this->lot($project, 8, $this->user(), id: 2);
 
-        $summary = new ProjectRollup()->summarize($project, [1 => 40, 2 => 12]);
+        $summary = $this->rollup([1 => 40, 2 => 12])->summarize($project);
 
         [$done, $started] = $summary->lots;
         self::assertSame([40, 0, 0], [$done->enteredQuarters, $done->remainingQuarters, $done->overrunQuarters]);
@@ -121,7 +138,7 @@ final class ProjectRollupTest extends TestCase
         $this->lot($project, 5, $this->user(), $split, 3);
         $this->lot($project, 4, $this->user(), id: 4);
 
-        $summary = new ProjectRollup()->summarize($project, [2 => 40, 3 => 8, 4 => 4]);
+        $summary = $this->rollup([2 => 40, 3 => 8, 4 => 4])->summarize($project);
 
         $lot = $summary->lots[0];
         self::assertSame([0, 20], [$lot->children[0]->remainingQuarters, $lot->children[0]->overrunQuarters]);
@@ -135,7 +152,7 @@ final class ProjectRollupTest extends TestCase
         $project = new Project()->setTitle('Kadence');
         $this->lot($project, null, $this->user(), id: 1);
 
-        $summary = new ProjectRollup()->summarize($project, [1 => 6]);
+        $summary = $this->rollup([1 => 6])->summarize($project);
 
         self::assertSame([6, 0, 0], [$summary->lots[0]->enteredQuarters, $summary->lots[0]->remainingQuarters, $summary->lots[0]->overrunQuarters]);
         self::assertTrue($summary->isPartial());
@@ -147,10 +164,10 @@ final class ProjectRollupTest extends TestCase
         $slow = $this->lot($project, 20, $this->user(), id: 1);
         $overrun = $this->lot($project, 10, $this->user(), id: 2);
 
-        $summary = new ProjectRollup()->summarize($project, [1 => 52, 2 => 48], [
+        $summary = $this->rollup([1 => 52, 2 => 48], [
             1 => [$this->declaration($slow, 40, 40, 60)],
             2 => [$this->declaration($overrun, 80, 48, 12)],
-        ]);
+        ])->summarize($project);
 
         [$slowSummary, $overrunSummary] = $summary->lots;
         self::assertSame([48, 0, 100], [$slowSummary->remainingQuarters, $slowSummary->overrunQuarters, $slowSummary->projectedQuarters]);
@@ -165,12 +182,14 @@ final class ProjectRollupTest extends TestCase
         $project = new Project()->setTitle('Kadence');
         $lot = $this->lot($project, 20, $this->user(), id: 1);
         $withdrawn = $this->declaration($lot, 0, 40, null);
+        $earlier = $this->declaration($lot, 40, 20, 30);
 
-        $leaf = new ProjectRollup()->summarize($project, [1 => 40], [1 => [$withdrawn, $this->declaration($lot, 40, 20, 30)]])->lots[0];
+        $leaf = $this->rollup([1 => 40], [1 => [$withdrawn, $earlier]])->summarize($project)->lots[0];
 
         self::assertSame(40, $leaf->remainingQuarters);
         self::assertNull($leaf->projectedQuarters);
         self::assertSame($withdrawn, $leaf->progress);
+        self::assertSame([$withdrawn, $earlier], $leaf->declarations);
         self::assertSame(50, $leaf->progressPercent(), 'Half the estimate entered.');
     }
 
@@ -179,8 +198,11 @@ final class ProjectRollupTest extends TestCase
         $project = new Project()->setTitle('Kadence');
         $lot = $this->lot($project, null, $this->user(), id: 1);
 
-        $leaf = new ProjectRollup()->summarize($project, [], [1 => [$this->declaration($lot, 30, 0, 28)]])->lots[0];
+        $declaration = $this->declaration($lot, 30, 0, 28);
 
+        $leaf = $this->rollup([], [1 => [$declaration]])->summarize($project)->lots[0];
+
+        self::assertSame([$declaration], $leaf->declarations);
         self::assertNull($leaf->progress);
         self::assertNull($leaf->projectedQuarters);
         self::assertNull($leaf->projectedGapQuarters());
@@ -195,7 +217,7 @@ final class ProjectRollupTest extends TestCase
         $this->lot($project, 20, $this->user(), $split, 3);
         $this->lot($project, null, $this->user(), id: 4);
 
-        $summary = new ProjectRollup()->summarize($project, [3 => 24, 4 => 8], [2 => [$this->declaration($declared, 50, 0, 40)]]);
+        $summary = $this->rollup([3 => 24, 4 => 8], [2 => [$this->declaration($declared, 50, 0, 40)]])->summarize($project);
 
         self::assertSame(40, $summary->lots[0]->progressPercent());
         self::assertSame(40, $summary->progressPercent());
@@ -210,7 +232,21 @@ final class ProjectRollupTest extends TestCase
         $this->lot($project, 10, $this->user(), $split, 2);
         $this->lot($project, 10, $this->user(), $split, 3);
 
-        self::assertSame(50, new ProjectRollup()->summarize($project, [2 => 60])->lots[0]->progressPercent());
+        self::assertSame(50, $this->rollup([2 => 60])->summarize($project)->lots[0]->progressPercent());
+    }
+
+    /**
+     * @param array<int, int>                         $quartersByLot     by lot id
+     * @param array<int, non-empty-list<LotProgress>> $declarationsByLot by lot id, the latest first
+     */
+    private function rollup(array $quartersByLot = [], array $declarationsByLot = []): ProjectRollup
+    {
+        $timeEntryRepository = $this->createStub(TimeEntryRepository::class);
+        $timeEntryRepository->method('sumQuartersByLot')->willReturn($quartersByLot);
+        $lotProgressRepository = $this->createStub(LotProgressRepository::class);
+        $lotProgressRepository->method('findForProjectByLot')->willReturn($declarationsByLot);
+
+        return new ProjectRollup($timeEntryRepository, $lotProgressRepository);
     }
 
     /**
