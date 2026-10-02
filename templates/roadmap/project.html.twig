@@ -1,0 +1,118 @@
+{% extends 'base.html.twig' %}
+
+{% set project = summary.project %}
+{% set roadmap = page.roadmap %}
+{% set projectRow = page.project %}
+
+{% block title %}{{ project.title }} · Kadence{% endblock %}
+
+{% block body %}
+    <a href="{{ back ? path('app_roadmap_week', {week: back.iso}) : path('app_roadmap') }}" class="mb-4 inline-flex items-center gap-1 text-sm text-body hover:underline" data-test="project-page-back">
+        <twig:ux:icon name="tabler:arrow-left" class="size-4"/>
+        Roadmap
+    </a>
+
+    <div class="mb-6">
+        <h1 class="font-display text-2xl font-bold tracking-tight text-heading sm:text-3xl" data-test="project-page-heading">{{ project.title }}</h1>
+        {% if project.description %}
+            <p class="mt-2 max-w-3xl whitespace-pre-line text-sm text-body" data-test="project-page-description">{{ project.description }}</p>
+        {% endif %}
+    </div>
+
+    {% if summary.isUnsplit %}
+        <twig:Card data-test="project-page-unsplit">
+            <p class="text-body">Ce projet n'est pas encore découpé en lots.</p>
+        </twig:Card>
+    {% else %}
+        <dl class="mb-8 grid grid-cols-2 gap-4 rounded-base border border-default bg-neutral-primary-soft p-4 text-sm sm:grid-cols-3 lg:grid-cols-6" data-test="project-page-summary">
+            <div>
+                <dt class="text-body">Estimé</dt>
+                <dd class="mt-1 font-semibold text-heading" data-test="project-page-estimate">{{ include('project/_estimate.html.twig') }}</dd>
+            </div>
+            <div>
+                <dt class="text-body">Saisi</dt>
+                <dd class="mt-1 font-semibold text-heading" data-test="project-page-entered">{{ summary.enteredQuarters|days }}</dd>
+            </div>
+            <div>
+                <dt class="text-body">Restant</dt>
+                <dd class="mt-1 font-semibold text-heading" data-test="project-page-remaining">{{ summary.remainingQuarters|days }}</dd>
+            </div>
+            <div>
+                <dt class="text-body">Dépassement</dt>
+                <dd class="mt-1 font-semibold {{ summary.overrunQuarters > 0 ? 'text-fg-danger-strong' : 'text-heading' }}" data-test="project-page-overrun">{{ summary.overrunQuarters|days }}</dd>
+            </div>
+            <div>
+                <dt class="text-body">Début</dt>
+                <dd class="mt-1 font-semibold text-heading" data-test="project-page-start">{{ projectRow.start ? projectRow.start|weekday ~ ' ' ~ projectRow.start|date('d/m/Y') : '—' }}</dd>
+            </div>
+            <div>
+                <dt class="text-body">Fin calculée</dt>
+                <dd class="mt-1 font-semibold text-heading" data-test="project-page-end">
+                    {%- if projectRow.end -%}
+                        {{ projectRow.end|weekday }} {{ projectRow.end|date('d/m/Y') }}
+                    {%- elseif projectRow.start -%}
+                        inconnue
+                    {%- else -%}
+                        —
+                    {%- endif -%}
+                </dd>
+            </div>
+            {% if projectRow.signals is not empty %}
+                <div class="col-span-full flex flex-wrap gap-1.5">
+                    {% for signal in projectRow.signals %}
+                        <twig:Badge variant="{{ signal.variant }}" data-test="signal-{{ signal.value }}">{{ signal.label }}</twig:Badge>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </dl>
+
+        <section class="mb-8">
+            <h2 class="mb-3 font-display text-lg font-semibold text-heading">Consommé face à l'estimé</h2>
+            {{ include('roadmap/_consumption.html.twig') }}
+        </section>
+
+        <section class="mb-8" {% if page.dated %}data-controller="roadmap" data-roadmap-remember-value="false" data-roadmap-center-value="{{ roadmap.centerPosition|number_format(4, '.', '') }}"{% endif %}>
+            <div class="mb-3 flex flex-wrap items-end justify-between gap-3">
+                <h2 class="font-display text-lg font-semibold text-heading">Frise</h2>
+                {% if page.dated %}
+                    {{ include('roadmap/_zoom.html.twig') }}
+                {% endif %}
+            </div>
+            {% if page.dated %}
+                {{ include('roadmap/_legend.html.twig') }}
+                {% embed 'roadmap/_frieze.html.twig' %}
+                    {% block rows %}
+                        <div class="grid grid-cols-[20rem_1fr] border-t border-default" data-test="roadmap-project" data-title="{{ projectRow.title }}">
+                            <div class="sticky left-0 z-10 bg-neutral-primary px-4 py-3">
+                                <div class="flex flex-wrap items-center gap-1.5">
+                                    <span class="font-semibold text-heading">{{ projectRow.title }}</span>
+                                    {% for signal in projectRow.signals %}
+                                        <twig:Badge variant="{{ signal.variant }}" data-test="signal-{{ signal.value }}">{{ signal.label }}</twig:Badge>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="roadmap-track relative min-h-12">
+                                {{ include('roadmap/_today.html.twig') }}
+                                {% if projectRow.span %}
+                                    {{ include('roadmap/_bar.html.twig', {row: projectRow, bar: projectRow.span, kind: 'span', class: 'h-3 rounded-full bg-brand-medium', test: 'roadmap-bar-span'}) }}
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% for row in projectRow.children %}
+                            {{ include('roadmap/_row.html.twig', {row: row, depth: 1, links: false}) }}
+                        {% endfor %}
+                    {% endblock %}
+                {% endembed %}
+            {% else %}
+                <twig:Card data-test="project-page-no-frieze">
+                    <p class="text-body">Aucune feuille n'a encore de date de début ni de temps saisi : rien à placer sur la frise.</p>
+                </twig:Card>
+            {% endif %}
+        </section>
+
+        <section>
+            <h2 class="mb-3 font-display text-lg font-semibold text-heading">Timeline</h2>
+            {{ include('roadmap/_timeline.html.twig') }}
+        </section>
+    {% endif %}
+{% endblock %}

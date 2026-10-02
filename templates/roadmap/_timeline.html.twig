@@ -1,0 +1,38 @@
+{#
+    Every run entered on the project, from the latest to the earliest, under the month of its last day. Expects `page`.
+#}
+{% if page.timeline is empty %}
+    <twig:Card data-test="timeline-empty">
+        <p class="text-body">Personne n'a encore saisi de temps sur ce projet.</p>
+    </twig:Card>
+{% else %}
+    <div class="ms-1.5 border-s border-default" data-test="timeline">
+        {% for month in page.timeline %}
+            <section class="ps-6 pb-6 last:pb-0" data-test="timeline-month">
+                <h3 class="mb-3 font-display text-sm font-semibold text-heading" data-test="timeline-month-label">{{ month.label }}</h3>
+                <ol class="space-y-3">
+                    {% for entry in month.entries %}
+                        {% set run = entry.run %}
+                        <li class="relative max-w-3xl rounded-base border border-default bg-neutral-primary-soft p-3 text-sm" data-test="timeline-entry" data-leaf="{{ entry.leafPath }}">
+                            <span class="absolute -start-[31.5px] top-4 size-3 rounded-full border-2 border-neutral-primary {{ entry.beyondEstimate ? 'bg-danger' : 'bg-brand' }}" aria-hidden="true"></span>
+                            <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                                <p class="font-medium text-heading" data-test="timeline-entry-leaf">{{ entry.leafPath }}</p>
+                                <p class="whitespace-nowrap text-body" data-test="timeline-entry-period">{{ run.from|weekday }} {{ run.from|date('d/m/Y') }} → {{ run.to|weekday }} {{ run.to|date('d/m/Y') }}</p>
+                            </div>
+                            <p class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-body">
+                                <span><span class="font-medium text-heading" data-test="timeline-entry-entered">{{ run.quarters|days }}</span> saisis</span>
+                                <span><span class="font-medium text-heading" data-test="timeline-entry-days">{{ run.dayCount }}</span> {{ run.dayCount > 1 ? 'jours' : 'jour' }} avec saisie</span>
+                                {% if entry.beyondEstimate %}
+                                    <twig:Badge variant="danger" data-test="timeline-entry-overrun">au-delà de l'estimation</twig:Badge>
+                                {% endif %}
+                            </p>
+                            <div class="mt-2 max-w-md text-xs">
+                                {{ include('roadmap/_team.html.twig', {lines: run.team, entered: true}) }}
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ol>
+            </section>
+        {% endfor %}
+    </div>
+{% endif %}

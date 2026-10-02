@@ -2,7 +2,7 @@
 
 > Carte des capacités fonctionnelles et backlog priorisé dérivé de `docs/vision.md`.
 
-_Document vivant — enrichi/édité au fil du cycle de vie, refondu lors d'un pivot. Date de dernière mise à jour : 2026-10-01._
+_Document vivant — enrichi/édité au fil du cycle de vie, refondu lors d'un pivot. Date de dernière mise à jour : 2026-10-02._
 
 ## Changelog
 
@@ -16,6 +16,7 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
 | 2026-09-30 | Éditer | C4.3, convention transverse « jours fériés », notes `rappel-saisie` et `capacite-equipe` | Sync post-livraison de la story 004-f-jours-feries : jours fériés France et Belgique posés (calendrier par personne, ajustements de la direction, saisie verrouillée) ; restent les fermetures |
 | 2026-09-30 | Éditer | C2.4, C4.4, règle transverse « période prévue », ligne `jalons-dates-annoncees`, notes `jalons-dates-annoncees`, `alerte-derive`, `affectation-sous-projets`, `roadmap-interne` et `charge-vs-capacite` | Sync post-livraison de la story 006-f-roadmap-planification : période prévue calculée (date de début posée, fin calculée sur le restant et la capacité), équipe et parts par feuille avec refus de surcharge, page Roadmap sans date annoncée ; lignes `affectation-sous-projets` et `roadmap-interne` recouvertes en partie |
 | 2026-10-01 | Enrichir | D1, C1.4, C1.5, règle transverse « profil », ligne `tags-hierarchie`, note `charge-vs-capacite` | Sync post-livraison de la story 007-f-tags-hierarchie, cadrée hors backlog : tags des personnes (compétences techniques, expériences fonctionnelles, type d'équipe) tenus par la direction et visibles en composition d'équipe, manager informatif ; ligne ajoutée en V2 |
+| 2026-10-02 | Enrichir | C5.1, C7.4, règle transverse « pas de lecture individuelle », ligne `consomme-vs-estime` | Sync post-livraison de la story 010-f-fiche-projet : fiche de consultation de chaque projet, ouverte à tous, avec le consommé face à l'estimé (restant et dépassement cumulés séparément), une frise sur toute sa durée et la timeline de ses tronçons ; le temps saisi par chacun sur une feuille ou un tronçon est visible de tous depuis les stories 009 et 010 (tension avec le principe 2 assumée) |
 
 ## Domaines fonctionnels
 
@@ -65,7 +66,7 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
 
 ### D5 — Suivi de consommation
 
-- **C5.1** — Un lead peut consulter le consommé face à l'estimé de chaque feuille, de chaque lot et de chaque projet.
+- **C5.1** — Un lead peut consulter le consommé face à l'estimé de chaque feuille, de chaque lot et de chaque projet. Posée par la story `010-f-fiche-projet`, sur la fiche de chaque projet, ouverte à tous : le restant et le dépassement s'y cumulent séparément, sans jamais se compenser.
 - **C5.2** — Le système peut alerter le responsable quand le rythme de consommation d'une feuille dépasse le rythme prévu sur sa période.
 - **C5.3** — La direction peut consulter la liste des feuilles en dérive.
 - **C5.4** — La direction peut consulter l'écart entre estimation initiale et réalisé des feuilles clôturées (pour mesurer la qualité d'estimation).
@@ -81,6 +82,7 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
 - **C7.1** — Tout le monde peut consulter la roadmap : les jalons à venir, avec leur date annoncée et leur date projetée côte à côte.
 - **C7.2** — La direction peut modifier une date annoncée ; l'historique des annonces est conservé.
 - **C7.3** — La direction peut consulter la North Star (% de jalons livrés à ± 1 semaine de leur première date annoncée) sur une période.
+- **C7.4** — Tout le monde peut ouvrir depuis la roadmap la fiche d'un projet : sa frise sur toute sa durée et la timeline de tous ses tronçons de travail, du plus récent au plus ancien. Posée par la story `010-f-fiche-projet`.
 
 ## Parcours utilisateurs principaux
 
@@ -149,7 +151,7 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
 - **Prod** : gère sa propre saisie et ses absences, consulte les projets et la roadmap.
 - **Responsable d'une feuille** : toute personne active, quel que soit son rôle ; il modifie le titre, la description et l'estimation de sa feuille, et rien d'autre de la structure du projet.
 - **Profil (tags et manager)** : tenu par la direction seule. Les leads voient les tags dans la composition de l'équipe d'une feuille, et chacun voit les siens et son manager sur sa page Mon compte. Être manager n'ouvre aucun droit (principe 2).
-- **Pas de lecture individuelle** (principe 2 de la vision) : le consommé n'est visible qu'agrégé par feuille, lot ou projet ; le détail des temps d'une personne n'est visible que par elle-même ; la charge individuelle n'apparaît que dans les vues de planification ; le taux de saisie n'est jamais présenté par personne.
+- **Pas de lecture individuelle** (principe 2 de la vision) : le consommé n'est visible qu'agrégé par feuille, lot ou projet ; le détail des temps d'une personne, jour par jour sur toutes ses feuilles, n'est visible que par elle-même ; sur la roadmap et la fiche d'un projet, chacun voit en revanche le temps saisi par chaque personne sur une feuille ou un tronçon de travail (tension avec le principe 2 assumée par les stories 009 et 010) ; la charge individuelle n'apparaît que dans les vues de planification ; le taux de saisie n'est jamais présenté par personne.
 
 ### Workflows et états
 
@@ -199,8 +201,8 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
   - Pas encore cadrée
   - C3.4, C3.5 · P1, P5 · dép. `saisie-quotidienne` · Vision : hypothèse H1, signal d'arrêt « saisie non tenue », principe 2
 - [ ] `consomme-vs-estime` — Permettre à un lead de voir le consommé face à l'estimé par feuille, par lot et par projet, pour savoir où en est chaque projet sans tableur.
-  - Pas encore cadrée
-  - C5.1 · P3 · dép. `saisie-quotidienne` · Vision : problème (où en sont les projets), signal d'arrêt « tableur toujours là »
+  - Story `010-f-fiche-projet` · **clôture en cours**
+  - C5.1, C7.4 · P3 · dép. `saisie-quotidienne` · Vision : problème (où en sont les projets), signal d'arrêt « tableur toujours là »
 - [ ] `alerte-derive` — Alerter le responsable quand une feuille consomme plus vite que prévu sur sa période, et lister les dérives pour la direction.
   - Pas encore cadrée
   - C5.2, C5.3 · P3, P5 · dép. `consomme-vs-estime`, `jalons-dates-annoncees` · Vision : irritant « dépassements tardifs », hypothèse H2

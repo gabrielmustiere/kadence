@@ -84,7 +84,7 @@ final class LotController extends AbstractController
     public function edit(Request $request, Lot $lot, TimeEntryRepository $timeEntryRepository, #[MapQueryParameter] ?string $roadmap = null): Response
     {
         $this->denyAccessUnlessGranted(LotVoter::EDIT, $lot);
-        $back = null === $roadmap ? null : self::roadmapWeek($roadmap);
+        $back = null === $roadmap ? null : Week::tryFromIso($roadmap);
         $backPath = null === $back
             ? $this->generateUrl('app_project_show', ['id' => $lot->getProject()->getId()])
             : $this->generateUrl('app_roadmap_week', ['week' => $back->iso()]);
@@ -134,14 +134,5 @@ final class LotController extends AbstractController
         }
 
         return $this->redirectToRoute('app_project_show', ['id' => $projectId]);
-    }
-
-    private static function roadmapWeek(string $iso): ?Week
-    {
-        try {
-            return Week::fromIso($iso);
-        } catch (\InvalidArgumentException) {
-            return null;
-        }
     }
 }

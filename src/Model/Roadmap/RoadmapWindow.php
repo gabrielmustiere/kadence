@@ -7,7 +7,8 @@ namespace App\Model\Roadmap;
 use App\Model\Week;
 
 /**
- * The weeks shown on the roadmap: from 4 weeks before the anchor week to 36 weeks after it.
+ * The whole weeks shown on a frieze: on the roadmap, from 4 weeks before the anchor week to 36 weeks after it; on the
+ * page of a project, the weeks of the project.
  */
 final readonly class RoadmapWindow
 {
@@ -15,15 +16,33 @@ final readonly class RoadmapWindow
     public const int WEEKS_AFTER = 36;
     public const int STEP = 4;
     public const int WEEK_COUNT = self::WEEKS_BEFORE + self::WEEKS_AFTER + 1;
+    public const int MIN_SPANNING_WEEKS = 4;
 
     private function __construct(
         public Week $anchor,
+        private \DateTimeImmutable $firstDay,
+        private \DateTimeImmutable $lastDay,
     ) {
     }
 
     public static function around(Week $anchor): self
     {
-        return new self($anchor);
+        return new self(
+            $anchor,
+            $anchor->monday->modify(\sprintf('-%d weeks', self::WEEKS_BEFORE)),
+            $anchor->monday->modify(\sprintf('+%d weeks', self::WEEKS_AFTER))->modify('+6 days'),
+        );
+    }
+
+    /**
+     * The weeks from the one of $from to the one of $to, at least MIN_SPANNING_WEEKS of them.
+     */
+    public static function spanning(\DateTimeImmutable $from, \DateTimeImmutable $to): self
+    {
+        $first = Week::containing($from);
+        $lastMonday = max(Week::containing($to)->monday, $first->monday->modify(\sprintf('+%d weeks', self::MIN_SPANNING_WEEKS - 1)));
+
+        return new self($first, $first->monday, $lastMonday->modify('+6 days'));
     }
 
     public function previous(): Week
@@ -38,12 +57,17 @@ final readonly class RoadmapWindow
 
     public function firstDay(): \DateTimeImmutable
     {
-        return $this->anchor->monday->modify(\sprintf('-%d weeks', self::WEEKS_BEFORE));
+        return $this->firstDay;
     }
 
     public function lastDay(): \DateTimeImmutable
     {
-        return $this->anchor->monday->modify(\sprintf('+%d weeks', self::WEEKS_AFTER))->modify('+6 days');
+        return $this->lastDay;
+    }
+
+    public function weekCount(): int
+    {
+        return intdiv($this->dayCount(), 7);
     }
 
     public function contains(\DateTimeImmutable $day): bool
@@ -109,11 +133,11 @@ final readonly class RoadmapWindow
 
     private function dayCount(): int
     {
-        return 7 * self::WEEK_COUNT;
+        return $this->offsetOf($this->lastDay) + 1;
     }
 
     private function offsetOf(\DateTimeImmutable $day): int
     {
-        return (int) $this->firstDay()->diff($day->setTime(0, 0))->format('%r%a');
+        return (int) $this->firstDay->diff($day->setTime(0, 0))->format('%r%a');
     }
 }

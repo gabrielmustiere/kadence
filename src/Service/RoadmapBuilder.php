@@ -6,17 +6,18 @@ namespace App\Service;
 
 use App\Entity\Lot;
 use App\Entity\Project;
-use App\Entity\User;
 use App\Enum\Type\RoadmapSignal;
+use App\Model\Roadmap\ProjectRoadmap;
 use App\Model\Roadmap\Roadmap;
 use App\Model\Roadmap\RoadmapBar;
 use App\Model\Roadmap\RoadmapRow;
 use App\Model\Roadmap\RoadmapRun;
 use App\Model\Roadmap\RoadmapTeamLine;
 use App\Model\Roadmap\RoadmapWindow;
+use App\Model\Roadmap\TimelineEntry;
+use App\Model\Roadmap\TimelineMonth;
 use App\Model\Schedule\LeafPlan;
 use App\Model\Schedule\LeafSchedule;
-use App\Model\Schedule\PlannedMember;
 use App\Model\Schedule\ScheduleData;
 use App\Model\Schedule\ScheduleResult;
 use App\Repository\ProjectRepository;
@@ -29,6 +30,7 @@ final readonly class RoadmapBuilder
         private Scheduler $scheduler,
         private ProjectRepository $projectRepository,
         private TimeEntryRepository $timeEntryRepository,
+        private RoadmapRunCutter $runCutter,
     ) {
     }
 
@@ -41,11 +43,76 @@ final readonly class RoadmapBuilder
         $result = $this->scheduler->schedule(array_values($data->plans), $data->capacity, $data->today);
         $overloaded = $withOverloads ? $result->overloadedLots() : [];
         $recaps = $this->recaps($data);
-        $parts = $this->enteredParts($data, $result, $window);
+        $entered = array_keys(array_filter($data->plans, static fn (LeafPlan $plan): bool => null !== $plan->firstEntryDay && true === $result->get($plan->lotId)?->isPlanned()));
+        $parts = self::enteredParts($this->runCutter->cut($data, $entered), $result, $window);
 
         $projects = array_map(fn (Project $project): RoadmapRow => $this->projectRow($project, $window, $result, $overloaded, $parts, $recaps), $this->projectRepository->findAllForList());
 
         return new Roadmap($window, $data->today, $projects);
+    }
+
+    /**
+     * The roadmap of a single project, on a window spanning its days, with the timeline of every run entered on its
+     * leaves, planned or not.
+     *
+     * @param bool $withOverloads whether to flag the leaves loading someone beyond a full load: planning views only
+     */
+    public function buildProject(Project $project, bool $withOverloads): ProjectRoadmap
+    {
+        $data = $this->scheduleLoader->load();
+        $result = $this->scheduler->schedule(array_values($data->plans), $data->capacity, $data->today);
+        $overloaded = $withOverloads ? $result->overloadedLots() : [];
+        $leaves = self::leavesOf($project);
+        $runs = $this->runCutter->cut($data, array_keys(array_filter($leaves, static fn (Lot $leaf): bool => null !== ($data->plans[(int) $leaf->getId()]->firstEntryDay ?? null))));
+
+        $bounds = self::bounds($leaves, $result);
+        $window = null === $bounds ? RoadmapWindow::spanning($data->today, $data->today) : RoadmapWindow::spanning(...$bounds);
+        $row = $this->projectRow($project, $window, $result, $overloaded, self::enteredParts($runs, $result, $window), $this->recaps($data));
+
+        return new ProjectRoadmap(new Roadmap($window, $data->today, [$row]), $row, TimelineMonth::group(TimelineEntry::ofLeaves($leaves, $runs)), null !== $bounds);
+    }
+
+    /**
+     * @return array<int, Lot> the leaves of the project in the order of its lots, by lot id
+     */
+    private static function leavesOf(Project $project): array
+    {
+        $leaves = [];
+        foreach ($project->getLots() as $lot) {
+            if ($lot->isSubLot()) {
+                continue;
+            }
+            foreach ($lot->isLeaf() ? [$lot] : $lot->getChildren() as $leaf) {
+                $leaves[(int) $leaf->getId()] = $leaf;
+            }
+        }
+
+        return $leaves;
+    }
+
+    /**
+     * The first and last days reached by the planned leaves or entered on any of them; null when there is none.
+     *
+     * @param array<int, Lot> $leaves by lot id
+     *
+     * @return array{\DateTimeImmutable, \DateTimeImmutable}|null
+     */
+    private static function bounds(array $leaves, ScheduleResult $result): ?array
+    {
+        $days = [];
+        foreach ($leaves as $lotId => $leaf) {
+            $schedule = $result->get($lotId);
+            if (null === $schedule) {
+                continue;
+            }
+            if ($schedule->isPlanned()) {
+                array_push($days, ...self::reach($leaf, $schedule));
+            }
+            array_push($days, $schedule->realizedFrom, $schedule->realizedTo);
+        }
+        $days = array_values(array_filter($days));
+
+        return [] === $days ? null : [min($days), max($days)];
     }
 
     /**
@@ -147,8 +214,7 @@ final readonly class RoadmapBuilder
             );
         }
 
-        $start = $schedule->start() ?? $leaf->getStartDate();
-        $lastDay = $schedule->end() ?? $schedule->realizedTo;
+        [$start, $lastDay] = self::reach($leaf, $schedule);
         [$realized, $overrun] = $parts[$lotId] ?? [null, null];
 
         return new RoadmapRow(
@@ -172,6 +238,16 @@ final readonly class RoadmapBuilder
     }
 
     /**
+     * The first day of a planned leaf and the last day it reaches.
+     *
+     * @return array{\DateTimeImmutable|null, \DateTimeImmutable|null}
+     */
+    private static function reach(Lot $leaf, LeafSchedule $schedule): array
+    {
+        return [$schedule->start() ?? $leaf->getStartDate(), $schedule->end() ?? $schedule->realizedTo];
+    }
+
+    /**
      * What each person entered on every leaf with time entered, and its number of days entered.
      *
      * @return array<int, array{list<RoadmapTeamLine>, int}> by lot id
@@ -182,7 +258,7 @@ final readonly class RoadmapBuilder
         foreach ($this->timeEntryRepository->sumQuartersByLotAndUser() as $lotId => $entered) {
             $leaf = $data->leaves[$lotId] ?? null;
             if (null !== $leaf) {
-                $recaps[$lotId] = [self::team($leaf, $entered, $data->people), $data->plans[$lotId]->enteredDayCount ?? 0];
+                $recaps[$lotId] = [RoadmapTeamLine::forLeaf($leaf, $entered, $data->people), $data->plans[$lotId]->enteredDayCount ?? 0];
             }
         }
 
@@ -190,101 +266,22 @@ final readonly class RoadmapBuilder
     }
 
     /**
-     * @param array<int, int>  $quartersByUser
-     * @param array<int, User> $people         by user id
+     * The runs of the planned leaves placed on the window.
      *
-     * @return list<RoadmapTeamLine> the members with their share, then the people outside the team by time entered
-     */
-    private static function team(Lot $leaf, array $quartersByUser, array $people): array
-    {
-        $lines = [];
-        foreach ($leaf->getMembers() as $member) {
-            $userId = (int) $member->getUser()->getId();
-            $lines[] = new RoadmapTeamLine($member->getUser(), $member->getShare(), $quartersByUser[$userId] ?? 0);
-            unset($quartersByUser[$userId]);
-        }
-
-        arsort($quartersByUser);
-        foreach (array_filter($quartersByUser) as $userId => $quarters) {
-            if (isset($people[$userId])) {
-                $lines[] = new RoadmapTeamLine($people[$userId], null, $quarters);
-            }
-        }
-
-        return $lines;
-    }
-
-    /**
-     * The days entered on every planned leaf with time entered, within its estimate then beyond it, each cut into runs.
+     * @param array<int, array{list<RoadmapRun>, list<RoadmapRun>}> $runs the runs within and beyond the estimate, by lot id
      *
      * @return array<int, array{RoadmapBar|null, RoadmapBar|null}> the bars within and beyond the estimate, by lot id
      */
-    private function enteredParts(ScheduleData $data, ScheduleResult $result, RoadmapWindow $window): array
+    private static function enteredParts(array $runs, ScheduleResult $result, RoadmapWindow $window): array
     {
-        $entered = array_keys(array_filter($data->plans, static fn (LeafPlan $plan): bool => null !== $plan->firstEntryDay && true === $result->get($plan->lotId)?->isPlanned()));
-
         $parts = [];
-        foreach ($this->timeEntryRepository->sumQuartersByDayAndUserForLots($entered) as $lotId => $quartersByDay) {
-            $leaf = $data->leaves[$lotId] ?? null;
-            if (null === $leaf) {
-                continue;
+        foreach ($runs as $lotId => [$within, $beyond]) {
+            if (true === $result->get($lotId)?->isPlanned()) {
+                $parts[$lotId] = [$window->segmentedBar($within), $window->segmentedBar($beyond)];
             }
-
-            $overrunDay = ($data->overrunDays[$lotId][1] ?? null)?->format('Y-m-d');
-            $within = array_filter($quartersByDay, static fn (string $day): bool => null === $overrunDay || $day < $overrunDay, \ARRAY_FILTER_USE_KEY);
-            $beyond = array_filter($quartersByDay, static fn (string $day): bool => null !== $overrunDay && $day >= $overrunDay, \ARRAY_FILTER_USE_KEY);
-
-            $parts[$lotId] = [
-                $window->segmentedBar(self::runs($within, $leaf, $data)),
-                $window->segmentedBar(self::runs($beyond, $leaf, $data)),
-            ];
         }
 
         return $parts;
-    }
-
-    /**
-     * Days entered make one run until a working day of one of the members goes by without any time entered.
-     *
-     * @param array<string, array<int, int>> $quartersByDay quarters entered by each person each day (Y-m-d, in date order)
-     *
-     * @return list<RoadmapRun>
-     */
-    private static function runs(array $quartersByDay, Lot $leaf, ScheduleData $data): array
-    {
-        $members = array_map(static fn (PlannedMember $member): int => $member->userId, $data->plans[(int) $leaf->getId()]->members ?? []);
-
-        $runs = [];
-        $run = [];
-        $lastDay = null;
-        foreach ($quartersByDay as $day => $quartersByUser) {
-            $date = new \DateTimeImmutable($day);
-            if (null !== $lastDay && $data->capacity->hasWorkingDayBetween($members, $lastDay, $date)) {
-                $runs[] = self::run($run, $leaf, $data->people);
-                $run = [];
-            }
-            $run[$day] = $quartersByUser;
-            $lastDay = $date;
-        }
-
-        return [] === $run ? $runs : [...$runs, self::run($run, $leaf, $data->people)];
-    }
-
-    /**
-     * @param non-empty-array<string, array<int, int>> $quartersByDay quarters entered by each person each day (Y-m-d, in date order)
-     * @param array<int, User>                         $people        by user id
-     */
-    private static function run(array $quartersByDay, Lot $leaf, array $people): RoadmapRun
-    {
-        $quartersByUser = [];
-        foreach ($quartersByDay as $entered) {
-            foreach ($entered as $userId => $quarters) {
-                $quartersByUser[$userId] = ($quartersByUser[$userId] ?? 0) + $quarters;
-            }
-        }
-        $days = array_keys($quartersByDay);
-
-        return new RoadmapRun(new \DateTimeImmutable($days[0]), new \DateTimeImmutable($days[array_key_last($days)]), array_sum($quartersByUser), \count($days), self::team($leaf, $quartersByUser, $people));
     }
 
     /**

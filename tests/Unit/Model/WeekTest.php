@@ -58,6 +58,17 @@ final class WeekTest extends TestCase
         Week::fromIso($iso);
     }
 
+    #[DataProvider('invalidIsoProvider')]
+    public function testTryFromIsoGivesNothingForInvalidWeeks(string $iso): void
+    {
+        self::assertNull(Week::tryFromIso($iso));
+    }
+
+    public function testTryFromIsoGivesAnExistingWeek(): void
+    {
+        self::assertSame('2026-09-28', Week::tryFromIso('2026-W40')?->monday->format('Y-m-d'));
+    }
+
     /**
      * @return \Generator<array{string}>
      */

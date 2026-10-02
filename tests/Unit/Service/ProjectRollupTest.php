@@ -98,10 +98,57 @@ final class ProjectRollupTest extends TestCase
         self::assertTrue($withTime->lots[0]->children[0]->hasTime);
     }
 
-    /** @param positive-int|null $estimateDays */
-    private function lot(Project $project, ?int $estimateDays, ?User $owner, ?Lot $parent = null): Lot
+    public function testLeafTellsWhatIsEnteredThenWhatRemainsOrGoesBeyondItsEstimate(): void
     {
-        return new Lot($project, $parent)->setTitle('Lot')->setEstimateDays($estimateDays)->setOwner($owner);
+        $project = new Project()->setTitle('Kadence');
+        $this->lot($project, 10, $this->user(), id: 1);
+        $this->lot($project, 8, $this->user(), id: 2);
+
+        $summary = new ProjectRollup()->summarize($project, [1 => 40, 2 => 12]);
+
+        [$done, $started] = $summary->lots;
+        self::assertSame([40, 0, 0], [$done->enteredQuarters, $done->remainingQuarters, $done->overrunQuarters]);
+        self::assertSame([12, 20, 0], [$started->enteredQuarters, $started->remainingQuarters, $started->overrunQuarters]);
+        self::assertSame([52, 20, 0], [$summary->enteredQuarters, $summary->remainingQuarters, $summary->overrunQuarters]);
+    }
+
+    public function testSplitLotAndProjectAddUpWhatRemainsAndWhatGoesBeyondSeparately(): void
+    {
+        $project = new Project()->setTitle('Kadence');
+        $split = $this->lot($project, null, null, id: 1);
+        $this->lot($project, 5, $this->user(), $split, 2);
+        $this->lot($project, 5, $this->user(), $split, 3);
+        $this->lot($project, 4, $this->user(), id: 4);
+
+        $summary = new ProjectRollup()->summarize($project, [2 => 40, 3 => 8, 4 => 4]);
+
+        $lot = $summary->lots[0];
+        self::assertSame([0, 20], [$lot->children[0]->remainingQuarters, $lot->children[0]->overrunQuarters]);
+        self::assertSame([12, 0], [$lot->children[1]->remainingQuarters, $lot->children[1]->overrunQuarters]);
+        self::assertSame([48, 12, 20], [$lot->enteredQuarters, $lot->remainingQuarters, $lot->overrunQuarters], '3 j left on one sub-lot do not offset 5 j beyond the other.');
+        self::assertSame([52, 24, 20], [$summary->enteredQuarters, $summary->remainingQuarters, $summary->overrunQuarters]);
+    }
+
+    public function testLeafToEstimateHasTimeEnteredButNothingLeftNorBeyond(): void
+    {
+        $project = new Project()->setTitle('Kadence');
+        $this->lot($project, null, $this->user(), id: 1);
+
+        $summary = new ProjectRollup()->summarize($project, [1 => 6]);
+
+        self::assertSame([6, 0, 0], [$summary->lots[0]->enteredQuarters, $summary->lots[0]->remainingQuarters, $summary->lots[0]->overrunQuarters]);
+        self::assertTrue($summary->isPartial());
+    }
+
+    /** @param positive-int|null $estimateDays */
+    private function lot(Project $project, ?int $estimateDays, ?User $owner, ?Lot $parent = null, ?int $id = null): Lot
+    {
+        $lot = new Lot($project, $parent)->setTitle('Lot')->setEstimateDays($estimateDays)->setOwner($owner);
+        if (null !== $id) {
+            new \ReflectionProperty(Lot::class, 'id')->setValue($lot, $id);
+        }
+
+        return $lot;
     }
 
     private function user(bool $active = true): User

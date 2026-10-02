@@ -238,3 +238,56 @@ test('un lead ouvre une feuille depuis la roadmap et y revient à la même fenê
   await expect(page).toHaveURL(window);
   await expect(projectRow(page).locator('[data-test="roadmap-leaf"][data-title="Socle"] [data-test="roadmap-remaining"]')).toHaveText('12 j');
 });
+
+test('l\'icône d\'un projet ouvre sa fiche sans le déplier, et la fiche ramène à la même fenêtre', async ({ page }) => {
+  await login(page, 'prod@example.com');
+  await page.goto('/roadmap');
+  await page.click('[data-test="roadmap-next"]');
+  await expect(page).toHaveURL(/\/roadmap\/\d{4}-W\d{2}$/);
+  const window = page.url();
+  const leaf = projectRow(page).locator('[data-test="roadmap-leaf"][data-title="Socle"]');
+  await expect(leaf).toBeHidden();
+
+  await projectRow(page).locator('[data-test="roadmap-project-open"]').click();
+  await expect(page).toHaveURL(/\/roadmap\/projets\/\d+\?roadmap=\d{4}-W\d{2}$/);
+  await expect(page.locator('[data-test="project-page-heading"]')).toHaveText(project);
+  await expect(page.locator('[data-test="nav-roadmap"]')).toHaveAttribute('aria-current', 'page');
+
+  await page.click('[data-test="project-page-back"]');
+  await expect(page).toHaveURL(window);
+  await expect(leaf).toBeHidden();
+});
+
+test('la fiche s\'ouvre à ×1 sans toucher au zoom de la roadmap, et détaille chaque tronçon', async ({ page }) => {
+  await login(page, 'prod@example.com');
+  await page.goto('/roadmap');
+  const level = page.locator('[data-test="roadmap-zoom-level"]');
+  await page.click('[data-test="roadmap-zoom-in"]');
+  await page.click('[data-test="roadmap-zoom-in"]');
+  await expect(level).toHaveText('×4');
+
+  await projectRow(page).locator('[data-test="roadmap-project-open"]').click();
+  await expect(page.locator('[data-test="project-page-heading"]')).toHaveText(project);
+  await expect(level).toHaveText('×1');
+  await page.click('[data-test="roadmap-zoom-in"]');
+  await expect(level).toHaveText('×2');
+
+  const leaf = page.locator('[data-test="roadmap-leaf"][data-title="Interrompue"]');
+  const segments = leaf.locator('[data-test="roadmap-segment-realized"]');
+  await expect(segments).toHaveCount(3);
+  // Brought into view first: a scroll made by hover() itself would close the tooltip it has just opened.
+  await segments.nth(1).evaluate((segment) => segment.scrollIntoView({ block: 'center', inline: 'center' }));
+  const shown = page.locator('[role="tooltip"]:visible');
+  await segments.nth(1).hover();
+  await expect(shown).toHaveCount(1);
+  await expect(shown.locator('[data-test="roadmap-days-entered"]')).toHaveText('1');
+
+  const entries = page.locator('[data-test="timeline-entry"][data-leaf="Interrompue"]');
+  await expect(entries).toHaveCount(3);
+  await expect(entries.locator('[data-test="timeline-entry-days"]')).toHaveText(['5', '1', '5']);
+  await expect(entries.first().locator('[data-test="roadmap-team"]')).toHaveText(/Arthur Petit/);
+
+  await page.click('[data-test="project-page-back"]');
+  await expect(page).toHaveURL(/\/roadmap\/\d{4}-W\d{2}$/);
+  await expect(level).toHaveText('×4');
+});

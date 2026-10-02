@@ -33,6 +33,18 @@ final readonly class Week
         return $week;
     }
 
+    /**
+     * The week of an ISO value such as « 2026-W40 », or null when it is not an existing ISO week.
+     */
+    public static function tryFromIso(string $iso): ?self
+    {
+        try {
+            return self::fromIso($iso);
+        } catch (\InvalidArgumentException) {
+            return null;
+        }
+    }
+
     public function iso(): string
     {
         return $this->monday->format('o-\WW');

@@ -1,12 +1,13 @@
 {#
-    A lot or a leaf of the roadmap, and the sub-lots of a split lot. Expects `row`, `roadmap` and `depth`.
+    A lot or a leaf of the roadmap, and the sub-lots of a split lot. Expects `row`, `roadmap` and `depth`; `links` set to
+    false keeps the title of a leaf from linking to its edition.
 #}
 {% set lot = row.lot %}
 {% set recap = row.leaf ? 'roadmap-recap-lot-' ~ lot.id : null %}
 <div class="grid grid-cols-[20rem_1fr] border-t border-default" data-test="{{ row.leaf ? 'roadmap-leaf' : 'roadmap-lot' }}" data-title="{{ row.title }}">
     <div class="sticky left-0 z-10 bg-neutral-primary px-4 py-2 {{ depth > 1 ? 'ps-12' : 'ps-8' }}">
         <div class="flex flex-wrap items-center gap-1.5">
-            {% if row.leaf and is_granted('LOT_EDIT', lot) %}
+            {% if row.leaf and (links ?? true) and is_granted('LOT_EDIT', lot) %}
                 <a href="{{ path('app_lot_edit', {id: lot.id, roadmap: roadmap.window.anchor.iso}) }}" class="text-sm font-medium text-heading hover:underline" aria-describedby="{{ recap }}" data-roadmap-tooltip="{{ recap }}" data-test="roadmap-leaf-link">{{ row.title }}</a>
             {% elseif row.leaf %}
                 <span class="text-sm font-medium text-heading" tabindex="0" aria-describedby="{{ recap }}" data-roadmap-tooltip="{{ recap }}" data-test="roadmap-leaf-title">{{ row.title }}</span>

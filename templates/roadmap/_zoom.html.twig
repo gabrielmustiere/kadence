@@ -1,0 +1,13 @@
+{#
+    The zoom buttons of a frieze, driven by the roadmap controller.
+#}
+<div class="flex items-center gap-1" role="group" aria-label="Zoom de la frise">
+    <twig:Button type="button" size="icon-sm" variant="outline" class="disabled:cursor-not-allowed disabled:opacity-50" aria-label="Dézoomer la frise" data-roadmap-target="zoomOut" data-action="roadmap#zoomOut" data-test="roadmap-zoom-out">
+        <twig:ux:icon name="tabler:minus" class="size-4"/>
+    </twig:Button>
+    <span class="min-w-8 text-center text-sm tabular-nums text-heading" aria-live="polite" data-roadmap-target="zoomLevel" data-test="roadmap-zoom-level">×1</span>
+    <twig:Button type="button" size="icon-sm" variant="outline" class="disabled:cursor-not-allowed disabled:opacity-50" aria-label="Zoomer la frise" data-roadmap-target="zoomIn" data-action="roadmap#zoomIn" data-test="roadmap-zoom-in">
+        <twig:ux:icon name="tabler:plus" class="size-4"/>
+    </twig:Button>
+    <twig:Button type="button" size="sm" variant="outline" class="disabled:cursor-not-allowed disabled:opacity-50" data-roadmap-target="zoomReset" data-action="roadmap#zoomReset" data-test="roadmap-zoom-reset">100 %</twig:Button>
+</div>

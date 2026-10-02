@@ -6,15 +6,16 @@ const ZOOMS = [1, 2, 4, 8];
 
 export default class extends Controller {
     static targets = ['project', 'scroller', 'track', 'zoomIn', 'zoomOut', 'zoomReset', 'zoomLevel'];
-    static values = { center: Number };
+    // remember: false on the page of a project, which always opens unzoomed and centred, its zoom kept to itself.
+    static values = { center: Number, remember: { type: Boolean, default: true } };
 
     #zoom = 1;
 
     connect() {
-        const stored = Number(sessionStorage.getItem(ZOOM_KEY));
+        const stored = this.rememberValue ? Number(sessionStorage.getItem(ZOOM_KEY)) : 1;
         this.#zoom = ZOOMS.includes(stored) ? stored : 1;
         this.#render();
-        if (this.#zoom > 1) {
+        if (this.#zoom > 1 || !this.rememberValue) {
             this.#centerOn(this.centerValue / 100);
         }
     }
@@ -44,7 +45,9 @@ export default class extends Controller {
     #zoomTo(zoom) {
         const center = this.#centerRatio();
         this.#zoom = zoom;
-        sessionStorage.setItem(ZOOM_KEY, String(zoom));
+        if (this.rememberValue) {
+            sessionStorage.setItem(ZOOM_KEY, String(zoom));
+        }
         this.#render();
         if (null !== center) {
             this.#centerOn(center);

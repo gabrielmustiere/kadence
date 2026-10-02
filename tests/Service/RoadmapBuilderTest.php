@@ -7,6 +7,7 @@ namespace App\Tests\Service;
 use App\Entity\Project;
 use App\Enum\Type\HolidayCalendar;
 use App\Enum\Type\RoadmapSignal;
+use App\Model\Roadmap\ProjectRoadmap;
 use App\Model\Roadmap\Roadmap;
 use App\Model\Roadmap\RoadmapBar;
 use App\Model\Roadmap\RoadmapRow;
@@ -14,6 +15,8 @@ use App\Model\Roadmap\RoadmapRun;
 use App\Model\Roadmap\RoadmapSegment;
 use App\Model\Roadmap\RoadmapTeamLine;
 use App\Model\Roadmap\RoadmapWindow;
+use App\Model\Roadmap\TimelineEntry;
+use App\Model\Roadmap\TimelineMonth;
 use App\Model\Week;
 use App\Service\RoadmapBuilder;
 use App\Tests\Support\CreatesProjects;
@@ -299,6 +302,153 @@ final class RoadmapBuilderTest extends KernelTestCase
         foreach ($hidden as $leaf) {
             self::assertFalse($leaf->hasSignal(RoadmapSignal::ToReplan));
         }
+    }
+
+    public function testProjectPageSpansTheDaysOfItsProjectAndListsItsRunsLatestFirst(): void
+    {
+        $alice = $this->createUser();
+        $bob = $this->createUser();
+        $project = $this->createProject();
+        $api = $this->planLot($this->createLot($project, 10, $alice, title: 'API'), new \DateTimeImmutable('2026-09-07'), [[$alice, 100]]);
+        foreach (['2026-09-07', '2026-09-08', '2026-09-09', '2026-09-10', '2026-09-11', '2026-09-21', '2026-09-22', '2026-09-23', '2026-09-24', '2026-09-25'] as $day) {
+            $this->createTimeEntry($alice, $api, $day, 4);
+        }
+        $front = $this->createLot($project, title: 'Front');
+        $login = $this->planLot($this->createLot($project, 8, $bob, $front, 'Login'), new \DateTimeImmutable('2026-09-14'), [[$bob, 100]]);
+        foreach (['2026-09-14', '2026-09-15', '2026-09-16'] as $day) {
+            $this->createTimeEntry($bob, $login, $day, 4);
+        }
+
+        $page = $this->buildProject($project);
+
+        self::assertTrue($page->dated);
+        self::assertSame(['2026-09-07', '2026-10-18'], [$page->roadmap->window->firstDay()->format('Y-m-d'), $page->roadmap->window->lastDay()->format('Y-m-d')], 'From the first day entered to the end of Login, calculated on 2026-10-14, in whole weeks.');
+        self::assertSame([$page->project], $page->roadmap->projects);
+        self::assertSame('2026-10-14', $page->project->end?->format('Y-m-d'));
+        self::assertCount(1, $page->timeline);
+        self::assertSame('Septembre 2026', $page->timeline[0]->label);
+        self::assertSame([
+            ['API', '2026-09-21', '2026-09-25', 20, 5, false],
+            ['Front · Login', '2026-09-14', '2026-09-16', 12, 3, false],
+            ['API', '2026-09-07', '2026-09-11', 20, 5, false],
+        ], self::entries($page->timeline[0]->entries));
+        self::assertSame([[$bob->getId(), 100, 12]], self::team($page->timeline[0]->entries[1]->run->team));
+    }
+
+    public function testProjectRowOfItsPageIsTheOneOfTheRoadmapOnTheSameWindow(): void
+    {
+        $user = $this->createUser();
+        $project = $this->createProject();
+        $leaf = $this->planLot($this->createLot($project, 2, $user), new \DateTimeImmutable('2026-09-14'), [[$user, 100]]);
+        foreach (['2026-09-14', '2026-09-15', '2026-09-17'] as $day) {
+            $this->createTimeEntry($user, $leaf, $day, 4);
+        }
+        $this->planLot($this->createLot($project, 3, $user), new \DateTimeImmutable('2026-10-12'), [[$user, 50]]);
+
+        $page = $this->buildProject($project);
+        $builder = static::getContainer()->get(RoadmapBuilder::class);
+        self::assertInstanceOf(RoadmapBuilder::class, $builder);
+        $onRoadmap = $this->projectRow($builder->build($page->roadmap->window, true), $project);
+
+        self::assertEquals([$onRoadmap->start, $onRoadmap->end, $onRoadmap->signals, $onRoadmap->span], [$page->project->start, $page->project->end, $page->project->signals, $page->project->span]);
+        foreach ($onRoadmap->children as $index => $leafRow) {
+            $pageRow = $page->project->children[$index];
+            self::assertEquals([$leafRow->realized, $leafRow->overrun, $leafRow->future, $leafRow->signals], [$pageRow->realized, $pageRow->overrun, $pageRow->future, $pageRow->signals]);
+        }
+    }
+
+    public function testTimelineMarksTheRunsBeyondTheEstimateAndFilesARunUnderTheMonthOfItsLastDay(): void
+    {
+        $user = $this->createUser();
+        $project = $this->createProject();
+        $leaf = $this->planLot($this->createLot($project, 2, $user, title: 'Socle'), new \DateTimeImmutable('2026-08-27'), [[$user, 100]]);
+        foreach (['2026-08-27', '2026-08-28', '2026-08-31', '2026-09-01'] as $day) {
+            $this->createTimeEntry($user, $leaf, $day, 4);
+        }
+
+        $timeline = $this->buildProject($project)->timeline;
+
+        self::assertSame(['Septembre 2026', 'Août 2026'], array_map(static fn (TimelineMonth $month): string => $month->label, $timeline));
+        self::assertSame([['Socle', '2026-08-31', '2026-09-01', 8, 2, true]], self::entries($timeline[0]->entries));
+        self::assertSame([['Socle', '2026-08-27', '2026-08-28', 8, 2, false]], self::entries($timeline[1]->entries));
+    }
+
+    public function testTimeEnteredOnUnplannedLeavesShowsOnTheTimelineButNotOnTheFrieze(): void
+    {
+        $alice = $this->createUser();
+        $bob = $this->createUser();
+        $project = $this->createProject();
+        $withoutStart = $this->createLot($project, 5, $alice, title: 'Sans début');
+        foreach (['2026-09-28', '2026-09-29', '2026-10-01'] as $day) {
+            $this->createTimeEntry($alice, $withoutStart, $day, 4);
+        }
+        $withoutTeam = $this->createLot($project, 5, title: 'Sans équipe');
+        $this->createTimeEntry($alice, $withoutTeam, '2026-09-28', 2);
+        $this->createTimeEntry($bob, $withoutTeam, '2026-09-30', 2);
+
+        $page = $this->buildProject($project);
+
+        self::assertTrue($page->dated);
+        self::assertSame(['2026-09-28', '2026-10-25'], [$page->roadmap->window->firstDay()->format('Y-m-d'), $page->roadmap->window->lastDay()->format('Y-m-d')], 'The days entered, on 4 weeks at least.');
+        self::assertNull($page->project->children[0]->realized);
+        self::assertNull($page->project->children[1]->realized);
+        self::assertSame([
+            ['Sans début', '2026-10-01', '2026-10-01', 4, 1, false],
+            ['Sans équipe', '2026-09-30', '2026-09-30', 2, 1, false],
+            ['Sans début', '2026-09-28', '2026-09-29', 8, 2, false],
+            ['Sans équipe', '2026-09-28', '2026-09-28', 2, 1, false],
+        ], self::entries(array_merge(...array_map(static fn (TimelineMonth $month): array => $month->entries, $page->timeline))), 'Without team, a run is cut on a working day of the people who entered time.');
+        self::assertSame(['Octobre 2026', 'Septembre 2026'], array_map(static fn (TimelineMonth $month): string => $month->label, $page->timeline));
+    }
+
+    public function testLeafWithoutTeamIsCutOnTheWorkingDaysOfEveryoneWhoEnteredTimeOnIt(): void
+    {
+        $belgian = $this->createUser(holidayCalendar: HolidayCalendar::Belgium);
+        $french = $this->createUser();
+        $project = $this->createProject();
+        $leaf = $this->createLot($project, 2, title: 'Sans équipe');
+        $this->createTimeEntry($belgian, $leaf, '2026-07-20', 4);
+        $this->createTimeEntry($belgian, $leaf, '2026-07-22', 4);
+        $this->createTimeEntry($french, $leaf, '2026-07-23', 4);
+
+        $timeline = $this->buildProject($project)->timeline;
+
+        self::assertSame([
+            ['Sans équipe', '2026-07-23', '2026-07-23', 4, 1, true],
+            ['Sans équipe', '2026-07-22', '2026-07-22', 4, 1, false],
+            ['Sans équipe', '2026-07-20', '2026-07-20', 4, 1, false],
+        ], self::entries($timeline[0]->entries), 'The Belgian national day is a working day for the French person, who entered time beyond the estimate only.');
+    }
+
+    public function testProjectWithoutStartNorEntryHasNoFrieze(): void
+    {
+        $user = $this->createUser();
+        $project = $this->createProject();
+        $this->createLot($project, 5, $user);
+
+        $page = $this->buildProject($project);
+
+        self::assertFalse($page->dated);
+        self::assertSame([], $page->timeline);
+        self::assertFalse($this->buildProject($this->createProject())->dated);
+    }
+
+    private function buildProject(Project $project): ProjectRoadmap
+    {
+        $builder = static::getContainer()->get(RoadmapBuilder::class);
+        self::assertInstanceOf(RoadmapBuilder::class, $builder);
+
+        return $builder->buildProject($project, true);
+    }
+
+    /**
+     * @param list<TimelineEntry> $entries
+     *
+     * @return list<array{string, string, string, int, int, bool}> leaf, first and last day, quarters, days and whether beyond the estimate
+     */
+    private static function entries(array $entries): array
+    {
+        return array_map(static fn (TimelineEntry $entry): array => [$entry->leafPath(), $entry->run->from->format('Y-m-d'), $entry->run->to->format('Y-m-d'), $entry->run->quarters, $entry->run->dayCount, $entry->beyondEstimate], $entries);
     }
 
     private function build(bool $withOverloads = true, string $anchor = '2026-W41'): Roadmap

@@ -9,7 +9,9 @@ use App\Entity\Project;
 final readonly class ProjectSummary
 {
     /**
-     * @param list<LotSummary> $lots top-level lots, each carrying its sub-lots
+     * @param list<LotSummary> $lots              top-level lots, each carrying its sub-lots
+     * @param int              $remainingQuarters what is left of the estimate of its leaves, never offset by an overrun
+     * @param int              $overrunQuarters   what is entered beyond the estimate of its leaves, never offset by what is left
      */
     public function __construct(
         public Project $project,
@@ -20,6 +22,9 @@ final readonly class ProjectSummary
         public int $toAssign,
         public int $toReassign,
         public bool $hasTime = false,
+        public int $enteredQuarters = 0,
+        public int $remainingQuarters = 0,
+        public int $overrunQuarters = 0,
     ) {
     }
 

@@ -153,6 +153,69 @@ final class RoadmapWindowTest extends TestCase
         self::assertSame('févr.', $months[1][0]);
     }
 
+    public function testSpanningWindowCoversTheWholeWeeksOfItsDays(): void
+    {
+        $window = RoadmapWindow::spanning(new \DateTimeImmutable('2026-09-08'), new \DateTimeImmutable('2026-11-18'));
+
+        self::assertSame('2026-09-07', $window->firstDay()->format('Y-m-d'));
+        self::assertSame('2026-11-22', $window->lastDay()->format('Y-m-d'));
+        self::assertSame(11, $window->weekCount());
+        self::assertSame('2026-W37', $window->anchor->iso());
+        self::assertSame(41, RoadmapWindow::around(Week::fromIso('2026-W40'))->weekCount());
+    }
+
+    public function testSpanningWindowCoversFourWeeksAtLeast(): void
+    {
+        $window = RoadmapWindow::spanning(new \DateTimeImmutable('2026-09-09'), new \DateTimeImmutable('2026-09-10'));
+
+        self::assertSame('2026-09-07', $window->firstDay()->format('Y-m-d'));
+        self::assertSame('2026-10-04', $window->lastDay()->format('Y-m-d'));
+        self::assertSame(4, $window->weekCount());
+    }
+
+    public function testBarIsPlacedOnASpanningWindow(): void
+    {
+        $window = RoadmapWindow::spanning(new \DateTimeImmutable('2026-09-07'), new \DateTimeImmutable('2026-09-25'));
+
+        $bar = $window->bar(new \DateTimeImmutable('2026-09-21'), new \DateTimeImmutable('2026-09-25'));
+
+        self::assertNotNull($bar);
+        self::assertEqualsWithDelta(100 * 14 / 28, $bar->left, 1e-9);
+        self::assertEqualsWithDelta(100 * 5 / 28, $bar->width, 1e-9);
+        self::assertFalse($bar->cutEnd);
+    }
+
+    public function testTrackOfAWindowLongerThanTheRoadmapWidensToKeepItsDaysAsWide(): void
+    {
+        $roadmap = new Roadmap($this->window(), new \DateTimeImmutable('2026-09-30'), []);
+        $short = new Roadmap(RoadmapWindow::spanning(new \DateTimeImmutable('2026-09-07'), new \DateTimeImmutable('2026-09-25')), new \DateTimeImmutable('2026-09-30'), []);
+        $long = new Roadmap(RoadmapWindow::spanning(new \DateTimeImmutable('2026-01-05'), new \DateTimeImmutable('2027-12-26')), new \DateTimeImmutable('2026-09-30'), []);
+
+        self::assertSame(52.0, $roadmap->minTrackRem());
+        self::assertSame(52.0, $short->minTrackRem());
+        self::assertSame(103, $long->window->weekCount());
+        self::assertEqualsWithDelta(52 * 103 / 41, $long->minTrackRem(), 1e-9);
+    }
+
+    public function testEveryMonthOfALongWindowIsLabelled(): void
+    {
+        $months = new Roadmap(RoadmapWindow::spanning(new \DateTimeImmutable('2026-01-05'), new \DateTimeImmutable('2027-12-26')), new \DateTimeImmutable('2026-09-30'), [])->months();
+
+        self::assertCount(24, $months);
+        self::assertSame(['janv. 2026', 0.0], $months[0]);
+        self::assertSame('janv. 2027', $months[12][0]);
+        self::assertSame('déc.', $months[23][0]);
+    }
+
+    public function testCenterIsTodayOrTheEdgeNearestToIt(): void
+    {
+        $window = RoadmapWindow::spanning(new \DateTimeImmutable('2026-09-07'), new \DateTimeImmutable('2026-09-25'));
+
+        self::assertEqualsWithDelta(50.0, new Roadmap($window, new \DateTimeImmutable('2026-09-21'), [])->centerPosition(), 1e-9);
+        self::assertSame(0.0, new Roadmap($window, new \DateTimeImmutable('2026-08-03'), [])->centerPosition());
+        self::assertSame(100.0, new Roadmap($window, new \DateTimeImmutable('2026-12-01'), [])->centerPosition());
+    }
+
     private function window(): RoadmapWindow
     {
         return RoadmapWindow::around(Week::fromIso('2026-W40'));

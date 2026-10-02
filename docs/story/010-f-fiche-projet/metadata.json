@@ -1,0 +1,42 @@
+{
+  "version": 2,
+  "title": "Consulter la fiche d'un projet : son consommé face à l'estimé, sa frise complète et la timeline de tous ses tronçons",
+  "created": "2026-10-02",
+  "updated": "2026-10-02",
+  "tags": [
+    "fiche-projet"
+  ],
+  "backlog": "consomme-vs-estime",
+  "changelog": [
+    {
+      "date": "2026-10-02",
+      "type": "Création",
+      "description": "Pitch initial rédigé : fiche de consultation d'un projet, ouverte à tous en lecture seule depuis une icône sur la roadmap ; synthèse et tableau du consommé face à l'estimé par projet, lot et feuille (C5.1), restant et dépassement cumulés séparément ; frise de la roadmap bornée à toute la vie du projet (4 semaines minimum), zoom ×1 à ×8 ouvert à ×1 sans mémorisation ; timeline verticale des tronçons saisis, toutes feuilles mélangées, du plus récent au plus ancien par mois, avec l'équipe et le temps de chacun (tension principe 2 assumée)."
+    },
+    {
+      "date": "2026-10-02",
+      "type": "Planification",
+      "description": "Plan technique validé : aucun impact modèle ; RoadmapWindow en plage de jours avec spanning() (semaines entières, 4 semaines minimum) et Roadmap::minTrackRem() pour garder la densité de la roadmap et défiler horizontalement au-delà ; RoadmapBuilder::buildProject() (planification globale, bornes du projet, enteredRuns() et reach() extraits, tronçons de toutes les feuilles saisies) rendant un ProjectRoadmap avec timeline TimelineMonth/TimelineEntry ; ProjectRollup cumule saisi, restant et dépassement séparés ; route app_roadmap_project dans RoadmapController avec ?roadmap= ; partiels _frieze/_zoom/_legend extraits de la roadmap, links dans _row, valeur remember dans roadmap_controller.js ; pitch annoté (règle 10 défilement horizontal au lieu de l'ajustement à la largeur, règle 13 centrage, règles 15 et 21 tronçons des feuilles non planifiées dans la timeline, critère ajouté, questions ouvertes tranchées)."
+    },
+    {
+      "date": "2026-10-02",
+      "type": "Implémentation",
+      "description": "Six étapes du plan livrées (RoadmapWindow::spanning() et Roadmap::minTrackRem(), cumul saisi/restant/dépassement dans ProjectRollup, RoadmapBuilder::buildProject() et timeline, route app_roadmap_project avec page, tableau, frise et timeline, icône sur la roadmap, valeur remember du zoom, E2E) ; 388 tests PHPUnit et 42 E2E verts, lint propre ; écarts : découpage des tronçons sorti dans un service RoadmapRunCutter, RoadmapTeamLine::forLeaf() et TimelineEntry::ofLeaves() pour tenir la limite de complexité cognitive de PHPStan, partiel _consumption_row.html.twig ajouté, test de l'icône placé dans RoadmapProjectControllerTest, E2E qui centre le tronçon avant de le survoler (un défilement provoqué par le survol referme l'infobulle, comportement de la story 009) ; questions ouvertes du plan tranchées (icône tabler:file-description, ligne du projet en pied de tableau)."
+    },
+    {
+      "date": "2026-10-02",
+      "type": "Review",
+      "description": "Revue du diff : 0 bloquant, 0 important, 4 mineurs corrigés pendant la passe (référence de découpe d'une feuille sans équipe calculée par feuille, lien « Ouvrir la fiche » sorti du <summary> et superposé à la colonne collante, --roadmap-min-track vérifié en fonctionnel avec un projet de 57 semaines, Week::tryFromIso() à la place de deux aides dupliquées) ; 395 tests PHPUnit et 42 E2E verts, lint propre. Statut : PRÊT À COMMITER."
+    },
+    {
+      "date": "2026-10-02",
+      "type": "Report",
+      "description": "Report rédigé : conformité 90 %, 18/18 critères d'acceptation, écarts volontaires (découpage en tronçons dans RoadmapRunCutter avec RoadmapTeamLine::forLeaf() et TimelineEntry::ofLeaves() pour la limite de complexité de PHPStan, propriété ProjectRoadmap::project, lien « Ouvrir la fiche » superposé hors du <summary>, test de l'icône dans RoadmapProjectControllerTest), ajouts (_consumption_row.html.twig, Week::tryFromIso(), tests issus de la review), aucun manque, aucune dette consignée."
+    },
+    {
+      "date": "2026-10-02",
+      "type": "Sync",
+      "description": "Plan réaligné sur le livré : découpage en tronçons dans RoadmapRunCutter et RoadmapTeamLine::forLeaf() (Approche retenue, Mécanismes mobilisés, Alternatives écartées, Périmètre, Ordre d'exécution, Risques), propriété ProjectRoadmap::project, TimelineEntry::ofLeaves(), _consumption_row.html.twig, Week::tryFromIso() et LotController, lien-icône superposé hors du <summary>, test de l'icône dans RoadmapProjectControllerTest, stratégie de test complétée (largeur minimale, projet de 57 semaines, WeekTest) ; critères de sortie attestés cochés ; pitch inchangé ; product-backlog : ligne consomme-vs-estime en clôture en cours, C5.1 annotée, C7.4 ajoutée, règle transverse « pas de lecture individuelle » éditée (temps par personne et par tronçon visible de tous depuis les stories 009 et 010) ; stack et vision inchangées."
+    }
+  ]
+}

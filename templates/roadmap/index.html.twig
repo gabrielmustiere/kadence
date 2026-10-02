@@ -23,70 +23,55 @@
                 <twig:ux:icon name="tabler:chevron-right" class="size-4 ms-1"/>
             </twig:Button>
         </nav>
-        <div class="flex items-center gap-1" role="group" aria-label="Zoom de la frise">
-            <twig:Button type="button" size="icon-sm" variant="outline" class="disabled:cursor-not-allowed disabled:opacity-50" aria-label="Dézoomer la frise" data-roadmap-target="zoomOut" data-action="roadmap#zoomOut" data-test="roadmap-zoom-out">
-                <twig:ux:icon name="tabler:minus" class="size-4"/>
-            </twig:Button>
-            <span class="min-w-8 text-center text-sm tabular-nums text-heading" aria-live="polite" data-roadmap-target="zoomLevel" data-test="roadmap-zoom-level">×1</span>
-            <twig:Button type="button" size="icon-sm" variant="outline" class="disabled:cursor-not-allowed disabled:opacity-50" aria-label="Zoomer la frise" data-roadmap-target="zoomIn" data-action="roadmap#zoomIn" data-test="roadmap-zoom-in">
-                <twig:ux:icon name="tabler:plus" class="size-4"/>
-            </twig:Button>
-            <twig:Button type="button" size="sm" variant="outline" class="disabled:cursor-not-allowed disabled:opacity-50" data-roadmap-target="zoomReset" data-action="roadmap#zoomReset" data-test="roadmap-zoom-reset">100 %</twig:Button>
-        </div>
+        {{ include('roadmap/_zoom.html.twig') }}
         </div>
     </div>
 
-    <div class="mb-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-body" data-test="roadmap-legend">
-        <span class="inline-flex items-center gap-1.5"><span class="inline-block h-3 w-6 rounded-sm bg-brand"></span>Saisi</span>
-        <span class="inline-flex items-center gap-1.5"><span class="inline-block h-3 w-6 rounded-sm bg-danger"></span>Saisi au-delà de l'estimation</span>
-        <span class="inline-flex items-center gap-1.5" data-test="roadmap-legend-gap"><span class="inline-flex h-3 w-6 gap-1"><span class="flex-1 rounded-sm bg-brand"></span><span class="flex-1 rounded-sm bg-brand"></span></span>Jour ouvré sans saisie</span>
-        <span class="inline-flex items-center gap-1.5"><span class="inline-block h-3 w-6 rounded-sm border border-dashed border-brand bg-brand-soft"></span>Restant, calculé</span>
-        <span class="inline-flex items-center gap-1.5"><span class="inline-block h-2 w-6 rounded-full bg-brand-medium"></span>Lot ou projet</span>
-        <span class="inline-flex items-center gap-1.5"><span class="inline-block h-3 w-px bg-danger"></span>Aujourd'hui</span>
-        <span data-test="roadmap-period">Du {{ window.firstDay|date('d/m/Y') }} au {{ window.lastDay|date('d/m/Y') }}</span>
-    </div>
+    {{ include('roadmap/_legend.html.twig') }}
 
     {% if roadmap.projects is empty %}
         <twig:Card data-test="roadmap-empty">
             <p class="text-body">Aucun projet pour l'instant.</p>
         </twig:Card>
     {% else %}
-        <div class="overflow-x-auto rounded-base border border-default bg-neutral-primary" style="--roadmap-weeks: {{ constant('App\\Model\\Roadmap\\RoadmapWindow::WEEK_COUNT') }}; --roadmap-zoom: 1" data-roadmap-target="scroller" data-controller="roadmap-tooltip" data-action="pointerover->roadmap-tooltip#show pointermove->roadmap-tooltip#show pointerout->roadmap-tooltip#leave focusin->roadmap-tooltip#show focusout->roadmap-tooltip#leave scroll->roadmap-tooltip#hide scroll@window->roadmap-tooltip#hide keydown.esc@window->roadmap-tooltip#hide turbo:before-cache@document->roadmap-tooltip#hide" data-test="roadmap">
-            <div style="min-width: calc(20rem + max(52rem, 100% - 20rem) * var(--roadmap-zoom))">
-                <div class="grid grid-cols-[20rem_1fr] bg-neutral-secondary-medium text-xs font-medium text-heading">
-                    <div class="sticky left-0 z-10 bg-neutral-secondary-medium px-4 py-2">Projet</div>
-                    <div class="relative h-8" data-roadmap-target="track" data-test="roadmap-months">
-                        {% for month in roadmap.months %}
-                            <span class="absolute top-2 whitespace-nowrap border-l border-default-medium ps-1" style="left: {{ month[1]|number_format(4, '.', '') }}%">{{ month[0] }}</span>
-                        {% endfor %}
-                    </div>
-                </div>
+        {% embed 'roadmap/_frieze.html.twig' %}
+            {% block rows %}
                 {% for project in roadmap.projects %}
-                    <details class="group border-t border-default" data-roadmap-target="project" data-project-id="{{ project.project.id }}" data-action="toggle->roadmap#remember" data-test="roadmap-project" data-title="{{ project.title }}">
-                        <summary class="grid cursor-pointer list-none grid-cols-[20rem_1fr] hover:bg-neutral-secondary-soft [&::-webkit-details-marker]:hidden">
-                            <div class="sticky left-0 z-10 bg-neutral-primary px-4 py-3 group-hover:bg-neutral-secondary-soft">
-                                <div class="flex flex-wrap items-center gap-1.5">
-                                    <twig:ux:icon name="tabler:chevron-right" class="size-4 shrink-0 text-body transition-transform group-open:rotate-90"/>
-                                    <span class="font-semibold text-heading">{{ project.title }}</span>
-                                    {% for signal in project.signals %}
-                                        <twig:Badge variant="{{ signal.variant }}" data-test="signal-{{ signal.value }}">{{ signal.label }}</twig:Badge>
-                                    {% endfor %}
+                    <div class="relative border-t border-default" data-test="roadmap-project" data-title="{{ project.title }}">
+                        <details class="group" data-roadmap-target="project" data-project-id="{{ project.project.id }}" data-action="toggle->roadmap#remember">
+                            <summary class="grid cursor-pointer list-none grid-cols-[20rem_1fr] hover:bg-neutral-secondary-soft [&::-webkit-details-marker]:hidden">
+                                <div class="sticky left-0 z-10 bg-neutral-primary py-3 ps-4 pe-11 group-hover:bg-neutral-secondary-soft">
+                                    <div class="flex flex-wrap items-center gap-1.5">
+                                        <twig:ux:icon name="tabler:chevron-right" class="size-4 shrink-0 text-body transition-transform group-open:rotate-90"/>
+                                        <span class="font-semibold text-heading">{{ project.title }}</span>
+                                        {% for signal in project.signals %}
+                                            <twig:Badge variant="{{ signal.variant }}" data-test="signal-{{ signal.value }}">{{ signal.label }}</twig:Badge>
+                                        {% endfor %}
+                                    </div>
                                 </div>
+                                <div class="roadmap-track relative min-h-12">
+                                    {{ include('roadmap/_today.html.twig') }}
+                                    {% if project.span %}
+                                        {{ include('roadmap/_bar.html.twig', {row: project, bar: project.span, kind: 'span', class: 'h-3 rounded-full bg-brand-medium', test: 'roadmap-bar-span'}) }}
+                                    {% endif %}
+                                </div>
+                            </summary>
+                            {% for row in project.children %}
+                                {{ include('roadmap/_row.html.twig', {row: row, depth: 1}) }}
+                            {% endfor %}
+                        </details>
+                        {# Laid over the summary rather than inside it: browsers expose a summary as a button, which may not hold a link. #}
+                        <div class="pointer-events-none absolute inset-x-0 top-0">
+                            <div class="sticky left-0 z-20 w-80">
+                                <a href="{{ path('app_roadmap_project', {id: project.project.id, roadmap: roadmap.window.anchor.iso}) }}" class="pointer-events-auto absolute end-3 top-3 grid size-6 place-items-center rounded-sm text-body hover:text-heading focus:outline-none focus:ring-2 focus:ring-brand-medium" title="Ouvrir la fiche" aria-label="Ouvrir la fiche de {{ project.title }}" data-test="roadmap-project-open">
+                                    <twig:ux:icon name="tabler:file-description" class="size-4"/>
+                                </a>
                             </div>
-                            <div class="roadmap-track relative min-h-12">
-                                {{ include('roadmap/_today.html.twig') }}
-                                {% if project.span %}
-                                    {{ include('roadmap/_bar.html.twig', {row: project, bar: project.span, kind: 'span', class: 'h-3 rounded-full bg-brand-medium', test: 'roadmap-bar-span'}) }}
-                                {% endif %}
-                            </div>
-                        </summary>
-                        {% for row in project.children %}
-                            {{ include('roadmap/_row.html.twig', {row: row, depth: 1}) }}
-                        {% endfor %}
-                    </details>
+                        </div>
+                    </div>
                 {% endfor %}
-            </div>
-        </div>
+            {% endblock %}
+        {% endembed %}
     {% endif %}
     </div>
 {% endblock %}

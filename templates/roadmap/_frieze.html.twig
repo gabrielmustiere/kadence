@@ -1,0 +1,17 @@
+{#
+    The frame of a frieze: it scrolls when zoomed or when its weeks need more room than the page, holds the tooltips and
+    the months, then the `rows` block. Expects `roadmap`.
+#}
+<div class="overflow-x-auto rounded-base border border-default bg-neutral-primary" style="--roadmap-weeks: {{ roadmap.window.weekCount }}; --roadmap-zoom: 1; --roadmap-min-track: {{ roadmap.minTrackRem|number_format(4, '.', '') }}rem" data-roadmap-target="scroller" data-controller="roadmap-tooltip" data-action="pointerover->roadmap-tooltip#show pointermove->roadmap-tooltip#show pointerout->roadmap-tooltip#leave focusin->roadmap-tooltip#show focusout->roadmap-tooltip#leave scroll->roadmap-tooltip#hide scroll@window->roadmap-tooltip#hide keydown.esc@window->roadmap-tooltip#hide turbo:before-cache@document->roadmap-tooltip#hide" data-test="roadmap">
+    <div style="min-width: calc(20rem + max(var(--roadmap-min-track), 100% - 20rem) * var(--roadmap-zoom))">
+        <div class="grid grid-cols-[20rem_1fr] bg-neutral-secondary-medium text-xs font-medium text-heading">
+            <div class="sticky left-0 z-10 bg-neutral-secondary-medium px-4 py-2">Projet</div>
+            <div class="relative h-8" data-roadmap-target="track" data-test="roadmap-months">
+                {% for month in roadmap.months %}
+                    <span class="absolute top-2 whitespace-nowrap border-l border-default-medium ps-1" style="left: {{ month[1]|number_format(4, '.', '') }}%">{{ month[0] }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% block rows %}{% endblock %}
+    </div>
+</div>
