@@ -36,6 +36,15 @@
       "date": "2026-10-02",
       "type": "Sync",
       "description": "Plan réaligné sur le livré : LeafPath.php créé et TimelineEntry.php modifié (Périmètre, étape 2), RoadmapRunCutter::split(), _legend.html.twig paramétrée (Mécanismes mobilisés, Périmètre, étape 3), résolveur d'entité par défaut au lieu de #[MapEntity], PersonLoad::unknownEnds en PersonLeafRow, « À venir » avec part « de sa capacité » et signaux, icône tabler:file-description, test NavigationTest dédié ; critères de sortie attestés cochés ; pitch : règle 16 (signaux toujours affichés, feuilles sans début à la fin), règle 22 (personne désactivée sans charge), alignement vision annoté ; product-backlog : D1 et C1.6 ajoutées, C6.3 annotée, règles transverses « profil » et « lecture individuelle sans comparaison » éditées, notes jalons-dates-annoncees et charge-vs-capacite, ligne fiche-collaborateur ajoutée en V2 (clôture en cours) ; vision : principe 2, anti-objectif « mesure de productivité individuelle » et cadre social édités ; stack inchangée."
+    },
+    {
+      "date": "2026-10-02",
+      "type": "Livraison",
+      "description": "Story livrée par le commit d94c769 (feat(person)) ; suite complète verte avant commit : 433 tests PHPUnit et 44 E2E, lint propre."
     }
-  ]
+  ],
+  "delivery": {
+    "release": null,
+    "commit": "d94c769"
+  }
 }
