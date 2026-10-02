@@ -11,6 +11,7 @@ use App\Enum\Type\TagCategory;
 use App\Exception\LastActiveDirectorException;
 use App\Exception\ManagerWithActiveReportsException;
 use App\Model\Week;
+use App\Model\WeeklyMaximum;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -140,7 +141,7 @@ final readonly class TeamManager
     private static function weeklyMaxQuarters(?float $days): int
     {
         $quarters = null === $days ? 0 : (int) round($days * 4);
-        if ($quarters < 1 || $quarters > WeeklyMaxManager::DEFAULT_QUARTERS) {
+        if ($quarters < 1 || $quarters > WeeklyMaximum::DEFAULT_QUARTERS) {
             throw new \LogicException('A validated team member input has a weekly maximum between a quarter and five days.');
         }
 

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Model\Schedule;
 
 use App\Enum\Type\HolidayCalendar;
-use App\Service\WeeklyMaxManager;
+use App\Model\WeeklyMaximum;
 
 /**
  * The capacity a person gives each working day: their weekly maximum, capped to the days that are not holidays, spread
@@ -100,7 +100,7 @@ final class DailyCapacity
             }
         }
 
-        return $this->weeks[$key] = [$workingDays, WeeklyMaxManager::cap($this->quartersInEffect($userId, $monday->format('Y-m-d')), 5 - $workingDays)];
+        return $this->weeks[$key] = [$workingDays, WeeklyMaximum::cap($this->quartersInEffect($userId, $monday->format('Y-m-d')), 5 - $workingDays)];
     }
 
     /**
@@ -108,7 +108,7 @@ final class DailyCapacity
      */
     private function quartersInEffect(int $userId, string $monday): int
     {
-        $quarters = WeeklyMaxManager::DEFAULT_QUARTERS;
+        $quarters = WeeklyMaximum::DEFAULT_QUARTERS;
         foreach ($this->weeklyMaxes[$userId] ?? [] as [$from, $value]) {
             if ($from > $monday) {
                 break;
