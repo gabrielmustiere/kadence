@@ -10,6 +10,17 @@ Chaque version porte un **titre** et distingue les **évolutions fonctionnelles*
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-10-02 — Fiche d'un projet
+
+### ✨ Fonctionnel
+- **Fiche d'un projet** — sur la roadmap, une icône dans la colonne du titre de chaque projet ouvre sa fiche, consultable par tous. Un lien ramène à la même semaine de la roadmap.
+- **Consommé face à l'estimé** — la fiche résume l'estimé, le saisi, le restant, le dépassement, le début et la fin calculée du projet, puis les détaille lot par lot. Le dépassement d'une feuille n'est jamais compensé par le restant d'une autre.
+- **Frise de tout le projet** — la frise couvre le projet du premier au dernier jour connu. Un projet plus long que la roadmap élargit la frise, qui défile, et chaque mois garde son libellé. Elle s'ouvre à ×1, sans toucher au zoom de la roadmap.
+- **Timeline des blocs de travail** — tous les tronçons du projet, du plus récent au plus ancien et mois par mois, avec la feuille, la période, le temps saisi et ce que chacun y a saisi, y compris sur une feuille pas encore planifiée.
+
+### 🔧 Technique
+- **Découpage des tronçons** — sorti dans un service dédié, partagé par la roadmap et la fiche.
+
 ## [0.10.0] - 2026-10-01 — Interruptions et zoom de la roadmap
 
 ### ✨ Fonctionnel
@@ -135,7 +146,8 @@ Chaque version porte un **titre** et distingue les **évolutions fonctionnelles*
 - **Connexion rapide en dev** — choix d'un compte de fixtures sur la page de connexion, uniquement en environnement de développement.
 - **Nettoyage du template d'amorçage** — suppression de la page design system et de la route de test d'e-mail.
 
-[Unreleased]: https://github.com/gabrielmustiere/kadence/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/gabrielmustiere/kadence/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/gabrielmustiere/kadence/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/gabrielmustiere/kadence/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/gabrielmustiere/kadence/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/gabrielmustiere/kadence/compare/v0.7.0...v0.8.0
