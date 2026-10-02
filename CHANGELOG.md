@@ -10,6 +10,18 @@ Chaque version porte un **titre** et distingue les **évolutions fonctionnelles*
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-10-02 — Avancement des feuilles
+
+### ✨ Fonctionnel
+- **Déclarer l'avancement d'une feuille** — sur la page d'un projet, un lead, la direction ou le responsable d'une feuille estimée déclare où en est le travail, de 0 à 100 % par pas de 5 %.
+- **Fin calculée sur le rythme réel** — le temps restant d'une feuille est déduit du temps déjà saisi et de l'avancement déclaré, puis diminue au fil de la saisie. La roadmap, la fiche d'un projet et celle d'une personne en tiennent compte. Sans avancement déclaré, rien ne change.
+- **Une fin pour les feuilles en dépassement** — une feuille qui a dépassé son estimation retrouve une fin calculée dès que son avancement est déclaré, et son lot et son projet aussi.
+- **Coût projeté et historique sur la fiche d'un projet** — on y voit l'avancement de chaque feuille, son coût projeté face à l'estimation (« 25 j (+5 j) »), l'avancement cumulé des lots et du projet, et l'historique des déclarations (date, pourcentage, auteur).
+- **Nouveaux signaux** — « terminée à 100 % », et « avancement à actualiser » quand le temps saisi depuis la déclaration a épuisé le restant. L'infobulle de la roadmap montre l'avancement et le coût projeté.
+
+### 🔧 Technique
+- **Historique des déclarations et dépassement séparé du restant** — chaque déclaration fige le temps saisi et le restant au jour où elle est faite, et le calcul de la chronologie distingue désormais le temps restant du dépassement de l'estimation.
+
 ## [0.12.0] - 2026-10-02 — Fiche d'une personne
 
 ### ✨ Fonctionnel
@@ -158,7 +170,8 @@ Chaque version porte un **titre** et distingue les **évolutions fonctionnelles*
 - **Connexion rapide en dev** — choix d'un compte de fixtures sur la page de connexion, uniquement en environnement de développement.
 - **Nettoyage du template d'amorçage** — suppression de la page design system et de la route de test d'e-mail.
 
-[Unreleased]: https://github.com/gabrielmustiere/kadence/compare/v0.12.0...HEAD
+[Unreleased]: https://github.com/gabrielmustiere/kadence/compare/v0.13.0...HEAD
+[0.13.0]: https://github.com/gabrielmustiere/kadence/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/gabrielmustiere/kadence/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/gabrielmustiere/kadence/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/gabrielmustiere/kadence/compare/v0.9.0...v0.10.0
