@@ -13,6 +13,7 @@ use App\Entity\User;
 use App\Exception\LotHasTimeEntriesException;
 use App\Repository\LotProgressRepository;
 use App\Repository\TimeEntryRepository;
+use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 
 final readonly class ProjectManager
@@ -47,11 +48,16 @@ final readonly class ProjectManager
             throw new LotHasTimeEntriesException($project->getTitle());
         }
 
-        $this->entityManager->wrapInTransaction(function () use ($project): void {
-            $this->lotProgressRepository->deleteForLots($project->getLots()->getValues());
-            $this->entityManager->remove($project);
-            $this->entityManager->flush();
-        });
+        try {
+            $this->entityManager->wrapInTransaction(function () use ($project): void {
+                $this->lotProgressRepository->deleteForLots($project->getLots()->getValues());
+                $this->entityManager->remove($project);
+                $this->entityManager->flush();
+            });
+        } catch (ForeignKeyConstraintViolationException) {
+            // Time entered since the check above: the database refuses to orphan it.
+            throw new LotHasTimeEntriesException($project->getTitle());
+        }
     }
 
     public function addLot(Project $project, LotInput $input): Lot
@@ -117,15 +123,20 @@ final readonly class ProjectManager
 
         $takenBackBy = $this->detach($lot);
 
-        $this->entityManager->wrapInTransaction(function () use ($lot, $takenBackBy): void {
-            if (null !== $takenBackBy) {
-                $this->lotProgressRepository->moveToLot($lot, $takenBackBy);
-            } else {
-                $this->lotProgressRepository->deleteForLots([$lot, ...$lot->getChildren()->getValues()]);
-            }
-            $this->entityManager->remove($lot);
-            $this->entityManager->flush();
-        });
+        try {
+            $this->entityManager->wrapInTransaction(function () use ($lot, $takenBackBy): void {
+                if (null !== $takenBackBy) {
+                    $this->lotProgressRepository->moveToLot($lot, $takenBackBy);
+                } else {
+                    $this->lotProgressRepository->deleteForLots([$lot, ...$lot->getChildren()->getValues()]);
+                }
+                $this->entityManager->remove($lot);
+                $this->entityManager->flush();
+            });
+        } catch (ForeignKeyConstraintViolationException) {
+            // Time entered since the check above: the database refuses to orphan it.
+            throw new LotHasTimeEntriesException($lot->getTitle());
+        }
     }
 
     /**
