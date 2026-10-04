@@ -10,6 +10,19 @@ Chaque version porte un **titre** et distingue les **évolutions fonctionnelles*
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-10-04 — Nouvelle interface & favoris de saisie
+
+### ✨ Fonctionnel
+- **Feuilles favorites dans « Ma semaine »** — une étoile sur chaque ligne de la grille et sur chaque résultat de « Ajouter une ligne » met une feuille en favori, ou l'en retire. Les favoris restent en tête de la grille chaque semaine, même sans temps saisi récemment : au retour de congés, plus besoin de les rechercher. Quand un lot favori est découpé en sous-lots, le favori passe au premier sous-lot.
+- **Nouvelle identité visuelle** — l'interface adopte le design system « Cadence » : nouvelle typographie, encre bleu-noir, bleu du stylo pour le temps saisi, rouge pour le dépassement, hachures pour ce qui est calculé, et un mode sombre complet.
+- **Pages revues** — la fiche d'un projet, la page de gestion d'un projet et la fiche d'une personne sont réorganisées, le tableau de bord et la page de connexion revus ; une règle graduée montre d'un coup d'œil le saisi, le restant et le dépassement de chaque lot et de chaque projet.
+- **Accessibilité** — navigation latérale lisible par les lecteurs d'écran, lien d'évitement vers le contenu, meilleurs contrastes en mode sombre, focus toujours visible.
+
+### 🔧 Technique
+- **Favoris en base** — nouvelle table des favoris (migration à appliquer) ; les favoris suivent le découpage et la suppression des lots, et la page de saisie ne fait qu'une requête de plus, quel que soit leur nombre.
+- **Composants d'interface partagés** — en-tête de page, tableaux, états vides, indicateurs, avatars, règle graduée et thème de formulaire communs à toutes les pages.
+- **Démo en ligne** — `deploy.sh` publie `main` sur kadence.mustiere.fr dans une image FrankenPHP, en recréant la base et ses données de démonstration à chaque déploiement.
+
 ## [0.13.1] - 2026-10-02 — Cases cochées & socle consolidé
 
 ### ✨ Fonctionnel
@@ -182,7 +195,8 @@ Chaque version porte un **titre** et distingue les **évolutions fonctionnelles*
 - **Connexion rapide en dev** — choix d'un compte de fixtures sur la page de connexion, uniquement en environnement de développement.
 - **Nettoyage du template d'amorçage** — suppression de la page design system et de la route de test d'e-mail.
 
-[Unreleased]: https://github.com/gabrielmustiere/kadence/compare/v0.13.1...HEAD
+[Unreleased]: https://github.com/gabrielmustiere/kadence/compare/v0.14.0...HEAD
+[0.14.0]: https://github.com/gabrielmustiere/kadence/compare/v0.13.1...v0.14.0
 [0.13.1]: https://github.com/gabrielmustiere/kadence/compare/v0.13.0...v0.13.1
 [0.13.0]: https://github.com/gabrielmustiere/kadence/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/gabrielmustiere/kadence/compare/v0.11.0...v0.12.0
