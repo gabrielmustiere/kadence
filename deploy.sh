@@ -51,7 +51,8 @@ remote "
 "
 
 step "Étape 2 : fichier d'environnement"
-rsync -a --chmod=F600 "$ENV_DIR/.env" "$REMOTE_USER@$REMOTE_HOST:$SITE_DIR/$ENV_DIR/.env"
+scp -q "$ENV_DIR/.env" "$REMOTE_USER@$REMOTE_HOST:$SITE_DIR/$ENV_DIR/.env"
+remote "chmod 600 '$SITE_DIR/$ENV_DIR/.env'"
 
 step "Étape 3 : build des images app et seed"
 remote "cd '$SITE_DIR' && $COMPOSE --profile seed build"
