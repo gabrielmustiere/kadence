@@ -15,6 +15,7 @@ use Doctrine\Persistence\ObjectManager;
 class ProjectFixtures extends Fixture implements DependentFixtureInterface
 {
     public const string SUPPORT = 'lot-support';
+    public const string TIMESHEET = 'lot-timesheet';
 
     public function load(ObjectManager $manager): void
     {
@@ -27,7 +28,7 @@ class ProjectFixtures extends Fixture implements DependentFixtureInterface
         $split = $this->lot($kadence, 'Projets et lots', null, null);
         $this->lot($kadence, 'Modèle et règles', 5, $prod, $split);
         $this->lot($kadence, 'Écrans', 8, $lead, $split);
-        $this->lot($kadence, 'Saisie des temps', null, $prod);
+        $this->addReference(self::TIMESHEET, $this->lot($kadence, 'Saisie des temps', null, $prod));
         $this->lot($kadence, 'Roadmap', 12, null);
         $this->lot($kadence, 'Rappels de saisie', 3, $former);
 

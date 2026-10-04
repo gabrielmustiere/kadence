@@ -45,6 +45,7 @@ function purge() {
   sql(`DELETE FROM holiday_adjustment WHERE label = '${neutralization}'`);
   const lots = `SELECT l.id FROM lot l JOIN project p ON p.id = l.project_id WHERE p.title LIKE 'Saisie E2E %'`;
   sql(`DELETE FROM time_entry WHERE lot_id IN (${lots})`);
+  sql(`DELETE FROM favorite_lot WHERE lot_id IN (${lots})`);
   sql(`DELETE FROM lot WHERE project_id IN (SELECT id FROM project WHERE title LIKE 'Saisie E2E %')`);
   sql(`DELETE FROM project WHERE title LIKE 'Saisie E2E %'`);
   sql(`DELETE FROM weekly_max WHERE user_id = (SELECT id FROM "user" WHERE email = 'ancien@example.com')`);
@@ -157,6 +158,38 @@ test('une ligne ajoutée par la recherche disparaît au rechargement si elle ne 
   const result = page.locator('[data-test="add-line-result"]', { hasText: 'Gamma' });
   await expect(result).toBeVisible();
   await result.click();
+  await expect(row(page, 'Gamma')).toBeVisible();
+
+  await page.reload();
+  await expect(row(page, 'Gamma')).toHaveCount(0);
+});
+
+test('une feuille mise en favori depuis la recherche passe en tête de la grille, sur toutes les semaines', async ({ page }) => {
+  await login(page, 'prod@example.com');
+
+  await page.click('[data-test="add-line-open"]');
+  await page.fill('[data-test="add-line-input"]', `${project} gamma`);
+  const searchStar = page.locator('[data-test="add-line-results"] [data-test="favorite-toggle"]');
+  await expect(searchStar).toHaveCount(1);
+  await searchStar.click();
+  await expect(row(page, 'Gamma').locator('[data-test="favorite-toggle"]')).toHaveAttribute('data-favorite', 'true');
+
+  await page.reload();
+  const titles = await page.locator('[data-test="timesheet-row"] [data-test="leaf-title"]').allTextContents();
+  expect(titles.indexOf('Gamma')).toBeGreaterThanOrEqual(0);
+  expect(titles.indexOf('Gamma')).toBeLessThan(titles.indexOf('Alpha'));
+
+  const label = page.locator('[data-test="week-label"]');
+  for (let i = 0; i < 3; i++) {
+    const week = await label.getAttribute('data-week');
+    await page.click('[data-test="week-prev"]');
+    await expect(label).not.toHaveAttribute('data-week', week ?? '');
+  }
+  const star = row(page, 'Gamma').locator('[data-test="favorite-toggle"]');
+  await expect(star).toHaveAttribute('data-favorite', 'true');
+
+  await star.click();
+  await expect(star).toHaveAttribute('data-favorite', 'false');
   await expect(row(page, 'Gamma')).toBeVisible();
 
   await page.reload();

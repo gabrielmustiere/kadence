@@ -13,6 +13,7 @@ use App\Entity\Project;
 use App\Entity\User;
 use App\Exception\LotDepthException;
 use App\Exception\LotHasTimeEntriesException;
+use App\Repository\FavoriteLotRepository;
 use App\Repository\LotProgressRepository;
 use App\Repository\TimeEntryRepository;
 use App\Service\ProjectManager;
@@ -30,7 +31,7 @@ final class ProjectManagerTest extends TestCase
         $input->title = 'Kadence';
         $input->description = '';
 
-        $project = new ProjectManager($entityManager, $this->createStub(TimeEntryRepository::class), $this->createStub(LotProgressRepository::class))->createProject($input);
+        $project = new ProjectManager($entityManager, $this->createStub(TimeEntryRepository::class), $this->createStub(LotProgressRepository::class), $this->createStub(FavoriteLotRepository::class))->createProject($input);
 
         self::assertSame('Kadence', $project->getTitle());
         self::assertNull($project->getDescription());
@@ -87,7 +88,7 @@ final class ProjectManagerTest extends TestCase
 
         $this->expectException(LotDepthException::class);
 
-        new ProjectManager($entityManager, $this->createStub(TimeEntryRepository::class), $this->createStub(LotProgressRepository::class))->addSubLot($subLot, $this->lotInput('Trop profond', 1, null));
+        new ProjectManager($entityManager, $this->createStub(TimeEntryRepository::class), $this->createStub(LotProgressRepository::class), $this->createStub(FavoriteLotRepository::class))->addSubLot($subLot, $this->lotInput('Trop profond', 1, null));
     }
 
     public function testDeletingTheLastSubLotMovesItsEstimateAndOwnerBackToItsLot(): void
@@ -153,7 +154,7 @@ final class ProjectManagerTest extends TestCase
         $timeEntryRepository->method('existsForLots')->willReturn(true);
         $timeEntryRepository->expects($this->once())->method('moveToLot')->with($lot, self::isInstanceOf(Lot::class));
 
-        $subLot = new ProjectManager($this->transactionalEntityManager(), $timeEntryRepository, $this->createStub(LotProgressRepository::class))->addSubLot($lot, $input);
+        $subLot = new ProjectManager($this->transactionalEntityManager(), $timeEntryRepository, $this->createStub(LotProgressRepository::class), $this->createStub(FavoriteLotRepository::class))->addSubLot($lot, $input);
 
         self::assertSame(6, $subLot->getInitialEstimateDays());
         self::assertSame(8, $subLot->getEstimateDays());
@@ -169,7 +170,7 @@ final class ProjectManagerTest extends TestCase
         $timeEntryRepository->method('existsForLots')->willReturn(true);
         $timeEntryRepository->expects($this->once())->method('moveToLot');
 
-        $subLot = new ProjectManager($this->transactionalEntityManager(), $timeEntryRepository, $this->createStub(LotProgressRepository::class))->addSubLot($lot, $input);
+        $subLot = new ProjectManager($this->transactionalEntityManager(), $timeEntryRepository, $this->createStub(LotProgressRepository::class), $this->createStub(FavoriteLotRepository::class))->addSubLot($lot, $input);
 
         self::assertSame(5, $subLot->getInitialEstimateDays());
     }
@@ -181,7 +182,7 @@ final class ProjectManagerTest extends TestCase
         $timeEntryRepository->method('existsForLots')->willReturn(false);
         $timeEntryRepository->expects($this->never())->method('moveToLot');
 
-        $subLot = new ProjectManager($this->transactionalEntityManager(), $timeEntryRepository, $this->createStub(LotProgressRepository::class))->addSubLot($lot, $this->prefilledSubLotInput($lot, 'Modèle'));
+        $subLot = new ProjectManager($this->transactionalEntityManager(), $timeEntryRepository, $this->createStub(LotProgressRepository::class), $this->createStub(FavoriteLotRepository::class))->addSubLot($lot, $this->prefilledSubLotInput($lot, 'Modèle'));
 
         self::assertNull($subLot->getInitialEstimateDays());
     }
@@ -207,7 +208,7 @@ final class ProjectManagerTest extends TestCase
 
         $this->expectException(LotHasTimeEntriesException::class);
 
-        new ProjectManager($entityManager, $timeEntryRepository, $this->createStub(LotProgressRepository::class))->deleteLot($lot);
+        new ProjectManager($entityManager, $timeEntryRepository, $this->createStub(LotProgressRepository::class), $this->createStub(FavoriteLotRepository::class))->deleteLot($lot);
     }
 
     public function testDeletingAProjectCarryingTimeIsRefused(): void
@@ -220,7 +221,7 @@ final class ProjectManagerTest extends TestCase
 
         $this->expectException(LotHasTimeEntriesException::class);
 
-        new ProjectManager($entityManager, $timeEntryRepository, $this->createStub(LotProgressRepository::class))->deleteProject($project);
+        new ProjectManager($entityManager, $timeEntryRepository, $this->createStub(LotProgressRepository::class), $this->createStub(FavoriteLotRepository::class))->deleteProject($project);
     }
 
     public function testFirstSubLotTakesOverTheProgressOfItsLot(): void
@@ -229,7 +230,7 @@ final class ProjectManagerTest extends TestCase
         $lotProgressRepository = $this->createMock(LotProgressRepository::class);
         $lotProgressRepository->expects($this->once())->method('moveToLot')->with($lot, self::isInstanceOf(Lot::class));
 
-        new ProjectManager($this->transactionalEntityManager(), $this->createStub(TimeEntryRepository::class), $lotProgressRepository)->addSubLot($lot, $this->prefilledSubLotInput($lot, 'Modèle'));
+        new ProjectManager($this->transactionalEntityManager(), $this->createStub(TimeEntryRepository::class), $lotProgressRepository, $this->createStub(FavoriteLotRepository::class))->addSubLot($lot, $this->prefilledSubLotInput($lot, 'Modèle'));
     }
 
     public function testNextSubLotsTakeOverNoProgress(): void
@@ -239,7 +240,7 @@ final class ProjectManagerTest extends TestCase
         $lotProgressRepository = $this->createMock(LotProgressRepository::class);
         $lotProgressRepository->expects($this->never())->method('moveToLot');
 
-        new ProjectManager($this->transactionalEntityManager(), $this->createStub(TimeEntryRepository::class), $lotProgressRepository)->addSubLot($lot, $this->lotInput('Écrans', 2, null));
+        new ProjectManager($this->transactionalEntityManager(), $this->createStub(TimeEntryRepository::class), $lotProgressRepository, $this->createStub(FavoriteLotRepository::class))->addSubLot($lot, $this->lotInput('Écrans', 2, null));
     }
 
     public function testDeletingTheLastSubLotMovesItsProgressBackToItsLot(): void
@@ -250,7 +251,7 @@ final class ProjectManagerTest extends TestCase
         $lotProgressRepository->expects($this->once())->method('moveToLot')->with($subLot, $lot);
         $lotProgressRepository->expects($this->never())->method('deleteForLots');
 
-        new ProjectManager($this->transactionalEntityManager(), $this->createStub(TimeEntryRepository::class), $lotProgressRepository)->deleteLot($subLot);
+        new ProjectManager($this->transactionalEntityManager(), $this->createStub(TimeEntryRepository::class), $lotProgressRepository, $this->createStub(FavoriteLotRepository::class))->deleteLot($subLot);
     }
 
     public function testDeletingASplitLotDeletesTheProgressOfItsSubLots(): void
@@ -261,7 +262,7 @@ final class ProjectManagerTest extends TestCase
         $lotProgressRepository->expects($this->once())->method('deleteForLots')->with([$lot, $subLot]);
         $lotProgressRepository->expects($this->never())->method('moveToLot');
 
-        new ProjectManager($this->transactionalEntityManager(), $this->createStub(TimeEntryRepository::class), $lotProgressRepository)->deleteLot($lot);
+        new ProjectManager($this->transactionalEntityManager(), $this->createStub(TimeEntryRepository::class), $lotProgressRepository, $this->createStub(FavoriteLotRepository::class))->deleteLot($lot);
     }
 
     public function testDeletingAProjectDeletesTheProgressOfItsLots(): void
@@ -275,7 +276,7 @@ final class ProjectManagerTest extends TestCase
         $entityManager->method('wrapInTransaction')->willReturnCallback(static fn (callable $work): mixed => $work());
         $entityManager->expects($this->once())->method('remove')->with($project);
 
-        new ProjectManager($entityManager, $this->createStub(TimeEntryRepository::class), $lotProgressRepository)->deleteProject($project);
+        new ProjectManager($entityManager, $this->createStub(TimeEntryRepository::class), $lotProgressRepository, $this->createStub(FavoriteLotRepository::class))->deleteProject($project);
     }
 
     public function testAddLotAppliesTheStartDateAndTheTeamWithTheOwnerAtFullShare(): void
@@ -347,7 +348,7 @@ final class ProjectManagerTest extends TestCase
 
     private function manager(): ProjectManager
     {
-        return new ProjectManager($this->createStub(EntityManagerInterface::class), $this->createStub(TimeEntryRepository::class), $this->createStub(LotProgressRepository::class));
+        return new ProjectManager($this->createStub(EntityManagerInterface::class), $this->createStub(TimeEntryRepository::class), $this->createStub(LotProgressRepository::class), $this->createStub(FavoriteLotRepository::class));
     }
 
     private function transactionalEntityManager(): EntityManagerInterface

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Controller;
 
 use App\Entity\User;
+use App\Tests\Support\CreatesFavorites;
 use App\Tests\Support\CreatesProjects;
 use App\Tests\Support\CreatesTimeEntries;
 use App\Tests\Support\CreatesUsers;
@@ -17,6 +18,7 @@ use Symfony\Component\HttpKernel\Profiler\Profile;
 final class TimesheetControllerTest extends WebTestCase
 {
     use ClockSensitiveTrait;
+    use CreatesFavorites;
     use CreatesProjects;
     use CreatesTimeEntries;
     use CreatesUsers;
@@ -80,7 +82,7 @@ final class TimesheetControllerTest extends WebTestCase
         self::assertSelectorExists('[data-test="home-timesheet"]');
     }
 
-    public function testQueryCountDoesNotGrowWithTheRows(): void
+    public function testQueryCountDoesNotGrowWithTheRowsOrTheFavorites(): void
     {
         $client = self::createClient();
         $small = $this->createUser();
@@ -92,6 +94,10 @@ final class TimesheetControllerTest extends WebTestCase
             $this->createTimeEntry($large, $this->createLot($split->getProject(), parent: $split), $day, 1);
             $this->createTimeEntry($large, $this->createLot($project), $day, 1);
         }
+        $this->createTimeEntry($large, $favorite = $this->createLot($project), '2026-09-30', 1);
+        $this->createFavorite($large, $favorite);
+        $split = $this->createLot($this->createProject());
+        $this->createFavorite($large, $this->createLot($split->getProject(), parent: $split));
         $client->request('GET', '/login');
 
         $smallCount = $this->queryCount($client, $small);

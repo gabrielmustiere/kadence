@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace App\Tests\Service;
 
+use App\Dto\LotInput;
 use App\Entity\Lot;
 use App\Exception\LotHasTimeEntriesException;
+use App\Repository\FavoriteLotRepository;
 use App\Repository\LotProgressRepository;
 use App\Repository\TimeEntryRepository;
 use App\Service\ProjectManager;
+use App\Tests\Support\CreatesFavorites;
 use App\Tests\Support\CreatesProjects;
 use App\Tests\Support\CreatesTimeEntries;
 use App\Tests\Support\CreatesUsers;
@@ -17,6 +20,7 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 final class ProjectManagerTest extends KernelTestCase
 {
+    use CreatesFavorites;
     use CreatesProjects;
     use CreatesTimeEntries;
     use CreatesUsers;
@@ -54,6 +58,57 @@ final class ProjectManagerTest extends KernelTestCase
         self::assertSame(1, $this->rowCount('SELECT COUNT(*) FROM time_entry WHERE lot_id = ?', $leaf->getId()));
     }
 
+    public function testTheFirstSubLotTakesOverTheFavoritesOfItsLot(): void
+    {
+        $lot = $this->createLot($this->createProject());
+        $this->createFavorite($this->createUser(), $lot);
+        $this->createFavorite($this->createUser(), $lot);
+        $input = LotInput::forSubLotOf($lot);
+        $input->title = 'Écrans';
+
+        $subLot = $this->manager()->addSubLot($lot, $input);
+
+        self::assertSame(0, $this->rowCount('SELECT COUNT(*) FROM favorite_lot WHERE lot_id = ?', $lot->getId()));
+        self::assertSame(2, $this->rowCount('SELECT COUNT(*) FROM favorite_lot WHERE lot_id = ?', $subLot->getId()));
+    }
+
+    public function testDeletingTheLastSubLotGivesItsFavoritesBackToItsLot(): void
+    {
+        $lot = $this->createLot($project = $this->createProject());
+        $subLot = $this->createLot($project, parent: $lot);
+        $this->createFavorite($this->createUser(), $subLot);
+
+        $this->manager()->deleteLot($subLot);
+
+        self::assertSame(1, $this->rowCount('SELECT COUNT(*) FROM favorite_lot WHERE lot_id = ?', $lot->getId()));
+    }
+
+    public function testAFavoriteNeverPreventsDeletingASplitLot(): void
+    {
+        $split = $this->createLot($project = $this->createProject());
+        $subLot = $this->createLot($project, parent: $split);
+        $this->createLot($project, parent: $split);
+        $this->createFavorite($this->createUser(), $subLot);
+        $subLotId = $subLot->getId();
+
+        $this->manager()->deleteLot($split);
+
+        self::assertSame(0, $this->rowCount('SELECT COUNT(*) FROM favorite_lot WHERE lot_id = ?', $subLotId));
+    }
+
+    public function testAFavoriteNeverPreventsDeletingAProject(): void
+    {
+        $lot = $this->createLot($project = $this->createProject());
+        $this->createFavorite($this->createUser(), $lot);
+        $lotId = $lot->getId();
+        $projectId = $project->getId();
+
+        $this->manager()->deleteProject($project);
+
+        self::assertSame(0, $this->rowCount('SELECT COUNT(*) FROM favorite_lot WHERE lot_id = ?', $lotId));
+        self::assertSame(0, $this->rowCount('SELECT COUNT(*) FROM project WHERE id = ?', $projectId));
+    }
+
     private function leafWithTime(): Lot
     {
         $leaf = $this->createLot($this->createProject(), 5);
@@ -72,8 +127,18 @@ final class ProjectManagerTest extends KernelTestCase
         $timeEntryRepository->method('existsForProject')->willReturn(false);
         $lotProgressRepository = self::getContainer()->get(LotProgressRepository::class);
         \assert($lotProgressRepository instanceof LotProgressRepository);
+        $favoriteLotRepository = self::getContainer()->get(FavoriteLotRepository::class);
+        \assert($favoriteLotRepository instanceof FavoriteLotRepository);
 
-        return new ProjectManager($this->entityManager(), $timeEntryRepository, $lotProgressRepository);
+        return new ProjectManager($this->entityManager(), $timeEntryRepository, $lotProgressRepository, $favoriteLotRepository);
+    }
+
+    private function manager(): ProjectManager
+    {
+        $manager = self::getContainer()->get(ProjectManager::class);
+        \assert($manager instanceof ProjectManager);
+
+        return $manager;
     }
 
     private function rowCount(string $sql, ?int $id): int

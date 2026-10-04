@@ -2,7 +2,7 @@
 
 > Carte des capacités fonctionnelles et backlog priorisé dérivé de `docs/vision.md`.
 
-_Document vivant — enrichi/édité au fil du cycle de vie, refondu lors d'un pivot. Date de dernière mise à jour : 2026-10-02._
+_Document vivant — enrichi/édité au fil du cycle de vie, refondu lors d'un pivot. Date de dernière mise à jour : 2026-10-04._
 
 ## Changelog
 
@@ -19,6 +19,7 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
 | 2026-10-02 | Enrichir | C5.1, C7.4, règle transverse « pas de lecture individuelle », ligne `consomme-vs-estime` | Sync post-livraison de la story 010-f-fiche-projet : fiche de consultation de chaque projet, ouverte à tous, avec le consommé face à l'estimé (restant et dépassement cumulés séparément), une frise sur toute sa durée et la timeline de ses tronçons ; le temps saisi par chacun sur une feuille ou un tronçon est visible de tous depuis les stories 009 et 010 (tension avec le principe 2 assumée) |
 | 2026-10-02 | Enrichir | D1, C1.6, C6.3, règles transverses « profil » et « pas de lecture individuelle », ligne `fiche-collaborateur`, notes `jalons-dates-annoncees` et `charge-vs-capacite` | Sync post-livraison de la story 011-f-fiche-collaborateur, cadrée hors backlog : fiche de consultation de chaque personne, ouverte à tous (temps par projet, tronçons, affectations à venir), charge et profil réservés ; la règle « pas de lecture individuelle » devient « lecture individuelle sans comparaison » (contradiction avec le principe 2 assumée au cadrage) ; ligne ajoutée en V2 |
 | 2026-10-02 | Enrichir | C5.5, C6.2, P3, règles transverses « responsable » et « estimation déclarative », ligne `avancement-feuilles`, notes `alerte-derive`, `jalons-dates-annoncees` et `charge-vs-capacite` | Sync post-livraison de la story 012-f-avancement-feuilles, cadrée hors backlog : avancement en % d'une feuille estimée déclaré par un lead, la direction ou son responsable ; restant extrapolé du rythme observé et ancré à la déclaration, qui alimente la fin calculée ; coût projeté, avancement cumulé et historique sur la fiche projet ; ligne ajoutée en V2 |
+| 2026-10-04 | Enrichir | C3.2, ligne `feuilles-favorites`, notes `jalons-dates-annoncees` et `archivage-projets` | Sync post-livraison de la story 013-f-feuilles-favorites, cadrée hors backlog : chacun met ses feuilles en favori, et elles sont des lignes de sa grille de saisie chaque semaine, en tête, même sans temps récent ; l'épinglage écarté par la story 003 est rétabli ; ligne ajoutée en V2 |
 
 ## Domaines fonctionnels
 
@@ -55,7 +56,7 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
 ### D3 — Saisie des temps
 
 - **C3.1** — Un membre de l'équipe peut déclarer sa journée en répartissant ses quarts de journée sur des feuilles (lots ou sous-lots).
-- **C3.2** — Un membre peut retrouver ses lots et sous-lots habituels en tête de liste (pour saisir en moins d'une minute).
+- **C3.2** — Un membre peut retrouver ses lots et sous-lots habituels en tête de liste (pour saisir en moins d'une minute). La story `013-f-feuilles-favorites` y ajoute les favoris : chacun épingle ses feuilles, qui sont des lignes de sa grille chaque semaine, en tête, même sans temps récent.
 - **C3.3** — Un membre peut corriger une journée déjà saisie.
 - **C3.4** — Le système peut rappeler à une personne, et à elle seule, qu'elle n'a pas saisi sa journée.
 - **C3.5** — La direction peut consulter le taux de saisie de l'équipe (global, jamais par personne).
@@ -211,7 +212,7 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
   - Pas encore cadrée
   - C5.2, C5.3 · P3, P5 · dép. `consomme-vs-estime`, `jalons-dates-annoncees` · Vision : irritant « dépassements tardifs », hypothèse H2
 
-### V2 — Court terme post-lancement (planifier, rendre la roadmap lisible) · `0/10 livrées`
+### V2 — Court terme post-lancement (planifier, rendre la roadmap lisible) · `0/11 livrées`
 
 - [ ] `capacite-equipe` — Permettre de déclarer temps de travail, temps partiels, absences, jours fériés et fermetures, pour connaître la capacité réelle.
   - Story `004-f-jours-feries` · **clôture en cours**
@@ -243,6 +244,9 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
 - [ ] `avancement-feuilles` — Permettre à un lead, à la direction ou au responsable de déclarer l'avancement d'une feuille, pour recaler sa fin calculée sur le rythme réellement observé et voir son coût projeté face à l'estimation.
   - Story `012-f-avancement-feuilles` · **clôture en cours**
   - C5.5, C6.2 · P3 · dép. `date-fin-projetee`, `consomme-vs-estime` · Vision : irritant « dépassements découverts trop tard », hypothèses H2 et H3
+- [ ] `feuilles-favorites` — Permettre à chacun de mettre ses feuilles en favori pour les retrouver chaque semaine en tête de sa grille de saisie, y compris au retour d'une absence.
+  - Story `013-f-feuilles-favorites` · **clôture en cours**
+  - C3.2 · P1 · dép. `saisie-quotidienne` · Vision : principe 1 (saisir sa journée en moins d'une minute), hypothèse H1
 
 ### V3 — Long terme · `0/2 livrées`
 
@@ -260,7 +264,7 @@ _(dérivé — recalculé à chaque passe, ne pas maintenir à la main)_
 ### Capacités par horizon
 
 - **MVP** — livrées : C1.1, C1.2, C1.3, C2.1, C2.2, C2.3 · planifiées : C2.4, C2.5, C3.1, C3.2, C3.3, C3.4, C3.5, C5.1, C5.2, C5.3, C7.2
-- **V2** — livrées : — · planifiées : C1.4, C1.5, C1.6, C2.6, C4.1, C4.2, C4.3, C4.4, C5.5, C6.1, C6.2, C6.3, C7.1, C7.3
+- **V2** — livrées : — · planifiées : C1.4, C1.5, C1.6, C2.6, C3.2, C4.1, C4.2, C4.3, C4.4, C5.5, C6.1, C6.2, C6.3, C7.1, C7.3
 - **V3** — livrées : — · planifiées : C5.4
 
 ### Capacités non couvertes (à challenger)
@@ -282,8 +286,9 @@ _(dérivé — recalculé à chaque passe, ne pas maintenir à la main)_
 - `saisie-quotidienne` : le « moins d'une minute » est un critère d'acceptation à rendre mesurable ; penser à la saisie d'une journée passée (C3.3) sans alourdir le cas nominal. Web responsive (anti-objectif : pas d'app mobile native). La saisie se fait sur les feuilles : le découpage en sous-lots allonge la liste (principe 1 sous tension). Appliquer le gel puis la révision bornée de l'estimation, le blocage des suppressions dès qu'un temps est saisi, et trancher le sort des temps d'un lot qui reçoit son premier sous-lot (questions ouvertes de la story 002).
 - `rappel-saisie` : canal du rappel à définir (e-mail, notification…) sans intégration externe au départ ; le taux affiché doit rester global (principe 2). Les jours ouvrés d'une personne excluent les jours fériés de son calendrier (story 004) : ne pas rappeler ni compter un jour férié.
 - `capacite-equipe` : les jours fériés sont livrés par la story 004 ; restent le temps de travail détaillé, les absences et les fermetures. Les ajustements de jours fériés ne servent pas aux fermetures (hors scope de la story 004). La livraison de la story 004 cochera la ligne : la découper si l'avancement doit rester exact.
-- `jalons-dates-annoncees` : la période prévue est désormais calculée (story 006) ; reste la date annoncée, historisée, et la clôture. La première date annoncée fait foi pour la North Star. Le jalon est porté par une feuille. Sans clôture, une feuille terminée paraît « estimation atteinte » ou « en dépassement » sur la roadmap, une feuille en dépassement rend inconnue la fin de son projet, et « libre à partir du … » sur la fiche de chaque membre de son équipe (story 011). Déclarer son avancement (story 012) rend une fin à une feuille en dépassement ; « terminée à 100 % » n'est pas une clôture, et une feuille dont l'avancement est à actualiser rend elle aussi la fin de son projet inconnue.
+- `jalons-dates-annoncees` : la période prévue est désormais calculée (story 006) ; reste la date annoncée, historisée, et la clôture. La première date annoncée fait foi pour la North Star. Le jalon est porté par une feuille. Sans clôture, une feuille terminée paraît « estimation atteinte » ou « en dépassement » sur la roadmap, une feuille en dépassement rend inconnue la fin de son projet, et « libre à partir du … » sur la fiche de chaque membre de son équipe (story 011). Déclarer son avancement (story 012) rend une fin à une feuille en dépassement ; « terminée à 100 % » n'est pas une clôture, et une feuille dont l'avancement est à actualiser rend elle aussi la fin de son projet inconnue. Une feuille clôturée perd définitivement ses favoris, puisqu'on ne peut plus y saisir (story 013, règle 17).
 - `alerte-derive` : définir le « rythme prévu » (estimation étalée sur la période prévue, désormais calculée ?) et le seuil d'alerte ; la roadmap (story 006) signale déjà une feuille « en dépassement » et colore les jours saisis au-delà de l'estimation ; l'efficacité de l'alerte est exactement ce que teste H2. L'estimation étant révisable après saisie, trancher si le rythme se calcule sur l'estimation initiale ou révisée. La fiche projet montre déjà, pour une feuille dont l'avancement est déclaré (story 012), son coût projeté face à l'estimation : c'est le repli de H2, posé en coexistence avec le rythme de consommation ; l'alerte peut s'appuyer dessus.
+- `archivage-projets` : un projet archivé retire définitivement les favoris de ses feuilles, puisqu'on ne peut plus y saisir (story 013, règle 17).
 - `affectation-sous-projets` : C4.4 est posée par la story 006 (équipe et parts par feuille, refus de surcharge), rattachée à `date-fin-projetee`. La ligne est à fusionner ou à retirer ; une part variable dans le temps n'a pas été retenue.
 - `roadmap-interne` : la page Roadmap existe (story 006, frise des feuilles avec fin calculée). Reste à y poser la date annoncée à côté de la fin calculée (principe 4) et à lister les jalons à venir.
 - `charge-vs-capacite` : la story 006 calcule déjà la charge de chaque personne jour par jour (refus et signal « à replanifier » au-delà de 100 %), et la fiche d'une personne (story 011) l'affiche, avec ses surcharges et « libre à partir du … », aux leads, à la direction et à la personne. Reste la vue de l'équipe semaine par semaine. Une feuille en dépassement ne charge plus son équipe, sauf si son avancement est déclaré (story 012) : sa partie future la charge alors de nouveau. Les absences ne sont pas encore déduites de la capacité. La capacité par compétence ou par type d'équipe, écartée de la story 007, peut s'appuyer sur ses tags : trancher le cas d'une personne qui porte plusieurs compétences.

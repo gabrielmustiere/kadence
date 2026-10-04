@@ -14,6 +14,7 @@ final readonly class TimesheetRow
     public function __construct(
         public Lot $lot,
         public array $cells,
+        public bool $favorite,
     ) {
     }
 }

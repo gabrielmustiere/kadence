@@ -12,6 +12,7 @@ use App\Model\Timesheet\TimesheetRow;
 use App\Model\Timesheet\WeekGrid;
 use App\Model\Week;
 use App\Service\TimesheetBuilder;
+use App\Tests\Support\CreatesFavorites;
 use App\Tests\Support\CreatesProjects;
 use App\Tests\Support\CreatesTimeEntries;
 use App\Tests\Support\CreatesUsers;
@@ -21,6 +22,7 @@ use Symfony\Component\Clock\Test\ClockSensitiveTrait;
 final class TimesheetBuilderTest extends KernelTestCase
 {
     use ClockSensitiveTrait;
+    use CreatesFavorites;
     use CreatesProjects;
     use CreatesTimeEntries;
     use CreatesUsers;
@@ -54,6 +56,65 @@ final class TimesheetBuilderTest extends KernelTestCase
         );
         self::assertSame([0, 0, 0, 0, 0], $this->quartersOf($grid->rows[1]), 'the previous week is not shown');
         self::assertSame([2, 0, 0, 0, 0], $this->quartersOf($grid->rows[3]));
+    }
+
+    public function testFavoritesComeFirstInTreeOrderThenTheOtherRows(): void
+    {
+        $user = $this->createUser();
+        $zeta = $this->createProject(uniqid('Zêta ', true));
+        $alpha = $this->createProject(uniqid('Alpha ', true));
+        $zetaFavorite = $this->createLot($zeta);
+        $split = $this->createLot($alpha);
+        $subLotFavorite = $this->createLot($alpha, parent: $split);
+        $alphaLot = $this->createLot($alpha);
+        $added = $this->createLot($alpha);
+        $this->createFavorite($user, $zetaFavorite);
+        $this->createFavorite($user, $subLotFavorite);
+        $this->createTimeEntry($user, $alphaLot, '2026-09-28', 1);
+
+        $grid = $this->build($user, [(int) $added->getId()]);
+
+        self::assertSame(
+            [[$subLotFavorite->getId(), true], [$zetaFavorite->getId(), true], [$alphaLot->getId(), false], [$added->getId(), false]],
+            array_map(static fn (TimesheetRow $row): array => [$row->lot->getId(), $row->favorite], $grid->rows),
+        );
+    }
+
+    public function testAFavoriteWithoutTimeIsARowOfAnyWeekPastOrFuture(): void
+    {
+        $user = $this->createUser();
+        $favorite = $this->createLot($this->createProject());
+        $this->createFavorite($user, $favorite);
+
+        foreach (['2026-W30', '2026-W40', '2026-W45'] as $week) {
+            $grid = $this->build($user, [], $week);
+
+            self::assertCount(1, $grid->rows, $week);
+            self::assertSame($favorite, $grid->rows[0]->lot);
+            self::assertTrue($grid->rows[0]->favorite);
+        }
+        self::assertSame([true, true, true, true, true], array_map(static fn (TimesheetCell $cell): bool => $cell->locked, $grid->rows[0]->cells));
+    }
+
+    public function testAFavoriteCarryingTimeOrAddedAgainIsShownOnce(): void
+    {
+        $user = $this->createUser();
+        $favorite = $this->createLot($this->createProject());
+        $this->createFavorite($user, $favorite);
+        $this->createTimeEntry($user, $favorite, '2026-09-29', 3);
+
+        $grid = $this->build($user, [(int) $favorite->getId()]);
+
+        self::assertCount(1, $grid->rows);
+        self::assertTrue($grid->rows[0]->favorite);
+        self::assertSame([0, 3, 0, 0, 0], $this->quartersOf($grid->rows[0]));
+    }
+
+    public function testTheFavoritesOfAnotherPersonAreNotShown(): void
+    {
+        $this->createFavorite($this->createUser(), $this->createLot($this->createProject()));
+
+        self::assertSame([], $this->build($this->createUser())->rows);
     }
 
     public function testNotchesAreLimitedByWhatTheDayStillAllows(): void

@@ -11,6 +11,7 @@ use App\Model\Timesheet\TimesheetRow;
 use App\Model\Timesheet\WeekGrid;
 use App\Model\Week;
 use App\Repository\LotRepository;
+use App\Service\FavoriteManager;
 use App\Service\LeafFinder;
 use App\Service\TimesheetBuilder;
 use App\Service\TimesheetManager;
@@ -53,6 +54,7 @@ final class Timesheet
     public function __construct(
         private readonly TimesheetBuilder $timesheetBuilder,
         private readonly TimesheetManager $timesheetManager,
+        private readonly FavoriteManager $favoriteManager,
         private readonly LeafFinder $leafFinder,
         private readonly LotRepository $lotRepository,
         private readonly Security $security,
@@ -111,6 +113,27 @@ final class Timesheet
             $this->addedLotIds[] = $id;
         }
         $this->query = '';
+    }
+
+    #[LiveAction]
+    public function addFavorite(#[LiveArg] int $lot): void
+    {
+        $this->favoriteManager->add($this->user(), $this->leaf($lot));
+        $this->query = '';
+    }
+
+    /**
+     * The leaf stays shown until the component is mounted again, so that a click by mistake can be undone.
+     */
+    #[LiveAction]
+    public function removeFavorite(#[LiveArg] int $lot): void
+    {
+        $leaf = $this->leaf($lot);
+        $this->favoriteManager->remove($this->user(), $leaf);
+        $id = (int) $leaf->getId();
+        if (!\in_array($id, $this->addedLotIds, true)) {
+            $this->addedLotIds[] = $id;
+        }
     }
 
     #[LiveAction]

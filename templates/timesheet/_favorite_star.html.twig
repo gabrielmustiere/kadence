@@ -1,0 +1,14 @@
+{%- set leaf_path = lot.project.title ~ ' › ' ~ (lot.parent ? lot.parent.title ~ ' › ') ~ lot.title -%}
+<button type="button" class="grid size-7 shrink-0 place-items-center rounded-base transition-colors hover:bg-neutral-tertiary focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-medium {{ favorite ? 'text-fg-brand' : 'text-body-subtle hover:text-fg-brand' }}"
+        data-test="favorite-toggle" data-lot="{{ lot.id }}" data-favorite="{{ favorite ? 'true' : 'false' }}"
+        aria-label="{{ favorite ? 'Retirer des favoris' : 'Mettre en favori' }} : {{ leaf_path }}"
+        title="{{ favorite ? 'Retirer des favoris' : 'Mettre en favori' }}"
+        data-action="live#action{{ close_modal|default(false) ? ' flowbite-modal#close' }}"
+        data-live-action-param="{{ favorite ? 'removeFavorite' : 'addFavorite' }}"
+        data-live-lot-param="{{ lot.id }}">
+    {%- if favorite %}
+        <twig:ux:icon name="tabler:star-filled" class="size-4" aria-hidden="true"/>
+    {%- else %}
+        <twig:ux:icon name="tabler:star" class="size-4" aria-hidden="true"/>
+    {%- endif %}
+</button>

@@ -13,6 +13,7 @@ use App\Model\Timesheet\TimesheetDay;
 use App\Model\Timesheet\TimesheetRow;
 use App\Model\Timesheet\WeekGrid;
 use App\Model\Week;
+use App\Repository\FavoriteLotRepository;
 use App\Repository\LotRepository;
 use App\Repository\TimeEntryRepository;
 use Psr\Clock\ClockInterface;
@@ -22,6 +23,7 @@ final readonly class TimesheetBuilder
     public function __construct(
         private TimeEntryRepository $timeEntryRepository,
         private LotRepository $lotRepository,
+        private FavoriteLotRepository $favoriteLotRepository,
         private WeeklyMaxManager $weeklyMaxManager,
         private HolidayManager $holidayManager,
         private ClockInterface $clock,
@@ -29,12 +31,18 @@ final readonly class TimesheetBuilder
     }
 
     /**
-     * The rows are the leaves the user entered time on during this week or the previous one, plus the added leaves.
+     * The rows are the user's favorite leaves, then the leaves they entered time on during this week or the previous
+     * one and the added leaves, each group in tree order.
      *
      * @param list<int> $addedLotIds
      */
     public function build(User $user, Week $week, array $addedLotIds = []): WeekGrid
     {
+        $favorites = [];
+        foreach ($this->favoriteLotRepository->findLotsOf($user) as $lot) {
+            $favorites[self::id($lot)] = $lot;
+        }
+
         $lots = [];
         $quarters = [];
         foreach ($this->timeEntryRepository->findForUserBetween($user, $week->previous()->monday, $week->friday()) as $entry) {
@@ -45,24 +53,27 @@ final readonly class TimesheetBuilder
             }
         }
 
-        $missingIds = array_values(array_diff($addedLotIds, array_keys($lots)));
+        $missingIds = array_values(array_diff($addedLotIds, array_keys($lots + $favorites)));
         foreach ($this->lotRepository->findLeavesByIds($missingIds) as $lot) {
             $lots[self::id($lot)] = $lot;
         }
-        $lots = array_values($lots);
-        usort($lots, LeafOrder::compare(...));
+        $others = array_values(array_diff_key($lots, $favorites));
+        usort($others, LeafOrder::compare(...));
+        $favoriteLots = array_values($favorites);
+        usort($favoriteLots, LeafOrder::compare(...));
 
         $holidays = $this->holidayManager->holidaysOf($user, $week);
 
-        return $this->compose($week, $lots, $quarters, $holidays, $this->weeklyMaxManager->capFor($user, $week, \count($holidays)));
+        return $this->compose($week, [...$favoriteLots, ...$others], array_keys($favorites), $quarters, $holidays, $this->weeklyMaxManager->capFor($user, $week, \count($holidays)));
     }
 
     /**
      * @param list<Lot>                            $lots
-     * @param array<int, array<string, int<1, 4>>> $quarters quarters by lot id, then by day
-     * @param array<string, non-empty-string>      $holidays holiday labels by day
+     * @param list<int>                            $favoriteIds
+     * @param array<int, array<string, int<1, 4>>> $quarters    quarters by lot id, then by day
+     * @param array<string, non-empty-string>      $holidays    holiday labels by day
      */
-    private function compose(Week $week, array $lots, array $quarters, array $holidays, int $maxQuarters): WeekGrid
+    private function compose(Week $week, array $lots, array $favoriteIds, array $quarters, array $holidays, int $maxQuarters): WeekGrid
     {
         $today = $this->clock->now()->format('Y-m-d');
         $dayQuarters = [];
@@ -83,7 +94,7 @@ final readonly class TimesheetBuilder
                     $day->format('Y-m-d') > $today || isset($holidays[$day->format('Y-m-d')]),
                 ),
                 $week->days(),
-            )),
+            ), \in_array(self::id($lot), $favoriteIds, true)),
             $lots,
         );
 

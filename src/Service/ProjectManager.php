@@ -11,6 +11,7 @@ use App\Entity\LotMember;
 use App\Entity\Project;
 use App\Entity\User;
 use App\Exception\LotHasTimeEntriesException;
+use App\Repository\FavoriteLotRepository;
 use App\Repository\LotProgressRepository;
 use App\Repository\TimeEntryRepository;
 use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
@@ -22,6 +23,7 @@ final readonly class ProjectManager
         private EntityManagerInterface $entityManager,
         private TimeEntryRepository $timeEntryRepository,
         private LotProgressRepository $lotProgressRepository,
+        private FavoriteLotRepository $favoriteLotRepository,
     ) {
     }
 
@@ -51,6 +53,7 @@ final readonly class ProjectManager
         try {
             $this->entityManager->wrapInTransaction(function () use ($project): void {
                 $this->lotProgressRepository->deleteForLots($project->getLots()->getValues());
+                $this->favoriteLotRepository->deleteForLots($project->getLots()->getValues());
                 $this->entityManager->remove($project);
                 $this->entityManager->flush();
             });
@@ -74,7 +77,7 @@ final readonly class ProjectManager
     /**
      * The estimate, owner, start date and team of a lot receiving its first sub-lot move to that sub-lot: the input
      * is expected to carry them (see LotInput::forSubLotOf()), and the lot, no longer a leaf, loses them. Its time
-     * entries, progress declarations and initial estimate move along.
+     * entries, progress declarations, favorites and initial estimate move along.
      */
     public function addSubLot(Lot $parent, LotInput $input): Lot
     {
@@ -99,6 +102,7 @@ final readonly class ProjectManager
             }
             if ($takesOver) {
                 $this->lotProgressRepository->moveToLot($parent, $subLot);
+                $this->favoriteLotRepository->moveToLot($parent, $subLot);
             }
         });
 
@@ -113,7 +117,7 @@ final readonly class ProjectManager
 
     /**
      * Removing the last sub-lot of a lot turns the lot back into a leaf that takes over the sub-lot's estimate, owner,
-     * start date, team and progress declarations.
+     * start date, team, progress declarations and favorites.
      */
     public function deleteLot(Lot $lot): void
     {
@@ -127,8 +131,10 @@ final readonly class ProjectManager
             $this->entityManager->wrapInTransaction(function () use ($lot, $takenBackBy): void {
                 if (null !== $takenBackBy) {
                     $this->lotProgressRepository->moveToLot($lot, $takenBackBy);
+                    $this->favoriteLotRepository->moveToLot($lot, $takenBackBy);
                 } else {
                     $this->lotProgressRepository->deleteForLots([$lot, ...$lot->getChildren()->getValues()]);
+                    $this->favoriteLotRepository->deleteForLots([$lot, ...$lot->getChildren()->getValues()]);
                 }
                 $this->entityManager->remove($lot);
                 $this->entityManager->flush();

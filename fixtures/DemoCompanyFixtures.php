@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DataFixtures;
 
+use App\Entity\FavoriteLot;
 use App\Entity\HolidayAdjustment;
 use App\Entity\Lot;
 use App\Entity\LotMember;
@@ -218,6 +219,7 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
         $this->estimate();
         $this->plan($firstWeek, $today);
         $this->declareProgress($manager, $today);
+        $this->loadFavorites($manager, $support);
         $manager->flush();
     }
 
@@ -353,6 +355,22 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
         }
 
         return $members;
+    }
+
+    /**
+     * The test accounts pin their current leaf and the support; Paula also pins a leaf she owns but has not worked on.
+     */
+    private function loadFavorites(ObjectManager $manager, Lot $support): void
+    {
+        $favorites = [
+            'paula' => [$this->leaves['Tableau de bord partenaire'], $support, $this->getReference(ProjectFixtures::TIMESHEET, Lot::class)],
+            'louis' => [$this->leaves['Tableau de bord partenaire'], $support],
+        ];
+        foreach ($favorites as $key => $leaves) {
+            foreach ($leaves as $leaf) {
+                $manager->persist(new FavoriteLot($this->people[$key], $leaf));
+            }
+        }
     }
 
     private function loadTimeEntries(ObjectManager $manager, string $key, User $person, Week $firstWeek, \DateTimeImmutable $today, Lot $support): void

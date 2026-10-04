@@ -1,6 +1,6 @@
 # Stack technique — Kadence
 
-> Dernière mise à jour : 2026-09-30 — cartographie factuelle de la stack. Chaque entrée est prouvée par un fichier du dépôt (source entre parenthèses) ou marquée _non renseigné_.
+> Dernière mise à jour : 2026-10-04 — cartographie factuelle de la stack. Chaque entrée est prouvée par un fichier du dépôt (source entre parenthèses) ou marquée _non renseigné_.
 
 ## Vue d'ensemble
 
@@ -79,7 +79,7 @@ Monolithe Symfony 8.1 en PHP 8.5, rendu serveur Twig + Symfony UX (Stimulus, Tur
 
 - **PHP ≥ 8.5 et Symfony 8.1** : versions très récentes, imposées par le template ; l'hébergement de production devra fournir PHP 8.5.
 - **SQLite + Messenger sur Doctrine** : la file de messages partage la base SQLite ; si SQLite est retenu en production, cela implique un seul serveur applicatif et une stratégie de sauvegarde du fichier. Choix à trancher (`/tech-plan` ou `/adr`) avec l'hébergement.
-- **SQLite : clés étrangères non appliquées, `LOWER()` limité à l'ASCII** : aucune activation des clés étrangères dans la configuration Doctrine, donc les contraintes déclarées par les migrations ne sont pas vérifiées et les suppressions en cascade passent par l'ORM (`cascade: ['remove']`) ; les comparaisons insensibles à la casse se font en PHP (`config/packages/doctrine.yaml`, `src/Entity/Lot.php`, `src/Validator/TitleComparison.php`). À reprendre avec le choix de la base de production.
+- **SQLite : clés étrangères appliquées connexion par connexion, `LOWER()` limité à l'ASCII** : SQLite n'applique les clés étrangères que si la connexion le demande ; le middleware DBAL `EnableForeignKeys` le fait sur chaque connexion, et `DeferForeignKeysInMigrations` reporte leur contrôle à la fin de chaque migration, le temps que SQLite reconstruise les tables. Aucune clé n'est déclarée `ON DELETE CASCADE` : les suppressions en cascade passent par l'ORM (`cascade: ['remove']`) ou par des suppressions explicites dans `ProjectManager`, et une ligne qui référence encore une donnée supprimée fait échouer la suppression. Les purges SQL des tests E2E (`dbal:run-sql`) passent par la même connexion et suppriment donc les lignes dépendantes d'abord. Les comparaisons insensibles à la casse se font en PHP (`config/services.yaml`, `src/EventListener/DeferForeignKeysInMigrations.php`, `src/Service/ProjectManager.php`, `src/Entity/Lot.php`, `src/Validator/TitleComparison.php`). Les deux mécanismes propres à SQLite sont à reprendre avec le choix de la base de production.
 - **Mailpit en `:latest`** : image non épinglée (dev uniquement).
 - **Pas de CI** : la QA repose sur la discipline locale.
 - **`ext-calendar` requise en production** : les jours fériés en dépendent ; l'hébergement devra la fournir, sans quoi `composer install` échoue (`composer.json`, `docs/adr/0002-jours-feries-calcules-et-ajustements.md`).
@@ -90,3 +90,4 @@ Monolithe Symfony 8.1 en PHP 8.5, rendu serveur Twig + Symfony UX (Stimulus, Tur
 - 2026-09-28 — Éditer — Backend (authentification) — sync post-livraison de la story 001-f-acces-roles
 - 2026-09-29 — Enrichir — Contraintes & dette (SQLite : clés étrangères, LOWER) — sync post-livraison de la story 002-f-projets-lots-sous-lots
 - 2026-09-30 — Enrichir — Langages & runtimes (extensions PHP requises), Contraintes & dette (`ext-calendar` en production) — sync post-livraison de la story 004-f-jours-feries
+- 2026-10-04 — Éditer — Contraintes & dette (SQLite : clés étrangères appliquées depuis le commit ef83b47) — sync post-livraison de la story 013-f-feuilles-favorites

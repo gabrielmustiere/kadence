@@ -59,11 +59,14 @@ test('le jour ajouté est verrouillé et nommé dans la grille, sans barre de sa
 
   await page.click('[data-test="add-line-open"]');
   await page.fill('[data-test="add-line-input"]', 'roadmap');
-  await page.locator('[data-test="add-line-result"]').first().click();
-  await expect(page.locator('[data-test="timesheet-row"]')).toHaveCount(1);
-  await expect(page.locator('[data-test="timesheet-cell"][data-day="2030-06-12"]')).toHaveAttribute('data-holiday', 'true');
-  await expect(page.locator('[data-test="timesheet-cell"][data-day="2030-06-12"] [data-test="quarter"]')).toHaveCount(0);
-  await expect(page.locator('[data-test="timesheet-cell"][data-day="2030-06-11"] [data-test="quarter"]')).toHaveCount(4);
+  const result = page.locator('[data-test="add-line-result"]').first();
+  const lotId = await result.getAttribute('data-lot');
+  await result.click();
+  const added = page.locator(`[data-test="timesheet-row"][data-lot="${lotId}"]`);
+  await expect(added).toHaveCount(1);
+  await expect(added.locator('[data-test="timesheet-cell"][data-day="2030-06-12"]')).toHaveAttribute('data-holiday', 'true');
+  await expect(added.locator('[data-test="timesheet-cell"][data-day="2030-06-12"] [data-test="quarter"]')).toHaveCount(0);
+  await expect(added.locator('[data-test="timesheet-cell"][data-day="2030-06-11"] [data-test="quarter"]')).toHaveCount(4);
 });
 
 test('sur téléphone, un jour férié est signalé à la place de la saisie', async ({ page }) => {

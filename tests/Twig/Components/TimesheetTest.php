@@ -9,6 +9,7 @@ use App\Entity\TimeEntry;
 use App\Entity\User;
 use App\Repository\TimeEntryRepository;
 use App\Service\ProjectManager;
+use App\Tests\Support\CreatesFavorites;
 use App\Tests\Support\CreatesProjects;
 use App\Tests\Support\CreatesTimeEntries;
 use App\Tests\Support\CreatesUsers;
@@ -22,6 +23,7 @@ use Symfony\UX\LiveComponent\Test\TestLiveComponent;
 final class TimesheetTest extends KernelTestCase
 {
     use ClockSensitiveTrait;
+    use CreatesFavorites;
     use CreatesProjects;
     use CreatesTimeEntries;
     use CreatesUsers;
@@ -148,6 +150,85 @@ final class TimesheetTest extends KernelTestCase
         self::assertSame([(string) $subLot->getId()], $results->each(static fn (Crawler $result): ?string => $result->attr('data-lot')));
     }
 
+    public function testStarringALineMovesItFirstWithAFullStarForGood(): void
+    {
+        $user = $this->createUser();
+        $first = $this->createLot($this->createProject(uniqid('Alpha ', true)));
+        $second = $this->createLot($this->createProject(uniqid('Bêta ', true)));
+        $this->createTimeEntry($user, $first, '2026-09-28', 1);
+        $this->createTimeEntry($user, $second, '2026-09-28', 1);
+        $component = $this->component($user);
+
+        $component->call('addFavorite', ['lot' => $second->getId()]);
+
+        self::assertSame([[$second->getId(), 'true', 'removeFavorite'], [$first->getId(), 'false', 'addFavorite']], $this->starsOf($component));
+        self::assertSame([[$second->getId(), 'true', 'removeFavorite'], [$first->getId(), 'false', 'addFavorite']], $this->starsOf($this->component($user)));
+    }
+
+    public function testStarringASearchResultAddsTheLineAndEmptiesTheSearch(): void
+    {
+        $user = $this->createUser();
+        $project = $this->createProject(uniqid('Recherche ', true));
+        $lot = $this->createLot($project);
+        $component = $this->component($user)->set('query', (string) $project->getTitle());
+        self::assertSame(['false'], $component->render()->crawler()->filter('[data-test="add-line-results"] [data-test="favorite-toggle"]')->each(static fn (Crawler $star): ?string => $star->attr('data-favorite')));
+
+        $component->call('addFavorite', ['lot' => $lot->getId()]);
+
+        self::assertCount(0, $component->render()->crawler()->filter('[data-test="add-line-results"]'));
+        self::assertSame([[$lot->getId(), 'true', 'removeFavorite']], $this->starsOf($this->component($user)));
+    }
+
+    public function testAnAddedLineStarredStaysWhenTheGridIsMountedAgain(): void
+    {
+        $user = $this->createUser();
+        $lot = $this->createLot($this->createProject());
+        $component = $this->component($user);
+
+        $component->call('addLot', ['lot' => $lot->getId()]);
+        $component->call('addFavorite', ['lot' => $lot->getId()]);
+
+        self::assertSame([[$lot->getId(), 'true', 'removeFavorite']], $this->starsOf($this->component($user)));
+    }
+
+    public function testAFavoriteWithoutTimeReplacesTheEmptyGridAndStaysUntilTheGridIsMountedAgainOnceUnstarred(): void
+    {
+        $user = $this->createUser();
+        $lot = $this->createLot($this->createProject());
+        $this->createFavorite($user, $lot);
+        $component = $this->component($user);
+        self::assertCount(0, $component->render()->crawler()->filter('[data-test="timesheet-empty"]'));
+
+        $component->call('removeFavorite', ['lot' => $lot->getId()]);
+
+        self::assertSame([[$lot->getId(), 'false', 'addFavorite']], $this->starsOf($component));
+        self::assertSame([], $this->starsOf($this->component($user)));
+    }
+
+    public function testUnstarringALineCarryingTimeLeavesItAmongTheOtherRows(): void
+    {
+        $user = $this->createUser();
+        $first = $this->createLot($this->createProject(uniqid('Alpha ', true)));
+        $favorite = $this->createLot($this->createProject(uniqid('Bêta ', true)));
+        $this->createTimeEntry($user, $first, '2026-09-28', 1);
+        $this->createTimeEntry($user, $favorite, '2026-09-22', 1);
+        $this->createFavorite($user, $favorite);
+
+        $this->component($user)->call('removeFavorite', ['lot' => $favorite->getId()]);
+
+        self::assertSame([[$first->getId(), 'false', 'addFavorite'], [$favorite->getId(), 'false', 'addFavorite']], $this->starsOf($this->component($user)));
+    }
+
+    public function testASplitLotCannotBeStarred(): void
+    {
+        $lot = $this->createLot($project = $this->createProject());
+        $this->createLot($project, parent: $lot);
+
+        $this->expectException(NotFoundHttpException::class);
+
+        $this->component($this->createUser())->call('addFavorite', ['lot' => $lot->getId()]);
+    }
+
     public function testShowDayChangesTheDayShownOnSmallScreens(): void
     {
         $component = $this->component($this->createUser());
@@ -200,6 +281,16 @@ final class TimesheetTest extends KernelTestCase
     private function component(User $user, string $week = '2026-W40'): TestLiveComponent
     {
         return $this->createLiveComponent('Timesheet', ['week' => $week])->actingAs($user);
+    }
+
+    /**
+     * @return list<array{int, string|null, string|null}> the leaf, the state and the action of each row's star
+     */
+    private function starsOf(TestLiveComponent $component): array
+    {
+        return $component->render()->crawler()->filter('[data-test="timesheet-row"] [data-test="favorite-toggle"]')->each(static fn (Crawler $star): array => [
+            (int) $star->attr('data-lot'), $star->attr('data-favorite'), $star->attr('data-live-action-param'),
+        ]);
     }
 
     private function selectedTab(TestLiveComponent $component): ?string

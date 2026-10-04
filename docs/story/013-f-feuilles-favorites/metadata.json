@@ -1,0 +1,46 @@
+{
+  "version": 2,
+  "title": "Mettre ses feuilles en favori pour les retrouver chaque semaine en tête de sa saisie",
+  "created": "2026-10-04",
+  "updated": "2026-10-04",
+  "tags": [
+    "saisie-temps"
+  ],
+  "changelog": [
+    {
+      "date": "2026-10-04",
+      "type": "Création",
+      "description": "Pitch initial cadré hors backlog (prolonge C3.2) : favoris personnels posés sur des feuilles depuis la grille et la recherche « Ajouter une ligne », toujours présents en tête de la grille sur toutes les semaines, triés comme le référentiel ; favori qui suit le premier sous-lot au découpage et revient au lot redevenu feuille ; revient sur l'épinglage écarté par la story 003."
+    },
+    {
+      "date": "2026-10-04",
+      "type": "Planification",
+      "description": "Plan technique validé : entité FavoriteLot (user, lot) unique par couple, FavoriteManager aux opérations idempotentes add/remove, TimesheetBuilder qui ajoute et trie les favoris en tête, actions addFavorite/removeFavorite du Live Component (ligne retirée gardée dans addedLotIds jusqu'au rechargement), transfert et suppression explicites des favoris dans ProjectManager comme pour LotProgress, purge E2E adaptée aux clés étrangères."
+    },
+    {
+      "date": "2026-10-04",
+      "type": "Implémentation",
+      "description": "Sept sous-tâches du plan livrées (FavoriteLot et migration, FavoriteManager, favoris en tête dans TimesheetBuilder, transfert et suppression dans ProjectManager, étoile du Live Component sur les lignes et dans la recherche, favoris de démonstration de Paula et Louis, scénario E2E) ; 520 tests PHPUnit et 46 E2E verts ; budget de requêtes de /saisie maintenu à 6 ; écarts : référence TIMESHEET ajoutée à ProjectFixtures, scénario E2E des jours fériés ciblé sur la ligne ajoutée (les favoris de Paula s'affichent sur toutes les semaines), test de suppression sur la base scindé en deux."
+    },
+    {
+      "date": "2026-10-04",
+      "type": "Review",
+      "description": "Revue du diff : 0 bloquant, 0 important, 3 mineurs (ordre de tabulation de l'étoile dans la recherche, libellé de l'étoile dans le nom de l'en-tête de ligne, test direct du critère « ligne ajoutée puis mise en favori ») ; prêt à commiter."
+    },
+    {
+      "date": "2026-10-04",
+      "type": "Review",
+      "description": "Les 3 mineurs corrigés : étoile après le résultat dans la recherche, étoile dans sa propre cellule de grille (en-tête de ligne réduit au chemin, colonne « Lot » en min-w-46), test direct du critère « ligne ajoutée puis mise en favori » ; statut inchangé, prêt à commiter."
+    },
+    {
+      "date": "2026-10-04",
+      "type": "Report",
+      "description": "Compte rendu d'implémentation : conformité 90 % (16/21 fichiers exactement comme prévu), 16/16 critères atteints, écarts volontaires (étoile dans sa propre cellule de grille et après le résultat dans la recherche, libellé « Mettre en favori : chemin », test de suppression scindé, plafond de requêtes maintenu à 6), deux ajouts (référence ProjectFixtures::TIMESHEET, scénario holidays.spec.ts ciblé sur la ligne ajoutée), aucune dette issue de la review."
+    },
+    {
+      "date": "2026-10-04",
+      "type": "Sync",
+      "description": "Doc réalignée sur le livré : pitch (règle 11 — ligne retirée des favoris gardée jusqu'au changement de semaine ou au rechargement ; libellé accessible « Mettre en favori : chemin ») ; plan (étoile dans sa propre cellule de grille et après le résultat dans la recherche, libellé, ProjectFixtures et holidays.spec.ts au périmètre, test de suppression scindé, plafond de requêtes maintenu à 6, critères de sortie cochés, risques survenus annotés) ; stack.md (clés étrangères SQLite appliquées) ; backlog (C3.2 enrichie, ligne feuilles-favorites en V2, notes jalons-dates-annoncees et archivage-projets)."
+    }
+  ]
+}
