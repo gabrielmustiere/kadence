@@ -1,0 +1,10 @@
+{#
+    The footer of a form in a card: its submit button, then the way out. Expects `submit_label`, `submit_test` and
+    `cancel_path`.
+#}
+<div class="-mx-6 -mb-6 mt-2 flex flex-wrap items-center gap-3 rounded-b-card border-t border-default bg-neutral-secondary-soft px-6 py-4">
+    <twig:Button type="submit" data-test="{{ submit_test }}">{{ submit_label }}</twig:Button>
+    {% if cancel_path is defined and cancel_path %}
+        <twig:Button as="a" variant="ghost" href="{{ cancel_path }}">Annuler</twig:Button>
+    {% endif %}
+</div>

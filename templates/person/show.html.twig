@@ -7,88 +7,136 @@
 {% block title %}{{ person.firstName }} {{ person.lastName }} · Kadence{% endblock %}
 
 {% block body %}
-    <div class="mb-6 flex flex-wrap items-center gap-3">
-        <h1 class="font-display text-2xl font-bold tracking-tight text-heading sm:text-3xl" data-test="person-heading">{{ person.firstName }} {{ person.lastName }}</h1>
-        {% if not person.active %}
-            <twig:Badge variant="alternative" border="bordered" data-test="person-inactive">désactivée</twig:Badge>
-        {% endif %}
-    </div>
+    <header class="mb-8 flex flex-wrap items-center gap-5">
+        <twig:Avatar :user="person" size="lg" tone="ink" class="{{ person.active ? '' : 'opacity-50' }}"/>
+        <div class="min-w-0">
+            <div class="flex flex-wrap items-center gap-3">
+                <h1 class="font-display text-[1.875rem] leading-[1.08] text-heading sm:text-[2.375rem]" data-test="person-heading">{{ person.firstName }} {{ person.lastName }}</h1>
+                {% if not person.active %}
+                    <twig:Badge variant="alternative" border="bordered" size="lg" data-test="person-inactive">désactivée</twig:Badge>
+                {% endif %}
+            </div>
+            {% if planning %}
+                <p class="mt-1.5 text-[15px] text-body" data-test="person-role">{{ person.role.label }}</p>
+            {% endif %}
+        </div>
+    </header>
 
-    {% if planning or is_granted('PERSON_MANAGER', person) %}
-        {% set categories = enum('App\\Enum\\Type\\TagCategory') %}
-        <dl class="mb-8 grid grid-cols-1 gap-x-6 gap-y-3 rounded-base border border-default bg-neutral-primary-soft p-4 text-sm sm:grid-cols-[auto_1fr]" data-test="person-profile">
-            {% if planning %}
-                <dt class="font-medium text-heading">Rôle</dt>
-                <dd class="text-heading" data-test="person-role">{{ person.role.label }}</dd>
-                {% for category in categories.cases() %}
-                    <dt class="font-medium text-heading">{{ category.allowsMany ? category.pluralLabel : category.label }}</dt>
-                    <dd class="flex flex-wrap gap-1" data-test="person-tags-{{ category.value }}">
-                        {% for tag in person.tagsOf(category) %}
-                            <twig:Badge variant="gray" data-test="person-tag">{{ tag.label }}</twig:Badge>
-                        {% else %}
-                            <span class="text-body">{{ category.allowsMany ? 'Aucune' : 'Aucun' }}</span>
-                        {% endfor %}
-                    </dd>
-                {% endfor %}
-            {% endif %}
-            {% if is_granted('PERSON_MANAGER', person) %}
-                <dt class="font-medium text-heading">Manager</dt>
-                <dd data-test="person-manager">
-                    {% if person.manager %}
-                        <span class="text-heading">{{ person.manager.firstName }} {{ person.manager.lastName }}</span>
-                    {% else %}
-                        <span class="text-body">Aucun</span>
-                    {% endif %}
-                </dd>
-            {% endif %}
-            {% if planning %}
-                <dt class="font-medium text-heading">Charge</dt>
-                <dd class="text-heading" data-test="person-load">
+    {% if planning %}
+        <section class="mb-12 grid grid-cols-1 overflow-hidden rounded-card border border-default bg-surface md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]" aria-labelledby="person-availability">
+            <h2 id="person-availability" class="sr-only">Charge et disponibilité</h2>
+            <div class="px-5 py-6 sm:px-7">
+                <p class="eyebrow text-body-subtle">Charge au prochain jour ouvré</p>
+                <div class="mt-2" data-test="person-load">
                     {% if load is null %}
-                        <span class="text-body">Désactivée, aucune charge</span>
+                        <span class="text-body-subtle">Désactivée, aucune charge</span>
                     {% elseif load.nextDay %}
-                        <span class="font-semibold {{ load.nextDayPercent > 100 ? 'text-fg-danger-strong' : '' }}" data-test="person-load-next">{{ load.nextDayPercent }} %</span>
-                        <span class="text-body">au prochain jour ouvré, {{ load.nextDay|weekday }} {{ load.nextDay|date('d/m/Y') }}</span>
+                        {% set percent = load.nextDayPercent %}
+                        {% set track = max(percent, 100) %}
+                        <p class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                            <span class="font-display text-[2.75rem] leading-none tabular-nums {{ percent > 100 ? 'text-fg-danger-strong' : 'text-heading' }}" data-test="person-load-next">{{ percent }} %</span>
+                            <span class="text-body">{{ load.nextDay|weekday }} {{ load.nextDay|date('d/m/Y') }}</span>
+                        </p>
+                        <div class="relative mt-5 h-3 max-w-md rounded-[3px] bg-neutral-tertiary" aria-hidden="true">
+                            <span class="absolute inset-y-0 left-0 rounded-s-[3px] bg-brand" style="width: {{ (min(percent, 100) / track * 100)|round(2) }}%"></span>
+                            {% if percent > 100 %}
+                                <span class="absolute inset-y-0 rounded-e-[3px] bg-danger" style="left: {{ (100 / track * 100)|round(2) }}%; width: {{ ((percent - 100) / track * 100)|round(2) }}%"></span>
+                            {% endif %}
+                            <span class="absolute -inset-y-1 w-0.5 -translate-x-1/2 bg-heading" style="left: {{ (100 / track * 100)|round(2) }}%"></span>
+                        </div>
+                        <p class="mt-2 max-w-md text-xs text-body-subtle" aria-hidden="true">Le trait marque une journée pleine.</p>
                     {% endif %}
-                </dd>
-                {% if load is not null %}
-                    <dt class="font-medium text-heading">Libre à partir du</dt>
-                    <dd class="text-heading" data-test="person-free-from">
+                </div>
+            </div>
+            {% if load is not null %}
+                <div class="border-t border-default-subtle px-5 py-6 sm:px-7 md:border-s md:border-t-0">
+                    <p class="eyebrow text-body-subtle">Libre à partir du</p>
+                    <p class="mt-2 text-2xl font-semibold tracking-tight text-heading tabular-nums" data-test="person-free-from">
                         {%- if load.unknownEnds is not empty -%}
-                            inconnue <span class="text-body">({% for row in load.unknownEnds %}{{ row.lot.project.title }} · {{ row.leafPath }}{{ loop.last ? '' : ', ' }}{% endfor %})</span>
+                            inconnue <span class="block text-sm font-normal tracking-normal text-body">({% for row in load.unknownEnds %}{{ row.lot.project.title }} · {{ row.leafPath }}{{ loop.last ? '' : ', ' }}{% endfor %})</span>
                         {%- elseif load.freeFrom -%}
                             {{ load.freeFrom|weekday }} {{ load.freeFrom|date('d/m/Y') }}
                         {%- else -%}
-                            <span class="text-body">aucune affectation à venir</span>
+                            <span class="text-lg font-normal tracking-normal text-body-subtle">aucune affectation à venir</span>
                         {%- endif -%}
-                    </dd>
-                {% endif %}
+                    </p>
+                </div>
             {% endif %}
-        </dl>
+        </section>
     {% endif %}
 
-    <section class="mb-8">
-        <h2 class="mb-3 font-display text-lg font-semibold text-heading">Temps saisi par projet</h2>
-        {% set entered = page.enteredProjects %}
-        {% if entered is empty %}
-            <twig:Card data-test="person-projects-empty">
-                <p class="text-body">Aucun temps saisi.</p>
-            </twig:Card>
-        {% else %}
-            <ul class="max-w-xl divide-y divide-default rounded-base border border-default bg-neutral-primary-soft text-sm" data-test="person-projects">
-                {% for item in entered %}
-                    <li class="flex justify-between gap-3 px-3 py-2" data-test="person-project" data-title="{{ item.project.title }}">
-                        <a href="{{ path('app_roadmap_project', {id: item.project.id}) }}" class="font-medium text-heading hover:underline" data-test="person-project-link">{{ item.project.title }}</a>
-                        <span class="tabular-nums text-heading" data-test="person-project-entered">{{ item.enteredQuarters|days }}</span>
-                    </li>
-                {% endfor %}
-            </ul>
-        {% endif %}
-    </section>
+    {% set profile = planning or is_granted('PERSON_MANAGER', person) %}
+    <div class="mb-12 grid grid-cols-1 items-start gap-x-10 gap-y-12 {{ profile ? 'xl:grid-cols-[minmax(0,1fr)_22rem]' : 'max-w-4xl' }}">
+        <div class="space-y-12">
+            <section>
+                <h2 class="mb-4 text-lg font-semibold tracking-tight text-heading">À venir</h2>
+                {{ include('person/_upcoming.html.twig') }}
+            </section>
 
-    <section class="mb-8" {% if page.dated %}data-controller="roadmap" data-roadmap-remember-value="false" data-roadmap-center-value="{{ roadmap.centerPosition|number_format(4, '.', '') }}"{% endif %}>
-        <div class="mb-3 flex flex-wrap items-end justify-between gap-3">
-            <h2 class="font-display text-lg font-semibold text-heading">Frise</h2>
+            <section>
+                <h2 class="mb-4 text-lg font-semibold tracking-tight text-heading">Temps saisi par projet</h2>
+                {% set entered = page.enteredProjects %}
+                {% if entered is empty %}
+                    <twig:EmptyState icon="tabler:clock" data-test="person-projects-empty">
+                        Aucun temps saisi.
+                    </twig:EmptyState>
+                {% else %}
+                    {% set most = max(entered|map(item => item.enteredQuarters)) %}
+                    <ul class="divide-y divide-default-subtle rounded-card border border-default bg-surface text-sm" data-test="person-projects">
+                        {% for item in entered %}
+                            <li class="px-5 py-3.5" data-test="person-project" data-title="{{ item.project.title }}">
+                                <div class="flex items-baseline justify-between gap-3">
+                                    <a href="{{ path('app_roadmap_project', {id: item.project.id}) }}" class="min-w-0 truncate font-medium text-heading decoration-default-strong underline-offset-4 hover:underline" title="{{ item.project.title }}" data-test="person-project-link">{{ item.project.title }}</a>
+                                    <span class="shrink-0 font-semibold tabular-nums text-heading" data-test="person-project-entered">{{ item.enteredQuarters|days }}</span>
+                                </div>
+                                <span class="mt-2 block h-1.5 overflow-hidden rounded-[2px] bg-neutral-tertiary" aria-hidden="true">
+                                    <span class="block h-full bg-brand" style="width: {{ most > 0 ? (item.enteredQuarters / most * 100)|round(2) : 0 }}%"></span>
+                                </span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </section>
+        </div>
+        {% if profile %}
+            {% set categories = enum('App\\Enum\\Type\\TagCategory') %}
+            <section>
+                <h2 class="mb-4 text-lg font-semibold tracking-tight text-heading">Profil</h2>
+                <dl class="divide-y divide-default-subtle rounded-card border border-default bg-surface text-sm" data-test="person-profile">
+                    {% if planning %}
+                        {% for category in categories.cases() %}
+                            <div class="px-5 py-3.5">
+                                <dt class="eyebrow text-body-subtle">{{ category.allowsMany ? category.pluralLabel : category.label }}</dt>
+                                <dd class="mt-2 flex flex-wrap gap-1.5" data-test="person-tags-{{ category.value }}">
+                                    {% for tag in person.tagsOf(category) %}
+                                        <twig:Badge variant="gray" size="lg" data-test="person-tag">{{ tag.label }}</twig:Badge>
+                                    {% else %}
+                                        <span class="text-body-subtle">{{ category.allowsMany ? 'Aucune' : 'Aucun' }}</span>
+                                    {% endfor %}
+                                </dd>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                    {% if is_granted('PERSON_MANAGER', person) %}
+                        <div class="px-5 py-3.5">
+                            <dt class="eyebrow text-body-subtle">Manager</dt>
+                            <dd class="mt-1.5" data-test="person-manager">
+                                {% if person.manager %}
+                                    <span class="font-medium text-heading">{{ person.manager.firstName }} {{ person.manager.lastName }}</span>
+                                {% else %}
+                                    <span class="text-body-subtle">Aucun</span>
+                                {% endif %}
+                            </dd>
+                        </div>
+                    {% endif %}
+                </dl>
+            </section>
+        {% endif %}
+    </div>
+
+    <section class="mb-12" {% if page.dated %}data-controller="roadmap" data-roadmap-remember-value="false" data-roadmap-center-value="{{ roadmap.centerPosition|number_format(4, '.', '') }}"{% endif %}>
+        <div class="mb-4 flex flex-wrap items-end justify-between gap-3">
+            <h2 class="text-lg font-semibold tracking-tight text-heading">Frise</h2>
             {% if page.dated %}
                 {{ include('roadmap/_zoom.html.twig') }}
             {% endif %}
@@ -98,20 +146,28 @@
             {% embed 'roadmap/_frieze.html.twig' %}
                 {% block rows %}
                     {% if load is not null %}
-                        <div class="grid grid-cols-[20rem_1fr] border-t border-default" data-test="person-load-row">
-                            <div class="sticky left-0 z-10 bg-neutral-primary px-4 py-3">
-                                <span class="font-semibold text-heading">Charge</span>
+                        <div class="grid grid-cols-[20rem_1fr] bg-neutral-secondary-soft" data-test="person-load-row">
+                            <div class="sticky left-0 z-10 flex items-center border-e border-default-subtle bg-neutral-secondary-soft px-4 py-3">
+                                <span class="flex items-center gap-2 text-sm font-semibold text-heading">
+                                    <twig:ux:icon name="tabler:gauge" class="size-4 text-body-subtle"/>
+                                    Charge
+                                </span>
+                                <ul class="sr-only">
+                                    {% for span in load.spans %}
+                                        <li>{{ span.from|weekday }} {{ span.from|date('d/m/Y') }} → {{ span.to|weekday }} {{ span.to|date('d/m/Y') }} : {{ span.percent }} %</li>
+                                    {% endfor %}
+                                </ul>
                             </div>
-                            <div class="roadmap-track relative min-h-10">
+                            <div class="roadmap-track relative min-h-11">
                                 {{ include('roadmap/_today.html.twig') }}
                                 {% for span in load.spans %}
-                                    <div class="absolute top-1/2 flex h-5 -translate-y-1/2 items-center overflow-hidden rounded-sm border {{ span.overload ? 'border-danger-subtle bg-danger-soft text-fg-danger-strong' : 'border-brand-subtle bg-brand-softer text-fg-brand-strong' }}"
+                                    <div class="absolute top-1/2 flex h-6 -translate-y-1/2 items-center overflow-hidden rounded-[4px] border {{ span.overload ? 'border-danger-subtle bg-danger-soft text-fg-danger-strong' : 'border-brand-subtle bg-brand-softer text-fg-brand-strong' }}"
                                          style="{{ span.bar.style }}"
                                          data-roadmap-tooltip="person-load-{{ loop.index }}"
                                          data-test="person-load-span"
                                          data-percent="{{ span.percent }}"
                                          aria-hidden="true">
-                                        <span class="ps-1 text-xs font-medium tabular-nums">{{ span.percent }} %</span>
+                                        <span class="whitespace-nowrap ps-1.5 text-[11px] font-semibold tabular-nums">{{ span.percent }} %</span>
                                     </div>
                                 {% endfor %}
                             </div>
@@ -122,8 +178,8 @@
                     {% endif %}
                     {% for item in page.projects %}
                         <div class="grid grid-cols-[20rem_1fr] border-t border-default" data-test="person-project-row" data-title="{{ item.project.title }}">
-                            <div class="sticky left-0 z-10 bg-neutral-primary px-4 py-3">
-                                <a href="{{ path('app_roadmap_project', {id: item.project.id}) }}" class="font-semibold text-heading hover:underline" data-test="person-project-link">{{ item.project.title }}</a>
+                            <div class="sticky left-0 z-10 border-e border-default-subtle bg-surface px-4 py-3">
+                                <a href="{{ path('app_roadmap_project', {id: item.project.id}) }}" class="text-sm font-semibold text-heading decoration-default-strong underline-offset-4 hover:underline" data-test="person-project-link">{{ item.project.title }}</a>
                             </div>
                             <div class="roadmap-track relative min-h-10">
                                 {{ include('roadmap/_today.html.twig') }}
@@ -136,19 +192,14 @@
                 {% endblock %}
             {% endembed %}
         {% else %}
-            <twig:Card data-test="person-no-frieze">
-                <p class="text-body">Aucun temps saisi ni aucune affectation planifiée : rien à placer sur la frise.</p>
-            </twig:Card>
+            <twig:EmptyState icon="tabler:timeline-event" data-test="person-no-frieze">
+                Aucun temps saisi ni aucune affectation planifiée : rien à placer sur la frise.
+            </twig:EmptyState>
         {% endif %}
     </section>
 
     <section>
-        <h2 class="mb-3 font-display text-lg font-semibold text-heading">Timeline</h2>
-        <h3 class="mb-3 font-display text-base font-semibold text-heading">À venir</h3>
-        <div class="mb-8">
-            {{ include('person/_upcoming.html.twig') }}
-        </div>
-        <h3 class="mb-3 font-display text-base font-semibold text-heading">Journal</h3>
+        <h2 class="mb-4 text-lg font-semibold tracking-tight text-heading">Journal</h2>
         {{ include('roadmap/_timeline.html.twig', {with_team: false, with_project: true, empty_message: "Aucun temps saisi."}) }}
     </section>
 {% endblock %}

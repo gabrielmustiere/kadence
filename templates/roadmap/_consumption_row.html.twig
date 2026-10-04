@@ -1,16 +1,22 @@
 {#
     A line of the consumption table. Expects `line` (a lot or project summary), `title`, `leaf` (the lot when it is a
-    leaf, null otherwise) and `nested`.
+    leaf, null otherwise), `nested` and `scale`, the quarters shared by the rulers of the table, null on the line of the
+    project.
 #}
 {% set toEstimate = leaf is not null and leaf.estimateDays is null %}
 <twig:Table:Row data-test="consumption-row" data-title="{{ title }}">
-    <twig:Table:Cell class="{{ nested ? 'ps-10' : 'font-medium text-heading' }}">
+    <twig:Table:Cell class="{{ nested ? 'ps-11 text-heading' : 'font-medium text-heading' }}">
         <div class="flex items-center gap-2">
-            {% if nested %}<twig:ux:icon name="tabler:corner-down-right" class="size-4 shrink-0 text-body"/>{% endif %}
+            {% if nested %}<twig:ux:icon name="tabler:corner-down-right" class="size-4 shrink-0 text-body-subtle"/>{% endif %}
             <span>{{ title }}</span>
         </div>
     </twig:Table:Cell>
-    <twig:Table:Cell class="whitespace-nowrap" data-test="consumption-estimate">
+    <twig:Table:Cell>
+        {% if scale is not null %}
+            <twig:Ruler :entered="line.enteredQuarters" :remaining="line.remainingQuarters" :overrun="line.overrunQuarters" :estimate="line.estimateDays * 4" :projected="leaf is not null ? line.projectedQuarters : null" :scale="scale"/>
+        {% endif %}
+    </twig:Table:Cell>
+    <twig:Table:Cell class="whitespace-nowrap tabular-nums" data-test="consumption-estimate">
         {% if toEstimate %}
             <twig:Badge variant="warning" data-test="leaf-to-estimate">à estimer</twig:Badge>
         {% elseif leaf is not null %}
@@ -19,21 +25,22 @@
             {{ include('project/_estimate.html.twig', {summary: line}) }}
         {% endif %}
     </twig:Table:Cell>
-    <twig:Table:Cell class="whitespace-nowrap" data-test="consumption-entered">{{ line.enteredQuarters|days }}</twig:Table:Cell>
-    <twig:Table:Cell class="whitespace-nowrap">
+    <twig:Table:Cell class="whitespace-nowrap tabular-nums text-heading" data-test="consumption-entered">
+        {{- line.enteredQuarters|days -}}
+    </twig:Table:Cell>
+    <twig:Table:Cell class="whitespace-nowrap tabular-nums">
         {% if toEstimate %}
             <span class="text-body">—</span>
         {% else %}
             {% if line.remainingQuarters > 0 or line.overrunQuarters == 0 %}
                 <span data-test="consumption-remaining">{{ line.remainingQuarters|days }}</span>
             {% endif %}
-            {% if line.remainingQuarters > 0 and line.overrunQuarters > 0 %}<span class="text-body"> · </span>{% endif %}
             {% if line.overrunQuarters > 0 %}
-                <span class="font-medium text-fg-danger-strong" data-test="consumption-overrun">{{ line.overrunQuarters|days }} de dépassement</span>
+                <span class="block font-medium text-fg-danger-strong" data-test="consumption-overrun">{{ line.overrunQuarters|days }} de dépassement</span>
             {% endif %}
         {% endif %}
     </twig:Table:Cell>
-    <twig:Table:Cell class="whitespace-nowrap" data-test="consumption-progress">
+    <twig:Table:Cell class="whitespace-nowrap tabular-nums" data-test="consumption-progress">
         {% if leaf is not null %}
             {% if line.progress and line.progress.percent > 0 %}
                 {{ line.progress.percent }} %
@@ -48,7 +55,7 @@
             <span class="text-body">—</span>
         {% endif %}
     </twig:Table:Cell>
-    <twig:Table:Cell class="whitespace-nowrap" data-test="consumption-projected">
+    <twig:Table:Cell class="whitespace-nowrap tabular-nums" data-test="consumption-projected">
         {% if leaf is not null and line.projectedQuarters is not null %}
             {% set gap = line.projectedGapQuarters %}
             {{ line.projectedQuarters|days }}

@@ -3,28 +3,31 @@
 {% block title %}Ma semaine · Kadence{% endblock %}
 
 {% block body %}
-    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-            <h1 class="font-display text-2xl font-bold tracking-tight text-heading sm:text-3xl">Ma semaine</h1>
-            <p class="mt-1 text-sm text-body" data-test="week-label" data-week="{{ week.iso }}">
+    {% set current = week.equals(current_week) %}
+    <twig:PageHeader title="Ma semaine">
+        <twig:block name="description">
+            <p class="mt-2.5 flex flex-wrap items-center gap-2.5 text-[15px] tabular-nums text-body" data-test="week-label" data-week="{{ week.iso }}">
+                <span class="rounded-xs bg-neutral-tertiary px-1.5 py-0.5 text-xs font-semibold text-heading">S{{ week.monday|date('W') }}</span>
                 Semaine du {{ week.monday|date('d/m') }} au {{ week.friday|date('d/m/Y') }}
             </p>
-        </div>
-        <nav class="flex flex-wrap items-center gap-2" aria-label="Navigation entre semaines">
-            <twig:Button as="a" size="sm" variant="outline" href="{{ path('app_timesheet_week', {week: week.previous.iso}) }}" data-test="week-prev">
-                <twig:ux:icon name="tabler:chevron-left" class="size-4 me-1"/>
-                Semaine précédente
-            </twig:Button>
-            <twig:Button as="a" size="sm" variant="{{ week.equals(current_week) ? 'secondary' : 'outline' }}" href="{{ path('app_timesheet') }}" data-test="week-current"
-                         aria-current="{{ week.equals(current_week) ? 'page' : 'false' }}">
+        </twig:block>
+        <nav class="inline-flex items-center gap-0.5 rounded-xl border border-default bg-surface p-1" aria-label="Navigation entre semaines">
+            <a href="{{ path('app_timesheet_week', {week: week.previous.iso}) }}" data-test="week-prev"
+               class="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-sm font-medium text-body transition-colors hover:bg-neutral-tertiary hover:text-heading">
+                <twig:ux:icon name="tabler:chevron-left" class="size-4"/>
+                <span class="max-sm:sr-only">Semaine précédente</span>
+            </a>
+            <a href="{{ path('app_timesheet') }}" data-test="week-current" aria-current="{{ current ? 'page' : 'false' }}"
+               class="inline-flex h-8 items-center rounded-lg px-3 text-sm font-medium transition-colors {{ current ? 'bg-neutral-tertiary text-heading' : 'text-body hover:bg-neutral-tertiary hover:text-heading' }}">
                 Cette semaine
-            </twig:Button>
-            <twig:Button as="a" size="sm" variant="outline" href="{{ path('app_timesheet_week', {week: week.next.iso}) }}" data-test="week-next">
-                Semaine suivante
-                <twig:ux:icon name="tabler:chevron-right" class="size-4 ms-1"/>
-            </twig:Button>
+            </a>
+            <a href="{{ path('app_timesheet_week', {week: week.next.iso}) }}" data-test="week-next"
+               class="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-sm font-medium text-body transition-colors hover:bg-neutral-tertiary hover:text-heading">
+                <span class="max-sm:sr-only">Semaine suivante</span>
+                <twig:ux:icon name="tabler:chevron-right" class="size-4"/>
+            </a>
         </nav>
-    </div>
+    </twig:PageHeader>
 
     {{ component('Timesheet', {week: week.iso}) }}
 {% endblock %}

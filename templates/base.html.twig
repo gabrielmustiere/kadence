@@ -5,102 +5,117 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     {# Turbo 8 : pas de préchargement au survol (évite notamment un GET /logout au survol) #}
     <meta name="turbo-prefetch" content="false">
+    <meta name="theme-color" content="#faf9f7" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0f0e0c" media="(prefers-color-scheme: dark)">
     <title>{% block title %}Kadence{% endblock %}</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=PT+Mono&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <link rel="icon"
-          href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><rect width=%22128%22 height=%22128%22 rx=%2224%22 fill=%22%23111111%22/><text y=%221.05em%22 x=%220.5em%22 text-anchor=%22middle%22 font-family=%22sans-serif%22 font-size=%2272%22 font-weight=%22700%22 fill=%22%238B5CF6%22>K</text></svg>">
+    {{ include('common/_head.html.twig') }}
     {% block stylesheets %}{% endblock %}
 
     {% block javascripts %}
         {% block importmap %}{{ importmap('app') }}{% endblock %}
     {% endblock %}
 </head>
-<body class="min-h-full antialiased bg-gray-50 dark:bg-gray-900">
+<body class="min-h-full bg-canvas font-sans text-body antialiased">
+<a href="#contenu" data-turbo="false" class="sr-only z-[60] rounded-base bg-primary px-4 py-2 text-sm font-medium text-on-primary focus:not-sr-only focus:fixed focus:top-2 focus:left-2">Aller au contenu</a>
 
 {# Topbar #}
-<nav class="bg-white border-b border-gray-200 px-4 py-2.5 dark:bg-gray-800 dark:border-gray-700 fixed left-0 right-0 top-0 z-50">
-    <div class="flex flex-wrap justify-between items-center">
-        <div class="flex justify-start items-center">
+<header class="fixed inset-x-0 top-0 z-50 h-14 border-b border-default bg-canvas/85 backdrop-blur-md backdrop-saturate-150">
+    <div class="flex h-full items-center justify-between gap-4 px-3 sm:px-4">
+        <div class="flex items-center gap-1">
             <button data-drawer-target="app-sidebar" data-drawer-toggle="app-sidebar"
                     aria-controls="app-sidebar" type="button" data-test="sidebar-toggle"
-                    class="p-2 mr-2 text-gray-600 rounded-lg cursor-pointer md:hidden hover:text-gray-900 hover:bg-gray-100 focus:bg-gray-100 dark:focus:bg-gray-700 focus:ring-2 focus:ring-gray-100 dark:focus:ring-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
-                <twig:ux:icon name="tabler:menu-2" class="w-6 h-6"/>
+                    class="grid size-9 cursor-pointer place-items-center rounded-lg text-body transition-colors hover:bg-neutral-tertiary hover:text-heading md:hidden">
+                <twig:ux:icon name="tabler:menu-2" class="size-5"/>
                 <span class="sr-only">Ouvrir le menu</span>
             </button>
-            <a href="{{ path('app_page') }}" class="flex items-center gap-2.5 mr-4">
-                <span class="grid size-8 place-items-center rounded-md bg-gray-900 font-display text-sm font-bold text-violet-400 dark:bg-violet-500 dark:text-gray-900">K</span>
-                <span class="self-center text-xl font-semibold whitespace-nowrap font-display dark:text-white">Kadence</span>
+            <a href="{{ path('app_page') }}" class="flex items-center gap-2.5 rounded-lg py-1 pe-2 ps-1 md:w-[14.5rem]">
+                <twig:Logo class="size-7"/>
+                <span class="text-[17px] font-bold tracking-tight text-heading [font-stretch:118%]" translate="no">Kadence</span>
             </a>
         </div>
-        <div class="flex items-center lg:order-2 gap-1">
+        <div class="flex items-center gap-2 sm:gap-3">
+            <button type="button" data-controller="theme" data-action="theme#toggle" aria-pressed="false" title="Thème clair ou sombre"
+                    class="grid size-9 place-items-center rounded-full text-body transition-colors hover:bg-neutral-tertiary hover:text-heading">
+                <twig:ux:icon name="tabler:moon" class="size-[18px] dark:hidden"/>
+                <twig:ux:icon name="tabler:sun" class="hidden size-[18px] dark:block"/>
+                <span class="sr-only">Thème sombre</span>
+            </button>
+            <span class="hidden items-center gap-2.5 rounded-base border border-default bg-surface px-3 py-1 text-xs tabular-nums text-body lg:inline-flex">
+                <span class="font-semibold text-heading">Semaine {{ 'now'|date('W') }}</span>
+                <span class="h-3 w-px bg-default-medium" aria-hidden="true"></span>
+                {{ 'now'|date('d/m/Y') }}
+            </span>
             {% if app.user %}
-                <button type="button" data-dropdown-toggle="app-topbar-user-menu" data-test="user-menu-toggle"
-                        class="flex mx-3 rounded-full focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600">
-                    <span class="grid size-8 place-items-center rounded-full bg-gray-900 text-sm font-semibold text-white dark:bg-violet-500">
-                        {{ app.user.firstName|first|upper }}
+                <button type="button" data-dropdown-toggle="app-topbar-user-menu" data-dropdown-placement="bottom-end" data-test="user-menu-toggle"
+                        class="flex items-center gap-2.5 rounded-full p-0.5 transition-colors hover:bg-neutral-tertiary sm:pe-3">
+                    <twig:Avatar :user="app.user" tone="ink"/>
+                    <span class="sr-only text-left leading-tight sm:not-sr-only sm:block">
+                        <span class="block text-[13px] font-medium text-heading">{{ app.user.firstName }}</span>
+                        <span class="block text-[11px] text-body">{{ app.user.role.label }}</span>
                     </span>
+                    <twig:ux:icon name="tabler:chevron-down" class="hidden size-3.5 text-body sm:block"/>
                 </button>
-                <div class="hidden z-50 my-4 w-56 text-base list-none bg-white rounded-xl divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600"
+                <div class="z-50 hidden w-64 overflow-hidden rounded-card border border-default bg-surface text-sm shadow-lg"
                      id="app-topbar-user-menu">
-                    <div class="py-3 px-4">
-                        <span class="block text-sm font-semibold text-gray-900 dark:text-white" data-test="user-menu-name">{{ app.user.firstName }} {{ app.user.lastName }}</span>
-                        <span class="block text-xs text-gray-500 truncate dark:text-gray-400">{{ app.user.role.label }}</span>
+                    <div class="flex items-center gap-3 px-4 py-3.5">
+                        <twig:Avatar :user="app.user" tone="ink"/>
+                        <div class="min-w-0">
+                            <span class="block truncate font-medium text-heading" data-test="user-menu-name">{{ app.user.firstName }} {{ app.user.lastName }}</span>
+                            <span class="block truncate text-xs text-body">{{ app.user.role.label }}</span>
+                        </div>
                     </div>
-                    <ul class="py-1 text-gray-700 dark:text-gray-300">
+                    <ul class="border-t border-default p-1.5 text-body">
                         <li>
                             <a href="{{ path('app_account_password') }}" data-test="nav-account"
-                               class="flex items-center gap-2 py-2 px-4 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
-                                <twig:ux:icon name="tabler:user" class="w-4 h-4"/> Mon compte
+                               class="flex items-center gap-2.5 rounded-lg px-2.5 py-2 transition-colors hover:bg-neutral-tertiary hover:text-heading">
+                                <twig:ux:icon name="tabler:user-circle" class="size-4"/> Mon compte
                             </a>
                         </li>
                         <li>
                             <a href="{{ path('app_person', {id: app.user.id}) }}" data-test="nav-person"
-                               class="flex items-center gap-2 py-2 px-4 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
-                                <twig:ux:icon name="tabler:file-description" class="w-4 h-4"/> Ma fiche
+                               class="flex items-center gap-2.5 rounded-lg px-2.5 py-2 transition-colors hover:bg-neutral-tertiary hover:text-heading">
+                                <twig:ux:icon name="tabler:id-badge-2" class="size-4"/> Ma fiche
                             </a>
                         </li>
                     </ul>
-                    <ul class="py-1">
+                    <ul class="border-t border-default p-1.5">
                         <li>
                             <a href="{{ path('app_logout') }}" data-test="logout-link"
-                               class="flex items-center gap-2 py-2 px-4 text-sm text-rose-700 hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-900/30">
-                                <twig:ux:icon name="tabler:logout" class="w-4 h-4"/> Déconnexion
+                               class="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-fg-danger transition-colors hover:bg-danger-soft">
+                                <twig:ux:icon name="tabler:logout" class="size-4"/> Déconnexion
                             </a>
                         </li>
                     </ul>
                 </div>
             {% else %}
-                <a href="{{ path('app_login') }}"
-                   class="flex items-center gap-2 mx-3 px-3 py-2 text-sm font-medium rounded-lg bg-gray-900 text-white hover:bg-gray-800 dark:bg-violet-500 dark:hover:bg-violet-400">
-                    <twig:ux:icon name="tabler:login" class="w-4 h-4"/> Se connecter
-                </a>
+                <twig:Button as="a" size="sm" href="{{ path('app_login') }}">
+                    <twig:ux:icon name="tabler:login" class="size-4"/> Se connecter
+                </twig:Button>
             {% endif %}
         </div>
     </div>
-</nav>
+</header>
 
 {# Sidebar #}
 {% set nav = nav_section(app.current_route) %}
-<aside id="app-sidebar"
-       class="fixed top-0 left-0 z-40 w-64 h-screen pt-14 transition-transform -translate-x-full bg-white border-r border-gray-200 md:translate-x-0 dark:bg-gray-800 dark:border-gray-700"
-       aria-label="Sidebar">
-    <div class="flex flex-col overflow-y-auto py-5 px-3 h-full bg-white dark:bg-gray-800">
-        <ul class="mb-6 shrink-0 space-y-2">
+<aside id="app-sidebar" data-controller="sidebar"
+       class="fixed top-0 left-0 z-40 h-screen w-64 -translate-x-full border-r border-default bg-canvas pt-14 transition-transform md:translate-x-0"
+       aria-label="Navigation principale">
+    <div class="flex h-full flex-col overflow-y-auto overscroll-contain px-3 py-5">
+        <ul class="shrink-0 space-y-0.5">
             <li>
-                <twig:NavLink href="{{ path('app_page') }}" icon="tabler:layout-dashboard" :active="nav == 'dashboard'" data-test="nav-dashboard">Tableau de bord</twig:NavLink>
+                <twig:NavLink href="{{ path('app_page') }}" icon="tabler:layout-grid" :active="nav == 'dashboard'" data-test="nav-dashboard">Tableau de bord</twig:NavLink>
             </li>
             <li>
                 <twig:NavLink href="{{ path('app_timesheet') }}" icon="tabler:calendar-week" :active="nav == 'timesheet'" data-test="nav-timesheet">Ma semaine</twig:NavLink>
             </li>
             <li>
-                <twig:NavLink href="{{ path('app_roadmap') }}" icon="tabler:timeline" :active="nav == 'roadmap'" data-test="nav-roadmap">Roadmap</twig:NavLink>
+                <twig:NavLink href="{{ path('app_roadmap') }}" icon="tabler:timeline-event" :active="nav == 'roadmap'" data-test="nav-roadmap">Roadmap</twig:NavLink>
             </li>
         </ul>
-        <div class="mt-auto shrink-0 border-t border-gray-200 pt-4 dark:border-gray-700" data-test="nav-admin">
-            <p id="nav-admin-title" class="mb-2 px-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Administration</p>
-            <ul class="space-y-2" aria-labelledby="nav-admin-title">
+        <div class="mt-auto shrink-0 pt-6" data-test="nav-admin">
+            <p id="nav-admin-title" class="eyebrow mb-2 px-3 text-body-subtle">Administration</p>
+            <ul class="space-y-0.5" aria-labelledby="nav-admin-title">
                 <li>
                     <twig:NavLink href="{{ path('app_project_index') }}" icon="tabler:folders" :active="nav == 'projects'" data-test="nav-projects">Projets</twig:NavLink>
                 </li>
@@ -120,8 +135,10 @@
     </div>
 </aside>
 
-<main class="p-4 md:ml-64 h-auto pt-20">
-    {% block body %}{% endblock %}
+<main id="contenu" tabindex="-1" class="min-h-screen pt-14 outline-none md:ml-64">
+    <div class="mx-auto w-full max-w-[96rem] px-4 py-6 sm:px-6 lg:px-10 lg:pt-8 lg:pb-12">
+        {% block body %}{% endblock %}
+    </div>
 </main>
 
 {% include 'common/flash-messages.html.twig' %}

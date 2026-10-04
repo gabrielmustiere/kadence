@@ -2,60 +2,77 @@
 {% set owner = lot.owner %}
 {% set mine = owner is not null and app.user is not null and owner.id == app.user.id %}
 <twig:Table:Row data-test="lot-row" data-title="{{ lot.title }}" data-mine="{{ mine ? 'true' : 'false' }}">
-    <twig:Table:Cell class="{{ nested ? 'ps-10' : 'font-medium text-heading' }}">
+    <twig:Table:Cell class="min-w-48 {{ nested ? 'ps-11' : 'font-medium text-heading' }}">
         <div class="flex items-center gap-2">
-            {% if nested %}<twig:ux:icon name="tabler:corner-down-right" class="size-4 shrink-0 text-body"/>{% endif %}
-            <span data-test="lot-title">{{ lot.title }}</span>
+            {% if nested %}<twig:ux:icon name="tabler:corner-down-right" class="size-4 shrink-0 text-body-subtle"/>{% endif %}
+            <span data-test="lot-title" class="{{ nested ? 'text-heading' : '' }}">{{ lot.title }}</span>
         </div>
         {% if lot.description %}
-            <p class="mt-1 whitespace-pre-line text-xs font-normal text-body">{{ lot.description }}</p>
+            <p class="mt-1 max-w-md whitespace-pre-line break-words text-xs font-normal leading-relaxed text-body {{ nested ? 'ps-6' : '' }}">{{ lot.description }}</p>
         {% endif %}
     </twig:Table:Cell>
     <twig:Table:Cell data-test="lot-owner-cell">
         {% if not lot.leaf %}
-            <span class="text-body">—</span>
+            <span class="text-body-subtle">—</span>
         {% elseif owner is null %}
             <twig:Badge variant="warning" data-test="leaf-to-assign">à désigner</twig:Badge>
         {% else %}
-            <span class="{{ owner.active ? '' : 'line-through' }}">{{ owner.firstName }} {{ owner.lastName }}</span>
-            {% if not owner.active %}
-                <twig:Badge variant="danger" class="ms-1.5" data-test="leaf-to-reassign">à redésigner</twig:Badge>
-            {% elseif mine %}
-                <twig:Badge variant="brand" class="ms-1.5" data-test="leaf-mine">vous</twig:Badge>
-            {% endif %}
+            <div class="flex items-center gap-2">
+                <twig:Avatar :user="owner" size="sm" class="{{ owner.active ? '' : 'opacity-50' }}"/>
+                <span class="whitespace-nowrap {{ owner.active ? 'text-heading' : 'text-body line-through' }}">{{ owner.firstName }} {{ owner.lastName }}</span>
+                {% if not owner.active %}
+                    <twig:Badge variant="danger" data-test="leaf-to-reassign">à redésigner</twig:Badge>
+                {% elseif mine %}
+                    <twig:Badge variant="brand" data-test="leaf-mine">vous</twig:Badge>
+                {% endif %}
+            </div>
         {% endif %}
     </twig:Table:Cell>
-    <twig:Table:Cell data-test="lot-estimate-cell">
+    <twig:Table:Cell class="tabular-nums" data-test="lot-estimate-cell">
         {% if not lot.leaf %}
             {{ include('project/_estimate.html.twig') }}
         {% elseif lot.estimateDays is null %}
             <twig:Badge variant="warning" data-test="leaf-to-estimate">à estimer</twig:Badge>
         {% else %}
-            <span class="whitespace-nowrap" data-test="estimate">{{ lot.estimateDays }} j</span>
+            <span class="whitespace-nowrap text-heading" data-test="estimate">{{ lot.estimateDays }} j</span>
         {% endif %}
         {% if lot.leaf and lot.initialEstimateDays is not null %}
-            <span class="mt-0.5 block whitespace-nowrap text-xs text-body" data-test="initial-estimate">initiale {{ lot.initialEstimateDays }} j</span>
+            <span class="mt-0.5 block whitespace-nowrap text-xs text-body-subtle" data-test="initial-estimate">initiale {{ lot.initialEstimateDays }} j</span>
         {% endif %}
+    </twig:Table:Cell>
+    <twig:Table:Cell>
+        <span class="block whitespace-nowrap text-xs tabular-nums text-body">
+            {{ summary.enteredQuarters|days }} saisis
+            {%- if summary.overrunQuarters > 0 %}, <span class="font-medium text-fg-danger-strong">{{ summary.overrunQuarters|days }} au-delà</span>{% endif -%}
+            {%- if summary.remainingQuarters > 0 %}<span class="sr-only">, {{ summary.remainingQuarters|days }} restants</span>{% endif -%}
+        </span>
+        <twig:Ruler class="mt-1.5" :entered="summary.enteredQuarters" :remaining="summary.remainingQuarters" :overrun="summary.overrunQuarters" :estimate="summary.estimateDays * 4" :scale="scale"/>
     </twig:Table:Cell>
     <twig:Table:Cell data-test="lot-progress-cell">
         {% if lot.leaf %}
             {{ include('project/_progress.html.twig') }}
         {% else %}
-            <span class="text-body">—</span>
+            <span class="text-body-subtle">—</span>
         {% endif %}
     </twig:Table:Cell>
-    <twig:Table:Cell>
-        <div class="flex flex-wrap justify-end gap-2">
+    <twig:Table:Cell class="w-px">
+        <div class="flex justify-end gap-1">
             {% if is_granted('LOT_EDIT', lot) %}
-                <twig:Button as="a" size="xs" variant="outline" href="{{ path('app_lot_edit', {id: lot.id}) }}" data-test="lot-edit">Modifier</twig:Button>
+                <twig:Button as="a" size="icon-xs" variant="ghost" class="text-body-subtle" href="{{ path('app_lot_edit', {id: lot.id}) }}" data-tooltip="Modifier" aria-label="Modifier « {{ lot.title }} »" data-test="lot-edit">
+                    <twig:ux:icon name="tabler:pencil" class="size-4"/>
+                </twig:Button>
             {% endif %}
             {% if is_granted('ROLE_LEAD') %}
                 {% if not nested %}
-                    <twig:Button as="a" size="xs" variant="outline" href="{{ path('app_lot_new_sub_lot', {id: lot.id}) }}" data-test="lot-new-sub-lot">Ajouter un sous-lot</twig:Button>
+                    <twig:Button as="a" size="icon-xs" variant="ghost" class="text-body-subtle" href="{{ path('app_lot_new_sub_lot', {id: lot.id}) }}" data-tooltip="Ajouter un sous-lot" aria-label="Ajouter un sous-lot à « {{ lot.title }} »" data-test="lot-new-sub-lot">
+                        <twig:ux:icon name="tabler:plus" class="size-4"/>
+                    </twig:Button>
                 {% endif %}
                 <twig:Modal id="delete-lot-{{ lot.id }}">
                     <twig:Modal:Trigger>
-                        <twig:Button size="xs" variant="outline-danger" data-test="lot-delete" {{ ...modal_trigger_attrs }}>Supprimer</twig:Button>
+                        <twig:Button size="icon-xs" variant="ghost" class="text-body-subtle hover:bg-danger-soft hover:text-fg-danger" data-tooltip="Supprimer" aria-label="Supprimer « {{ lot.title }} »" data-test="lot-delete" {{ ...modal_trigger_attrs }}>
+                            <twig:ux:icon name="tabler:trash" class="size-4"/>
+                        </twig:Button>
                     </twig:Modal:Trigger>
                     <twig:Modal:Content>
                         <twig:Modal:Header>

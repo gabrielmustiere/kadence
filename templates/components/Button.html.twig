@@ -1,36 +1,37 @@
-{# @prop variant 'brand'|'secondary'|'tertiary'|'success'|'danger'|'warning'|'dark'|'ghost'|'outline'|'outline-brand'|'outline-success'|'outline-danger'|'outline-warning' The visual style variant. Defaults to `brand` #}
+{# @prop variant 'primary'|'brand'|'secondary'|'tertiary'|'success'|'danger'|'warning'|'dark'|'ghost'|'outline'|'outline-brand'|'outline-success'|'outline-danger'|'outline-warning' The visual style variant. Defaults to `primary` #}
 {# @prop size 'default'|'xs'|'sm'|'lg'|'xl'|'icon'|'icon-xs'|'icon-sm' The button size. Defaults to `default` #}
 {# @prop shape 'rounded'|'pill' The badge shape. Defaults to `rounded` #}
 {# @prop as 'button' The HTML tag to render. Defaults to `button` #}
 {# @block content The button label and/or icon #}
-{%- props variant = 'brand', size = 'default', shape = 'rounded', as = 'button' -%}
+{%- props variant = 'primary', size = 'default', shape = 'rounded', as = 'button' -%}
 {%- set style = html_cva(
-    base: 'inline-flex items-center justify-center box-border border border-transparent font-medium focus:ring-4 focus:outline-none shadow-xs',
+    base: 'inline-flex items-center justify-center gap-1.5 whitespace-nowrap box-border border border-transparent font-medium select-none transition-[background-color,border-color,color,box-shadow,transform] duration-150 ease-out focus:outline-hidden focus-visible:ring-4 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-45 disabled:active:translate-y-0 [&_svg]:shrink-0',
     variants: {
         variant: {
-            brand: 'text-white bg-brand hover:bg-brand-strong focus:ring-brand-medium',
-            secondary: 'text-body bg-neutral-secondary-medium border-default-medium hover:bg-neutral-tertiary-medium hover:text-heading focus:ring-neutral-tertiary',
-            tertiary: 'text-body bg-neutral-primary-soft border-default hover:bg-neutral-secondary-medium hover:text-heading focus:ring-neutral-tertiary-soft',
-            success: 'text-white bg-success hover:bg-success-strong focus:ring-success-medium',
-            danger: 'text-white bg-danger hover:bg-danger-strong focus:ring-danger-medium',
-            warning: 'text-white bg-warning hover:bg-warning-strong focus:ring-warning-medium',
-            dark: 'text-white bg-dark hover:bg-dark-strong focus:ring-neutral-tertiary',
-            ghost: 'text-heading bg-transparent hover:bg-neutral-secondary-medium focus:ring-neutral-tertiary shadow-none',
-            outline: 'text-body bg-neutral-primary border-default hover:bg-neutral-secondary-soft hover:text-heading focus:ring-neutral-tertiary',
-            'outline-brand': 'text-fg-brand bg-neutral-primary border-brand hover:bg-brand hover:text-white focus:ring-brand-subtle',
-            'outline-success': 'text-success bg-neutral-primary border-success hover:bg-success hover:text-white focus:ring-neutral-tertiary',
-            'outline-danger': 'text-danger bg-neutral-primary border-danger hover:bg-danger hover:text-white focus:ring-neutral-tertiary',
-            'outline-warning': 'text-warning bg-neutral-primary border-warning hover:bg-warning hover:text-white focus:ring-neutral-tertiary',
+            primary: 'text-on-primary bg-primary hover:bg-primary-strong shadow-[inset_0_1px_0_rgb(255_255_255/0.12),0_1px_2px_rgb(28_25_23/0.18)] focus-visible:ring-brand-medium',
+            brand: 'text-white bg-brand hover:bg-brand-strong shadow-[inset_0_1px_0_rgb(255_255_255/0.16),0_1px_2px_rgb(28_25_23/0.14)] focus-visible:ring-brand-medium',
+            secondary: 'text-heading bg-neutral-tertiary hover:bg-neutral-tertiary-medium focus-visible:ring-brand-medium',
+            tertiary: 'text-heading bg-surface border-default shadow-xs hover:bg-neutral-secondary-soft focus-visible:ring-brand-medium',
+            success: 'text-white bg-success hover:bg-success-strong focus-visible:ring-success-medium',
+            danger: 'text-white bg-danger hover:bg-danger-strong shadow-[inset_0_1px_0_rgb(255_255_255/0.14),0_1px_2px_rgb(28_25_23/0.14)] focus-visible:ring-danger-medium',
+            warning: 'text-white bg-warning hover:bg-warning-strong focus-visible:ring-warning-medium',
+            dark: 'text-on-primary bg-primary hover:bg-primary-strong focus-visible:ring-brand-medium',
+            ghost: 'text-body bg-transparent hover:bg-neutral-tertiary hover:text-heading focus-visible:ring-brand-medium',
+            outline: 'text-heading bg-surface border-default shadow-xs hover:bg-neutral-secondary-soft hover:border-default-medium focus-visible:ring-brand-medium',
+            'outline-brand': 'text-fg-brand bg-surface border-brand-subtle shadow-xs hover:bg-brand-softer focus-visible:ring-brand-medium',
+            'outline-success': 'text-fg-success bg-surface border-default shadow-xs hover:bg-success-soft hover:border-success-subtle focus-visible:ring-success-medium',
+            'outline-danger': 'text-fg-danger bg-surface border-default shadow-xs hover:bg-danger-soft hover:border-danger-subtle hover:text-fg-danger-strong focus-visible:ring-danger-medium',
+            'outline-warning': 'text-fg-warning bg-surface border-default shadow-xs hover:bg-warning-soft hover:border-warning-subtle focus-visible:ring-warning-medium',
         },
         size: {
-            default: 'leading-5 text-sm px-4 py-2.5',
-            xs: 'leading-5 text-xs px-3 py-1.5',
-            sm: 'leading-5 text-sm px-3 py-2',
-            lg: 'text-base px-5 py-3',
-            xl: 'text-base px-6 py-3.5',
-            icon: 'w-10 h-10',
-            'icon-xs': 'w-8 h-8',
-            'icon-sm': 'w-9 h-9',
+            default: 'h-10 px-4 text-sm',
+            xs: 'h-7 px-2.5 text-xs',
+            sm: 'h-9 px-3.5 text-sm',
+            lg: 'h-11 px-5 text-[15px]',
+            xl: 'h-12 px-6 text-base',
+            icon: 'size-10',
+            'icon-xs': 'size-8',
+            'icon-sm': 'size-9',
         },
         shape: {
             rounded: 'rounded-base',

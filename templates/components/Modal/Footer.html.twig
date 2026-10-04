@@ -1,6 +1,6 @@
 {# @block content The footer area, typically contains action buttons #}
 <footer
-    class="{{ ('flex items-center border-t border-default space-x-4 pt-4 md:pt-5 ' ~ attributes.render('class'))|tailwind_merge }}"
+    class="{{ ('-mx-6 -mb-6 flex flex-row-reverse items-center gap-2 rounded-b-card border-t border-default bg-neutral-secondary-soft px-6 py-4 ' ~ attributes.render('class'))|tailwind_merge }}"
     {{ attributes }}
 >
     {%- block content %}{% endblock -%}

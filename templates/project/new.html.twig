@@ -3,13 +3,9 @@
 {% block title %}Nouveau projet · Kadence{% endblock %}
 
 {% block body %}
+    <twig:PageHeader title="Nouveau projet" :back="path('app_project_index')" backLabel="Projets"
+                     description="Le projet est une enveloppe : vous le découperez ensuite en lots, qui porteront les estimations et les responsables."/>
     <twig:Card>
-        <twig:Card:Header>
-            <twig:Card:Title as="h1">Nouveau projet</twig:Card:Title>
-            <p class="mt-2 text-sm text-body">Le projet est une enveloppe : vous le découperez ensuite en lots, qui porteront les estimations et les responsables.</p>
-        </twig:Card:Header>
-        <twig:Card:Content>
-            {{ include('project/_form.html.twig', {submit_label: 'Créer le projet', cancel_path: path('app_project_index')}) }}
-        </twig:Card:Content>
+        {{ include('project/_form.html.twig', {submit_label: 'Créer le projet', cancel_path: path('app_project_index')}) }}
     </twig:Card>
 {% endblock %}

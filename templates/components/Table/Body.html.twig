@@ -2,12 +2,12 @@
 {# @block content The table body rows, typically `Table:Row` components #}
 {% props highlight = 'hover' %}
 {%- set style = html_cva(
-    base: '[&>tr]:bg-neutral-primary-soft group-data-[border=bordered]/table:[&>tr]:border-b group-data-[border=bordered]/table:[&>tr]:border-default [&>tr]:transition-colors',
+    base: '[&>tr]:bg-surface group-data-[border=bordered]/table:[&>tr]:border-b group-data-[border=bordered]/table:[&>tr]:border-default-subtle group-data-[border=bordered]/table:[&>tr:last-child]:border-b-0 [&>tr]:transition-colors',
     variants: {
         highlight: {
             none: '',
-            hover: '[&>tr]:hover:bg-neutral-secondary-medium',
-            striped: '[&>tr]:odd:bg-neutral-primary [&>tr]:even:bg-neutral-secondary-soft',
+            hover: '[&>tr]:hover:bg-neutral-secondary-soft',
+            striped: '[&>tr]:odd:bg-surface [&>tr]:even:bg-neutral-secondary-soft',
         },
     },
 ) -%}

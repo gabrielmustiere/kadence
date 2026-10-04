@@ -3,36 +3,30 @@
 {% block title %}Projets · Kadence{% endblock %}
 
 {% block body %}
-    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-            <h1 class="font-display text-2xl font-bold tracking-tight text-heading sm:text-3xl">Projets</h1>
-            <p class="mt-1 text-sm text-body">Les projets, leur découpage en lots et sous-lots, et ce qu'il reste à estimer ou à confier.</p>
-        </div>
+    <twig:PageHeader title="Projets" description="Les projets, leur découpage en lots et sous-lots, et ce qu'il reste à estimer ou à confier.">
         {% if is_granted('ROLE_LEAD') %}
             <twig:Button as="a" href="{{ path('app_project_new') }}" data-test="project-new">
-                <twig:ux:icon name="tabler:plus" class="size-4 me-1.5"/>
+                <twig:ux:icon name="tabler:plus" class="size-4"/>
                 Nouveau projet
             </twig:Button>
         {% endif %}
-    </div>
+    </twig:PageHeader>
 
-    <div class="mb-4 flex gap-2">
-        <twig:Button as="a" size="xs" variant="{{ mine ? 'outline' : 'brand' }}" href="{{ path('app_project_index') }}" :aria-current="mine ? false : 'page'" data-test="filter-all">Tous les projets</twig:Button>
-        <twig:Button as="a" size="xs" variant="{{ mine ? 'brand' : 'outline' }}" href="{{ path('app_project_index', {'mes-responsabilites': 1}) }}" :aria-current="mine ? 'page' : false" data-test="filter-mine">Mes responsabilités</twig:Button>
-    </div>
+    <nav class="mb-5 inline-flex items-center gap-0.5 rounded-xl border border-default bg-surface p-1 shadow-xs" aria-label="Filtrer les projets">
+        {{ _self.filter(path('app_project_index'), 'Tous les projets', not mine, 'filter-all') }}
+        {{ _self.filter(path('app_project_index', {'mes-responsabilites': 1}), 'Mes responsabilités', mine, 'filter-mine') }}
+    </nav>
 
     {% if projects is empty %}
-        <twig:Card data-test="projects-empty">
-            <p class="text-body">
-                {% if mine %}
-                    Vous n'êtes responsable d'aucun lot ni sous-lot pour l'instant.
-                {% else %}
-                    Aucun projet pour l'instant.
-                {% endif %}
-            </p>
-        </twig:Card>
+        <twig:EmptyState icon="tabler:folders" data-test="projects-empty">
+            {% if mine %}
+                Vous n'êtes responsable d'aucun lot ni sous-lot pour l'instant.
+            {% else %}
+                Aucun projet pour l'instant.
+            {% endif %}
+        </twig:EmptyState>
     {% else %}
-        <div class="overflow-x-auto rounded-base border border-default">
+        <twig:TableCard>
             <twig:Table data-test="projects-table">
                 <twig:Table:Header>
                     <twig:Table:Row>
@@ -45,11 +39,14 @@
                     {% for summary in projects %}
                         <twig:Table:Row data-test="project-row" data-title="{{ summary.project.title }}">
                             <twig:Table:Cell class="font-medium text-heading">
-                                <a href="{{ path('app_project_show', {id: summary.project.id}) }}" class="hover:underline" data-test="project-link">{{ summary.project.title }}</a>
+                                <div class="flex items-center gap-3">
+                                    {{ include('project/_monogram.html.twig', {project: summary.project}) }}
+                                    <a href="{{ path('app_project_show', {id: summary.project.id}) }}" class="decoration-default-strong underline-offset-4 hover:underline" data-test="project-link">{{ summary.project.title }}</a>
+                                </div>
                             </twig:Table:Cell>
-                            <twig:Table:Cell>
+                            <twig:Table:Cell class="tabular-nums">
                                 {% if summary.isUnsplit %}
-                                    <span class="text-body">—</span>
+                                    <span class="text-body-subtle">—</span>
                                 {% else %}
                                     {{ include('project/_estimate.html.twig') }}
                                 {% endif %}
@@ -65,6 +62,11 @@
                     {% endfor %}
                 </twig:Table:Body>
             </twig:Table>
-        </div>
+        </twig:TableCard>
     {% endif %}
 {% endblock %}
+
+{% macro filter(href, label, current, test_id) %}
+    <a href="{{ href }}" data-test="{{ test_id }}" {% if current %}aria-current="page"{% endif %}
+       class="inline-flex h-8 items-center rounded-lg px-3 text-sm font-medium transition-colors {{ current ? 'bg-primary text-on-primary shadow-xs' : 'text-body hover:bg-neutral-tertiary hover:text-heading' }}">{{ label }}</a>
+{% endmacro %}

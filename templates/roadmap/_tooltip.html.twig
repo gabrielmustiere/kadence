@@ -3,16 +3,16 @@
     realized and overrun for a segment, whose `run` is then expected too, future or span for a whole bar.
 #}
 {% set legend = {
-    realized: ['Saisi', 'rounded-sm bg-brand'],
-    overrun: ["Saisi au-delà de l'estimation", 'rounded-sm bg-danger'],
-    future: ['Restant, calculé', 'rounded-sm border border-dashed border-brand bg-brand-soft'],
+    realized: ['Saisi', 'rounded-[3px] bg-brand'],
+    overrun: ["Saisi au-delà de l'estimation", 'rounded-[3px] bg-danger'],
+    future: ['Restant, calculé', 'rounded-[3px] border border-dashed border-brand bg-brand-softer hatch-brand'],
     span: [row.lot ? 'Lot' : 'Projet', 'rounded-full bg-brand-medium'],
 }[kind] %}
 {% set run = kind in ['realized', 'overrun'] ? run : null %}
-<div id="{{ id }}" role="tooltip" hidden class="pointer-events-none z-30 {{ run is null ? 'w-80' : 'w-96' }} rounded-base border border-default bg-neutral-primary-soft p-3 text-xs text-body shadow-md" data-test="roadmap-tooltip-{{ kind }}">
-    <p class="text-sm font-semibold text-heading">{{ row.title }}</p>
-    <p class="mt-1 flex items-center gap-1.5"><span class="inline-block h-2.5 w-5 {{ legend[1] }}"></span>{{ legend[0] }}</p>
-    <dl class="mt-2 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 border-t border-default pt-2">
+<div id="{{ id }}" role="tooltip" hidden class="pointer-events-none z-30 {{ run is null ? 'w-80' : 'w-96' }} rounded-xl border border-default bg-surface p-3.5 text-xs text-body shadow-lg" data-test="roadmap-tooltip-{{ kind }}">
+    <p class="text-[13px] font-semibold text-heading">{{ row.title }}</p>
+    <p class="mt-1.5 flex items-center gap-1.5"><span class="inline-block h-2.5 w-5 {{ legend[1] }}"></span>{{ legend[0] }}</p>
+    <dl class="mt-2.5 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 border-t border-default pt-2.5">
         <dt>Période</dt>
         <dd class="whitespace-nowrap text-heading" data-test="roadmap-tooltip-period">
             {{ bar.from|weekday }} {{ bar.from|date('d/m/Y') }} →

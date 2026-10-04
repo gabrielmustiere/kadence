@@ -3,12 +3,8 @@
 {% block title %}Modifier {{ project.title }} · Kadence{% endblock %}
 
 {% block body %}
+    <twig:PageHeader title="Modifier le projet" :back="path('app_project_show', {id: project.id})" :backLabel="project.title"/>
     <twig:Card>
-        <twig:Card:Header>
-            <twig:Card:Title as="h1">Modifier le projet</twig:Card:Title>
-        </twig:Card:Header>
-        <twig:Card:Content>
-            {{ include('project/_form.html.twig', {submit_label: 'Enregistrer', cancel_path: path('app_project_show', {id: project.id})}) }}
-        </twig:Card:Content>
+        {{ include('project/_form.html.twig', {submit_label: 'Enregistrer', cancel_path: path('app_project_show', {id: project.id})}) }}
     </twig:Card>
 {% endblock %}

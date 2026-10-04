@@ -2,11 +2,18 @@
     Time entered against the estimate of each lot and sub-lot, then of the project, with their progress. Expects
     `summary`.
 #}
-<div class="overflow-x-auto rounded-base border border-default">
+{% set scale = 0 %}
+{% for lotSummary in summary.lots %}
+    {% for line in [lotSummary]|merge(lotSummary.children) %}
+        {% set scale = max(scale, line.enteredQuarters + line.remainingQuarters, line.estimateDays * 4, line.projectedQuarters ?? 0) %}
+    {% endfor %}
+{% endfor %}
+<twig:TableCard>
     <twig:Table data-test="consumption">
         <twig:Table:Header>
             <twig:Table:Row>
                 <twig:Table:Head>Lot</twig:Table:Head>
+                <twig:Table:Head class="min-w-48">Consommation</twig:Table:Head>
                 <twig:Table:Head>Estimé</twig:Table:Head>
                 <twig:Table:Head>Saisi</twig:Table:Head>
                 <twig:Table:Head>Restant ou dépassement</twig:Table:Head>
@@ -16,14 +23,14 @@
         </twig:Table:Header>
         <twig:Table:Body>
             {% for lotSummary in summary.lots %}
-                {{ include('roadmap/_consumption_row.html.twig', {line: lotSummary, title: lotSummary.lot.title, leaf: lotSummary.lot.leaf ? lotSummary.lot : null, nested: false}) }}
+                {{ include('roadmap/_consumption_row.html.twig', {line: lotSummary, title: lotSummary.lot.title, leaf: lotSummary.lot.leaf ? lotSummary.lot : null, nested: false, scale: scale}) }}
                 {% for subLotSummary in lotSummary.children %}
-                    {{ include('roadmap/_consumption_row.html.twig', {line: subLotSummary, title: subLotSummary.lot.title, leaf: subLotSummary.lot, nested: true}) }}
+                    {{ include('roadmap/_consumption_row.html.twig', {line: subLotSummary, title: subLotSummary.lot.title, leaf: subLotSummary.lot, nested: true, scale: scale}) }}
                 {% endfor %}
             {% endfor %}
         </twig:Table:Body>
         <twig:Table:Footer class="border-t border-default">
-            {{ include('roadmap/_consumption_row.html.twig', {line: summary, title: 'Projet', leaf: null, nested: false}) }}
+            {{ include('roadmap/_consumption_row.html.twig', {line: summary, title: 'Projet', leaf: null, nested: false, scale: null}) }}
         </twig:Table:Footer>
     </twig:Table>
-</div>
+</twig:TableCard>

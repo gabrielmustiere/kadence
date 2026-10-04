@@ -8,24 +8,24 @@
 {% endfor %}
 {% set declared = leaves|filter(leaf => leaf.declarations is not empty) %}
 {% if declared is empty %}
-    <twig:Card data-test="progress-history-empty">
-        <p class="text-body">Aucun avancement n'a encore été déclaré sur ce projet.</p>
-    </twig:Card>
+    <twig:EmptyState icon="tabler:progress" data-test="progress-history-empty">
+        Aucun avancement n'a encore été déclaré sur ce projet.
+    </twig:EmptyState>
 {% else %}
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" data-test="progress-history">
+    <ul class="divide-y divide-default-subtle rounded-card border border-default bg-surface" data-test="progress-history">
         {% for leaf in declared %}
-            <div class="rounded-base border border-default bg-neutral-primary-soft p-4" data-test="progress-history-leaf" data-title="{{ leaf.lot.title }}">
+            <li class="px-5 py-4" data-test="progress-history-leaf" data-title="{{ leaf.lot.title }}">
                 <p class="text-sm font-semibold text-heading">{{ leaf.lot.parent ? leaf.lot.parent.title ~ ' · ' }}{{ leaf.lot.title }}</p>
-                <ol class="mt-2 space-y-1 text-sm">
+                <ol class="mt-2.5 space-y-2 text-sm">
                     {% for declaration in leaf.declarations %}
-                        <li class="flex items-baseline justify-between gap-3" data-test="progress-history-entry">
-                            <span class="text-body">{{ declaration.declaredOn|weekday }} {{ declaration.declaredOn|date('d/m/Y') }}</span>
-                            <span class="font-medium text-heading">{{ declaration.percent }} %</span>
+                        <li class="grid grid-cols-[7.25rem_3rem_minmax(0,1fr)] items-center gap-x-3 {{ loop.first ? '' : 'text-body' }}" data-test="progress-history-entry">
+                            <span class="tabular-nums text-body">{{ declaration.declaredOn|weekday }} {{ declaration.declaredOn|date('d/m/Y') }}</span>
+                            <span class="whitespace-nowrap text-right font-semibold tabular-nums {{ loop.first ? 'text-heading' : 'text-body' }}">{{ declaration.percent }} %</span>
                             <span class="min-w-0 truncate text-body">{{ declaration.author.firstName }} {{ declaration.author.lastName }}</span>
                         </li>
                     {% endfor %}
                 </ol>
-            </div>
+            </li>
         {% endfor %}
-    </div>
+    </ul>
 {% endif %}

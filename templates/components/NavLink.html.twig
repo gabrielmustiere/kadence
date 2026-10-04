@@ -4,10 +4,10 @@
 {# @block content The link label #}
 {%- props href, icon, active = false -%}
 <a href="{{ href }}"
-   class="{{ ('group flex items-center p-2 text-base font-medium rounded-lg ' ~ (active ? 'bg-brand-softer font-semibold text-fg-brand-strong' : 'text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700') ~ ' ' ~ attributes.render('class'))|tailwind_merge }}"
+   class="{{ ('group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-[background-color,color,box-shadow] duration-150 ' ~ (active ? 'bg-surface text-heading shadow-sm ring-1 ring-default' : 'text-body hover:bg-neutral-tertiary hover:text-heading') ~ ' ' ~ attributes.render('class'))|tailwind_merge }}"
    {% if active %}aria-current="page"{% endif %}
    {{ attributes }}
 >
-    <twig:ux:icon name="{{ icon }}" class="w-6 h-6 transition duration-75 {{ active ? 'text-fg-brand-strong' : 'text-gray-500 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white' }}"/>
-    <span class="ml-3">{%- block content %}{% endblock -%}</span>
+    <twig:ux:icon name="{{ icon }}" class="size-[18px] shrink-0 transition-colors {{ active ? 'text-fg-brand' : 'text-body-subtle group-hover:text-heading' }}"/>
+    <span>{%- block content %}{% endblock -%}</span>
 </a>

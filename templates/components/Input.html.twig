@@ -1,4 +1,4 @@
 <input
-    class="{{ ('bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand block w-full shadow-xs placeholder:text-body [&:disabled:not([readonly])]:text-fg-disabled aria-invalid:bg-danger-soft aria-invalid:border-danger-subtle aria-invalid:text-fg-danger-strong aria-invalid:focus:ring-danger aria-invalid:focus:border-danger aria-invalid:placeholder:text-fg-danger-strong ' ~ attributes.render('class'))|tailwind_merge }}"
+    class="{{ ('block h-10 w-full rounded-base border border-default-medium bg-surface px-3 text-sm text-heading shadow-xs transition-[border-color,box-shadow] placeholder:text-body-subtle focus:border-brand focus:outline-hidden focus:ring-4 focus:ring-brand-medium/50 [&:disabled:not([readonly])]:text-fg-disabled aria-invalid:border-danger aria-invalid:bg-danger-soft/40 aria-invalid:focus:ring-danger-medium ' ~ attributes.render('class'))|tailwind_merge }}"
     {{ attributes }}
 >

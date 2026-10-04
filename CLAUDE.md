@@ -17,7 +17,7 @@ Monolithe Symfony, rendu serveur. Stack détaillée : `docs/stack.md`.
 - PHP 8.5+ / Symfony 8.1, Doctrine ORM 3.7 + Migrations, SQLite (`var/data.db`, partagée par dev et test)
 - Symfony Messenger sur transport Doctrine (même base SQLite)
 - Front : Twig + Symfony UX (Stimulus, Turbo, Live Component, Icons, Toolkit), AssetMapper + importmap — **pas de bundler Node**
-- UI : Tailwind CSS 4, Flowbite 4, design system « Paper » (`DESIGN.md`, tokens `@theme` dans `assets/styles/app.css`, ADR 0001)
+- UI : Tailwind CSS 4, Flowbite 4, design system « Cadence » (`DESIGN.md`, tokens `@theme` dans `assets/styles/app.css`, mode sombre sous `.dark`, thème de formulaire `templates/form/theme.html.twig`) ; stack tracée par l'ADR 0001, identité par l'ADR 0003
 - Tests : PHPUnit 13 (Unit + Functional) + Playwright (E2E) ; qualité : PHPStan level 10 + PHP-CS-Fixer
 - AI : Symfony AI Mate en CLI (`symfony php vendor/bin/mate`, voir `AGENTS.md`) configuré dans `mate/` (extensions symfony + monolog) ; extensions maison dans `Mate\` (`mate/src/`) ; serveurs MCP Playwright et Chrome DevTools (`.mcp.json`)
 
@@ -31,7 +31,7 @@ src/
 fixtures/              # fixtures Doctrine (namespace DataFixtures\)
 migrations/            # migrations Doctrine
 templates/
-  components/          # composants Twig « Paper » (<twig:Button>, Alert, Modal, Table…)
+  components/          # composants Twig « Cadence » (<twig:Button>, PageHeader, TableCard, Modal…)
 assets/
   controllers/         # contrôleurs Stimulus
   styles/app.css       # Tailwind + tokens du design system

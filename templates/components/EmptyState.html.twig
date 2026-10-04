@@ -1,0 +1,11 @@
+{# @prop icon string The icon name, e.g. `tabler:folders` #}
+{# @block content The message, then optional actions #}
+{%- props icon = 'tabler:inbox' -%}
+<div class="{{ ('flex flex-col items-center justify-center gap-3 rounded-card border border-dashed border-default-medium bg-surface/60 px-6 py-10 text-center ' ~ attributes.render('class'))|tailwind_merge }}" {{ attributes }}>
+    <span class="grid size-10 place-items-center rounded-full bg-neutral-tertiary text-body" aria-hidden="true">
+        <twig:ux:icon name="{{ icon }}" class="size-5"/>
+    </span>
+    <div class="max-w-md text-sm text-body">
+        {%- block content %}{% endblock -%}
+    </div>
+</div>

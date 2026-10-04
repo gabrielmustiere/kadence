@@ -37,7 +37,7 @@ Monolithe Symfony 8.1 en PHP 8.5, rendu serveur Twig + Symfony UX (Stimulus, Tur
 - **Bundler / build** : AssetMapper + importmap, sans bundler Node — Stimulus 3.2.2, Turbo 8.0.23 (`importmap.php`, `config/packages/asset_mapper.yaml`)
 - **CSS** : Tailwind CSS 4 via `symfonycasts/tailwind-bundle` (binaire `v4.3.3`) (`config/packages/symfonycasts_tailwind.yaml`, `package.json`)
 - **UI kit** : Flowbite 4.0.2 (+ `flowbite-datepicker` 2.0.0) via `tales-from-a-dev/flowbite-bundle` ; composants Twig à variants via `tales-from-a-dev/twig-tailwind-extra` (`html_cva`, `tailwind_merge`) (`importmap.php`, `composer.json`)
-- **Design system** : « Paper » — tokens `@theme` dans `assets/styles/app.css`, documenté dans `DESIGN.md` ; choix tracé par l'ADR 0001 (`docs/adr/0001-stack-front-paper-flowbite-ux-toolkit.md`)
+- **Design system** : « Cadence » — tokens `@theme` dans `assets/styles/app.css` (mode sombre sous `.dark`), police Archivo variable (Google Fonts), composant `Ruler` (règle graduée des lots et projets), thème de formulaire `templates/form/theme.html.twig`, documenté dans `DESIGN.md` ; stack front tracée par l'ADR 0001 (`docs/adr/0001-stack-front-paper-flowbite-ux-toolkit.md`), identité par l'ADR 0003 (`docs/adr/0003-identite-visuelle-cadence.md`)
 - **TypeScript** : non pour l'application (seule la config Playwright est en `.ts` : `playwright.config.ts`)
 
 ## Données & stockage

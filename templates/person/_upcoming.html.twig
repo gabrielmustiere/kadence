@@ -3,28 +3,33 @@
     `page`.
 #}
 {% if page.upcoming is empty %}
-    <twig:Card data-test="person-upcoming-empty">
-        <p class="text-body">Aucune affectation à venir.</p>
-    </twig:Card>
+    <twig:EmptyState icon="tabler:calendar-event" data-test="person-upcoming-empty">
+        Aucune affectation à venir.
+    </twig:EmptyState>
 {% else %}
-    <ul class="max-w-3xl divide-y divide-default rounded-base border border-default bg-neutral-primary-soft text-sm" data-test="person-upcoming">
+    <ul class="divide-y divide-default-subtle rounded-card border border-default bg-surface text-sm" data-test="person-upcoming">
         {% for row in page.upcoming %}
-            <li class="p-3" data-test="person-upcoming-entry" data-leaf="{{ row.leafPath }}">
-                <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                    <p class="font-medium text-heading">
-                        <a href="{{ path('app_roadmap_project', {id: row.lot.project.id}) }}" class="hover:underline" data-test="person-project-link">{{ row.lot.project.title }}</a>
-                        · {{ row.leafPath }}
-                    </p>
-                    {% if row.start and row.end %}
-                        <p class="whitespace-nowrap text-body" data-test="person-upcoming-period">{{ row.start|weekday }} {{ row.start|date('d/m/Y') }} → {{ row.end|weekday }} {{ row.end|date('d/m/Y') }}</p>
+            <li class="grid grid-cols-1 gap-x-6 gap-y-2.5 px-5 py-4 sm:grid-cols-[minmax(0,1fr)_auto]" data-test="person-upcoming-entry" data-leaf="{{ row.leafPath }}">
+                <div class="min-w-0">
+                    <a href="{{ path('app_roadmap_project', {id: row.lot.project.id}) }}" class="text-[13px] text-body underline decoration-default-medium underline-offset-4 hover:text-heading hover:decoration-default-strong" data-test="person-project-link">{{ row.lot.project.title }}</a>
+                    <p class="mt-0.5 font-semibold text-heading">{{ row.leafPath }}</p>
+                    {% if row.signals is not empty %}
+                        <div class="mt-2 flex flex-wrap gap-1.5">
+                            {% for signal in row.signals %}
+                                <twig:Badge variant="{{ signal.variant }}" data-test="signal-{{ signal.value }}">{{ signal.label }}</twig:Badge>
+                            {% endfor %}
+                        </div>
                     {% endif %}
                 </div>
-                <p class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-body">
-                    <span><span class="font-medium tabular-nums text-heading" data-test="person-upcoming-share">{{ row.share }} %</span> de sa capacité</span>
-                    {% for signal in row.signals %}
-                        <twig:Badge variant="{{ signal.variant }}" data-test="signal-{{ signal.value }}">{{ signal.label }}</twig:Badge>
-                    {% endfor %}
-                </p>
+                <div class="flex flex-col gap-1.5 sm:items-end">
+                    {% if row.start and row.end %}
+                        <p class="whitespace-nowrap tabular-nums text-heading" data-test="person-upcoming-period">{{ row.start|weekday }} {{ row.start|date('d/m/Y') }} → {{ row.end|weekday }} {{ row.end|date('d/m/Y') }}</p>
+                    {% endif %}
+                    <p class="inline-flex items-center gap-2 text-[13px] text-body">
+                        <span class="h-2 w-16 overflow-hidden rounded-[2px] bg-neutral-tertiary" aria-hidden="true"><span class="hatch-brand block h-full bg-brand-softer" style="width: {{ min(row.share, 100) }}%"></span></span>
+                        <span><span class="font-semibold tabular-nums text-heading" data-test="person-upcoming-share">{{ row.share }} %</span> de sa capacité</span>
+                    </p>
+                </div>
             </li>
         {% endfor %}
     </ul>

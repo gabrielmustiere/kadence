@@ -5,16 +5,16 @@
 <div
     role="group"
     aria-label="{{ title }}"
-    class="{{ ('grid grid-cols-1 gap-x-8 gap-y-4 py-6 lg:grid-cols-[15rem_minmax(0,1fr)] ' ~ attributes.render('class'))|tailwind_merge }}"
+    class="{{ ('grid grid-cols-1 gap-x-10 gap-y-4 py-7 lg:grid-cols-[17rem_minmax(0,1fr)] ' ~ attributes.render('class'))|tailwind_merge }}"
     {{ attributes }}
 >
     <div>
-        <h2 class="text-base font-semibold text-heading">{{ title }}</h2>
+        <h2 class="text-[15px] font-semibold tracking-tight text-heading">{{ title }}</h2>
         {% if description %}
-            <p class="mt-1 text-sm text-body">{{ description }}</p>
+            <p class="mt-1.5 text-[13px] leading-relaxed text-body">{{ description }}</p>
         {% endif %}
     </div>
-    <div class="min-w-0">
+    <div class="min-w-0 max-w-3xl">
         {%- block content %}{% endblock -%}
     </div>
 </div>

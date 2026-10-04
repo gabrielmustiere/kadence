@@ -3,22 +3,22 @@
 {% block title %}Connexion · Kadence{% endblock %}
 
 {% block body %}
-    <div class="grid min-h-screen grid-cols-1 lg:grid-cols-2">
+    <div class="grid min-h-screen grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
 
         {# Form column #}
-        <div class="flex flex-col justify-between px-6 py-10 sm:px-12 lg:px-16">
+        <div class="flex flex-col justify-between px-6 py-8 sm:px-12 lg:px-16">
 
             <div class="flex items-center gap-2.5">
-                <span class="grid size-9 place-items-center rounded-lg bg-gray-900 font-display text-sm font-bold text-violet-400 dark:bg-violet-500 dark:text-gray-900">K</span>
+                <twig:Logo class="size-9"/>
                 <div class="leading-tight">
-                    <div class="font-display text-base font-semibold tracking-tight text-gray-900 dark:text-white">Kadence</div>
-                    <div class="text-2xs uppercase tracking-wider text-gray-500">Pilotage de production</div>
+                    <div class="text-base font-bold tracking-tight text-heading [font-stretch:118%]" translate="no">Kadence</div>
+                    <div class="eyebrow text-body-subtle">Pilotage de production</div>
                 </div>
             </div>
 
-            <div class="mx-auto w-full max-w-sm">
-                <h1 class="font-display text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Se connecter</h1>
-                <p class="mt-2 text-sm text-gray-500">
+            <div class="mx-auto w-full max-w-sm py-12">
+                <h1 class="font-display text-[2.5rem] leading-none text-heading">Se connecter</h1>
+                <p class="mt-3 text-[15px] text-body">
                     Identifiez-vous pour accéder à l'espace de travail.
                 </p>
 
@@ -27,18 +27,18 @@
                 <form method="post" class="mt-8 space-y-5"
                       {% if dev_login %}data-controller="dev-login" data-dev-login-password-value="password"{% endif %}>
                     {% if error %}
-                        <div role="alert" class="flex items-start gap-3 rounded-md border border-rose-200 bg-rose-50 p-3 dark:border-rose-900/50 dark:bg-rose-900/30">
-                            <twig:ux:icon name="tabler:alert-circle" class="mt-0.5 size-5 shrink-0 text-rose-600 dark:text-rose-400"/>
-                            <div class="text-sm text-rose-800 dark:text-rose-200">
+                        <div role="alert" class="flex items-start gap-3 rounded-xl border border-danger-subtle bg-danger-soft p-3.5">
+                            <twig:ux:icon name="tabler:alert-circle-filled" class="mt-px size-5 shrink-0 text-danger"/>
+                            <div class="text-sm leading-relaxed text-fg-danger-strong">
                                 {{ error.messageKey|trans(error.messageData, 'security') }}
                             </div>
                         </div>
                     {% endif %}
 
                     {% if app.user %}
-                        <div class="flex items-start gap-3 rounded-md border border-violet-200 bg-violet-50 p-3 dark:border-violet-500/40 dark:bg-violet-500/10">
-                            <twig:ux:icon name="tabler:user-check" class="mt-0.5 size-5 shrink-0 text-violet-600 dark:text-violet-300"/>
-                            <div class="text-sm text-violet-900 dark:text-violet-200">
+                        <div class="flex items-start gap-3 rounded-xl border border-brand-subtle bg-brand-softer p-3.5">
+                            <twig:ux:icon name="tabler:user-check" class="mt-px size-5 shrink-0 text-fg-brand"/>
+                            <div class="text-sm leading-relaxed text-fg-brand-strong">
                                 Connecté en tant que <span class="font-medium">{{ app.user.userIdentifier }}</span>.
                                 <a href="{{ logout_path() }}" class="ml-1 font-medium underline hover:no-underline">Se déconnecter</a>
                             </div>
@@ -46,72 +46,81 @@
                     {% endif %}
 
                     {% if dev_login %}
-                        <div class="rounded-md border border-dashed border-amber-300 bg-amber-50 p-3 dark:border-amber-500/40 dark:bg-amber-500/10">
-                            <label for="dev-login-user" class="mb-1.5 block text-sm font-medium text-amber-900 dark:text-amber-200">Connexion rapide (dev uniquement)</label>
-                            <select id="dev-login-user" data-test="dev-login-user" data-action="dev-login#fill"
-                                    class="block w-full rounded-md border border-amber-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-violet-500 focus:ring-2 focus:ring-violet-200 focus:outline-none dark:border-amber-500/40 dark:bg-gray-900 dark:text-white">
+                        <div class="rounded-xl border border-dashed border-warning-subtle bg-warning-soft/70 p-3.5">
+                            <label for="dev-login-user" class="mb-2 flex items-center gap-1.5 text-[13px] font-medium text-fg-warning">
+                                <twig:ux:icon name="tabler:bolt" class="size-4"/>
+                                Connexion rapide (dev uniquement)
+                            </label>
+                            <twig:Select id="dev-login-user" data-test="dev-login-user" data-action="dev-login#fill">
                                 {% for dev_user in dev_users %}
                                     <option value="{{ dev_user.email }}" {{ dev_user.email == dev_default_email ? 'selected' }}>
                                         {{ dev_user.firstName }} {{ dev_user.lastName }} — {{ dev_user.role.label }}{{ dev_user.active ? '' : ' (désactivé)' }}
                                     </option>
                                 {% endfor %}
-                            </select>
-                            <p class="mt-1.5 text-xs text-amber-800 dark:text-amber-300">Remplit l'e-mail et le mot de passe des fixtures (<span class="font-mono">password</span>).</p>
+                            </twig:Select>
+                            <p class="mt-2 text-xs text-fg-warning">Remplit l'e-mail et le mot de passe des fixtures (<span class="font-mono">password</span>).</p>
                         </div>
                     {% endif %}
 
                     <div>
-                        <label for="username" class="mb-1.5 block text-sm font-medium text-gray-900 dark:text-gray-100">Email</label>
-                        <input id="username" type="email" name="_username" value="{{ dev_login ? dev_default_email : last_username }}"
-                               {% if dev_login %}data-dev-login-target="username"{% endif %}
-                               required autocomplete="email" autofocus
-                               placeholder="vous@exemple.com"
-                               class="block w-full rounded-md border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-violet-500 focus:ring-2 focus:ring-violet-200 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500 dark:focus:border-violet-500 dark:focus:ring-violet-900/50"/>
+                        <twig:Label for="username" class="mb-1.5">Email</twig:Label>
+                        <twig:Input id="username" type="email" name="_username" value="{{ dev_login ? dev_default_email : last_username }}"
+                                    :data-dev-login-target="dev_login ? 'username' : false"
+                                    required autocomplete="username" spellcheck="false" autofocus
+                                    placeholder="vous@exemple.com" class="h-11"/>
                     </div>
 
                     <div>
-                        <label for="password" class="mb-1.5 block text-sm font-medium text-gray-900 dark:text-gray-100">Mot de passe</label>
-                        <input id="password" type="password" name="_password" required
-                               {% if dev_login %}value="password" data-dev-login-target="password"{% endif %}
-                               autocomplete="current-password"
-                               placeholder="••••••••"
-                               class="block w-full rounded-md border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-violet-500 focus:ring-2 focus:ring-violet-200 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500 dark:focus:border-violet-500 dark:focus:ring-violet-900/50"/>
+                        <twig:Label for="password" class="mb-1.5">Mot de passe</twig:Label>
+                        <twig:Input id="password" type="password" name="_password" required
+                                    :value="dev_login ? 'password' : false" :data-dev-login-target="dev_login ? 'password' : false"
+                                    autocomplete="current-password"
+                                    placeholder="••••••••" class="h-11"/>
                     </div>
 
                     <input type="hidden" name="_csrf_token" data-controller="csrf-protection"
                            value="{{ csrf_token('authenticate') }}">
 
-                    <button type="submit"
-                            class="flex w-full items-center justify-center gap-2 rounded-md bg-gray-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 dark:bg-violet-500 dark:hover:bg-violet-400 dark:focus:ring-violet-500 dark:focus:ring-offset-gray-950">
+                    <twig:Button type="submit" size="lg" class="w-full">
                         Se connecter
-                        <twig:ux:icon name="tabler:arrow-right" class="size-4"/>
-                    </button>
+                    </twig:Button>
                 </form>
 
             </div>
 
-            <p class="text-center text-xs text-gray-400">© {{ "now"|date("Y") }} Kadence</p>
+            <p class="text-center text-xs text-body-subtle lg:text-left">© {{ "now"|date("Y") }} Kadence, outil interne de pilotage</p>
         </div>
 
-        {# Decorative column #}
-        <div class="relative hidden overflow-hidden bg-gray-900 lg:block dark:bg-gray-950">
-            <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(139,92,246,0.25),transparent_55%)]"></div>
-            <div class="absolute inset-0 bg-[linear-gradient(135deg,transparent_60%,rgba(255,255,255,0.04)_60.5%,rgba(255,255,255,0.04)_61%,transparent_61.5%)]"></div>
+        {# Decorative column: four projects as rulers, what was entered then what remains. #}
+        <div class="relative m-3 hidden overflow-hidden rounded-[14px] bg-blue-black lg:block" aria-hidden="true">
+            <div class="relative flex h-full flex-col justify-between gap-16 p-12 text-white">
+                <div class="space-y-5 pt-6">
+                    {% for bar in [
+                        {label: 'Atlas', done: 30, todo: 10},
+                        {label: 'Nova', done: 18, todo: 14},
+                        {label: 'Orion', done: 34, todo: 4},
+                        {label: 'Vega', done: 9, todo: 23},
+                    ] %}
+                        <div>
+                            <span class="text-sm font-medium text-pen-200">{{ bar.label }}</span>
+                            <div class="ruler mt-2" style="--ruler-cells: 40; --ruler-gap: 3px; --ruler-gap-color: var(--color-blue-black)">
+                                <div class="ruler-track h-4">
+                                    <span class="ruler-done bg-pen-300" style="width: {{ bar.done / 40 * 100 }}%"></span>
+                                    <span class="ruler-rest bg-pen-950 bg-[repeating-linear-gradient(-45deg,var(--color-pen-800)_0_3px,transparent_3px_7px)]" style="left: {{ bar.done / 40 * 100 }}%; width: {{ bar.todo / 40 * 100 }}%"></span>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
 
-            <div class="relative flex h-full flex-col justify-between p-12 text-white">
-                <div class="font-mono text-xs uppercase tracking-[0.2em] text-violet-300">Direction · Leads · Production</div>
-
-                <div class="max-w-md">
-                    <h2 class="font-display text-4xl font-bold leading-tight tracking-tight">
-                        Savoir à date ce que l'équipe peut encore absorber,<br/>
-                        <span class="text-violet-400">et quand chaque projet sera livré.</span>
+                <div class="max-w-lg">
+                    <h2 class="font-display text-[2rem] leading-[1.12]">
+                        Savoir à date ce que l'équipe peut encore absorber, et quand chaque projet sera livré.
                     </h2>
-                    <p class="mt-4 text-sm text-gray-300">
+                    <p class="mt-5 max-w-md text-sm leading-relaxed text-pen-200">
                         Temps passés, estimé face au réalisé, capacité de l'équipe et dates projetées, au même endroit.
                     </p>
                 </div>
-
-                <div class="text-xs font-mono text-gray-400">Outil interne — accès réservé à l'équipe.</div>
             </div>
         </div>
     </div>

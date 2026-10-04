@@ -3,44 +3,58 @@
 {% block title %}Tableau de bord · Kadence{% endblock %}
 
 {% block body %}
-    <div class="mb-8">
-        <h1 class="font-display text-2xl font-bold tracking-tight text-heading sm:text-3xl">Tableau de bord</h1>
-        <p class="mt-1 text-sm text-body" data-test="home-greeting">
-            Bonjour {{ app.user.firstName }}. Suivez la charge, l'avancement et les dates de livraison de l'équipe.
-        </p>
-    </div>
+    <twig:PageHeader title="Tableau de bord">
+        <twig:block name="description">
+            <p class="mt-2.5 max-w-3xl text-[15px] leading-relaxed text-body" data-test="home-greeting">
+                Bonjour {{ app.user.firstName }}. Suivez la charge, l'avancement et les dates de livraison de l'équipe.
+            </p>
+        </twig:block>
+    </twig:PageHeader>
 
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {{ _self.shortcut(path('app_timesheet'), 'tabler:calendar-week', 'Ma semaine', 'Saisir vos temps de la semaine, au quart de journée.', 'home-timesheet') }}
-        {{ _self.shortcut(path('app_account_password'), 'tabler:user', 'Mon compte', 'Voir votre profil et changer votre mot de passe.', 'home-account') }}
-    </div>
-
-    <section class="mt-10" data-test="home-admin">
-        <h2 class="mb-4 font-display text-lg font-semibold text-heading">Administration</h2>
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {{ _self.shortcut(path('app_project_index'), 'tabler:folders', 'Projets', 'Découper les projets en lots et sous-lots, estimer et confier chaque partie.', 'home-projects') }}
-            {% if is_granted('ROLE_DIRECTION') %}
-                {{ _self.shortcut(path('app_team_index'), 'tabler:users', 'Équipe', 'Inscrire les personnes, gérer leurs rôles et leurs accès.', 'home-team') }}
-                {{ _self.shortcut(path('app_tag_index'), 'tabler:tags', 'Tags', 'Tenir le vocabulaire des compétences, des expériences et des types d\'équipe.', 'home-tags') }}
-                {{ _self.shortcut(path('app_holiday_index'), 'tabler:calendar-off', 'Jours fériés', 'Consulter les jours fériés de chaque calendrier et les ajuster.', 'home-holidays') }}
-            {% endif %}
+    <a href="{{ path('app_timesheet') }}" data-test="home-timesheet"
+       class="group mb-12 flex flex-col gap-6 rounded-card bg-primary px-6 py-7 text-on-primary transition-colors hover:bg-primary-strong sm:flex-row sm:items-center sm:justify-between sm:px-8">
+        <div class="flex items-center gap-5">
+            <twig:Logo class="size-12 shrink-0 rounded-[9px] ring-1 ring-on-primary/15"/>
+            <div>
+                <p class="font-display text-[1.75rem] leading-tight">Ma semaine</p>
+                <p class="mt-1 text-sm text-on-primary/75">
+                    Semaine {{ 'now'|date('W') }}, du {{ 'monday this week'|date('d/m') }} au {{ 'friday this week'|date('d/m') }} : saisissez vos temps au quart de journée.
+                </p>
+            </div>
         </div>
-    </section>
+        <span class="inline-flex h-10 shrink-0 items-center self-start rounded-base bg-on-primary px-4 text-sm font-semibold text-primary sm:self-auto">Saisir mes temps</span>
+    </a>
+
+    <div class="grid grid-cols-1 gap-x-10 gap-y-12 lg:grid-cols-2">
+        <section>
+            <h2 class="mb-3 text-lg font-semibold tracking-tight text-heading">Suivre</h2>
+            <ul class="divide-y divide-default-subtle border-y border-default-subtle">
+                <li>{{ _self.shortcut(path('app_roadmap'), 'tabler:timeline-event', 'Roadmap', 'La chronologie de chaque projet et sa date de fin projetée.', 'home-roadmap') }}</li>
+                <li>{{ _self.shortcut(path('app_account_password'), 'tabler:user-circle', 'Mon compte', 'Voir votre profil et changer votre mot de passe.', 'home-account') }}</li>
+            </ul>
+        </section>
+
+        <section data-test="home-admin">
+            <h2 class="mb-3 text-lg font-semibold tracking-tight text-heading">Administration</h2>
+            <ul class="divide-y divide-default-subtle border-y border-default-subtle">
+                <li>{{ _self.shortcut(path('app_project_index'), 'tabler:folders', 'Projets', 'Découper les projets en lots et sous-lots, estimer et confier chaque partie.', 'home-projects') }}</li>
+                {% if is_granted('ROLE_DIRECTION') %}
+                    <li>{{ _self.shortcut(path('app_team_index'), 'tabler:users', 'Équipe', 'Inscrire les personnes, gérer leurs rôles et leurs accès.', 'home-team') }}</li>
+                    <li>{{ _self.shortcut(path('app_tag_index'), 'tabler:tags', 'Tags', 'Tenir le vocabulaire des compétences, des expériences et des types d\'équipe.', 'home-tags') }}</li>
+                    <li>{{ _self.shortcut(path('app_holiday_index'), 'tabler:calendar-off', 'Jours fériés', 'Consulter les jours fériés de chaque calendrier et les ajuster.', 'home-holidays') }}</li>
+                {% endif %}
+            </ul>
+        </section>
+    </div>
 {% endblock %}
 
 {% macro shortcut(href, icon, title, description, test_id) %}
-    <a href="{{ href }}" data-test="{{ test_id }}" class="group block">
-        <twig:Card class="h-full transition group-hover:bg-neutral-secondary-soft">
-            <div class="flex items-start gap-4">
-                <span class="grid size-10 shrink-0 place-items-center rounded-base bg-neutral-secondary-medium text-heading">
-                    <twig:ux:icon name="{{ icon }}" class="size-5"/>
-                </span>
-                <div class="min-w-0 flex-1">
-                    <p class="font-display text-base font-semibold text-heading">{{ title }}</p>
-                    <p class="mt-1 text-sm text-body">{{ description }}</p>
-                </div>
-                <twig:ux:icon name="tabler:arrow-right" class="size-5 shrink-0 text-body transition group-hover:translate-x-0.5"/>
-            </div>
-        </twig:Card>
+    <a href="{{ href }}" data-test="{{ test_id }}"
+       class="group -mx-3 flex items-start gap-4 rounded-base px-3 py-4 transition-colors hover:bg-neutral-secondary-medium">
+        <twig:ux:icon name="{{ icon }}" class="mt-0.5 size-5 shrink-0 text-fg-brand" aria-hidden="true"/>
+        <span class="min-w-0">
+            <span class="block text-[15px] font-semibold text-heading group-hover:underline group-hover:decoration-default-strong group-hover:underline-offset-4">{{ title }}</span>
+            <span class="mt-0.5 block text-sm leading-relaxed text-body">{{ description }}</span>
+        </span>
     </a>
 {% endmacro %}

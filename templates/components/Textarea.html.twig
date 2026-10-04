@@ -1,6 +1,6 @@
 {# @block content The initial textarea value #}
 <textarea
-    class="{{ ('bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand block w-full p-3.5 shadow-xs placeholder:text-body ' ~ attributes.render('class'))|tailwind_merge }}"
+    class="{{ ('block w-full rounded-base border border-default-medium bg-surface p-3 text-sm text-heading shadow-xs transition-[border-color,box-shadow] placeholder:text-body-subtle focus:border-brand focus:outline-hidden focus:ring-4 focus:ring-brand-medium/50 ' ~ attributes.render('class'))|tailwind_merge }}"
     {{ attributes }}
 >
     {%- block content %}{% endblock -%}

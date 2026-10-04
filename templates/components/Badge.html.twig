@@ -6,27 +6,27 @@
 {# @block content The badge label or content #}
 {%- props variant = 'brand', size = 'default', shape = 'rounded', border = 'none', as = 'div' -%}
 {%- set style = html_cva(
-    base: 'inline-flex items-center justify-center font-medium',
+    base: 'inline-flex items-center justify-center gap-1 whitespace-nowrap font-medium ring-inset',
     variants: {
         variant: {
-            brand: 'bg-brand-softer text-fg-brand-strong border-brand-subtle [a&]:hover:bg-brand-soft',
-            alternative: 'bg-neutral-primary-soft text-heading border-default [a&]:hover:bg-neutral-secondary-medium',
-            gray: 'bg-neutral-secondary-medium text-heading border-default-medium [a&]:hover:bg-neutral-tertiary-medium',
-            danger: 'bg-danger-soft text-fg-danger-strong border-danger-subtle [a&]:hover:bg-danger-medium',
-            success: 'bg-success-soft text-fg-success-strong border-success-subtle [a&]:hover:bg-success-medium',
-            warning: 'bg-warning-soft text-fg-warning border-warning-subtle [a&]:hover:bg-warning-medium',
+            brand: 'bg-brand-softer text-fg-brand-strong ring-brand-subtle [a&]:hover:bg-brand-soft',
+            alternative: 'bg-surface text-heading ring-default-medium [a&]:hover:bg-neutral-secondary-soft',
+            gray: 'bg-neutral-tertiary text-heading ring-default [a&]:hover:bg-neutral-tertiary-medium',
+            danger: 'bg-danger-soft text-fg-danger-strong ring-danger-subtle [a&]:hover:bg-danger-medium',
+            success: 'bg-success-soft text-fg-success-strong ring-success-subtle [a&]:hover:bg-success-medium',
+            warning: 'bg-warning-soft text-fg-warning ring-warning-subtle [a&]:hover:bg-warning-medium',
         },
         size: {
-            default: 'px-1.5 py-0.5 text-xs',
-            lg: 'px-2 py-1 text-sm',
+            default: 'h-5 px-1.5 text-[11.5px] leading-none',
+            lg: 'h-6 px-2 text-xs',
         },
         shape: {
-            rounded: 'rounded',
+            rounded: 'rounded-md',
             pill: 'rounded-full',
         },
         border: {
             none: '',
-            bordered: 'border',
+            bordered: 'ring-1',
         },
     },
 

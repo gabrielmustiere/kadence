@@ -3,29 +3,32 @@
 {% block title %}Modifier {{ member.firstName }} {{ member.lastName }} · Kadence{% endblock %}
 
 {% block body %}
+    <twig:PageHeader title="Modifier {{ member.firstName }} {{ member.lastName }}" :back="path('app_team_index')" backLabel="Équipe">
+        <twig:Button as="a" variant="outline" href="{{ path('app_person', {id: member.id}) }}">
+            <twig:ux:icon name="tabler:id-badge-2" class="size-4"/>
+            Voir la fiche
+        </twig:Button>
+    </twig:PageHeader>
     <twig:Card>
-        <twig:Card:Header>
-            <twig:Card:Title as="h1">Modifier {{ member.firstName }} {{ member.lastName }}</twig:Card:Title>
-        </twig:Card:Header>
-        <twig:Card:Content>
-            {{ include('team/_form.html.twig', {submit_label: 'Enregistrer'}) }}
-        </twig:Card:Content>
+        {{ include('team/_form.html.twig', {submit_label: 'Enregistrer'}) }}
     </twig:Card>
 
     <twig:Card class="mt-6" data-test="weekly-max-history">
         <twig:Card:Header>
             <twig:Card:Title as="h2">Historique du maximum hebdomadaire</twig:Card:Title>
-            <p class="mt-2 text-sm text-body">Chaque semaine applique la valeur en vigueur à son lundi. Supprimer une valeur rétablit la précédente.</p>
+            <p class="mt-1.5 text-[13px] leading-relaxed text-body">Chaque semaine applique la valeur en vigueur à son lundi. Supprimer une valeur rétablit la précédente.</p>
         </twig:Card:Header>
         <twig:Card:Content>
-            <ul class="divide-y divide-default text-sm">
-                <li class="flex items-center justify-between gap-4 py-2" data-test="weekly-max-default">
-                    <span><strong class="text-heading">5 j</strong> <span class="text-body">par défaut</span></span>
+            <ol class="relative ms-1.5 space-y-0 border-s border-default text-sm">
+                <li class="relative flex items-center justify-between gap-4 py-2.5 ps-5" data-test="weekly-max-default">
+                    <span class="absolute -start-[5px] top-1/2 size-2.5 -translate-y-1/2 rounded-full border-2 border-surface bg-neutral-quaternary-medium" aria-hidden="true"></span>
+                    <span><strong class="font-semibold tabular-nums text-heading">5 j</strong> <span class="text-body">par défaut</span></span>
                 </li>
                 {% for weeklyMax in weekly_maxes %}
-                    <li class="flex items-center justify-between gap-4 py-2" data-test="weekly-max-entry" data-from="{{ weeklyMax.effectiveFrom|date('Y-m-d') }}">
+                    <li class="relative flex items-center justify-between gap-4 py-2.5 ps-5" data-test="weekly-max-entry" data-from="{{ weeklyMax.effectiveFrom|date('Y-m-d') }}">
+                        <span class="absolute -start-[5px] top-1/2 size-2.5 -translate-y-1/2 rounded-full border-2 border-surface bg-brand" aria-hidden="true"></span>
                         <span>
-                            <strong class="text-heading">{{ weeklyMax.quarters|days }}</strong>
+                            <strong class="font-semibold tabular-nums text-heading">{{ weeklyMax.quarters|days }}</strong>
                             <span class="text-body">à partir de la semaine du {{ weeklyMax.effectiveFrom|date('d/m/Y') }}</span>
                         </span>
                         <form method="post" action="{{ path('app_team_weekly_max_delete', {id: member.id, weeklyMaxId: weeklyMax.id}) }}">
@@ -34,7 +37,7 @@
                         </form>
                     </li>
                 {% endfor %}
-            </ul>
+            </ol>
         </twig:Card:Content>
     </twig:Card>
 {% endblock %}

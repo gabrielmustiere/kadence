@@ -3,27 +3,29 @@
 {% block title %}Modifier {{ lot.title }} · Kadence{% endblock %}
 
 {% block body %}
-    <twig:Card>
-        <twig:Card:Header>
-            <twig:Card:Title as="h1">Modifier « {{ lot.title }} »</twig:Card:Title>
-            <p class="mt-2 text-sm text-body">
+    <twig:PageHeader title="Modifier « {{ lot.title }} »" :eyebrow="lot.project.title" :back="back_path" backLabel="Retour">
+        <twig:block name="description">
+            <p class="mt-2.5 max-w-3xl text-[15px] leading-relaxed text-body">
                 {{ lot.subLot ? 'Sous-lot de « ' ~ lot.parent.title ~ ' »' : 'Lot' }} du projet « {{ lot.project.title }} ».
                 {% if not lot.leaf %}
                     Son estimation est la somme de ses sous-lots.
                 {% endif %}
             </p>
             {% if consumed_quarters > 0 %}
-                <p class="mt-2 text-sm text-body" data-test="lot-consumed">
-                    {% if lot.initialEstimateDays is not null %}Estimation initiale : <strong class="text-heading">{{ lot.initialEstimateDays }} j</strong>. {% endif %}
-                    {{ consumed_quarters|days }} déjà saisis : une révision de l'estimation ne peut pas descendre sous {{ minimum_estimate_days }} j.
+                <p class="mt-3 flex max-w-3xl gap-2.5 rounded-xl border border-default bg-surface px-4 py-3 text-sm leading-relaxed text-body shadow-xs" data-test="lot-consumed">
+                    <twig:ux:icon name="tabler:clock-hour-4" class="mt-0.5 size-4 shrink-0 text-body-subtle" aria-hidden="true"/>
+                    <span>
+                        {% if lot.initialEstimateDays is not null %}Estimation initiale : <strong class="text-heading">{{ lot.initialEstimateDays }} j</strong>. {% endif %}
+                        {{ consumed_quarters|days }} déjà saisis : une révision de l'estimation ne peut pas descendre sous {{ minimum_estimate_days }} j.
+                    </span>
                 </p>
             {% endif %}
-        </twig:Card:Header>
-        <twig:Card:Content>
-            {{ include('lot/_form.html.twig', {
-                submit_label: 'Enregistrer',
-                cancel_path: back_path,
-            }) }}
-        </twig:Card:Content>
+        </twig:block>
+    </twig:PageHeader>
+    <twig:Card>
+        {{ include('lot/_form.html.twig', {
+            submit_label: 'Enregistrer',
+            cancel_path: back_path,
+        }) }}
     </twig:Card>
 {% endblock %}

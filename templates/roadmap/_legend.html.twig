@@ -4,16 +4,16 @@
     load beyond a full load.
 #}
 <div class="mb-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-body" data-test="roadmap-legend">
-    <span class="inline-flex items-center gap-1.5"><span class="inline-block h-3 w-6 rounded-sm bg-brand"></span>Saisi</span>
-    <span class="inline-flex items-center gap-1.5"><span class="inline-block h-3 w-6 rounded-sm bg-danger"></span>Saisi au-delà de l'estimation</span>
-    <span class="inline-flex items-center gap-1.5" data-test="roadmap-legend-gap"><span class="inline-flex h-3 w-6 gap-1"><span class="flex-1 rounded-sm bg-brand"></span><span class="flex-1 rounded-sm bg-brand"></span></span>Jour ouvré sans saisie</span>
-    <span class="inline-flex items-center gap-1.5"><span class="inline-block h-3 w-6 rounded-sm border border-dashed border-brand bg-brand-soft"></span>{{ future_label ?? 'Restant, calculé' }}</span>
+    <span class="inline-flex items-center gap-1.5"><span class="inline-block h-2.5 w-5 rounded-[3px] bg-brand"></span>Saisi</span>
+    <span class="inline-flex items-center gap-1.5"><span class="inline-block h-2.5 w-5 rounded-[3px] bg-danger"></span>Saisi au-delà de l'estimation</span>
+    <span class="inline-flex items-center gap-1.5" data-test="roadmap-legend-gap"><span class="inline-flex h-2.5 w-5 gap-0.5"><span class="flex-1 rounded-[3px] bg-brand"></span><span class="flex-1 rounded-[3px] bg-brand"></span></span>Jour ouvré sans saisie</span>
+    <span class="inline-flex items-center gap-1.5"><span class="hatch-brand inline-block h-2.5 w-5 rounded-[3px] border border-dashed border-brand bg-brand-softer"></span>{{ future_label ?? 'Restant, calculé' }}</span>
     {% if with_span ?? true %}
-        <span class="inline-flex items-center gap-1.5"><span class="inline-block h-2 w-6 rounded-full bg-brand-medium"></span>Lot ou projet</span>
+        <span class="inline-flex items-center gap-1.5"><span class="inline-block h-1.5 w-5 rounded-full bg-brand-medium"></span>Lot ou projet</span>
     {% endif %}
     {% if with_overload ?? false %}
-        <span class="inline-flex items-center gap-1.5"><span class="inline-block h-3 w-6 rounded-sm border border-danger-subtle bg-danger-soft"></span>Charge au-delà de 100 %</span>
+        <span class="inline-flex items-center gap-1.5"><span class="inline-block h-2.5 w-5 rounded-[3px] border border-danger-subtle bg-danger-soft"></span>Charge au-delà de 100 %</span>
     {% endif %}
-    <span class="inline-flex items-center gap-1.5"><span class="inline-block h-3 w-px bg-danger"></span>Aujourd'hui</span>
-    <span data-test="roadmap-period">Du {{ roadmap.window.firstDay|date('d/m/Y') }} au {{ roadmap.window.lastDay|date('d/m/Y') }}</span>
+    <span class="inline-flex items-center gap-1.5"><span class="relative inline-block h-3 w-px bg-primary/70"><span class="absolute -top-0.5 -left-[3px] size-[7px] rounded-full bg-primary"></span></span>Aujourd'hui</span>
+    <span class="ms-auto text-xs tabular-nums text-body-subtle" data-test="roadmap-period">Du {{ roadmap.window.firstDay|date('d/m/Y') }} au {{ roadmap.window.lastDay|date('d/m/Y') }}</span>
 </div>

@@ -1,4 +1,4 @@
 {% set today = roadmap.todayPosition %}
 {% if today is not null %}
-    <div class="absolute inset-y-0 w-px bg-danger" style="left: {{ today|number_format(4, '.', '') }}%" aria-hidden="true" data-test="roadmap-today-line"></div>
+    <div class="absolute inset-y-0 w-px bg-primary/70" style="left: {{ today|number_format(4, '.', '') }}%" aria-hidden="true" data-test="roadmap-today-line"></div>
 {% endif %}

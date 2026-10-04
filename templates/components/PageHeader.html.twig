@@ -1,0 +1,49 @@
+{# @prop title string The page heading #}
+{# @prop description string|null A sentence under the heading #}
+{# @prop eyebrow string|null A short label above the heading #}
+{# @prop back string|null The URL of the page this one belongs to #}
+{# @prop backLabel string|null The name of that page #}
+{# @prop backTest string|null The data-test of the back link #}
+{# @prop headingAttrs array Extra attributes of the heading, e.g. its data-test #}
+{# @prop compact boolean Actions on the line of the heading and the description below at full width, so that the data of the page starts higher. Defaults to `false` #}
+{# @block description Replaces the description paragraph #}
+{# @block meta Below the description: figures, signals #}
+{# @block content The actions of the page #}
+{%- props title, description = null, eyebrow = null, back = null, backLabel = null, backTest = null, headingAttrs = {}, compact = false -%}
+{%- set heading -%}
+    <h1 class="font-display text-[1.875rem] leading-[1.08] text-heading sm:text-[2.375rem]"{% for name, value in headingAttrs %} {{ name }}="{{ value }}"{% endfor %}>{{ title }}</h1>
+{%- endset -%}
+<header class="{{ ((compact ? 'mb-6' : 'mb-8 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between') ~ ' ' ~ attributes.render('class'))|tailwind_merge }}" {{ attributes }}>
+    <div class="min-w-0">
+        {% if back %}
+            <a href="{{ back }}" class="group mb-4 inline-flex items-center gap-1.5 text-sm text-body transition-colors hover:text-heading" {% if backTest %}data-test="{{ backTest }}"{% endif %}>
+                <twig:ux:icon name="tabler:arrow-left" class="size-4 transition-transform group-hover:-translate-x-0.5"/>
+                {{ backLabel }}
+            </a>
+        {% endif %}
+        {% if eyebrow %}
+            <p class="eyebrow mb-1.5 text-body">{{ eyebrow }}</p>
+        {% endif %}
+        {% if compact %}
+            <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                {{ heading }}
+                <div class="flex shrink-0 flex-wrap items-center gap-2 empty:hidden">
+                    {%- block content %}{% endblock -%}
+                </div>
+            </div>
+        {% else %}
+            {{ heading }}
+        {% endif %}
+        {%- block description -%}
+            {% if description %}
+                <p class="mt-2.5 text-[15px] leading-relaxed text-body {{ compact ? '' : 'max-w-3xl' }}">{{ description }}</p>
+            {% endif %}
+        {%- endblock -%}
+        {%- block meta %}{% endblock -%}
+    </div>
+    {% if not compact %}
+        <div class="flex shrink-0 flex-wrap items-center gap-2 empty:hidden">
+            {{- block('content') -}}
+        </div>
+    {% endif %}
+</header>

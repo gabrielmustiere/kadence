@@ -3,19 +3,12 @@
 {% block title %}Renommer « {{ tag.label }} » · Kadence{% endblock %}
 
 {% block body %}
-    <twig:Card>
-        <twig:Card:Header>
-            <twig:Card:Title as="h1">Renommer « {{ tag.label }} »</twig:Card:Title>
-            <p class="mt-2 text-sm text-body">{{ tag.category.label }}. Le nouveau libellé s'affiche aussitôt sur toutes les personnes qui portent ce tag.</p>
-        </twig:Card:Header>
-        <twig:Card:Content>
-            {{ form_start(form, {attr: {'data-test': 'tag-form'}}) }}
-                <div class="sm:w-1/2">{{ form_row(form.label) }}</div>
-                <div class="mt-6 flex items-center gap-3">
-                    <twig:Button type="submit" data-test="tag-submit">Renommer</twig:Button>
-                    <a href="{{ path('app_tag_index') }}" class="text-sm text-body underline hover:no-underline">Annuler</a>
-                </div>
-            {{ form_end(form) }}
-        </twig:Card:Content>
+    <twig:PageHeader title="Renommer « {{ tag.label }} »" :eyebrow="tag.category.label" :back="path('app_tag_index')" backLabel="Tags"
+                     description="Le nouveau libellé s'affiche aussitôt sur toutes les personnes qui portent ce tag."/>
+    <twig:Card class="max-w-2xl">
+        {{ form_start(form, {attr: {'data-test': 'tag-form'}}) }}
+            {{ form_row(form.label) }}
+            {{ include('common/_form_actions.html.twig', {submit_label: 'Renommer', submit_test: 'tag-submit', cancel_path: path('app_tag_index')}) }}
+        {{ form_end(form) }}
     </twig:Card>
 {% endblock %}

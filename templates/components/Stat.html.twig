@@ -1,0 +1,11 @@
+{# @prop label string What the figure measures #}
+{# @prop tone 'default'|'danger'|'brand' Defaults to `default` #}
+{# @prop valueTest string|null The data-test of the value #}
+{# @block content The value #}
+{%- props label, tone = 'default', valueTest = null -%}
+<div class="{{ ('min-w-0 ' ~ attributes.render('class'))|tailwind_merge }}" {{ attributes }}>
+    <dt class="eyebrow text-body-subtle">{{ label }}</dt>
+    <dd class="mt-2 text-xl font-semibold tracking-tight tabular-nums {{ {default: 'text-heading', danger: 'text-fg-danger-strong', brand: 'text-fg-brand'}[tone] }}" {% if valueTest %}data-test="{{ valueTest }}"{% endif %}>
+        {%- block content %}{% endblock -%}
+    </dd>
+</div>

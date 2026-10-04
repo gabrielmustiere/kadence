@@ -1,6 +1,6 @@
 # ADR-0001 — Stack front du template : Paper + Tailwind 4 + Flowbite 4 + UX Toolkit
 
-- **Statut** : accepted
+- **Statut** : accepted — partie identité « Paper » superseded by ADR-0003 (la stack reste en vigueur)
 - **Date** : 2026-05-26
 - **Déciders** : @gabrielmustiere
 - **Story liée** : —
@@ -78,6 +78,7 @@ Le coût accepté — empilement de 4 dépendances + dépendance à Flowbite (pr
 
 - Commit fondateur : `fc0b0ef` — "feat(template): adopter le design system Paper avec intégration Flowbite"
 - Design system : `DESIGN.md` (front-matter Paper)
+- Superseded par : ADR-0003 (`0003-identite-visuelle-cadence.md`) pour l'identité « Paper » uniquement — Tailwind 4, Flowbite 4 et UX Toolkit restent en vigueur
 - Theming : `assets/styles/app.css` (variables `@theme` + mode sombre via `.dark`)
 - Composant de référence : `templates/components/Button.html.twig` (pattern `html_cva` + `tailwind_merge`)
 - Références externes :

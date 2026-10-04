@@ -6,44 +6,42 @@
 
 {% block body %}
     <div data-controller="roadmap" data-roadmap-center-value="{{ (roadmap.todayPosition ?? window.position(window.anchor.monday))|number_format(4, '.', '') }}">
-    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-            <h1 class="font-display text-2xl font-bold tracking-tight text-heading sm:text-3xl">Roadmap</h1>
-            <p class="mt-1 text-sm text-body">La chronologie de chaque projet : ce qui a été saisi, puis ce qui reste, réparti sur la capacité de l'équipe.</p>
-        </div>
-        <div class="flex shrink-0 flex-wrap items-center gap-3">
-        <nav class="flex gap-2" aria-label="Période affichée">
-            <twig:Button as="a" size="sm" variant="outline" href="{{ path('app_roadmap_week', {week: window.previous.iso}) }}" data-test="roadmap-previous">
-                <twig:ux:icon name="tabler:chevron-left" class="size-4 me-1"/>
+    {% set current = window.anchor.equals(current_week) %}
+    <twig:PageHeader title="Roadmap" compact description="La chronologie de chaque projet : ce qui a été saisi, puis ce qui reste, réparti sur la capacité de l'équipe.">
+        <nav class="inline-flex items-center gap-0.5 rounded-xl border border-default bg-surface p-1 shadow-xs" aria-label="Période affichée">
+            <a href="{{ path('app_roadmap_week', {week: window.previous.iso}) }}" data-test="roadmap-previous"
+               class="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-sm font-medium text-body transition-colors hover:bg-neutral-tertiary hover:text-heading">
+                <twig:ux:icon name="tabler:chevron-left" class="size-4"/>
                 4 semaines
-            </twig:Button>
-            <twig:Button as="a" size="sm" variant="{{ window.anchor.equals(current_week) ? 'brand' : 'outline' }}" href="{{ path('app_roadmap') }}" :aria-current="window.anchor.equals(current_week) ? 'page' : false" data-test="roadmap-today">Aujourd'hui</twig:Button>
-            <twig:Button as="a" size="sm" variant="outline" href="{{ path('app_roadmap_week', {week: window.next.iso}) }}" data-test="roadmap-next">
+            </a>
+            <a href="{{ path('app_roadmap') }}" data-test="roadmap-today" {% if current %}aria-current="page"{% endif %}
+               class="inline-flex h-8 items-center rounded-lg px-3 text-sm font-medium transition-colors {{ current ? 'bg-primary text-on-primary shadow-xs' : 'text-body hover:bg-neutral-tertiary hover:text-heading' }}">Aujourd'hui</a>
+            <a href="{{ path('app_roadmap_week', {week: window.next.iso}) }}" data-test="roadmap-next"
+               class="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-sm font-medium text-body transition-colors hover:bg-neutral-tertiary hover:text-heading">
                 4 semaines
-                <twig:ux:icon name="tabler:chevron-right" class="size-4 ms-1"/>
-            </twig:Button>
+                <twig:ux:icon name="tabler:chevron-right" class="size-4"/>
+            </a>
         </nav>
         {{ include('roadmap/_zoom.html.twig') }}
-        </div>
-    </div>
+    </twig:PageHeader>
 
     {{ include('roadmap/_legend.html.twig') }}
 
     {% if roadmap.projects is empty %}
-        <twig:Card data-test="roadmap-empty">
-            <p class="text-body">Aucun projet pour l'instant.</p>
-        </twig:Card>
+        <twig:EmptyState icon="tabler:timeline-event" data-test="roadmap-empty">
+            Aucun projet pour l'instant.
+        </twig:EmptyState>
     {% else %}
         {% embed 'roadmap/_frieze.html.twig' %}
             {% block rows %}
                 {% for project in roadmap.projects %}
-                    <div class="relative border-t border-default" data-test="roadmap-project" data-title="{{ project.title }}">
+                    <div class="relative border-t border-default first:border-t-0" data-test="roadmap-project" data-title="{{ project.title }}">
                         <details class="group" data-roadmap-target="project" data-project-id="{{ project.project.id }}" data-action="toggle->roadmap#remember">
-                            <summary class="grid cursor-pointer list-none grid-cols-[20rem_1fr] hover:bg-neutral-secondary-soft [&::-webkit-details-marker]:hidden">
-                                <div class="sticky left-0 z-10 bg-neutral-primary py-3 ps-4 pe-11 group-hover:bg-neutral-secondary-soft">
+                            <summary class="grid cursor-pointer list-none grid-cols-[20rem_1fr] transition-colors hover:bg-neutral-secondary-soft [&::-webkit-details-marker]:hidden">
+                                <div class="sticky left-0 z-10 border-e border-default-subtle bg-surface py-3 ps-4 pe-11 transition-colors group-hover:bg-neutral-secondary-soft">
                                     <div class="flex flex-wrap items-center gap-1.5">
-                                        <twig:ux:icon name="tabler:chevron-right" class="size-4 shrink-0 text-body transition-transform group-open:rotate-90"/>
-                                        <span class="font-semibold text-heading">{{ project.title }}</span>
+                                        <twig:ux:icon name="tabler:chevron-right" class="size-4 shrink-0 text-body-subtle transition-transform duration-200 group-open:rotate-90"/>
+                                        <span class="text-sm font-semibold text-heading">{{ project.title }}</span>
                                         {% for signal in project.signals %}
                                             <twig:Badge variant="{{ signal.variant }}" data-test="signal-{{ signal.value }}">{{ signal.label }}</twig:Badge>
                                         {% endfor %}
@@ -52,7 +50,7 @@
                                 <div class="roadmap-track relative min-h-12">
                                     {{ include('roadmap/_today.html.twig') }}
                                     {% if project.span %}
-                                        {{ include('roadmap/_bar.html.twig', {row: project, bar: project.span, kind: 'span', class: 'h-3 rounded-full bg-brand-medium', test: 'roadmap-bar-span'}) }}
+                                        {{ include('roadmap/_bar.html.twig', {row: project, bar: project.span, kind: 'span', class: 'h-2.5 rounded-full bg-brand-medium', test: 'roadmap-bar-span'}) }}
                                     {% endif %}
                                 </div>
                             </summary>
@@ -63,8 +61,8 @@
                         {# Laid over the summary rather than inside it: browsers expose a summary as a button, which may not hold a link. #}
                         <div class="pointer-events-none absolute inset-x-0 top-0">
                             <div class="sticky left-0 z-20 w-80">
-                                <a href="{{ path('app_roadmap_project', {id: project.project.id, roadmap: roadmap.window.anchor.iso}) }}" class="pointer-events-auto absolute end-3 top-3 grid size-6 place-items-center rounded-sm text-body hover:text-heading focus:outline-none focus:ring-2 focus:ring-brand-medium" title="Ouvrir la fiche" aria-label="Ouvrir la fiche de {{ project.title }}" data-test="roadmap-project-open">
-                                    <twig:ux:icon name="tabler:file-description" class="size-4"/>
+                                <a href="{{ path('app_roadmap_project', {id: project.project.id, roadmap: roadmap.window.anchor.iso}) }}" class="pointer-events-auto absolute end-3 top-3 grid size-7 place-items-center rounded-lg text-body-subtle transition-colors hover:bg-neutral-tertiary hover:text-heading focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-medium" title="Ouvrir la fiche" aria-label="Ouvrir la fiche de {{ project.title }}" data-test="roadmap-project-open">
+                                    <twig:ux:icon name="tabler:arrow-up-right" class="size-4"/>
                                 </a>
                             </div>
                         </div>

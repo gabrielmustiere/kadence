@@ -5,106 +5,123 @@
 {% block title %}{{ project.title }} · Kadence{% endblock %}
 
 {% block body %}
-    <a href="{{ path('app_project_index') }}" class="mb-4 inline-flex items-center gap-1 text-sm text-body hover:underline">
-        <twig:ux:icon name="tabler:arrow-left" class="size-4"/>
-        Projets
-    </a>
-
-    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div class="min-w-0">
-            <h1 class="font-display text-2xl font-bold tracking-tight text-heading sm:text-3xl" data-test="project-heading">{{ project.title }}</h1>
+    <twig:PageHeader :title="project.title" :back="path('app_project_index')" backLabel="Projets" :headingAttrs="{'data-test': 'project-heading'}">
+        <twig:block name="description">
             {% if project.description %}
-                <p class="mt-2 max-w-3xl whitespace-pre-line text-sm text-body" data-test="project-description">{{ project.description }}</p>
+                <p class="mt-2.5 max-w-3xl whitespace-pre-line break-words text-[15px] leading-relaxed text-body" data-test="project-description">{{ project.description }}</p>
             {% endif %}
-            <div class="mt-3 flex flex-wrap items-center gap-3 text-sm text-body">
-                <span>Estimation totale : <strong class="text-heading" data-test="project-total">{{ include('project/_estimate.html.twig') }}</strong></span>
+        </twig:block>
+        <twig:block name="meta">
+            <div class="mt-5 flex flex-wrap items-center gap-x-5 gap-y-3 text-sm text-body">
+                <div class="inline-flex items-baseline gap-2">
+                    Estimation totale
+                    <strong class="text-base font-semibold text-heading" data-test="project-total">{{ include('project/_estimate.html.twig') }}</strong>
+                </div>
                 {% if summary.isUnsplit %}
                     <twig:Badge variant="gray" data-test="signal-unsplit">à découper</twig:Badge>
                 {% else %}
                     {{ include('project/_signals.html.twig') }}
                 {% endif %}
             </div>
-        </div>
+        </twig:block>
 
+        <twig:Button as="a" variant="ghost" href="{{ path('app_roadmap_project', {id: project.id}) }}">
+            <twig:ux:icon name="tabler:timeline-event" class="size-4"/>
+            Fiche du projet
+        </twig:Button>
         {% if is_granted('ROLE_LEAD') %}
-            <div class="flex shrink-0 flex-wrap gap-2">
-                <twig:Button as="a" size="sm" variant="outline" href="{{ path('app_project_edit', {id: project.id}) }}" data-test="project-edit">Modifier</twig:Button>
-                <twig:Modal id="delete-project-{{ project.id }}">
-                    <twig:Modal:Trigger>
-                        <twig:Button size="sm" variant="outline-danger" data-test="project-delete" {{ ...modal_trigger_attrs }}>Supprimer</twig:Button>
-                    </twig:Modal:Trigger>
-                    <twig:Modal:Content>
-                        <twig:Modal:Header>
-                            <twig:Modal:Title>Supprimer « {{ project.title }} » ?</twig:Modal:Title>
-                        </twig:Modal:Header>
-                        <twig:Modal:Body>
-                            {% if summary.hasTime %}
-                                <p class="text-body" data-test="project-delete-blocked">
-                                    Des temps sont saisis sur ce projet : il ne peut plus être supprimé.
-                                </p>
-                            {% else %}
-                                <p class="text-body" data-test="project-delete-scope">
-                                    {% if summary.isUnsplit %}
-                                        Le projet ne contient aucun lot.
-                                    {% else %}
-                                        Ses {{ summary.lots|length }} lot(s) et {{ summary.subLotCount }} sous-lot(s) seront supprimés avec lui.
-                                    {% endif %}
-                                    Cette action est définitive.
-                                </p>
-                            {% endif %}
-                        </twig:Modal:Body>
-                        <twig:Modal:Footer>
-                            {% if not summary.hasTime %}
-                                <form method="post" action="{{ path('app_project_delete', {id: project.id}) }}">
-                                    <input type="hidden" name="_token" value="{{ csrf_token('project-' ~ project.id) }}">
-                                    <twig:Button type="submit" variant="danger" data-test="project-delete-confirm">Supprimer</twig:Button>
-                                </form>
-                            {% endif %}
-                            <twig:Modal:Close>
-                                <twig:Button variant="outline" {{ ...modal_close_attrs }}>{{ summary.hasTime ? 'Fermer' : 'Annuler' }}</twig:Button>
-                            </twig:Modal:Close>
-                        </twig:Modal:Footer>
-                    </twig:Modal:Content>
-                </twig:Modal>
-            </div>
+            <twig:Button as="a" variant="outline" href="{{ path('app_project_edit', {id: project.id}) }}" data-test="project-edit">
+                <twig:ux:icon name="tabler:pencil" class="size-4"/>
+                Modifier
+            </twig:Button>
+            <twig:Modal id="delete-project-{{ project.id }}">
+                <twig:Modal:Trigger>
+                    <twig:Button variant="outline-danger" data-test="project-delete" {{ ...modal_trigger_attrs }}>
+                        <twig:ux:icon name="tabler:trash" class="size-4"/>
+                        Supprimer
+                    </twig:Button>
+                </twig:Modal:Trigger>
+                <twig:Modal:Content>
+                    <twig:Modal:Header>
+                        <twig:Modal:Title>Supprimer « {{ project.title }} » ?</twig:Modal:Title>
+                    </twig:Modal:Header>
+                    <twig:Modal:Body>
+                        {% if summary.hasTime %}
+                            <p class="text-body" data-test="project-delete-blocked">
+                                Des temps sont saisis sur ce projet : il ne peut plus être supprimé.
+                            </p>
+                        {% else %}
+                            <p class="text-body" data-test="project-delete-scope">
+                                {% if summary.isUnsplit %}
+                                    Le projet ne contient aucun lot.
+                                {% else %}
+                                    Ses {{ summary.lots|length }} lot(s) et {{ summary.subLotCount }} sous-lot(s) seront supprimés avec lui.
+                                {% endif %}
+                                Cette action est définitive.
+                            </p>
+                        {% endif %}
+                    </twig:Modal:Body>
+                    <twig:Modal:Footer>
+                        {% if not summary.hasTime %}
+                            <form method="post" action="{{ path('app_project_delete', {id: project.id}) }}">
+                                <input type="hidden" name="_token" value="{{ csrf_token('project-' ~ project.id) }}">
+                                <twig:Button type="submit" variant="danger" data-test="project-delete-confirm">Supprimer</twig:Button>
+                            </form>
+                        {% endif %}
+                        <twig:Modal:Close>
+                            <twig:Button variant="outline" {{ ...modal_close_attrs }}>{{ summary.hasTime ? 'Fermer' : 'Annuler' }}</twig:Button>
+                        </twig:Modal:Close>
+                    </twig:Modal:Footer>
+                </twig:Modal:Content>
+            </twig:Modal>
         {% endif %}
-    </div>
+    </twig:PageHeader>
 
-    <div class="mb-3 flex items-center justify-between gap-4">
-        <h2 class="font-display text-lg font-semibold text-heading">Lots</h2>
+    <div class="mb-4 flex items-center justify-between gap-4">
+        <h2 class="flex items-center gap-2 text-lg font-semibold tracking-tight text-heading">
+            Lots
+            {% if not summary.isUnsplit %}<span class="rounded-full bg-neutral-tertiary px-2 py-0.5 text-xs font-medium tabular-nums text-body">{{ summary.lots|length }}</span>{% endif %}
+        </h2>
         {% if is_granted('ROLE_LEAD') %}
-            <twig:Button as="a" size="sm" href="{{ path('app_lot_new', {id: project.id}) }}" data-test="lot-new">
-                <twig:ux:icon name="tabler:plus" class="size-4 me-1.5"/>
+            <twig:Button as="a" size="sm" variant="brand" href="{{ path('app_lot_new', {id: project.id}) }}" data-test="lot-new">
+                <twig:ux:icon name="tabler:plus" class="size-4"/>
                 Ajouter un lot
             </twig:Button>
         {% endif %}
     </div>
 
     {% if summary.isUnsplit %}
-        <twig:Card data-test="lots-empty">
-            <p class="text-body">Ce projet n'est pas encore découpé en lots.</p>
-        </twig:Card>
+        <twig:EmptyState icon="tabler:stack-2" data-test="lots-empty">
+            Ce projet n'est pas encore découpé en lots.
+        </twig:EmptyState>
     {% else %}
-        <div class="overflow-x-auto rounded-base border border-default">
+        {% set scale = 0 %}
+        {% for lotSummary in summary.lots %}
+            {% for line in [lotSummary]|merge(lotSummary.children) %}
+                {% set scale = max(scale, line.enteredQuarters + line.remainingQuarters, line.estimateDays * 4) %}
+            {% endfor %}
+        {% endfor %}
+        <twig:TableCard>
             <twig:Table data-test="lots-table">
                 <twig:Table:Header>
                     <twig:Table:Row>
                         <twig:Table:Head>Lot</twig:Table:Head>
                         <twig:Table:Head>Responsable</twig:Table:Head>
                         <twig:Table:Head>Estimation</twig:Table:Head>
+                        <twig:Table:Head class="min-w-44">Consommé</twig:Table:Head>
                         <twig:Table:Head>Avancement</twig:Table:Head>
                         <twig:Table:Head><span class="sr-only">Actions</span></twig:Table:Head>
                     </twig:Table:Row>
                 </twig:Table:Header>
                 <twig:Table:Body>
                     {% for lotSummary in summary.lots %}
-                        {{ include('project/_lot_row.html.twig', {summary: lotSummary, nested: false}) }}
+                        {{ include('project/_lot_row.html.twig', {summary: lotSummary, nested: false, scale: scale}) }}
                         {% for subLotSummary in lotSummary.children %}
-                            {{ include('project/_lot_row.html.twig', {summary: subLotSummary, nested: true}) }}
+                            {{ include('project/_lot_row.html.twig', {summary: subLotSummary, nested: true, scale: scale}) }}
                         {% endfor %}
                     {% endfor %}
                 </twig:Table:Body>
             </twig:Table>
-        </div>
+        </twig:TableCard>
     {% endif %}
 {% endblock %}

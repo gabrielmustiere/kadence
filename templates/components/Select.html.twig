@@ -1,6 +1,6 @@
 {# @block content The select options (`<option>` elements) #}
 <select
-    class="{{ ('block w-full px-3 py-2.5 bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand shadow-xs placeholder:text-body disabled:text-fg-disabled ' ~ attributes.render('class'))|tailwind_merge }}"
+    class="{{ ('block h-10 w-full cursor-pointer rounded-base border border-default-medium bg-surface px-3 text-sm text-heading shadow-xs transition-[border-color,box-shadow] hover:border-default-strong focus:border-brand focus:outline-hidden focus:ring-4 focus:ring-brand-medium/50 disabled:cursor-not-allowed disabled:text-fg-disabled ' ~ attributes.render('class'))|tailwind_merge }}"
     {{ attributes }}
 >
     {%- block content %}{% endblock -%}

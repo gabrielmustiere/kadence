@@ -5,23 +5,23 @@
 {% block title %}{{ heading }} · Kadence{% endblock %}
 
 {% block body %}
-    <twig:Card>
-        <twig:Card:Header>
-            <twig:Card:Title as="h1">{{ heading }}</twig:Card:Title>
+    <twig:PageHeader :title="heading" :back="path('app_project_show', {id: project.id})" :backLabel="project.title">
+        <twig:block name="description">
             {% if parent and takes_over %}
-                <p class="mt-2 text-sm text-body" data-test="lot-takes-over">
-                    C'est le premier sous-lot de « {{ parent.title }} » : il reprend son estimation, son responsable, sa date de début et son équipe, que le lot ne portera plus. Ajustez-les si besoin.
+                <p class="mt-3 flex max-w-3xl gap-2.5 rounded-xl border border-brand-subtle bg-brand-softer px-4 py-3 text-sm leading-relaxed text-fg-brand-strong" data-test="lot-takes-over">
+                    <twig:ux:icon name="tabler:arrows-split-2" class="mt-0.5 size-4 shrink-0" aria-hidden="true"/>
+                    <span>C'est le premier sous-lot de « {{ parent.title }} » : il reprend son estimation, son responsable, sa date de début et son équipe, que le lot ne portera plus. Ajustez-les si besoin.</span>
                 </p>
             {% elseif not parent %}
-                <p class="mt-2 text-sm text-body">Un lot porte l'estimation, le responsable et la planification tant qu'il n'est pas découpé en sous-lots.</p>
+                <p class="mt-2.5 max-w-3xl text-[15px] leading-relaxed text-body">Un lot porte l'estimation, le responsable et la planification tant qu'il n'est pas découpé en sous-lots.</p>
             {% endif %}
-        </twig:Card:Header>
-        <twig:Card:Content>
-            {{ include('lot/_form.html.twig', {
-                submit_label: 'Enregistrer',
-                add_another: true,
-                cancel_path: path('app_project_show', {id: project.id}),
-            }) }}
-        </twig:Card:Content>
+        </twig:block>
+    </twig:PageHeader>
+    <twig:Card>
+        {{ include('lot/_form.html.twig', {
+            submit_label: 'Enregistrer',
+            add_another: true,
+            cancel_path: path('app_project_show', {id: project.id}),
+        }) }}
     </twig:Card>
 {% endblock %}

@@ -1,0 +1,5 @@
+{# The frame of a table: a card that scrolls sideways when the table needs more room than the page. #}
+{# @block content The table #}
+<div class="{{ ('relative overflow-x-auto rounded-card border border-default bg-surface shadow-card ' ~ attributes.render('class'))|tailwind_merge }}" {{ attributes }}>
+    {%- block content %}{% endblock -%}
+</div>

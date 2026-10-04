@@ -1,0 +1,21 @@
+{# @prop user App\Entity\User The person whose initials are shown #}
+{# @prop size 'sm'|'md'|'lg' Defaults to `md` #}
+{# @prop tone 'soft'|'ink' Soft in lists, ink for the signed-in person and the head of a page. Defaults to `soft` #}
+{%- props user, size = 'md', tone = 'soft' -%}
+{%- set style = html_cva(
+    base: 'inline-grid shrink-0 place-items-center rounded-full font-medium select-none',
+    variants: {
+        size: {
+            sm: 'size-7 text-[11px]',
+            md: 'size-8 text-xs',
+            lg: 'size-14 text-lg',
+        },
+        tone: {
+            soft: 'bg-neutral-tertiary text-heading ring-1 ring-inset ring-default',
+            ink: 'bg-primary text-on-primary ring-2 ring-surface',
+        },
+    },
+) -%}
+<span class="{{ style.apply({size: size, tone: tone}, attributes.render('class'))|tailwind_merge }}" aria-hidden="true" {{ attributes }}>
+    {{- user.firstName|first|upper }}{{ user.lastName|first|upper -}}
+</span>

@@ -3,9 +3,9 @@
 #}
 {% set lot = row.lot %}
 {% set start = row.start ?? lot.startDate %}
-<div id="roadmap-recap-lot-{{ lot.id }}" role="tooltip" hidden class="pointer-events-none z-30 w-96 rounded-base border border-default bg-neutral-primary-soft p-3 text-xs text-body shadow-md" data-test="roadmap-recap">
-    <p class="text-sm font-semibold text-heading">{{ row.title }}</p>
-    <dl class="mt-2 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 border-t border-default pt-2">
+<div id="roadmap-recap-lot-{{ lot.id }}" role="tooltip" hidden class="pointer-events-none z-30 w-96 rounded-xl border border-default bg-surface p-3.5 text-xs text-body shadow-lg" data-test="roadmap-recap">
+    <p class="text-[13px] font-semibold text-heading">{{ row.title }}</p>
+    <dl class="mt-2.5 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 border-t border-default pt-2.5">
         <dt>Début</dt>
         <dd class="text-heading" data-test="roadmap-recap-start">{{ start ? start|weekday ~ ' ' ~ start|date('d/m/Y') : 'sans début' }}</dd>
         <dt>Fin</dt>
