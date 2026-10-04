@@ -41,6 +41,15 @@
       "date": "2026-10-04",
       "type": "Sync",
       "description": "Doc réalignée sur le livré : pitch (règle 11 — ligne retirée des favoris gardée jusqu'au changement de semaine ou au rechargement ; libellé accessible « Mettre en favori : chemin ») ; plan (étoile dans sa propre cellule de grille et après le résultat dans la recherche, libellé, ProjectFixtures et holidays.spec.ts au périmètre, test de suppression scindé, plafond de requêtes maintenu à 6, critères de sortie cochés, risques survenus annotés) ; stack.md (clés étrangères SQLite appliquées) ; backlog (C3.2 enrichie, ligne feuilles-favorites en V2, notes jalons-dates-annoncees et archivage-projets)."
+    },
+    {
+      "date": "2026-10-04",
+      "type": "Livraison",
+      "description": "Story livrée dans le commit e622112 sur la branche main."
     }
-  ]
+  ],
+  "delivery": {
+    "release": null,
+    "commit": "e622112"
+  }
 }
