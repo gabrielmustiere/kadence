@@ -46,10 +46,15 @@
       "date": "2026-10-04",
       "type": "Livraison",
       "description": "Story livrée dans le commit e622112 sur la branche main."
+    },
+    {
+      "date": "2026-10-04",
+      "type": "Release",
+      "description": "Story publiée dans la version v0.14.0 « Nouvelle interface & favoris de saisie »."
     }
   ],
   "delivery": {
-    "release": null,
+    "release": "v0.14.0",
     "commit": "e622112"
   }
 }
