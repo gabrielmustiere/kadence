@@ -10,6 +10,22 @@ Chaque version porte un **titre** et distingue les **évolutions fonctionnelles*
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-10-11 — Congés & RTT
+
+### ✨ Fonctionnel
+- **Demander ses congés** — un nouveau menu « Congés » permet de poser des congés payés (du 1er mai au 30 avril), des RTT (sur l'année civile), un congé sans solde ou un événement familial, à la journée ou à la demi-journée. Le formulaire montre les jours décomptés et le solde restant avant l'envoi ; un dépassement reste possible et il est signalé.
+- **Validation par le manager** — le manager reçoit la demande par e-mail et la valide ou la refuse dans « À valider », avec un motif obligatoire en cas de refus ; sans manager actif, c'est la direction qui décide. La personne est prévenue de la décision et peut annuler sa demande, ou son congé validé tant qu'il n'a pas commencé.
+- **Compteurs** — la direction déclare les droits de chacun pour chaque type de congé et chaque période ; chacun suit ses jours validés, ses jours en attente et son solde dans « Mes congés ».
+- **Saisie bloquée sur les jours posés** — dès la demande, un jour de congé n'est plus saisissable, une demi-journée limite la saisie à la moitié du jour, et le maximum de la semaine diminue d'autant ; une demande qui couvre du temps déjà saisi est refusée.
+- **Congés pris en compte dans la planification** — un congé validé réduit la capacité de la personne : les fins calculées reculent, la roadmap montre les absences sous les feuilles et signale « à replanifier » ce qui en devient surchargé, et la fiche d'une personne affiche ses congés et en tient compte dans sa charge.
+- **Absences de l'équipe** — une page « Absences » montre, mois par mois, les congés validés de chacun, sans leur type.
+
+### 🔧 Technique
+- **Congés en base** — deux nouvelles tables, demandes et droits (migration à appliquer) ; une demande ne stocke que ses bornes et ses jours se recalculent à la lecture, si bien qu'un jour devenu férié cesse d'être décompté.
+- **Premiers e-mails transactionnels** — envoyés en arrière-plan par Messenger ; nouvelle variable `MAILER_SENDER` pour l'expéditeur. L'instance de démonstration n'envoie aucun e-mail.
+- **Capacité unifiée** — les congés validés passent par le calcul de capacité journalière déjà utilisé par la roadmap et les fiches ; les pages de congés gardent un nombre de requêtes fixe, quel que soit l'historique.
+- **Démo** — les semaines sans saisie de chacun deviennent des congés payés validés.
+
 ## [0.14.0] - 2026-10-04 — Nouvelle interface & favoris de saisie
 
 ### ✨ Fonctionnel
@@ -195,7 +211,8 @@ Chaque version porte un **titre** et distingue les **évolutions fonctionnelles*
 - **Connexion rapide en dev** — choix d'un compte de fixtures sur la page de connexion, uniquement en environnement de développement.
 - **Nettoyage du template d'amorçage** — suppression de la page design system et de la route de test d'e-mail.
 
-[Unreleased]: https://github.com/gabrielmustiere/kadence/compare/v0.14.0...HEAD
+[Unreleased]: https://github.com/gabrielmustiere/kadence/compare/v0.15.0...HEAD
+[0.15.0]: https://github.com/gabrielmustiere/kadence/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/gabrielmustiere/kadence/compare/v0.13.1...v0.14.0
 [0.13.1]: https://github.com/gabrielmustiere/kadence/compare/v0.13.0...v0.13.1
 [0.13.0]: https://github.com/gabrielmustiere/kadence/compare/v0.12.0...v0.13.0
