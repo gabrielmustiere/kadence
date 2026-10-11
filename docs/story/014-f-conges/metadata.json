@@ -44,6 +44,15 @@
       "date": "2026-10-11",
       "type": "Sync",
       "description": "Doc réalignée sur le livré. Pitch : règle 21 (rien n'est affiché à la place des autres absents pour une personne sans manager), règle 24 (la direction voit toutes les demandes en attente sauf les siennes), règle 43 (soldes des périodes en cours et non terminées). Plan : approche (lectures d'équipe dans TimeOffOverview, soldes par Balance::count() en lot, absences de la roadmap par TeamAbsences), mécanismes (voter avant le jeton CSRF, #[CurrentUser], méthodes de repository), modèle (AbsenceRow, TimeOffPeriod::key(), TimeOffDay::collect(), Balance::count(), TimeOffPreview::of(), RoadmapRow sans absenceBand, DailyCapacity::timeOffSpans()), périmètre (fichiers ajoutés, TimeEntryRepository et ScheduleLoaderTest retirés, PersonLoadTest reporté en dette), stratégie de test, critères de sortie cochés (seuil de la grille 6 → 7 signalé), questions ouvertes tranchées. Projet : backlog (C1.5, C4.2, règles de profil et de permissions, workflow des demandes de congé, notes capacite-equipe, rappel-saisie et charge-vs-capacite), vision (audience et risque externe), stack (e-mails)."
+    },
+    {
+      "date": "2026-10-11",
+      "type": "Livraison",
+      "description": "Story livrée dans le commit 6418d99 sur la branche main."
     }
-  ]
+  ],
+  "delivery": {
+    "release": null,
+    "commit": "6418d99"
+  }
 }
