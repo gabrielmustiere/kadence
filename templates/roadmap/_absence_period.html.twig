@@ -1,0 +1,6 @@
+{# The days of an absence on the roadmap. Expects `absence`. #}
+{%- if absence.from|date('Y-m-d') == absence.to|date('Y-m-d') -%}
+    {{ absence.from|weekday }} {{ absence.from|date('d/m/Y') }}{% if absence.half %} (demi-journée){% endif %}
+{%- else -%}
+    {{ absence.from|weekday }} {{ absence.from|date('d/m/Y') }} → {{ absence.to|weekday }} {{ absence.to|date('d/m/Y') }}
+{%- endif -%}

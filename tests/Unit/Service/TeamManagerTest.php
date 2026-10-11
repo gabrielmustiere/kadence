@@ -6,23 +6,39 @@ namespace App\Tests\Unit\Service;
 
 use App\Dto\TeamMemberInput;
 use App\Entity\Tag;
+use App\Entity\TimeOffRequest;
 use App\Entity\User;
 use App\Entity\WeeklyMax;
+use App\Enum\Type\HalfDay;
 use App\Enum\Type\Role;
 use App\Enum\Type\TagCategory;
+use App\Enum\Type\TimeOffStatus;
+use App\Enum\Type\TimeOffType;
 use App\Exception\LastActiveDirectorException;
 use App\Exception\ManagerWithActiveReportsException;
+use App\Mailer\TimeOffMailer;
 use App\Model\Week;
+use App\Repository\HolidayAdjustmentRepository;
 use App\Repository\TagRepository;
+use App\Repository\TimeOffEntitlementRepository;
+use App\Repository\TimeOffRequestRepository;
 use App\Repository\UserRepository;
 use App\Repository\WeeklyMaxRepository;
+use App\Service\HolidayManager;
+use App\Service\LegalHolidays;
 use App\Service\TagManager;
 use App\Service\TeamManager;
 use App\Service\TemporaryPasswordGenerator;
+use App\Service\TimeOffApprovers;
+use App\Service\TimeOffBook;
+use App\Service\TimeOffManager;
 use App\Service\WeeklyMaxManager;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Clock\MockClock;
+use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 final class TeamManagerTest extends TestCase
 {
@@ -95,6 +111,17 @@ final class TeamManagerTest extends TestCase
         $this->teamManager(activeDirectors: 1)->deactivate($prod);
 
         self::assertFalse($prod->isActive());
+    }
+
+    public function testDeactivatingCancelsThePendingRequestsOfThePerson(): void
+    {
+        $prod = $this->user(Role::Prod);
+        $pending = new TimeOffRequest($prod, TimeOffType::PaidLeave, new \DateTimeImmutable('2026-11-16'), HalfDay::Morning, new \DateTimeImmutable('2026-11-20'), HalfDay::Afternoon, null, new \DateTimeImmutable('2026-10-01'));
+
+        $this->teamManager(pendingTimeOff: [$pending])->deactivate($prod);
+
+        self::assertSame(TimeOffStatus::Cancelled, $pending->getStatus());
+        self::assertNull($pending->getCancelledBy());
     }
 
     public function testDeactivatingSomeoneWhoStillManagesActivePeopleIsRefusedNamingThem(): void
@@ -202,9 +229,10 @@ final class TeamManagerTest extends TestCase
     }
 
     /**
-     * @param list<User> $reports the people naming as manager whoever is deactivated
+     * @param list<User>           $reports        the people naming as manager whoever is deactivated
+     * @param list<TimeOffRequest> $pendingTimeOff the pending requests of whoever is deactivated
      */
-    private function teamManager(?EntityManagerInterface $entityManager = null, int $activeDirectors = 1, array $reports = []): TeamManager
+    private function teamManager(?EntityManagerInterface $entityManager = null, int $activeDirectors = 1, array $reports = [], array $pendingTimeOff = []): TeamManager
     {
         $userRepository = $this->createStub(UserRepository::class);
         $userRepository->method('countActiveDirectors')->willReturn($activeDirectors);
@@ -217,6 +245,17 @@ final class TeamManagerTest extends TestCase
 
         $entityManager ??= $this->createStub(EntityManagerInterface::class);
 
+        $timeOffRequestRepository = $this->createStub(TimeOffRequestRepository::class);
+        $timeOffRequestRepository->method('findPendingOfUser')->willReturn($pendingTimeOff);
+        $timeOffManager = new TimeOffManager(
+            $entityManager,
+            $timeOffRequestRepository,
+            new TimeOffApprovers($userRepository),
+            new TimeOffBook($timeOffRequestRepository, $this->createStub(TimeOffEntitlementRepository::class), new HolidayManager($entityManager, $this->createStub(HolidayAdjustmentRepository::class), new LegalHolidays())),
+            new TimeOffMailer($this->createStub(MailerInterface::class), $this->createStub(UrlGeneratorInterface::class), 'kadence@example.com'),
+            new MockClock('2026-10-12'),
+        );
+
         return new TeamManager(
             $entityManager,
             $userRepository,
@@ -224,6 +263,7 @@ final class TeamManagerTest extends TestCase
             new TemporaryPasswordGenerator(),
             new WeeklyMaxManager($entityManager, $this->createStub(WeeklyMaxRepository::class)),
             new TagManager($entityManager, $this->createStub(TagRepository::class), $userRepository),
+            $timeOffManager,
         );
     }
 

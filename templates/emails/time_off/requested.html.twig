@@ -1,0 +1,10 @@
+{% extends 'emails/_layout.html.twig' %}
+
+{% block content %}
+    <p>{{ person }} demande un congé.</p>
+    {{ include('emails/time_off/_summary.html.twig') }}
+    {% if overrun %}
+        <p style="color: #b42318;">Cette demande dépasse le solde de {{ person }}.</p>
+    {% endif %}
+    <p><a href="{{ url }}">Décider de la demande</a></p>
+{% endblock %}

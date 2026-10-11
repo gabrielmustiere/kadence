@@ -1,0 +1,64 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mes congés · Kadence{% endblock %}
+
+{% block body %}
+    <twig:PageHeader title="Congés" description="Demandez vos congés à votre manager. Les jours demandés sont réservés dans votre semaine dès l'envoi, et retirés de votre capacité une fois validés."/>
+    {{ include('time_off/_tabs.html.twig') }}
+
+    <div class="mb-10 grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
+        <twig:Card data-test="time-off-new">
+            <twig:Card:Header>
+                <twig:Card:Title as="h2">Nouvelle demande</twig:Card:Title>
+            </twig:Card:Header>
+            <twig:Card:Content>
+                <twig:TimeOffRequestForm/>
+            </twig:Card:Content>
+        </twig:Card>
+
+        <section class="overflow-hidden rounded-card border border-default bg-surface shadow-card" data-test="time-off-balances">
+            <header class="border-b border-default bg-neutral-secondary-soft px-5 py-3.5">
+                <h2 class="text-[15px] font-semibold tracking-tight text-heading">Mes soldes</h2>
+            </header>
+            <ul class="divide-y divide-default-subtle text-sm">
+                {% for balance in balances %}
+                    <li class="px-5 py-3.5" data-test="time-off-balance" data-type="{{ balance.period.type.value }}" data-period="{{ balance.period.label }}">
+                        <div class="flex items-baseline justify-between gap-3">
+                            <span class="font-medium text-heading">{{ balance.period.type.label }} {{ balance.period.label }}</span>
+                            <strong class="text-lg tabular-nums {{ balance.overrun ? 'text-fg-danger-strong' : 'text-heading' }}" data-test="time-off-balance-remaining">{{ balance.remainingHalfDays|half_days }}</strong>
+                        </div>
+                        <p class="mt-1 text-xs text-body tabular-nums">
+                            {{ balance.entitledHalfDays|half_days }} de droits · {{ balance.approvedHalfDays|half_days }} validés · {{ balance.pendingHalfDays|half_days }} en attente
+                        </p>
+                    </li>
+                {% endfor %}
+            </ul>
+        </section>
+    </div>
+
+    <section>
+        <h2 class="mb-4 text-lg font-semibold tracking-tight text-heading">Mes demandes</h2>
+        {% if requests is empty %}
+            <twig:EmptyState icon="tabler:beach" data-test="time-off-requests-empty">Aucune demande pour l'instant.</twig:EmptyState>
+        {% else %}
+            <div class="overflow-x-auto rounded-card border border-default bg-surface shadow-card">
+                <table class="w-full text-sm" data-test="time-off-requests">
+                    <thead class="border-b border-default bg-neutral-secondary-soft text-left">
+                        <tr>
+                            <th scope="col" class="eyebrow px-5 py-3 font-medium text-body-subtle">Dates</th>
+                            <th scope="col" class="eyebrow px-5 py-3 font-medium text-body-subtle">Type</th>
+                            <th scope="col" class="eyebrow px-5 py-3 font-medium text-body-subtle">Décompte</th>
+                            <th scope="col" class="eyebrow px-5 py-3 font-medium text-body-subtle">Statut</th>
+                            <th scope="col" class="px-5 py-3"><span class="sr-only">Actions</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in requests %}
+                            {{ include('time_off/_request.html.twig', {request: item.request, half_days: item.halfDays}) }}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </section>
+{% endblock %}

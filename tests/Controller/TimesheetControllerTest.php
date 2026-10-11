@@ -102,7 +102,7 @@ final class TimesheetControllerTest extends WebTestCase
 
         $smallCount = $this->queryCount($client, $small);
 
-        self::assertLessThanOrEqual(6, $smallCount);
+        self::assertLessThanOrEqual(7, $smallCount);
         self::assertSame($smallCount, $this->queryCount($client, $large));
     }
 

@@ -9,6 +9,7 @@ use App\Entity\Project;
 use App\Enum\Type\RoadmapSignal;
 use App\Model\Roadmap\ProjectRoadmap;
 use App\Model\Roadmap\Roadmap;
+use App\Model\Roadmap\RoadmapAbsence;
 use App\Model\Roadmap\RoadmapBar;
 use App\Model\Roadmap\RoadmapRow;
 use App\Model\Roadmap\RoadmapRun;
@@ -31,6 +32,7 @@ final readonly class RoadmapBuilder
         private ProjectRepository $projectRepository,
         private TimeEntryRepository $timeEntryRepository,
         private RoadmapRunCutter $runCutter,
+        private TeamAbsences $teamAbsences,
     ) {
     }
 
@@ -45,8 +47,9 @@ final readonly class RoadmapBuilder
         $recaps = $this->recaps($data);
         $entered = array_keys(array_filter($data->plans, static fn (LeafPlan $plan): bool => null !== $plan->firstEntryDay && true === $result->get($plan->lotId)?->isPlanned()));
         $parts = self::enteredParts($this->runCutter->cut($data, $entered), $result, $window);
+        $absences = $this->teamAbsences->byLeaf($data, $result, $window);
 
-        $projects = array_map(fn (Project $project): RoadmapRow => $this->projectRow($project, $window, $result, $overloaded, $parts, $recaps), $this->projectRepository->findAllForList());
+        $projects = array_map(fn (Project $project): RoadmapRow => $this->projectRow($project, $window, $result, $overloaded, $parts, $recaps, $absences), $this->projectRepository->findAllForList());
 
         return new Roadmap($window, $data->today, $projects);
     }
@@ -67,7 +70,7 @@ final readonly class RoadmapBuilder
 
         $bounds = self::bounds($leaves, $result);
         $window = null === $bounds ? RoadmapWindow::spanning($data->today, $data->today) : RoadmapWindow::spanning(...$bounds);
-        $row = $this->projectRow($project, $window, $result, $overloaded, self::enteredParts($runs, $result, $window), $this->recaps($data));
+        $row = $this->projectRow($project, $window, $result, $overloaded, self::enteredParts($runs, $result, $window), $this->recaps($data), $this->teamAbsences->byLeaf($data, $result, $window));
 
         return new ProjectRoadmap(new Roadmap($window, $data->today, [$row]), $row, TimelineMonth::group(TimelineEntry::ofLeaves($leaves, $runs)), null !== $bounds);
     }
@@ -116,11 +119,12 @@ final readonly class RoadmapBuilder
      * @param array<int, true>                                    $overloaded
      * @param array<int, array{RoadmapBar|null, RoadmapBar|null}> $parts
      * @param array<int, array{list<RoadmapTeamLine>, int}>       $recaps
+     * @param array<int, list<RoadmapAbsence>>                    $absences
      */
-    private function projectRow(Project $project, RoadmapWindow $window, ScheduleResult $result, array $overloaded, array $parts, array $recaps): RoadmapRow
+    private function projectRow(Project $project, RoadmapWindow $window, ScheduleResult $result, array $overloaded, array $parts, array $recaps, array $absences): RoadmapRow
     {
         $lots = array_map(
-            fn (Lot $lot): RoadmapRow => $lot->isLeaf() ? $this->leafRow($lot, $window, $result, $overloaded, $parts, $recaps) : $this->splitLotRow($lot, $window, $result, $overloaded, $parts, $recaps),
+            fn (Lot $lot): RoadmapRow => $lot->isLeaf() ? $this->leafRow($lot, $window, $result, $overloaded, $parts, $recaps, $absences) : $this->splitLotRow($lot, $window, $result, $overloaded, $parts, $recaps, $absences),
             $project->topLevelLots(),
         );
 
@@ -138,10 +142,11 @@ final readonly class RoadmapBuilder
      * @param array<int, true>                                    $overloaded
      * @param array<int, array{RoadmapBar|null, RoadmapBar|null}> $parts
      * @param array<int, array{list<RoadmapTeamLine>, int}>       $recaps
+     * @param array<int, list<RoadmapAbsence>>                    $absences
      */
-    private function splitLotRow(Lot $lot, RoadmapWindow $window, ScheduleResult $result, array $overloaded, array $parts, array $recaps): RoadmapRow
+    private function splitLotRow(Lot $lot, RoadmapWindow $window, ScheduleResult $result, array $overloaded, array $parts, array $recaps, array $absences): RoadmapRow
     {
-        $children = array_map(fn (Lot $child): RoadmapRow => $this->leafRow($child, $window, $result, $overloaded, $parts, $recaps), $lot->getChildren()->getValues());
+        $children = array_map(fn (Lot $child): RoadmapRow => $this->leafRow($child, $window, $result, $overloaded, $parts, $recaps, $absences), $lot->getChildren()->getValues());
 
         return $this->spanRow($lot->getProject(), $lot, $children, $window, []);
     }
@@ -179,8 +184,9 @@ final readonly class RoadmapBuilder
      * @param array<int, true>                                    $overloaded
      * @param array<int, array{RoadmapBar|null, RoadmapBar|null}> $parts
      * @param array<int, array{list<RoadmapTeamLine>, int}>       $recaps
+     * @param array<int, list<RoadmapAbsence>>                    $absences
      */
-    private function leafRow(Lot $leaf, RoadmapWindow $window, ScheduleResult $result, array $overloaded, array $parts, array $recaps): RoadmapRow
+    private function leafRow(Lot $leaf, RoadmapWindow $window, ScheduleResult $result, array $overloaded, array $parts, array $recaps, array $absences): RoadmapRow
     {
         $lotId = (int) $leaf->getId();
         $schedule = $result->get($lotId);
@@ -233,6 +239,7 @@ final readonly class RoadmapBuilder
             team: $team,
             overrunQuarters: $schedule->overrunQuarters,
             progress: $schedule->progress,
+            absences: $absences[$lotId] ?? [],
         );
     }
 
@@ -241,7 +248,7 @@ final readonly class RoadmapBuilder
      *
      * @return array{\DateTimeImmutable|null, \DateTimeImmutable|null}
      */
-    private static function reach(Lot $leaf, LeafSchedule $schedule): array
+    public static function reach(Lot $leaf, LeafSchedule $schedule): array
     {
         return [$schedule->start() ?? $leaf->getStartDate(), $schedule->end() ?? $schedule->realizedTo];
     }

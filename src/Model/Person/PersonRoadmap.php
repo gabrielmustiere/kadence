@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Model\Person;
 
+use App\Entity\TimeOffRequest;
 use App\Model\Roadmap\Roadmap;
 use App\Model\Roadmap\TimelineMonth;
 
@@ -13,13 +14,14 @@ use App\Model\Roadmap\TimelineMonth;
 final readonly class PersonRoadmap
 {
     /**
-     * @param Roadmap             $roadmap  the window and today, without project rows
-     * @param list<PersonProject> $projects in the order of the roadmap
-     * @param list<PersonLeafRow> $upcoming the leaves of their teams not over yet, by first day of their future part
-     * @param list<TimelineMonth> $timeline
-     * @param bool                $dated    whether the person entered time or is in the team of a leaf with a future
-     *                                      part, without which there is no frieze to draw
-     * @param PersonLoad|null     $load     null when it is not to be shown, or when the person is deactivated
+     * @param Roadmap              $roadmap  the window and today, without project rows
+     * @param list<PersonProject>  $projects in the order of the roadmap
+     * @param list<PersonLeafRow>  $upcoming the leaves of their teams not over yet, by first day of their future part
+     * @param list<TimelineMonth>  $timeline
+     * @param bool                 $dated    whether the person entered time or is in the team of a leaf with a future
+     *                                       part, without which there is no frieze to draw
+     * @param PersonLoad|null      $load     null when it is not to be shown, or when the person is deactivated
+     * @param list<TimeOffRequest> $absences the approved time off of the person, from the oldest
      */
     public function __construct(
         public Roadmap $roadmap,
@@ -28,7 +30,28 @@ final readonly class PersonRoadmap
         public array $timeline,
         public bool $dated,
         public ?PersonLoad $load,
+        public array $absences = [],
     ) {
+    }
+
+    /**
+     * @return list<TimeOffRequest> the time off not over yet, from the nearest
+     */
+    public function upcomingAbsences(): array
+    {
+        $today = $this->roadmap->today->format('Y-m-d');
+
+        return array_values(array_filter($this->absences, static fn (TimeOffRequest $request): bool => $request->getEndDay()->format('Y-m-d') >= $today));
+    }
+
+    /**
+     * @return list<TimeOffRequest> the time off over, from the latest
+     */
+    public function pastAbsences(): array
+    {
+        $today = $this->roadmap->today->format('Y-m-d');
+
+        return array_reverse(array_values(array_filter($this->absences, static fn (TimeOffRequest $request): bool => $request->getEndDay()->format('Y-m-d') < $today)));
     }
 
     /**

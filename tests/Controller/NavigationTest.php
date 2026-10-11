@@ -22,7 +22,7 @@ final class NavigationTest extends WebTestCase
     {
         $crawler = $this->clientFor('admin@example.com')->request('GET', '/');
 
-        self::assertSame(['nav-dashboard', 'nav-timesheet', 'nav-roadmap', 'nav-projects', 'nav-team', 'nav-tags', 'nav-holidays'], $this->entries($crawler->filter('#app-sidebar')));
+        self::assertSame(['nav-dashboard', 'nav-timesheet', 'nav-time-off', 'nav-roadmap', 'nav-projects', 'nav-team', 'nav-tags', 'nav-holidays'], $this->entries($crawler->filter('#app-sidebar')));
         self::assertSame(['nav-projects', 'nav-team', 'nav-tags', 'nav-holidays'], $this->entries($crawler->filter('[data-test="nav-admin"]')));
         self::assertSelectorTextContains('[data-test="nav-admin"]', 'Administration');
         self::assertSame('Administration', $crawler->filter('#' . $crawler->filter('[data-test="nav-admin"] ul')->attr('aria-labelledby'))->text());
@@ -33,7 +33,7 @@ final class NavigationTest extends WebTestCase
     {
         $crawler = $this->clientFor($email)->request('GET', '/');
 
-        self::assertSame(['nav-dashboard', 'nav-timesheet', 'nav-roadmap', 'nav-projects'], $this->entries($crawler->filter('#app-sidebar')));
+        self::assertSame(['nav-dashboard', 'nav-timesheet', 'nav-time-off', 'nav-roadmap', 'nav-projects'], $this->entries($crawler->filter('#app-sidebar')));
         self::assertSame(['nav-projects'], $this->entries($crawler->filter('[data-test="nav-admin"]')));
     }
 
@@ -56,6 +56,9 @@ final class NavigationTest extends WebTestCase
         $pages = [
             '/' => 'nav-dashboard',
             '/saisie/2026-W40' => 'nav-timesheet',
+            '/conges' => 'nav-time-off',
+            '/conges/absences/2026-11' => 'nav-time-off',
+            '/conges/compteurs' => 'nav-time-off',
             '/roadmap' => 'nav-roadmap',
             '/roadmap/2026-W40' => 'nav-roadmap',
             '/projets' => 'nav-projects',

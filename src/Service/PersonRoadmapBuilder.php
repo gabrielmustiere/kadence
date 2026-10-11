@@ -21,6 +21,7 @@ use App\Model\Roadmap\TimelineMonth;
 use App\Model\Schedule\LeafSchedule;
 use App\Model\Schedule\ScheduleData;
 use App\Model\Schedule\ScheduleResult;
+use App\Repository\TimeOffRequestRepository;
 
 final readonly class PersonRoadmapBuilder
 {
@@ -28,6 +29,7 @@ final readonly class PersonRoadmapBuilder
         private ScheduleLoader $scheduleLoader,
         private Scheduler $scheduler,
         private RoadmapRunCutter $runCutter,
+        private TimeOffRequestRepository $timeOffRequestRepository,
     ) {
     }
 
@@ -62,6 +64,7 @@ final readonly class PersonRoadmapBuilder
             TimelineMonth::group(TimelineEntry::ofLeaves($leaves, $runs)),
             null !== $bounds,
             $withLoad && $person->isActive() ? PersonLoad::of($result->loadsOf($userId), $data->capacity, $userId, $data->today, $window, $unknownEnds) : null,
+            $this->timeOffRequestRepository->findApprovedOfUser($person),
         );
     }
 

@@ -1,0 +1,24 @@
+{#
+    The tabs of the time off pages, as links. Expects `inbox_count`: the requests the signed-in person has to decide on,
+    null when they have none to decide.
+#}
+{% set route = app.current_route %}
+{% set tabs = [
+    {route: 'app_time_off_index', label: 'Mes congés', icon: 'tabler:beach', test: 'mine'},
+    inbox_count is not null ? {route: 'app_time_off_inbox', label: 'À valider', icon: 'tabler:checklist', test: 'inbox', count: inbox_count} : null,
+    {route: 'app_time_off_absences', label: 'Absences', icon: 'tabler:calendar-user', test: 'absences'},
+    is_granted('ROLE_DIRECTION') ? {route: 'app_time_off_entitlements', label: 'Compteurs', icon: 'tabler:abacus', test: 'entitlements'} : null,
+]|filter(tab => tab is not null) %}
+<nav class="mb-8 flex flex-wrap gap-1 border-b border-default" aria-label="Congés" data-test="time-off-tabs">
+    {% for tab in tabs %}
+        {% set active = route starts with tab.route %}
+        <a href="{{ path(tab.route) }}" data-test="time-off-tab-{{ tab.test }}" {% if active %}aria-current="page"{% endif %}
+           class="-mb-px inline-flex items-center gap-2 border-b-2 px-3.5 pt-2 pb-3 text-sm font-medium transition-colors {{ active ? 'border-brand text-fg-brand' : 'border-transparent text-body hover:border-default-medium hover:text-heading' }}">
+            <twig:ux:icon name="{{ tab.icon }}" class="size-4" aria-hidden="true"/>
+            {{ tab.label }}
+            {% if tab.count ?? 0 %}
+                <twig:Badge variant="brand" shape="pill" data-test="time-off-inbox-count">{{ tab.count }}</twig:Badge>
+            {% endif %}
+        </a>
+    {% endfor %}
+</nav>

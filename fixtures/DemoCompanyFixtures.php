@@ -12,12 +12,18 @@ use App\Entity\LotProgress;
 use App\Entity\Project;
 use App\Entity\Tag;
 use App\Entity\TimeEntry;
+use App\Entity\TimeOffEntitlement;
+use App\Entity\TimeOffRequest;
 use App\Entity\User;
 use App\Entity\WeeklyMax;
+use App\Enum\Type\HalfDay;
 use App\Enum\Type\HolidayCalendar;
 use App\Enum\Type\Role;
 use App\Enum\Type\TagCategory;
+use App\Enum\Type\TimeOffStatus;
+use App\Enum\Type\TimeOffType;
 use App\Model\Schedule\LeafProgress;
+use App\Model\TimeOff\TimeOffPeriod;
 use App\Model\Week;
 use App\Service\HolidayManager;
 use App\Service\LegalHolidays;
@@ -32,8 +38,9 @@ use function Symfony\Component\String\u;
 /**
  * A fake software company: four projects split into lots and sub-lots, a team with part-time
  * people and two people on the Belgian holiday calendar, and six months of time entries up to yesterday, none on a
- * holiday. Each week a team swarms on one leaf of its project, and its people lend a hand to another project some days.
- * Test accounts get no entry in the current week, so that the end-to-end scenarios find it empty.
+ * holiday nor on a day off. Each week a team swarms on one leaf of its project, and its people lend a hand to another
+ * project some days; two weeks of each person are approved paid leave. Test accounts get no entry in the current week
+ * and no time off, so that the end-to-end scenarios find their week empty.
  * Deterministic: the same seed always gives the same company, relative to today.
  */
 final class DemoCompanyFixtures extends Fixture implements DependentFixtureInterface
@@ -99,6 +106,23 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
         'Documentation' => [['ines', 100], ['lucas', 50]],
         'Tableau de bord partenaire' => [['maxime', 100]],
     ];
+
+    /**
+     * Time off ahead, outside the teams the end-to-end scenarios plan: person key, weeks after the current one, first
+     * and last ISO day of that week with their half-day, type and status.
+     */
+    private const array TIME_OFF = [
+        ['hugo', 1, 3, HalfDay::Afternoon, 3, HalfDay::Afternoon, TimeOffType::Rtt, TimeOffStatus::Approved],
+        ['emma', 3, 1, HalfDay::Morning, 5, HalfDay::Afternoon, TimeOffType::PaidLeave, TimeOffStatus::Approved],
+        ['chloe', 2, 5, HalfDay::Morning, 5, HalfDay::Afternoon, TimeOffType::Rtt, TimeOffStatus::Pending],
+        ['maxime', 2, 1, HalfDay::Morning, 1, HalfDay::Afternoon, TimeOffType::Rtt, TimeOffStatus::Pending],
+        ['nathan', 5, 1, HalfDay::Morning, 3, HalfDay::Afternoon, TimeOffType::PaidLeave, TimeOffStatus::Refused],
+        ['ines', 4, 1, HalfDay::Morning, 5, HalfDay::Afternoon, TimeOffType::PaidLeave, TimeOffStatus::Cancelled],
+        ['lucas', 6, 1, HalfDay::Morning, 5, HalfDay::Afternoon, TimeOffType::FamilyEvent, TimeOffStatus::Pending],
+    ];
+
+    /** The entitlements declared to everyone, in half-days, for the current and the previous period. */
+    private const array ENTITLEMENTS = ['cp' => 50, 'rtt' => 20];
 
     /** A leaf planned two weeks ago on which nobody has entered time yet: title, estimate in days, team (owner first). */
     private const array LATE_START = ['Migration des clients', 15, [['karim', 50]]];
@@ -220,6 +244,7 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
         $this->plan($firstWeek, $today);
         $this->declareProgress($manager, $today);
         $this->loadFavorites($manager, $support);
+        $this->loadTimeOff($manager, $today);
         $manager->flush();
     }
 
@@ -386,6 +411,9 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
 
         for ($weekIndex = $firstActiveWeek; $weekIndex <= self::WEEKS; ++$weekIndex) {
             $week = $this->week($firstWeek, $weekIndex);
+            if (\in_array($weekIndex, $holidays, true) && !$isTestAccount) {
+                $manager->persist($this->timeOff($person, $week->monday, HalfDay::Morning, $week->friday(), HalfDay::Afternoon, TimeOffType::PaidLeave, TimeOffStatus::Approved));
+            }
             if (\in_array($weekIndex, $holidays, true) || ($isTestAccount && $week->monday >= $currentMonday)) {
                 continue;
             }
@@ -626,6 +654,39 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
         if (null !== $complete) {
             $declare($complete, 0, 100, (int) $complete->getEstimateDays() * 4);
         }
+    }
+
+    private function loadTimeOff(ObjectManager $manager, \DateTimeImmutable $today): void
+    {
+        foreach ($this->people as $person) {
+            foreach (self::ENTITLEMENTS as $type => $halfDays) {
+                $current = TimeOffPeriod::containing(TimeOffType::from($type), $today);
+                foreach ([$current->previous(), $current] as $period) {
+                    $manager->persist(new TimeOffEntitlement($person, $period->type, $period->year, $halfDays));
+                }
+            }
+        }
+
+        $currentWeek = Week::containing($today);
+        foreach (self::TIME_OFF as [$key, $weeksAhead, $firstDay, $firstHalf, $lastDay, $lastHalf, $type, $status]) {
+            $monday = $currentWeek->monday->modify(\sprintf('+%d weeks', $weeksAhead));
+            $manager->persist($this->timeOff($this->people[$key], $monday->modify(\sprintf('+%d days', $firstDay - 1)), $firstHalf, $monday->modify(\sprintf('+%d days', $lastDay - 1)), $lastHalf, $type, $status));
+        }
+    }
+
+    private function timeOff(User $person, \DateTimeImmutable $start, HalfDay $startHalf, \DateTimeImmutable $end, HalfDay $endHalf, TimeOffType $type, TimeOffStatus $status): TimeOffRequest
+    {
+        $requestedAt = $start->modify('-3 weeks')->setTime(9, 0);
+        $request = new TimeOffRequest($person, $type, $start, $startHalf, $end, $endHalf, null, $requestedAt);
+        $manager = $person->getManager() ?? $this->people['helene'];
+        match ($status) {
+            TimeOffStatus::Pending => null,
+            TimeOffStatus::Approved => $request->approve($manager, $requestedAt->modify('+1 day')),
+            TimeOffStatus::Refused => $request->refuse($manager, $requestedAt->modify('+1 day'), 'Mise en production prévue cette semaine-là : décalez d\'une semaine.'),
+            TimeOffStatus::Cancelled => $request->cancel($person, $requestedAt->modify('+2 days')),
+        };
+
+        return $request;
     }
 
     /**

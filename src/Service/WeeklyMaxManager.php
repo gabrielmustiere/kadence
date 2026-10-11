@@ -32,13 +32,13 @@ final readonly class WeeklyMaxManager
     }
 
     /**
-     * The maximum of the week once its holidays are left out.
+     * The maximum of the week once its holidays and time off are left out.
      *
      * @return int<0, 20>
      */
-    public function capFor(User $user, Week $week, int $holidayCount): int
+    public function capFor(User $user, Week $week, int $holidayCount, int $timeOffHalfDays = 0): int
     {
-        return WeeklyMaximum::cap($this->quartersFor($user, $week), $holidayCount);
+        return WeeklyMaximum::cap($this->quartersFor($user, $week), $holidayCount, $timeOffHalfDays);
     }
 
     /**

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Model\Person;
 
+use App\Model\Roadmap\RoadmapBar;
 use App\Model\Roadmap\RoadmapWindow;
 use App\Model\Schedule\DailyCapacity;
 
@@ -13,7 +14,7 @@ use App\Model\Schedule\DailyCapacity;
  */
 final readonly class PersonLoad
 {
-    private const int MAX_DAYS_OFF = 31;
+    private const int MAX_DAYS_OFF = 120;
 
     /**
      * @param list<LoadSpan>          $spans
@@ -22,6 +23,7 @@ final readonly class PersonLoad
      *                                             load; null when unknown, or when they carry none
      * @param list<PersonLeafRow>     $unknownEnds the leaves of their teams not over yet without a calculated end, which
      *                                             leave $freeFrom unknown
+     * @param list<RoadmapBar>        $timeOff     the days of approved time off of the person within the window
      */
     public function __construct(
         public array $spans,
@@ -29,6 +31,7 @@ final readonly class PersonLoad
         public int $nextDayPercent,
         public ?\DateTimeImmutable $freeFrom,
         public array $unknownEnds,
+        public array $timeOff = [],
     ) {
     }
 
@@ -47,7 +50,24 @@ final readonly class PersonLoad
             null === $nextDay ? 0 : $loads[$nextDay->format('Y-m-d')] ?? 0,
             [] !== $unknownEnds || null === $lastDay ? null : self::workingDayAfter($capacity, $userId, new \DateTimeImmutable($lastDay)),
             $unknownEnds,
+            self::timeOff($capacity, $userId, $window),
         );
+    }
+
+    /**
+     * @return list<RoadmapBar>
+     */
+    private static function timeOff(DailyCapacity $capacity, int $userId, RoadmapWindow $window): array
+    {
+        $bars = [];
+        foreach ($capacity->timeOffSpans($userId, $window->firstDay(), $window->lastDay()) as [$from, $to]) {
+            $bar = $window->bar($from, $to);
+            if (null !== $bar) {
+                $bars[] = $bar;
+            }
+        }
+
+        return $bars;
     }
 
     /**

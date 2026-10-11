@@ -1,0 +1,28 @@
+{#
+    A line of request. Expects `request` and `half_days`; `with_person` to name its person, `back` the path to come back
+    to after cancelling.
+#}
+{% set status_variant = {pending: 'warning', approved: 'success', refused: 'danger', cancelled: 'gray'}[request.status.value] %}
+<tr class="border-t border-default-subtle first:border-t-0" data-test="time-off-request-row" data-status="{{ request.status.value }}" data-id="{{ request.id }}">
+    {% if with_person|default(false) %}
+        <th scope="row" class="px-5 py-3 text-left font-medium text-heading">{{ request.user.firstName }} {{ request.user.lastName }}</th>
+    {% endif %}
+    <td class="px-5 py-3 text-heading tabular-nums" data-test="time-off-request-period">{{ include('time_off/_period.html.twig') }}</td>
+    <td class="px-5 py-3">{{ request.type.label }}</td>
+    <td class="px-5 py-3 tabular-nums">{{ half_days|half_days }}</td>
+    <td class="px-5 py-3">
+        <twig:Badge variant="{{ status_variant }}" data-test="time-off-request-status">{{ request.status.label }}</twig:Badge>
+        {% if request.refusalReason %}
+            <p class="mt-1 text-xs text-body" data-test="time-off-refusal-reason">Motif : {{ request.refusalReason }}</p>
+        {% endif %}
+    </td>
+    <td class="px-5 py-3 text-right">
+        {% if is_granted('TIME_OFF_CANCEL', request) %}
+            <form method="post" action="{{ path('app_time_off_cancel', {id: request.id}) }}" class="inline">
+                <input type="hidden" name="_token" value="{{ csrf_token('time-off-cancel-' ~ request.id) }}">
+                <input type="hidden" name="back" value="{{ back|default(path('app_time_off_index')) }}">
+                <twig:Button type="submit" size="xs" variant="outline-danger" data-test="time-off-cancel">Annuler</twig:Button>
+            </form>
+        {% endif %}
+    </td>
+</tr>

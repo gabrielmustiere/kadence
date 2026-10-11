@@ -9,15 +9,16 @@ use App\Model\WeeklyMaximum;
 
 /**
  * The capacity a person gives each working day: their weekly maximum, capped to the days that are not holidays, spread
- * evenly over those days. Counted in units of 1/6000 of a quarter, so that a share (%) of a maximum spread over one to
- * five days is always a whole number.
+ * evenly over those days. A day of approved time off gives nothing and a half-day off half of it, without spreading the
+ * week over fewer days. Counted in units of 1/12000 of a quarter, so that a share (%) of a maximum spread over one to
+ * five days, and its half, is always a whole number.
  */
 final class DailyCapacity
 {
     public const int UNITS_PER_QUARTER = 100 * self::DAY_DIVISOR;
 
-    /** Divisible by every count of working days in a week (1 to 5). */
-    private const int DAY_DIVISOR = 60;
+    /** Divisible by every count of working days in a week (1 to 5), and still once halved. */
+    private const int DAY_DIVISOR = 120;
 
     /** @var array<string, array{int, int}> working days and capped quarters, by user id and ISO week */
     private array $weeks = [];
@@ -26,11 +27,13 @@ final class DailyCapacity
      * @param array<int, array{HolidayCalendar, bool}>    $people      calendar and active flag, by user id
      * @param array<int, list<array{string, int<1, 20>}>> $weeklyMaxes Monday (Y-m-d) of effect and quarters, oldest first, by user id
      * @param array<string, array<string, true>>          $holidays    holidays (Y-m-d) by calendar value
+     * @param array<int, array<string, int<1, 2>>>        $timeOff     half-days of approved time off by user id and day (Y-m-d)
      */
     public function __construct(
         private readonly array $people,
         private readonly array $weeklyMaxes,
         private readonly array $holidays,
+        private readonly array $timeOff = [],
     ) {
     }
 
@@ -40,13 +43,62 @@ final class DailyCapacity
     }
 
     /**
-     * A weekday that is not a holiday of the person's calendar.
+     * A weekday that is neither a holiday of the person's calendar nor a whole day of approved time off.
      */
     public function isWorkingDay(int $userId, \DateTimeImmutable $day): bool
     {
-        $calendar = $this->people[$userId][0] ?? null;
+        return $this->isScheduledDay($userId, $day) && 2 > $this->timeOffHalves($userId, $day);
+    }
 
-        return null !== $calendar && (int) $day->format('N') <= 5 && !isset($this->holidays[$calendar->value][$day->format('Y-m-d')]);
+    /**
+     * @return int<0, 2> the half-days of approved time off of the person on that day, none on a weekend or a holiday
+     */
+    public function timeOffHalves(int $userId, \DateTimeImmutable $day): int
+    {
+        return $this->isScheduledDay($userId, $day) ? $this->timeOff[$userId][$day->format('Y-m-d')] ?? 0 : 0;
+    }
+
+    /**
+     * The approved time off of the person between two days included: whole days off in a row make one span, across
+     * weekends and holidays; a half-day off is a span of its own.
+     *
+     * @return list<array{\DateTimeImmutable, \DateTimeImmutable, bool}> first day, last day, and whether it is a half-day
+     */
+    public function timeOffSpans(int $userId, \DateTimeImmutable $from, \DateTimeImmutable $to): array
+    {
+        $spans = [];
+        $open = null;
+        foreach ($this->scheduledDays($userId, $from, $to) as [$day, $halves]) {
+            if (null !== $open && 2 === $halves && !$open[2]) {
+                $open[1] = $day;
+                continue;
+            }
+            if (null !== $open) {
+                $spans[] = $open;
+                $open = null;
+            }
+            if (0 < $halves) {
+                $open = [$day, $day, 1 === $halves];
+            }
+        }
+
+        return null === $open ? $spans : [...$spans, $open];
+    }
+
+    /**
+     * @return list<array{\DateTimeImmutable, int<0, 2>}> each weekday that is not a holiday of the person, with their half-days off
+     */
+    private function scheduledDays(int $userId, \DateTimeImmutable $from, \DateTimeImmutable $to): array
+    {
+        $days = [];
+        $last = $to->format('Y-m-d');
+        for ($day = $from->setTime(0, 0); $day->format('Y-m-d') <= $last; $day = $day->modify('+1 day')) {
+            if ($this->isScheduledDay($userId, $day)) {
+                $days[] = [$day, $this->timeOff[$userId][$day->format('Y-m-d')] ?? 0];
+            }
+        }
+
+        return $days;
     }
 
     /**
@@ -78,8 +130,23 @@ final class DailyCapacity
         }
 
         [$workingDays, $quarters] = $this->week($userId, $day);
+        if (0 === $workingDays) {
+            return 0;
+        }
 
-        return 0 === $workingDays ? 0 : intdiv($share * $quarters * self::DAY_DIVISOR, $workingDays);
+        $units = intdiv($share * $quarters * self::DAY_DIVISOR, $workingDays);
+
+        return 1 === $this->timeOffHalves($userId, $day) ? intdiv($units, 2) : $units;
+    }
+
+    /**
+     * A weekday that is not a holiday of the person's calendar: the days their weekly maximum is spread over.
+     */
+    private function isScheduledDay(int $userId, \DateTimeImmutable $day): bool
+    {
+        $calendar = $this->people[$userId][0] ?? null;
+
+        return null !== $calendar && (int) $day->format('N') <= 5 && !isset($this->holidays[$calendar->value][$day->format('Y-m-d')]);
     }
 
     /**
@@ -95,7 +162,7 @@ final class DailyCapacity
         $monday = $day->modify('monday this week');
         $workingDays = 0;
         for ($offset = 0; $offset < 5; ++$offset) {
-            if ($this->isWorkingDay($userId, $monday->modify(\sprintf('+%d days', $offset)))) {
+            if ($this->isScheduledDay($userId, $monday->modify(\sprintf('+%d days', $offset)))) {
                 ++$workingDays;
             }
         }

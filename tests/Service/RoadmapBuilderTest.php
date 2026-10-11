@@ -6,10 +6,14 @@ namespace App\Tests\Service;
 
 use App\Dto\LotInput;
 use App\Entity\Project;
+use App\Enum\Type\HalfDay;
 use App\Enum\Type\HolidayCalendar;
 use App\Enum\Type\RoadmapSignal;
+use App\Enum\Type\TimeOffStatus;
+use App\Enum\Type\TimeOffType;
 use App\Model\Roadmap\ProjectRoadmap;
 use App\Model\Roadmap\Roadmap;
+use App\Model\Roadmap\RoadmapAbsence;
 use App\Model\Roadmap\RoadmapBar;
 use App\Model\Roadmap\RoadmapRow;
 use App\Model\Roadmap\RoadmapRun;
@@ -24,6 +28,7 @@ use App\Service\RoadmapBuilder;
 use App\Tests\Support\CreatesProgress;
 use App\Tests\Support\CreatesProjects;
 use App\Tests\Support\CreatesTimeEntries;
+use App\Tests\Support\CreatesTimeOff;
 use App\Tests\Support\CreatesUsers;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Clock\Test\ClockSensitiveTrait;
@@ -34,6 +39,7 @@ final class RoadmapBuilderTest extends KernelTestCase
     use CreatesProgress;
     use CreatesProjects;
     use CreatesTimeEntries;
+    use CreatesTimeOff;
     use CreatesUsers;
 
     protected function setUp(): void
@@ -292,6 +298,73 @@ final class RoadmapBuilderTest extends KernelTestCase
 
         self::assertSame([['2026-09-14', '2026-09-15'], ['2026-09-17', '2026-09-21']], self::segments($row->realized));
         self::assertSame(5, $row->enteredDayCount);
+    }
+
+    public function testApprovedTimeOffPushesTheEndButAPendingRequestDoesNot(): void
+    {
+        $user = $this->createUser();
+        $project = $this->createProject();
+        $this->planLot($this->createLot($project, 10, $user), new \DateTimeImmutable('2026-11-16'), [[$user, 100]]);
+        $endOf = fn (): ?string => $this->projectRow($this->build(), $project)->children[0]->end?->format('Y-m-d');
+
+        $request = $this->createTimeOff($user, '2026-11-23', '2026-11-23', TimeOffStatus::Pending);
+        self::assertSame('2026-11-27', $endOf(), 'Without time off, as with a pending request, it ends on Friday.');
+
+        $request->approve(null, new \DateTimeImmutable());
+        $this->entityManager()->flush();
+        self::assertSame('2026-11-30', $endOf());
+    }
+
+    public function testApprovedTimeOffThatPushesAnEndIntoAnotherLeafOfThePersonIsToReplan(): void
+    {
+        $user = $this->createUser();
+        $project = $this->createProject();
+        $this->planLot($this->createLot($project, 5, $user), new \DateTimeImmutable('2026-11-16'), [[$user, 100]]);
+        $this->planLot($this->createLot($project, 5, $user), new \DateTimeImmutable('2026-11-23'), [[$user, 100]]);
+        self::assertSame([[], []], array_map(static fn (RoadmapRow $row): array => $row->signals, $this->projectRow($this->build(), $project)->children));
+
+        $this->createTimeOff($user, '2026-11-18', '2026-11-18');
+
+        self::assertSame([[RoadmapSignal::ToReplan], [RoadmapSignal::ToReplan]], array_map(static fn (RoadmapRow $row): array => $row->signals, $this->projectRow($this->build(), $project)->children));
+    }
+
+    public function testTheTimeOffOfTheTeamIsNamedOnTheLeafWithinItsDays(): void
+    {
+        $alice = $this->createUser();
+        $bob = $this->createUser();
+        $project = $this->createProject();
+        $this->planLot($this->createLot($project, 10, $alice), new \DateTimeImmutable('2026-11-16'), [[$alice, 100], [$bob, 50]]);
+        $this->createTimeOff($alice, '2026-11-18', '2026-11-19');
+        $this->createTimeOff($bob, '2026-11-20', '2026-11-20', TimeOffStatus::Approved, TimeOffType::Rtt, HalfDay::Afternoon, HalfDay::Afternoon);
+        $this->createTimeOff($bob, '2027-03-01', '2027-03-05');
+        $this->createTimeOff($alice, '2026-11-23', '2026-11-23', TimeOffStatus::Pending);
+
+        $row = $this->projectRow($this->build(), $project)->children[0];
+
+        self::assertSame(
+            [[$alice->getId(), '2026-11-18', '2026-11-19', false], [$bob->getId(), '2026-11-20', '2026-11-20', true]],
+            array_map(static fn (RoadmapAbsence $absence): array => [$absence->person->getId(), $absence->from->format('Y-m-d'), $absence->to->format('Y-m-d'), $absence->half], $row->absences),
+        );
+    }
+
+    public function testAWholeDayOffDoesNotCutTheTimeEnteredButAHalfDayOffDoes(): void
+    {
+        $whole = $this->createUser();
+        $half = $this->createUser();
+        $project = $this->createProject();
+        $wholeLeaf = $this->planLot($this->createLot($project, 10, $whole), new \DateTimeImmutable('2026-09-14'), [[$whole, 100]]);
+        $halfLeaf = $this->planLot($this->createLot($project, 10, $half), new \DateTimeImmutable('2026-09-14'), [[$half, 100]]);
+        foreach (['2026-09-14', '2026-09-15', '2026-09-17'] as $day) {
+            $this->createTimeEntry($whole, $wholeLeaf, $day, 4);
+            $this->createTimeEntry($half, $halfLeaf, $day, 4);
+        }
+        $this->createTimeOff($whole, '2026-09-16', '2026-09-16');
+        $this->createTimeOff($half, '2026-09-16', '2026-09-16', TimeOffStatus::Approved, TimeOffType::PaidLeave, HalfDay::Morning, HalfDay::Morning);
+
+        $rows = $this->projectRow($this->build(), $project)->children;
+
+        self::assertSame([['2026-09-14', '2026-09-17']], self::segments($rows[0]->realized));
+        self::assertSame([['2026-09-14', '2026-09-15'], ['2026-09-17', '2026-09-17']], self::segments($rows[1]->realized));
     }
 
     public function testAHolidayCutsTheTimeEnteredOnlyWhenOneMemberCouldWork(): void

@@ -33,6 +33,11 @@ final class TimeEntryRefusedException extends \DomainException
         return new self(\sprintf('Le %s est férié (%s) : on n\'y saisit pas de temps.', $day->format('d/m'), $label));
     }
 
+    public static function timeOff(\DateTimeImmutable $day, string $label): self
+    {
+        return new self(\sprintf('Le %s est posé (%s) : on n\'y saisit pas de temps.', $day->format('d/m'), $label));
+    }
+
     public static function dayFull(\DateTimeImmutable $day, int $remainingQuarters): self
     {
         return new self(0 >= $remainingQuarters

@@ -29,4 +29,18 @@ final class WeeklyMaximumTest extends TestCase
     {
         self::assertSame(0, WeeklyMaximum::cap(20, 5));
     }
+
+    public function testTimeOffTakesItsShareOfTheWeekRoundedDownToTheQuarter(): void
+    {
+        self::assertSame(16, WeeklyMaximum::cap(20, 0, 2), '5 j with a day off');
+        self::assertSame(16, WeeklyMaximum::cap(18, 0, 1), '4,5 j with a morning off');
+        self::assertSame(12, WeeklyMaximum::cap(16, 0, 2), '4 j with a day off');
+        self::assertSame(0, WeeklyMaximum::cap(20, 0, 10), 'a whole week off');
+    }
+
+    public function testTimeOffIsProratedOverTheDaysThatAreNotHolidays(): void
+    {
+        self::assertSame(12, WeeklyMaximum::cap(20, 1, 2));
+        self::assertSame(12, WeeklyMaximum::cap(18, 1, 2));
+    }
 }

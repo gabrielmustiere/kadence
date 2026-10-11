@@ -7,6 +7,7 @@ namespace App\Tests\Service;
 use App\Entity\Lot;
 use App\Entity\User;
 use App\Enum\Type\RoadmapSignal;
+use App\Enum\Type\TimeOffStatus;
 use App\Model\Person\LoadSpan;
 use App\Model\Person\PersonLeafRow;
 use App\Model\Person\PersonProject;
@@ -18,6 +19,7 @@ use App\Model\Roadmap\TimelineMonth;
 use App\Service\PersonRoadmapBuilder;
 use App\Tests\Support\CreatesProjects;
 use App\Tests\Support\CreatesTimeEntries;
+use App\Tests\Support\CreatesTimeOff;
 use App\Tests\Support\CreatesUsers;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Clock\Test\ClockSensitiveTrait;
@@ -27,6 +29,7 @@ final class PersonRoadmapBuilderTest extends KernelTestCase
     use ClockSensitiveTrait;
     use CreatesProjects;
     use CreatesTimeEntries;
+    use CreatesTimeOff;
     use CreatesUsers;
 
     protected function setUp(): void
@@ -133,6 +136,34 @@ final class PersonRoadmapBuilderTest extends KernelTestCase
         $overrunRow = self::rowOf($page, $overrun);
         self::assertSame([['2026-09-28', '2026-09-28', 4, 1]], self::runs($overrunRow->realized));
         self::assertSame([['2026-09-29', '2026-09-29', 2, 1]], self::runs($overrunRow->overrun), 'Beyond the estimate of the leaf.');
+    }
+
+    public function testTheFreeDaySkipsApprovedTimeOff(): void
+    {
+        $alice = $this->createUser();
+        $this->planLot($this->createLot($this->createProject(), 5, $alice), new \DateTimeImmutable('2026-10-05'), [[$alice, 100]]);
+        $this->createTimeOff($alice, '2026-10-12', '2026-10-13');
+
+        $load = $this->build($alice)->load;
+
+        self::assertNotNull($load);
+        self::assertSame('2026-10-14', $load->freeFrom?->format('Y-m-d'));
+    }
+
+    public function testTheApprovedTimeOffOfThePersonIsListedAndMarkedOnTheLoad(): void
+    {
+        $alice = $this->createUser();
+        $this->planLot($this->createLot($this->createProject(), 10, $alice), new \DateTimeImmutable('2026-10-05'), [[$alice, 100]]);
+        $past = $this->createTimeOff($alice, '2026-09-21', '2026-09-22');
+        $coming = $this->createTimeOff($alice, '2026-10-08', '2026-10-09');
+        $this->createTimeOff($alice, '2026-10-12', '2026-10-12', TimeOffStatus::Pending);
+
+        $page = $this->build($alice);
+
+        self::assertSame([$coming], $page->upcomingAbsences());
+        self::assertSame([$past], $page->pastAbsences());
+        self::assertNotNull($page->load);
+        self::assertSame([['2026-10-08', '2026-10-09']], array_map(static fn (RoadmapBar $bar): array => [$bar->from->format('Y-m-d'), $bar->to->format('Y-m-d')], $page->load->timeOff));
     }
 
     public function testRunsAreCutOnTheWorkingDaysOfThePersonAlone(): void

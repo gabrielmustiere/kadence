@@ -17,6 +17,12 @@ final class DaysExtension
         return Quarters::toDays($quarters);
     }
 
+    #[AsTwigFilter('half_days')]
+    public function halfDays(int $halfDays): string
+    {
+        return Quarters::toDays($halfDays * Quarters::PER_DAY / 2);
+    }
+
     #[AsTwigFilter('quarter_fraction')]
     public function quarterFraction(int $quarters): string
     {

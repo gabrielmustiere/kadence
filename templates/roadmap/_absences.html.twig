@@ -1,0 +1,18 @@
+{#
+    The approved time off of the members of the team of a leaf, as a hatched band under its bars, named in the tooltip of
+    each mark. Expects `row`.
+#}
+{% for absence in row.absences %}
+    {% set tooltip = 'roadmap-absence-' ~ row.lot.id ~ '-' ~ loop.index %}
+    <div class="absolute bottom-1 h-1.5 rounded-full bg-neutral-quaternary hatch-brand" style="{{ absence.bar.style }}"
+         data-roadmap-tooltip="{{ tooltip }}" data-test="roadmap-absence" data-person="{{ absence.person.id }}" aria-hidden="true"></div>
+    <div id="{{ tooltip }}" role="tooltip" hidden class="pointer-events-none z-30 w-72 rounded-xl border border-default bg-surface p-3 text-xs text-body shadow-lg">
+        <p class="text-[13px] font-semibold text-heading">{{ absence.person.firstName }} {{ absence.person.lastName }} absent</p>
+        <p class="mt-1">{{ include('roadmap/_absence_period.html.twig') }}</p>
+    </div>
+{% endfor %}
+<ul class="sr-only">
+    {% for absence in row.absences %}
+        <li>{{ absence.person.firstName }} {{ absence.person.lastName }} absent : {{ include('roadmap/_absence_period.html.twig') }}</li>
+    {% endfor %}
+</ul>

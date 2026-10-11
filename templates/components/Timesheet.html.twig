@@ -64,12 +64,13 @@
     <div class="mb-3 grid grid-cols-5 gap-1.5 md:hidden" role="tablist" aria-label="Jour affiché">
         {% for column in grid.days %}
             {% set selected = loop.index0 == focusedDay %}
+            {% set day_off = column.timeOff and column.timeOff.whole %}
             <button type="button" role="tab" aria-selected="{{ selected ? 'true' : 'false' }}"
-                    data-test="day-tab" data-day="{{ column.date|date('Y-m-d') }}" data-holiday="{{ column.holiday ? 'true' : 'false' }}"
+                    data-test="day-tab" data-day="{{ column.date|date('Y-m-d') }}" data-holiday="{{ column.holiday ? 'true' : 'false' }}" data-time-off="{{ column.timeOff ? (day_off ? 'whole' : 'half') : 'none' }}"
                     data-action="live#action" data-live-action-param="showDay" data-live-index-param="{{ loop.index0 }}"
-                    class="rounded-xl border px-1 py-2 text-center text-xs transition-colors {{ selected ? 'border-brand ring-2 ring-brand-medium' : 'border-default' }} {{ column.complete ? 'bg-success-soft' : (column.holiday ? 'bg-neutral-tertiary' : 'bg-surface') }}">
+                    class="rounded-xl border px-1 py-2 text-center text-xs transition-colors {{ selected ? 'border-brand ring-2 ring-brand-medium' : 'border-default' }} {{ column.complete ? 'bg-success-soft' : (column.holiday or day_off ? 'bg-neutral-tertiary' : 'bg-surface') }}">
                 <span class="block text-xs font-medium tabular-nums {{ column.today ? 'font-semibold text-fg-brand' : 'text-heading' }}">{{ column.date|weekday }} {{ column.date|date('d') }}</span>
-                <span class="mt-0.5 block tabular-nums {{ column.forgotten ? 'font-semibold text-fg-warning' : 'text-body' }}">{{ column.holiday ? 'Férié' : column.quarters|days }}</span>
+                <span class="mt-0.5 block tabular-nums {{ column.forgotten ? 'font-semibold text-fg-warning' : 'text-body' }}">{{ column.holiday ? 'Férié' : (day_off ? 'Congé' : column.quarters|days) }}</span>
             </button>
         {% endfor %}
     </div>
@@ -80,6 +81,11 @@
             <twig:ux:icon name="tabler:beach" class="size-4 shrink-0" aria-hidden="true"/>
             Jour férié · {{ focused.holiday }} : on n'y saisit pas de temps.
         </p>
+    {% elseif focused.timeOff %}
+        <p class="mb-3 flex items-center gap-2 rounded-xl border border-default bg-neutral-tertiary px-3.5 py-2.5 text-sm text-body md:hidden" data-test="time-off-notice">
+            <twig:ux:icon name="tabler:beach" class="size-4 shrink-0" aria-hidden="true"/>
+            {{ focused.timeOff.label }} : {{ focused.timeOff.whole ? "on n'y saisit pas de temps." : 'une demi-journée reste à saisir.' }}
+        </p>
     {% endif %}
 
     <div class="relative overflow-x-auto rounded-card border border-default bg-surface shadow-card">
@@ -89,13 +95,15 @@
                     <th scope="col" class="w-0 bg-neutral-secondary-soft ps-3.5 pe-0"><span class="sr-only">Favori</span></th>
                     <th scope="col" class="eyebrow min-w-46 bg-neutral-secondary-soft py-3 ps-1.5 pe-5 text-left align-bottom font-medium text-body-subtle">Lot</th>
                     {% for column in grid.days %}
-                        {% set day_ratio = min(column.quarters / 4, 1) %}
+                        {% set day_ratio = column.capQuarters > 0 ? min(column.quarters / column.capQuarters, 1) : 0 %}
+                        {% set day_off = column.timeOff and column.timeOff.whole %}
                         <th scope="col"
-                            class="relative w-36 border-l border-default-subtle px-3 pt-3 pb-2.5 text-center align-top {{ loop.index0 != focusedDay ? 'max-md:hidden' }} {{ column.complete ? 'bg-success-soft' : (column.holiday ? 'bg-neutral-tertiary' : (column.today ? 'bg-brand-softer' : 'bg-neutral-secondary-soft')) }}"
+                            class="relative w-36 border-l border-default-subtle px-3 pt-3 pb-2.5 text-center align-top {{ loop.index0 != focusedDay ? 'max-md:hidden' }} {{ column.complete ? 'bg-success-soft' : (column.holiday or day_off ? 'bg-neutral-tertiary' : (column.today ? 'bg-brand-softer' : 'bg-neutral-secondary-soft')) }}"
                             data-test="day-header" data-day="{{ column.date|date('Y-m-d') }}"
                             data-complete="{{ column.complete ? 'true' : 'false' }}"
                             data-forgotten="{{ column.forgotten ? 'true' : 'false' }}"
                             data-holiday="{{ column.holiday ? 'true' : 'false' }}"
+                            data-time-off="{{ column.timeOff ? (day_off ? 'whole' : 'half') : 'none' }}"
                             data-today="{{ column.today ? 'true' : 'false' }}">
                             {% if column.today %}<span class="absolute inset-x-0 top-0 h-0.5 bg-brand" aria-hidden="true"></span>{% endif %}
                             <span class="block text-xs font-semibold tabular-nums {{ column.today ? 'text-fg-brand' : 'text-heading' }}">
@@ -104,6 +112,8 @@
                             </span>
                             {% if column.holiday %}
                                 <span class="mt-1 block text-xs font-normal text-body" data-test="day-holiday">Férié · {{ column.holiday }}</span>
+                            {% elseif day_off %}
+                                <span class="mt-1 block text-xs font-normal text-body" data-test="day-time-off">{{ column.timeOff.label }}</span>
                             {% else %}
                                 <span class="mt-1 flex items-center justify-center gap-1 text-xs font-medium tabular-nums {{ column.forgotten ? 'text-fg-warning' : (column.complete ? 'text-fg-success-strong' : 'text-body') }}" data-test="day-total">
                                     {% if column.forgotten %}<twig:ux:icon name="tabler:alert-circle" class="size-3.5" aria-hidden="true"/>{% endif %}
@@ -114,6 +124,9 @@
                                 <span class="mx-auto mt-2 block h-1 w-16 overflow-hidden rounded-full bg-neutral-quaternary" aria-hidden="true">
                                     <span class="block h-full rounded-full {{ column.complete ? 'bg-success' : 'bg-brand' }}" style="width: {{ (day_ratio * 100)|round(1) }}%"></span>
                                 </span>
+                                {% if column.timeOff %}
+                                    <span class="mt-1.5 block text-xs font-normal text-body" data-test="day-time-off">{{ column.timeOff.label }}</span>
+                                {% endif %}
                             {% endif %}
                         </th>
                     {% endfor %}
@@ -130,10 +143,13 @@
                         </th>
                         {% for cell in row.cells %}
                             {% set column = grid.days[loop.index0] %}
-                            <td class="border-l border-default-subtle px-3 py-3 {{ loop.index0 != focusedDay ? 'max-md:hidden' }} {{ column.complete ? 'bg-success-soft/60' : (column.holiday ? 'bg-neutral-tertiary' : (column.today ? 'bg-brand-softer/60')) }}"
-                                data-test="timesheet-cell" data-day="{{ cell.day|date('Y-m-d') }}" data-holiday="{{ column.holiday ? 'true' : 'false' }}">
+                            {% set day_off = column.timeOff and column.timeOff.whole %}
+                            <td class="border-l border-default-subtle px-3 py-3 {{ loop.index0 != focusedDay ? 'max-md:hidden' }} {{ column.complete ? 'bg-success-soft/60' : (column.holiday or day_off ? 'bg-neutral-tertiary' : (column.today ? 'bg-brand-softer/60')) }}"
+                                data-test="timesheet-cell" data-day="{{ cell.day|date('Y-m-d') }}" data-holiday="{{ column.holiday ? 'true' : 'false' }}" data-time-off="{{ column.timeOff ? (day_off ? 'whole' : 'half') : 'none' }}">
                                 {% if column.holiday %}
                                     <span class="sr-only">Jour férié</span>
+                                {% elseif day_off %}
+                                    <span class="sr-only">Jour de congé</span>
                                 {% else %}
                                     {{ include('timesheet/_quarter_bar.html.twig', {lot: row.lot, cell: cell}) }}
                                 {% endif %}

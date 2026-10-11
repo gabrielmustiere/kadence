@@ -1,0 +1,11 @@
+{% extends 'emails/_layout.html.twig' %}
+
+{% block content %}
+    {% if own %}
+        <p>Votre congé validé a été annulé{% if cancelled_by %} par {{ cancelled_by }}{% endif %}.</p>
+    {% else %}
+        <p>{{ person }} a annulé un congé validé.</p>
+    {% endif %}
+    {{ include('emails/time_off/_summary.html.twig') }}
+    <p><a href="{{ url }}">Voir les absences</a></p>
+{% endblock %}

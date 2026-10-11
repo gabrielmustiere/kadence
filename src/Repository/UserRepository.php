@@ -150,4 +150,37 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     {
         return $this->count(['role' => Role::Direction, 'active' => true]);
     }
+
+    /**
+     * @return list<User>
+     */
+    public function findActiveDirectors(): array
+    {
+        return $this->findBy(['role' => Role::Direction, 'active' => true], ['lastName' => 'ASC', 'firstName' => 'ASC']);
+    }
+
+    /**
+     * The active people, with their manager, by name.
+     *
+     * @return list<User>
+     */
+    public function findActiveWithManager(): array
+    {
+        /** @var list<User> $users */
+        $users = $this->createQueryBuilder('u')
+            ->addSelect('m')
+            ->leftJoin('u.manager', 'm')
+            ->andWhere('u.active = true')
+            ->orderBy('u.lastName', 'ASC')
+            ->addOrderBy('u.firstName', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        return $users;
+    }
+
+    public function hasActiveReports(User $manager): bool
+    {
+        return 0 < $this->count(['manager' => $manager, 'active' => true]);
+    }
 }

@@ -94,16 +94,59 @@ final class DailyCapacityTest extends TestCase
         self::assertFalse($capacity->hasWorkingDayBetween([], $this->day('2026-10-06'), $this->day('2026-10-08')));
     }
 
+    public function testADayOffGivesNothingWithoutRaisingTheOtherDaysOfTheWeek(): void
+    {
+        $capacity = $this->capacity(weeklyMaxes: [self::ALICE => [['2026-01-05', 16]]], timeOff: [self::ALICE => ['2026-10-07' => 2]]);
+
+        self::assertSame(0, $capacity->units(self::ALICE, 100, $this->day('2026-10-07')));
+        self::assertFalse($capacity->isWorkingDay(self::ALICE, $this->day('2026-10-07')));
+        self::assertSame(intdiv(16 * DailyCapacity::UNITS_PER_QUARTER, 5), $capacity->units(self::ALICE, 100, $this->day('2026-10-06')));
+        self::assertTrue($capacity->isWorkingDay(self::BRUNO, $this->day('2026-10-07')));
+    }
+
+    public function testAHalfDayOffGivesHalfTheDayAndStaysAWorkingDay(): void
+    {
+        $capacity = $this->capacity(weeklyMaxes: [self::ALICE => [['2026-01-05', 18]]], timeOff: [self::ALICE => ['2026-10-07' => 1]]);
+
+        self::assertSame(intdiv(18 * DailyCapacity::UNITS_PER_QUARTER, 10), $capacity->units(self::ALICE, 100, $this->day('2026-10-07')));
+        self::assertSame(intdiv(18 * 50 * DailyCapacity::UNITS_PER_QUARTER, 100 * 10), $capacity->units(self::ALICE, 50, $this->day('2026-10-07')));
+        self::assertTrue($capacity->isWorkingDay(self::ALICE, $this->day('2026-10-07')));
+        self::assertSame(1, $capacity->timeOffHalves(self::ALICE, $this->day('2026-10-07')));
+    }
+
+    public function testADayOffDoesNotCountAsAWorkingDayBetweenTwoDays(): void
+    {
+        $capacity = $this->capacity(timeOff: [self::ALICE => ['2026-10-07' => 2]]);
+
+        self::assertFalse($capacity->hasWorkingDayBetween([self::ALICE], $this->day('2026-10-06'), $this->day('2026-10-08')));
+        self::assertTrue($capacity->hasWorkingDayBetween([self::ALICE, self::BRUNO], $this->day('2026-10-06'), $this->day('2026-10-08')));
+    }
+
+    public function testDaysOffInARowMakeOneSpanAcrossWeekendsAndHolidaysAndAHalfDayIsASpanOfItsOwn(): void
+    {
+        $capacity = $this->capacity(holidays: ['fr' => ['2026-11-11' => true]], timeOff: [self::ALICE => [
+            '2026-11-05' => 2, '2026-11-06' => 2, '2026-11-09' => 2, '2026-11-10' => 2, '2026-11-11' => 2, '2026-11-12' => 2, '2026-11-13' => 1, '2026-11-17' => 2,
+        ]]);
+
+        self::assertSame(
+            [['2026-11-05', '2026-11-12', false], ['2026-11-13', '2026-11-13', true], ['2026-11-17', '2026-11-17', false]],
+            array_map(static fn (array $span): array => [$span[0]->format('Y-m-d'), $span[1]->format('Y-m-d'), $span[2]], $capacity->timeOffSpans(self::ALICE, $this->day('2026-11-01'), $this->day('2026-11-30'))),
+        );
+        self::assertSame(0, $capacity->timeOffHalves(self::ALICE, $this->day('2026-11-11')), 'A holiday is not shown as time off.');
+    }
+
     /**
      * @param array<int, list<array{string, int<1, 20>}>> $weeklyMaxes
      * @param array<string, array<string, true>>          $holidays
+     * @param array<int, array<string, int<1, 2>>>        $timeOff
      */
-    private function capacity(array $weeklyMaxes = [], array $holidays = []): DailyCapacity
+    private function capacity(array $weeklyMaxes = [], array $holidays = [], array $timeOff = []): DailyCapacity
     {
         return new DailyCapacity(
             [self::ALICE => [HolidayCalendar::France, true], self::BRUNO => [HolidayCalendar::Belgium, true], self::CLARA => [HolidayCalendar::France, false]],
             $weeklyMaxes,
             $holidays,
+            $timeOff,
         );
     }
 

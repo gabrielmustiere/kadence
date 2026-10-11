@@ -1,0 +1,45 @@
+{#
+    The approved time off of a person: what is coming, then what is over. Expects `page` and `person`; the type shows to
+    the person, their manager and the direction only.
+#}
+{% set detail = is_granted('TIME_OFF_DETAIL', person) %}
+{% set back = path('app_person', {id: person.id}) %}
+{% macro absence_list(requests, detail, back, test) %}
+    <ul class="divide-y divide-default-subtle rounded-card border border-default bg-surface text-sm" data-test="{{ test }}">
+        {% for request in requests %}
+            <li class="flex flex-wrap items-center justify-between gap-3 px-5 py-3" data-test="person-absence" data-id="{{ request.id }}">
+                <span class="min-w-0">
+                    <span class="font-medium text-heading tabular-nums">{{ include('time_off/_period.html.twig', {request: request}) }}</span>
+                    {% if detail %}<twig:Badge variant="gray" class="ms-2" data-test="person-absence-type">{{ request.type.label }}</twig:Badge>{% endif %}
+                </span>
+                {% if is_granted('TIME_OFF_CANCEL', request) %}
+                    <form method="post" action="{{ path('app_time_off_cancel', {id: request.id}) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('time-off-cancel-' ~ request.id) }}">
+                        <input type="hidden" name="back" value="{{ back }}">
+                        <twig:Button type="submit" size="xs" variant="outline-danger" data-test="time-off-cancel">Annuler</twig:Button>
+                    </form>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+{% endmacro %}
+{% set upcoming = page.upcomingAbsences %}
+{% set past = page.pastAbsences %}
+{% if upcoming is empty and past is empty %}
+    <twig:EmptyState icon="tabler:beach" data-test="person-absences-empty">Aucun congé validé.</twig:EmptyState>
+{% else %}
+    <div class="space-y-5">
+        {% if upcoming is not empty %}
+            <div>
+                <p class="eyebrow mb-2 text-body-subtle">À venir</p>
+                {{ _self.absence_list(upcoming, detail, back, 'person-absences-upcoming') }}
+            </div>
+        {% endif %}
+        {% if past is not empty %}
+            <div>
+                <p class="eyebrow mb-2 text-body-subtle">Passées</p>
+                {{ _self.absence_list(past, detail, back, 'person-absences-past') }}
+            </div>
+        {% endif %}
+    </div>
+{% endif %}

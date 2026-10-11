@@ -1,0 +1,16 @@
+{% extends 'emails/_layout.html.twig' %}
+
+{% block content %}
+    {% if for_manager ?? false %}
+        <p>{{ decided_by }} a {{ approved ? 'validé' : 'refusé' }} à votre place le congé de {{ person }}.</p>
+    {% elseif approved %}
+        <p>Votre congé est validé{% if decided_by %} par {{ decided_by }}{% endif %}.</p>
+    {% else %}
+        <p>Votre demande de congé est refusée{% if decided_by %} par {{ decided_by }}{% endif %}.</p>
+    {% endif %}
+    {{ include('emails/time_off/_summary.html.twig') }}
+    {% if not approved %}
+        <p><strong>Motif :</strong> {{ reason }}</p>
+    {% endif %}
+    <p><a href="{{ url }}">Ouvrir Kadence</a></p>
+{% endblock %}

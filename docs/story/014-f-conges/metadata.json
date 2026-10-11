@@ -1,0 +1,49 @@
+{
+  "version": 2,
+  "title": "Poser ses congés et ses RTT auprès de son manager, et les déduire de la saisie et de la capacité",
+  "created": "2026-10-11",
+  "updated": "2026-10-11",
+  "tags": [
+    "conges",
+    "saisie",
+    "capacite"
+  ],
+  "backlog": "capacite-equipe",
+  "changelog": [
+    {
+      "date": "2026-10-11",
+      "type": "Création",
+      "description": "Pitch initial rattaché à la ligne capacite-equipe (C4.2, au-delà de ce que prévoyait le backlog) : Kadence devient l'outil officiel des congés ; CP du 1er mai au 30 avril et RTT sur l'année civile, droits déclarés par la direction, sans acquisition ni report, avec dépassement permis et signalé ; deux types sans compteur (sans solde, événement familial) ; demande à la journée ou à la demi-journée (matin ou après-midi), décidée par le manager actif, ou par la direction sans manager et en suppléance, avec motif de refus obligatoire et validation d'office pour le seul membre de la direction ; verrou de la saisie dès la demande et maximum de la semaine réduit au prorata ; congés validés déduits de la capacité, de la fin calculée, des coupes de la roadmap et de la fiche d'une personne ; absences visibles de tous, type réservé ; e-mails de demande, de décision et d'annulation ; contredit la règle « être manager n'ouvre aucun droit » de la story 007."
+    },
+    {
+      "date": "2026-10-11",
+      "type": "Planification",
+      "description": "Plan technique validé : TimeOffRequest ne stocke que ses bornes (jour et demi-journée), dépliées à la lecture par TimeOffDays pour un décompte vivant ; TimeOffEntitlement en demi-journées par personne, type et année de période ; statut en enum gardé par TimeOffManager et TimeOffVoter (sans composant Workflow) ; préfixe TimeOff* pour éviter la confusion avec les feuilles (leaf) ; saisie par plafond de jour (4, 2 ou 0 quarts) et WeeklyMaximum::cap() au prorata ; congés validés dans DailyCapacity (jour ouvré dédoublé, demi-unités, DAY_DIVISOR 120), qui propage fin calculée, surcharge, coupes de la roadmap et charge de la fiche ; Live Component TimeOffRequestForm pour l'aperçu du décompte et du solde ; entrée de menu « Congés » à onglets (Mes congés, À valider, Absences, Compteurs) ; e-mails par appel direct à TimeOffMailer en async, MAILER_DSN=null://null en test ; bande d'absences sous les feuilles de la roadmap ; compteurs déclarés en un formulaire d'équipe ; questions du pitch tranchées : demandes en attente annulées à la désactivation, pas d'e-mail au nouveau valideur."
+    },
+    {
+      "date": "2026-10-11",
+      "type": "Implémentation",
+      "description": "Dix sous-tâches du plan livrées (socle et migration, lecture, écriture et e-mails, saisie, capacité, Mes congés, À valider / Absences / Compteurs, roadmap et fiches, démo, E2E) ; 619 tests PHPUnit et 49 E2E verts, PHPStan niveau 10 et CS-Fixer propres. Écarts : lectures d'équipe sorties de TimeOffBook dans TimeOffOverview et regroupement par jour dans TimeOffDay::collect() (complexité cognitive) ; absences de la roadmap calculées par un service TeamAbsences, RoadmapBuilder::reach() rendue publique, RoadmapRow porte une seule liste absences (pas d'absenceBand) ; modèle AbsenceRow et noms de mois maison (pas d'extension Intl) ; droits vérifiés avant le jeton CSRF, comme LotController::progress() ; seuil de requêtes de la grille relevé de 6 à 7 (une requête de congés, les jours fériés déjà lus sont passés à daysOf()) ; filtre Twig half_days ; requêtes findActiveOfUser(), findActiveBetween(), findApprovedOfUser() et UserRepository::findActiveWithManager() / hasActiveReports() ; contrainte testée en unitaire, validation d'office testée en unitaire, TeamManagerTest monté avec un vrai TimeOffManager (classes finales) ; affichage des erreurs du formulaire vérifié dans le navigateur ; la direction annule un congé depuis le bloc Absences de la fiche personne ; démo : les deux semaines sans saisie de chacun deviennent des CP validés, congés à venir hors équipe Atlas, aucun sur les comptes de test."
+    },
+    {
+      "date": "2026-10-11",
+      "type": "Review",
+      "description": "Revue du diff : 0 bloquant, 2 importants (requêtes en boucle sur « Mes congés » et « À valider » : 12 → 66 requêtes avec 40 demandes, 88 pour 21 en attente ; e-mails inopérants en production, MAILER_DSN null:// hors diff), 7 mineurs (retour après annulation qui accepte /\\hôte, bouton d'annulation inopérant pour la direction sur son propre congé commencé, phrase trompeuse sans manager, soldes des périodes passées, surcharge passive non testée, #[CurrentUser] non utilisé, code mort) ; corrections requises."
+    },
+    {
+      "date": "2026-10-11",
+      "type": "Review",
+      "description": "Corrections de la revue : requêtes en boucle supprimées (Balance::count(), TimeOffPreview::of(), TimeOffBook::historyOf(), droits en lot par findHalfDaysOf(), liste à valider chargée en une fois ; « Mes congés » à 8 requêtes quel que soit l'historique, « À valider » à 10 quel que soit le nombre de demandes, test de nombre de requêtes ajouté) ; sept mineurs corrigés (chemin de retour sans /\\hôte, annulation par la direction alignée sur le voter, phrase masquée sans manager, soldes limités aux périodes non terminées, test de surcharge passive, #[CurrentUser], code mort retiré) ; e-mails inopérants en production assumés pour la démonstration ; 626 tests PHPUnit et 49 E2E verts ; prêt à commiter sous réserve."
+    },
+    {
+      "date": "2026-10-11",
+      "type": "Report",
+      "description": "Compte rendu d'implémentation : 85/94 lignes du plan conformes (90 %), 28/28 critères atteints, écarts volontaires documentés (TimeOffOverview et TeamAbsences imposés par la complexité cognitive, RoadmapRow sans absenceBand, calcul des soldes en lot après review, méthodes de repository ajustées, voter avant le jeton CSRF, règle 43 resserrée, annulation par la direction alignée sur le voter) ; non implémenté : PersonLoadTest (oubli) et ScheduleLoaderTest (couvert par RoadmapBuilderTest) ; dette : e-mails en production (critique en usage réel), test de MAX_DAYS_OFF, affichage des erreurs du formulaire et collègues absents sans test automatisé, réalignement pitch et backlog, ADR non écrite."
+    },
+    {
+      "date": "2026-10-11",
+      "type": "Sync",
+      "description": "Doc réalignée sur le livré. Pitch : règle 21 (rien n'est affiché à la place des autres absents pour une personne sans manager), règle 24 (la direction voit toutes les demandes en attente sauf les siennes), règle 43 (soldes des périodes en cours et non terminées). Plan : approche (lectures d'équipe dans TimeOffOverview, soldes par Balance::count() en lot, absences de la roadmap par TeamAbsences), mécanismes (voter avant le jeton CSRF, #[CurrentUser], méthodes de repository), modèle (AbsenceRow, TimeOffPeriod::key(), TimeOffDay::collect(), Balance::count(), TimeOffPreview::of(), RoadmapRow sans absenceBand, DailyCapacity::timeOffSpans()), périmètre (fichiers ajoutés, TimeEntryRepository et ScheduleLoaderTest retirés, PersonLoadTest reporté en dette), stratégie de test, critères de sortie cochés (seuil de la grille 6 → 7 signalé), questions ouvertes tranchées. Projet : backlog (C1.5, C4.2, règles de profil et de permissions, workflow des demandes de congé, notes capacite-equipe, rappel-saisie et charge-vs-capacite), vision (audience et risque externe), stack (e-mails)."
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 # Stack technique — Kadence
 
-> Dernière mise à jour : 2026-10-04 — cartographie factuelle de la stack. Chaque entrée est prouvée par un fichier du dépôt (source entre parenthèses) ou marquée _non renseigné_.
+> Dernière mise à jour : 2026-10-11 — cartographie factuelle de la stack. Chaque entrée est prouvée par un fichier du dépôt (source entre parenthèses) ou marquée _non renseigné_.
 
 ## Vue d'ensemble
 
@@ -28,7 +28,7 @@ Monolithe Symfony 8.1 en PHP 8.5, rendu serveur Twig + Symfony UX (Stimulus, Tur
 - **ORM / données** : Doctrine ORM `^3.7.2` (3.7.2 résolue), DoctrineBundle `^3.3.2` (3.3.2 résolue), Doctrine Migrations `^4.0.1` (`composer.json`, `composer.lock`)
 - **Authentification** : `symfony/security-bundle` — login par formulaire e-mail / mot de passe avec CSRF, provider entité `App\Entity\User` chargé par `UserRepository` (e-mail insensible à la casse) ; rôles hiérarchisés `ROLE_DIRECTION` ⊃ `ROLE_LEAD` ⊃ `ROLE_PROD` ⊃ `ROLE_USER`, `/equipe` réservé à `ROLE_DIRECTION`, reste du site en `ROLE_USER` sauf `/login` ; `UserChecker` refusant les comptes désactivés ; limitation des tentatives par `login_throttling` via `symfony/rate-limiter` `8.1.*` (8.1.6 résolue) (`config/packages/security.yaml`, `src/Entity/User.php`, `src/Repository/UserRepository.php`, `src/Security/UserChecker.php`, `composer.json`, `composer.lock`)
 - **Asynchrone** : Symfony Messenger — transport `async` sur Doctrine (`MESSENGER_TRANSPORT_DSN=doctrine://default`), 3 retries avec backoff ×2, transport `failed` ; e-mails et notifications routés en async ; `sync://` en test (`config/packages/messenger.yaml`, `.env`, `.env.test`)
-- **E-mails / notifications** : `symfony/mailer`, `symfony/notifier` (`composer.json`, `config/packages/mailer.yaml`, `config/packages/notifier.yaml`)
+- **E-mails / notifications** : `symfony/mailer`, `symfony/notifier` (`composer.json`, `config/packages/mailer.yaml`, `config/packages/notifier.yaml`) ; premiers e-mails transactionnels (congés) en `TemplatedEmail` envoyés en async par Messenger depuis `src/Mailer/`, expéditeur `MAILER_SENDER`, transport `null://null` en test (`src/Mailer/TimeOffMailer.php`, `.env`, `.env.test`)
 - **Libs structurantes** : Form, Validator, Serializer, HttpClient, Intl, Translation, ExpressionLanguage, Twig 3.30 + `twig/extra-bundle` / `twig/html-extra` (`composer.json`, `composer.lock`)
 
 ## Frontend
@@ -91,3 +91,4 @@ Monolithe Symfony 8.1 en PHP 8.5, rendu serveur Twig + Symfony UX (Stimulus, Tur
 - 2026-09-29 — Enrichir — Contraintes & dette (SQLite : clés étrangères, LOWER) — sync post-livraison de la story 002-f-projets-lots-sous-lots
 - 2026-09-30 — Enrichir — Langages & runtimes (extensions PHP requises), Contraintes & dette (`ext-calendar` en production) — sync post-livraison de la story 004-f-jours-feries
 - 2026-10-04 — Éditer — Contraintes & dette (SQLite : clés étrangères appliquées depuis le commit ef83b47) — sync post-livraison de la story 013-f-feuilles-favorites
+- 2026-10-11 — Enrichir — Backend (e-mails / notifications) — sync post-livraison de la story 014-f-conges

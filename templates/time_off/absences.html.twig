@@ -1,0 +1,75 @@
+{% extends 'base.html.twig' %}
+
+{% set days = month.days %}
+
+{% block title %}Absences · Kadence{% endblock %}
+
+{% block body %}
+    <twig:PageHeader title="Congés" description="Qui est absent, jour par jour. Le type d'un congé et les demandes en attente ne sont visibles que de la personne, de son manager et de la direction."/>
+    {{ include('time_off/_tabs.html.twig') }}
+
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <h2 class="text-lg font-semibold tracking-tight text-heading" data-test="absences-month" data-month="{{ month.firstDay|date('Y-m') }}">{{ month.label }}</h2>
+        <nav class="inline-flex items-center gap-0.5 rounded-xl border border-default bg-surface p-1 shadow-xs" aria-label="Navigation entre mois">
+            <a href="{{ path('app_time_off_absences_month', {month: month.previous|date('Y-m')}) }}" data-test="absences-prev"
+               class="inline-flex h-8 items-center rounded-lg px-2.5 text-body transition-colors hover:bg-neutral-tertiary hover:text-heading" aria-label="Mois précédent">
+                <twig:ux:icon name="tabler:chevron-left" class="size-4"/>
+            </a>
+            <a href="{{ path('app_time_off_absences') }}" class="inline-flex h-8 items-center rounded-lg px-3 text-sm font-medium text-body transition-colors hover:bg-neutral-tertiary hover:text-heading">Ce mois-ci</a>
+            <a href="{{ path('app_time_off_absences_month', {month: month.next|date('Y-m')}) }}" data-test="absences-next"
+               class="inline-flex h-8 items-center rounded-lg px-2.5 text-body transition-colors hover:bg-neutral-tertiary hover:text-heading" aria-label="Mois suivant">
+                <twig:ux:icon name="tabler:chevron-right" class="size-4"/>
+            </a>
+        </nav>
+    </div>
+
+    <div class="overflow-x-auto rounded-card border border-default bg-surface shadow-card">
+        <table class="w-full border-collapse text-xs" data-test="absences-grid">
+            <thead>
+                <tr class="border-b border-default bg-neutral-secondary-soft">
+                    <th scope="col" class="sticky left-0 z-10 min-w-44 bg-neutral-secondary-soft px-4 py-2.5 text-left font-medium text-body-subtle">Personne</th>
+                    {% for day in days %}
+                        <th scope="col" class="min-w-8 border-l border-default-subtle px-0.5 py-2 text-center font-medium tabular-nums {{ day|date('N') == 1 ? 'border-l-default-medium' }} text-body">
+                            <span class="block">{{ day|weekday|slice(0, 1) }}</span>
+                            <span class="block text-heading">{{ day|date('d') }}</span>
+                        </th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in month.rows %}
+                    <tr class="border-t border-default-subtle first:border-t-0" data-test="absences-row" data-person="{{ row.person.id }}">
+                        <th scope="row" class="sticky left-0 z-10 bg-surface px-4 py-2 text-left text-sm font-normal whitespace-nowrap">
+                            <a href="{{ path('app_person', {id: row.person.id}) }}" class="text-heading hover:underline">{{ row.person.firstName }} {{ row.person.lastName }}</a>
+                        </th>
+                        {% for day in days %}
+                            {% set date = day|date('Y-m-d') %}
+                            {% set holiday = row.holidays[date] ?? null %}
+                            {% set off = row.days[date] ?? null %}
+                            <td class="h-9 border-l border-default-subtle p-0.5 {{ day|date('N') == 1 ? 'border-l-default-medium' }}" data-test="absences-cell" data-day="{{ date }}"
+                                data-state="{{ holiday ? 'holiday' : (off ? (off.whole ? 'whole' : 'half') : 'none') }}"
+                                {% if off %}title="{{ row.detail ? off.label : 'Absent' ~ (off.whole ? '' : ' (' ~ off.halves[0][0].label ~ ')') }}"{% elseif holiday %}title="Férié · {{ holiday }}"{% endif %}>
+                                {% if holiday %}
+                                    <span class="block h-full rounded-sm bg-neutral-tertiary" aria-label="Férié"></span>
+                                {% elseif off %}
+                                    <span class="flex h-full flex-col gap-px" {% if row.detail %}data-test="absences-detail" data-label="{{ off.label }}"{% endif %}>
+                                        {% for half in ['morning', 'afternoon'] %}
+                                            {% set covered = off.halves|filter(h => h[0].value == half)|first %}
+                                            <span class="block flex-1 rounded-[2px] {{ covered ? (covered[2].value == 'pending' ? 'border border-dashed border-brand bg-brand-softer' : 'bg-brand') : '' }}"></span>
+                                        {% endfor %}
+                                    </span>
+                                    <span class="sr-only">{{ row.detail ? off.label : 'Absent' }}</span>
+                                {% endif %}
+                            </td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <p class="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-body">
+        <span class="inline-flex items-center gap-1.5"><span class="inline-block size-3 rounded-sm bg-brand"></span>Absent (matin en haut, après-midi en bas)</span>
+        <span class="inline-flex items-center gap-1.5"><span class="inline-block size-3 rounded-sm border border-dashed border-brand bg-brand-softer"></span>Demande en attente</span>
+        <span class="inline-flex items-center gap-1.5"><span class="inline-block size-3 rounded-sm bg-neutral-tertiary"></span>Férié</span>
+    </p>
+{% endblock %}

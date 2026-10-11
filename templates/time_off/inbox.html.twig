@@ -1,0 +1,86 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Congés à valider · Kadence{% endblock %}
+
+{% block body %}
+    <twig:PageHeader title="Congés" description="Les demandes de vos collaborateurs, avec le solde qu'elles laissent et les autres absents de l'équipe sur la période."/>
+    {{ include('time_off/_tabs.html.twig') }}
+
+    {% if items is empty %}
+        <twig:EmptyState icon="tabler:checklist" data-test="time-off-inbox-empty">Aucune demande en attente.</twig:EmptyState>
+    {% else %}
+        <ul class="space-y-4" data-test="time-off-inbox">
+            {% for item in items %}
+                {% set request = item.request %}
+                {% set preview = item.preview %}
+                <li class="rounded-card border border-default bg-surface p-5 shadow-card" data-test="time-off-inbox-item" data-id="{{ request.id }}">
+                    <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                        <div class="min-w-0 space-y-2 text-sm">
+                            <p class="flex flex-wrap items-center gap-2">
+                                <a href="{{ path('app_person', {id: request.user.id}) }}" class="text-[15px] font-semibold text-heading hover:underline">{{ request.user.firstName }} {{ request.user.lastName }}</a>
+                                <twig:Badge variant="gray">{{ request.type.label }}</twig:Badge>
+                            </p>
+                            <p class="text-heading tabular-nums" data-test="time-off-inbox-period">{{ include('time_off/_period.html.twig') }} · {{ preview.halfDays|half_days }}</p>
+                            {% if request.comment %}
+                                <p class="text-body">« {{ request.comment }} »</p>
+                            {% endif %}
+                            {% for period in preview.periods %}
+                                {% set balance = period[1] %}
+                                <p class="{{ balance.overrun ? 'font-medium text-fg-danger-strong' : 'text-body' }}" data-test="time-off-inbox-balance">
+                                    Solde {{ balance.period.type.label }} {{ balance.period.label }} après la demande : <span class="tabular-nums">{{ balance.remainingHalfDays|half_days }}</span>
+                                    {% if balance.overrun %}· dépassement{% endif %}
+                                </p>
+                            {% endfor %}
+                            {% if item.colleagues is not null %}
+                                <p class="text-body" data-test="time-off-inbox-colleagues">
+                                    {% if item.colleagues is empty %}
+                                        Personne d'autre de l'équipe n'est absent sur la période.
+                                    {% else %}
+                                        Aussi absents :
+                                        {% for other in item.colleagues %}
+                                            <span class="text-heading">{{ other.user.firstName }} {{ other.user.lastName }}</span> ({{ include('time_off/_period.html.twig', {request: other}) }}{{ other.status.value == 'pending' ? ', en attente' }}){{ loop.last ? '' : ' ;' }}
+                                        {% endfor %}
+                                    {% endif %}
+                                </p>
+                            {% endif %}
+                        </div>
+                        <div class="flex shrink-0 items-center gap-2">
+                            <form method="post" action="{{ path('app_time_off_approve', {id: request.id}) }}">
+                                <input type="hidden" name="_token" value="{{ csrf_token('time-off-decide-' ~ request.id) }}">
+                                <twig:Button type="submit" data-test="time-off-approve">
+                                    <twig:ux:icon name="tabler:check" class="size-4"/>
+                                    Valider
+                                </twig:Button>
+                            </form>
+                            <twig:Modal id="refuse-{{ request.id }}">
+                                <twig:Modal:Trigger>
+                                    <twig:Button variant="outline-danger" data-test="time-off-refuse" {{ ...modal_trigger_attrs }}>Refuser</twig:Button>
+                                </twig:Modal:Trigger>
+                                <twig:Modal:Content>
+                                    <form method="post" action="{{ path('app_time_off_refuse', {id: request.id}) }}">
+                                        <twig:Modal:Header>
+                                            <twig:Modal:Title>Refuser la demande de {{ request.user.firstName }} ?</twig:Modal:Title>
+                                        </twig:Modal:Header>
+                                        <twig:Modal:Body>
+                                            <input type="hidden" name="_token" value="{{ csrf_token('time-off-decide-' ~ request.id) }}">
+                                            <label for="refuse-reason-{{ request.id }}" class="mb-1.5 block text-[13px] font-medium text-heading">Motif du refus</label>
+                                            <textarea id="refuse-reason-{{ request.id }}" name="reason" rows="3" maxlength="500" required data-test="time-off-refuse-reason"
+                                                      class="block w-full rounded-base border border-default-medium bg-surface px-3 py-2 text-sm text-heading shadow-xs focus:border-brand focus:outline-hidden focus:ring-4 focus:ring-brand-medium/50"></textarea>
+                                            <p class="mt-1.5 text-xs text-body">{{ request.user.firstName }} le verra dans ses congés et dans l'e-mail de refus.</p>
+                                        </twig:Modal:Body>
+                                        <twig:Modal:Footer>
+                                            <twig:Button type="submit" variant="danger" data-test="time-off-refuse-confirm">Refuser</twig:Button>
+                                            <twig:Modal:Close>
+                                                <twig:Button variant="outline" {{ ...modal_close_attrs }}>Annuler</twig:Button>
+                                            </twig:Modal:Close>
+                                        </twig:Modal:Footer>
+                                    </form>
+                                </twig:Modal:Content>
+                            </twig:Modal>
+                        </div>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+{% endblock %}

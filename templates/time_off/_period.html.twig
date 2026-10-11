@@ -1,0 +1,9 @@
+{# The days of a request, with its half-days at the bounds. Expects `request`. #}
+{%- set same_day = request.startDay|date('Y-m-d') == request.endDay|date('Y-m-d') -%}
+{%- if same_day -%}
+    {{ request.startDay|weekday }} {{ request.startDay|date('d/m/Y') }}
+    {%- if request.startHalf == request.endHalf %} · {{ request.startHalf.label }}{% endif -%}
+{%- else -%}
+    {{ request.startDay|weekday }} {{ request.startDay|date('d/m/Y') }}{% if request.startHalf.value == 'afternoon' %} après-midi{% endif %}
+    → {{ request.endDay|weekday }} {{ request.endDay|date('d/m/Y') }}{% if request.endHalf.value == 'morning' %} matin{% endif %}
+{%- endif -%}

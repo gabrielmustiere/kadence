@@ -9,6 +9,7 @@ use App\Entity\TimeEntry;
 use App\Entity\User;
 use App\Exception\TimeEntryRefusedException;
 use App\Model\Quarters;
+use App\Model\TimeOff\TimeOffDay;
 use App\Model\Week;
 use App\Repository\TimeEntryRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -21,6 +22,7 @@ final readonly class TimesheetManager
         private TimeEntryRepository $timeEntryRepository,
         private WeeklyMaxManager $weeklyMaxManager,
         private HolidayManager $holidayManager,
+        private TimeOffBook $timeOffBook,
         private ClockInterface $clock,
     ) {
     }
@@ -28,7 +30,7 @@ final readonly class TimesheetManager
     /**
      * Sets the cell of the user on this leaf and day; 0 empties it. Lowering a cell is always accepted, even on a
      * week above a weekly maximum lowered since, so that it can still be corrected, except on a holiday: nothing is
-     * ever recorded on one.
+     * ever recorded on one. A day off, pending or approved, takes nothing more than what it leaves.
      *
      * @throws TimeEntryRefusedException
      */
@@ -47,11 +49,18 @@ final readonly class TimesheetManager
         [$entry, $otherQuartersOfDay, $otherQuartersOfWeek] = $this->splitWeek($user, $lot, $day, $week);
 
         if ($quarters > ($entry?->getQuarters() ?? 0)) {
-            if ($otherQuartersOfDay + $quarters > Quarters::PER_DAY) {
-                throw TimeEntryRefusedException::dayFull($day, Quarters::PER_DAY - $otherQuartersOfDay);
+            $timeOff = $this->timeOffBook->daysOf($user, $week->monday, $week->friday(), $holidays);
+            $dayOff = $timeOff[$day->format('Y-m-d')] ?? null;
+            if (null !== $dayOff && $dayOff->isWhole()) {
+                throw TimeEntryRefusedException::timeOff($day, $dayOff->label());
             }
 
-            $maxQuarters = $this->weeklyMaxManager->capFor($user, $week, \count($holidays));
+            $dayCap = $dayOff?->capQuarters() ?? Quarters::PER_DAY;
+            if ($otherQuartersOfDay + $quarters > $dayCap) {
+                throw TimeEntryRefusedException::dayFull($day, $dayCap - $otherQuartersOfDay);
+            }
+
+            $maxQuarters = $this->weeklyMaxManager->capFor($user, $week, \count($holidays), TimeOffDay::halfDayCountOf($timeOff));
             if ($otherQuartersOfWeek + $quarters > $maxQuarters) {
                 throw TimeEntryRefusedException::weekFull($maxQuarters, $maxQuarters - $otherQuartersOfWeek);
             }

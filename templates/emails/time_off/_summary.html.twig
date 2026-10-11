@@ -1,0 +1,11 @@
+<table style="margin: 16px 0; border-collapse: collapse; font-size: 14px;">
+    <tr><td style="padding: 4px 16px 4px 0; color: #6b6f76;">Type</td><td style="padding: 4px 0;">{{ type }}</td></tr>
+    <tr><td style="padding: 4px 16px 4px 0; color: #6b6f76;">Du</td><td style="padding: 4px 0;">{{ start }}</td></tr>
+    <tr><td style="padding: 4px 16px 4px 0; color: #6b6f76;">Au</td><td style="padding: 4px 0;">{{ end }}</td></tr>
+    {% if half_days is defined %}
+        <tr><td style="padding: 4px 16px 4px 0; color: #6b6f76;">Décompte</td><td style="padding: 4px 0;">{{ (half_days * 2)|days }}</td></tr>
+    {% endif %}
+    {% if comment %}
+        <tr><td style="padding: 4px 16px 4px 0; color: #6b6f76;">Commentaire</td><td style="padding: 4px 0;">{{ comment }}</td></tr>
+    {% endif %}
+</table>

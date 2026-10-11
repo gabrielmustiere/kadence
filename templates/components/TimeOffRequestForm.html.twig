@@ -1,0 +1,41 @@
+{% set preview = this.preview %}
+<div {{ attributes.defaults({'data-test': 'time-off-request'}) }}>
+    {{ form_start(form, {attr: {'data-action': 'live#action:prevent', 'data-live-action-param': 'save', 'data-model': 'on(change)|*', novalidate: 'novalidate', 'data-test': 'time-off-form'}}) }}
+        {{ form_row(form.type) }}
+        <div class="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
+            <div class="mb-5">
+                {{ form_row(form.startDay, {row_attr: {class: 'mb-2'}}) }}
+                {{ form_widget(form.startHalf) }}
+            </div>
+            <div class="mb-5">
+                {{ form_row(form.endDay, {row_attr: {class: 'mb-2'}}) }}
+                {{ form_widget(form.endHalf) }}
+            </div>
+        </div>
+        <p class="-mt-2 mb-5 text-xs text-body-subtle">Commencer l'après-midi ou finir le matin pose une demi-journée.</p>
+
+        <div class="mb-5 rounded-xl border border-default bg-neutral-secondary-soft px-4 py-3 text-sm text-body" data-test="time-off-preview" aria-live="polite">
+            {% if preview is null %}
+                Choisissez vos dates pour voir les jours décomptés et votre solde.
+            {% else %}
+                <p><strong class="text-heading tabular-nums" data-test="time-off-preview-days">{{ preview.halfDays|half_days }}</strong> décomptés, hors week-ends et jours fériés.</p>
+                {% for item in preview.periods %}
+                    {% set balance = item[1] %}
+                    <p class="mt-1" data-test="time-off-preview-balance" data-period="{{ balance.period.label }}">
+                        {{ balance.period.type.label }} {{ balance.period.label }} : {{ item[0]|half_days }} sur la période, solde après la demande
+                        <strong class="tabular-nums {{ balance.overrun ? 'text-fg-danger-strong' : 'text-heading' }}" data-test="time-off-preview-remaining">{{ balance.remainingHalfDays|half_days }}</strong>
+                    </p>
+                {% endfor %}
+                {% if preview.overrun %}
+                    <p class="mt-2 font-medium text-fg-warning" data-test="time-off-preview-overrun">Cette demande dépasse vos droits : elle reste possible, et votre manager en sera averti.</p>
+                {% endif %}
+            {% endif %}
+        </div>
+
+        {{ form_row(form.comment) }}
+        <twig:Button type="submit" data-test="time-off-submit" data-loading="action(save)|addAttribute(disabled)">
+            <twig:ux:icon name="tabler:send" class="size-4"/>
+            Envoyer la demande
+        </twig:Button>
+    {{ form_end(form) }}
+</div>

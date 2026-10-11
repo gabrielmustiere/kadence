@@ -35,5 +35,14 @@
             <dt>Équipe</dt>
             <dd>{{ include('roadmap/_team.html.twig', {lines: run.team ?? row.members, entered: run is not null}) }}</dd>
         {% endif %}
+        {% set absences = row.absences|filter(absence => absence.to|date('Y-m-d') >= bar.from|date('Y-m-d') and absence.from|date('Y-m-d') <= bar.to|date('Y-m-d')) %}
+        {% if absences is not empty %}
+            <dt>Absences</dt>
+            <dd data-test="roadmap-tooltip-absences">
+                {% for absence in absences %}
+                    <span class="block">{{ absence.person.firstName }} {{ absence.person.lastName }} · {{ include('roadmap/_absence_period.html.twig') }}</span>
+                {% endfor %}
+            </dd>
+        {% endif %}
     </dl>
 </div>

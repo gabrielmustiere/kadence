@@ -110,6 +110,9 @@
                 <twig:NavLink href="{{ path('app_timesheet') }}" icon="tabler:calendar-week" :active="nav == 'timesheet'" data-test="nav-timesheet">Ma semaine</twig:NavLink>
             </li>
             <li>
+                <twig:NavLink href="{{ path('app_time_off_index') }}" icon="tabler:beach" :active="nav == 'time_off'" data-test="nav-time-off">Congés</twig:NavLink>
+            </li>
+            <li>
                 <twig:NavLink href="{{ path('app_roadmap') }}" icon="tabler:timeline-event" :active="nav == 'roadmap'" data-test="nav-roadmap">Roadmap</twig:NavLink>
             </li>
         </ul>

@@ -34,6 +34,7 @@ final readonly class ScheduleLoader
         private WeeklyMaxRepository $weeklyMaxRepository,
         private UserRepository $userRepository,
         private HolidayManager $holidayManager,
+        private TimeOffBook $timeOffBook,
         private ClockInterface $clock,
     ) {
     }
@@ -157,6 +158,7 @@ final readonly class ScheduleLoader
             array_map(static fn (User $user): array => [$user->getHolidayCalendar(), $user->isActive()], $people),
             $this->weeklyMaxRepository->findAllQuartersByUser(),
             $holidays,
+            $this->timeOffBook->approvedHalfDaysBetween($firstDay, $until),
         );
     }
 }

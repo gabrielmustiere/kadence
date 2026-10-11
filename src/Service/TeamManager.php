@@ -26,6 +26,7 @@ final readonly class TeamManager
         private TemporaryPasswordGenerator $temporaryPasswordGenerator,
         private WeeklyMaxManager $weeklyMaxManager,
         private TagManager $tagManager,
+        private TimeOffManager $timeOffManager,
     ) {
     }
 
@@ -55,7 +56,8 @@ final readonly class TeamManager
     }
 
     /**
-     * A manager shown is always active: the people already deactivated who name this person lose their manager.
+     * A manager shown is always active: the people already deactivated who name this person lose their manager. The
+     * pending requests of the person are cancelled; their approved time off is kept.
      */
     public function deactivate(User $user): void
     {
@@ -70,6 +72,7 @@ final readonly class TeamManager
         foreach ($reports as $report) {
             $report->setManager(null);
         }
+        $this->timeOffManager->cancelPendingOf($user);
         $user->setActive(false);
         $this->entityManager->flush();
     }

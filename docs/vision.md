@@ -2,7 +2,7 @@
 
 > Pitch en une phrase : Kadence est l'outil interne de pilotage de production de notre éditeur logiciel (15 à 40 personnes), qui permet à la direction et aux leads de savoir à date ce que l'équipe peut encore absorber et quand chaque projet sera livré, à partir d'une saisie quotidienne des temps et d'estimations déclaratives sur des projets découpés en lots et sous-lots.
 
-_Document vivant — enrichi au fil du cycle de vie, refondu lors d'un pivot stratégique. Date de dernière mise à jour : 2026-10-02._
+_Document vivant — enrichi au fil du cycle de vie, refondu lors d'un pivot stratégique. Date de dernière mise à jour : 2026-10-11._
 
 ## Changelog
 
@@ -15,6 +15,7 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
 | 2026-09-29 | Édition ciblée | Pitch, audience, positionnement, métriques, anti-objectifs, hypothèses H2 et H3, horizons, notes | Vocabulaire réaligné sur lot / sous-lot ; H2 : l'estimation révisable (initiale conservée) devient la règle, le repli devient un reste à faire déclaré |
 | 2026-10-02 | Édition ciblée | Principe 2, anti-objectifs, risques externes | Sync post-livraison de la story 011-f-fiche-collaborateur : la fiche d'une personne rend son travail saisi lisible de tous, y compris pour préparer un point individuel (contradiction assumée au cadrage) ; le principe 2 et l'anti-objectif « évaluation individuelle » sont reformulés autour de l'absence de comparaison, de classement et d'indicateur de productivité ; le cadre social mentionne la fiche |
 | 2026-10-02 | Édition ciblée | Hypothèse H2, audience (leads) | Sync post-livraison de la story 012-f-avancement-feuilles : le repli de H2 est posé en coexistence avant que H2 soit tranchée — un lead, la direction ou le responsable peut déclarer l'avancement d'une feuille, dont le restant est alors extrapolé du rythme observé ; une feuille sans avancement garde le calcul estimé − consommé, ce qui permet de comparer les deux |
+| 2026-10-11 | Enrichir | Audience (utilisateurs secondaires), risques externes | Sync post-livraison de la story 014-f-conges : la prod demande ses congés dans Kadence, qui en devient l'outil officiel ; les managers décident des congés de leurs collaborateurs ; les congés entrent dans le cadre social et données personnelles |
 
 ## Le problème
 
@@ -45,7 +46,8 @@ Deux usages distincts, portés par deux rôles :
 
 ### Utilisateurs secondaires
 
-- **Équipe de prod** — saisit ses temps chaque jour ; consulte la roadmap pour savoir sur quoi elle sera dans les semaines à venir.
+- **Équipe de prod** — saisit ses temps chaque jour ; consulte la roadmap pour savoir sur quoi elle sera dans les semaines à venir ; demande ses congés dans l'outil.
+- **Managers** — toute personne désignée comme manager décide des demandes de congé de ses collaborateurs ; la direction le fait pour les personnes sans manager, ou à la place d'un manager.
 
 ### Hors cible explicite
 
@@ -127,7 +129,7 @@ Ce qu'on **refuse explicitement** de faire, et pourquoi :
 
 ## Risques externes
 
-- **Cadre social et données personnelles** : un outil de suivi des temps des salariés traite des données personnelles et peut être perçu comme un dispositif de contrôle de l'activité. Information préalable des salariés et, selon l'effectif, consultation du CSE à prévoir avant déploiement ; le principe 2 doit être explicite dans la communication. La fiche d'une personne, qui rend son travail saisi lisible de tous et sert aussi aux points individuels, entre dans ce cadre. Mitigation : cadrer le déploiement avec la direction / les RH avant le lancement.
+- **Cadre social et données personnelles** : un outil de suivi des temps des salariés traite des données personnelles et peut être perçu comme un dispositif de contrôle de l'activité. Information préalable des salariés et, selon l'effectif, consultation du CSE à prévoir avant déploiement ; le principe 2 doit être explicite dans la communication. La fiche d'une personne, qui rend son travail saisi lisible de tous et sert aussi aux points individuels, entre dans ce cadre, comme les congés, dont Kadence est l'outil officiel (demandes, décisions, droits et soldes). Mitigation : cadrer le déploiement avec la direction / les RH avant le lancement.
 - **Rejet par l'équipe** : si la saisie est perçue comme du flicage ou une corvée, l'hypothèse 1 tombe et toute la chaîne avec. Mitigation : principes 1 et 2, affichés et tenus.
 
 ## Horizons

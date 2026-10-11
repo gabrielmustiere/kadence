@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace App\Tests\Service;
 
 use App\Entity\User;
+use App\Enum\Type\HalfDay;
 use App\Enum\Type\HolidayCalendar;
+use App\Enum\Type\TimeOffStatus;
+use App\Enum\Type\TimeOffType;
 use App\Model\Timesheet\TimesheetCell;
 use App\Model\Timesheet\TimesheetDay;
 use App\Model\Timesheet\TimesheetRow;
@@ -15,6 +18,7 @@ use App\Service\TimesheetBuilder;
 use App\Tests\Support\CreatesFavorites;
 use App\Tests\Support\CreatesProjects;
 use App\Tests\Support\CreatesTimeEntries;
+use App\Tests\Support\CreatesTimeOff;
 use App\Tests\Support\CreatesUsers;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Clock\Test\ClockSensitiveTrait;
@@ -25,6 +29,7 @@ final class TimesheetBuilderTest extends KernelTestCase
     use CreatesFavorites;
     use CreatesProjects;
     use CreatesTimeEntries;
+    use CreatesTimeOff;
     use CreatesUsers;
 
     protected function setUp(): void
@@ -199,6 +204,37 @@ final class TimesheetBuilderTest extends KernelTestCase
         self::assertSame([null, null, null, null, null], array_map(static fn (TimesheetDay $day): ?string => $day->holiday, $grid->days));
         self::assertSame([false, false, false, false, false], array_map(static fn (TimesheetCell $cell): bool => $cell->locked, $grid->rows[0]->cells));
         self::assertSame(20, $grid->maxQuarters);
+    }
+
+    public function testDaysOffAreLockedOrHalvedNamedNeverForgottenAndProratedOutOfTheWeeklyMaximum(): void
+    {
+        $user = $this->createUser();
+        $lot = $this->createLot($this->createProject());
+        $this->createTimeOff($user, '2026-09-28', '2026-09-28', TimeOffStatus::Pending);
+        $this->createTimeOff($user, '2026-09-29', '2026-09-29', TimeOffStatus::Approved, TimeOffType::Rtt, HalfDay::Morning, HalfDay::Morning);
+        $this->createTimeOff($user, '2026-09-30', '2026-09-30', TimeOffStatus::Refused);
+
+        $grid = $this->build($user, [(int) $lot->getId()]);
+
+        self::assertSame(['Congé · CP · en attente', 'Congé · RTT (matin)', null, null, null], array_map(static fn (TimesheetDay $day): ?string => $day->timeOff?->label(), $grid->days));
+        self::assertSame([0, 2, 4, 4, 4], array_map(static fn (TimesheetDay $day): int => $day->capQuarters, $grid->days));
+        self::assertSame([false, true, false, false, false], array_map(static fn (TimesheetDay $day): bool => $day->forgotten, $grid->days));
+        self::assertSame([true, false, false, true, true], array_map(static fn (TimesheetCell $cell): bool => $cell->locked, $grid->rows[0]->cells));
+        self::assertSame(2, $grid->rows[0]->cells[1]->maxSelectable);
+        self::assertSame(14, $grid->maxQuarters);
+    }
+
+    public function testAHalfDayOffIsCompleteOnceHalfADayIsEntered(): void
+    {
+        $user = $this->createUser();
+        $lot = $this->createLot($this->createProject());
+        $this->createTimeOff($user, '2026-09-29', '2026-09-29', TimeOffStatus::Approved, TimeOffType::PaidLeave, HalfDay::Afternoon, HalfDay::Afternoon);
+        $this->createTimeEntry($user, $lot, '2026-09-29', 2);
+
+        $tuesday = $this->build($user)->days[1];
+
+        self::assertTrue($tuesday->isComplete());
+        self::assertFalse($tuesday->forgotten);
     }
 
     /**

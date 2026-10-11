@@ -74,6 +74,11 @@
             </section>
 
             <section>
+                <h2 class="mb-4 text-lg font-semibold tracking-tight text-heading">Absences</h2>
+                {{ include('person/_absences.html.twig') }}
+            </section>
+
+            <section>
                 <h2 class="mb-4 text-lg font-semibold tracking-tight text-heading">Temps saisi par projet</h2>
                 {% set entered = page.enteredProjects %}
                 {% if entered is empty %}
@@ -156,10 +161,16 @@
                                     {% for span in load.spans %}
                                         <li>{{ span.from|weekday }} {{ span.from|date('d/m/Y') }} → {{ span.to|weekday }} {{ span.to|date('d/m/Y') }} : {{ span.percent }} %</li>
                                     {% endfor %}
+                                    {% for bar in load.timeOff %}
+                                        <li>Congé du {{ bar.from|date('d/m/Y') }} au {{ bar.to|date('d/m/Y') }}</li>
+                                    {% endfor %}
                                 </ul>
                             </div>
                             <div class="roadmap-track relative min-h-11">
                                 {{ include('roadmap/_today.html.twig') }}
+                                {% for bar in load.timeOff %}
+                                    <div class="absolute inset-y-1.5 rounded-[3px] bg-neutral-tertiary hatch-brand" style="{{ bar.style }}" title="Congé" data-test="person-load-time-off" aria-hidden="true"></div>
+                                {% endfor %}
                                 {% for span in load.spans %}
                                     <div class="absolute top-1/2 flex h-6 -translate-y-1/2 items-center overflow-hidden rounded-[4px] border {{ span.overload ? 'border-danger-subtle bg-danger-soft text-fg-danger-strong' : 'border-brand-subtle bg-brand-softer text-fg-brand-strong' }}"
                                          style="{{ span.bar.style }}"

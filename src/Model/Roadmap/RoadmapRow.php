@@ -30,6 +30,7 @@ final readonly class RoadmapRow
      *                                                 then the people outside the team who entered time on it
      * @param int                     $overrunQuarters time entered beyond the estimate, 0 within it
      * @param LeafProgress|null       $progress        the progress in force on the leaf
+     * @param list<RoadmapAbsence>    $absences        the approved time off of the members of the team of the leaf
      */
     public function __construct(
         public Project $project,
@@ -51,6 +52,7 @@ final readonly class RoadmapRow
         public array $team = [],
         public int $overrunQuarters = 0,
         public ?LeafProgress $progress = null,
+        public array $absences = [],
     ) {
     }
 

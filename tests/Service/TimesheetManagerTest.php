@@ -7,12 +7,16 @@ namespace App\Tests\Service;
 use App\Entity\Lot;
 use App\Entity\TimeEntry;
 use App\Entity\User;
+use App\Enum\Type\HalfDay;
 use App\Enum\Type\HolidayCalendar;
+use App\Enum\Type\TimeOffStatus;
+use App\Enum\Type\TimeOffType;
 use App\Exception\TimeEntryRefusedException;
 use App\Repository\TimeEntryRepository;
 use App\Service\TimesheetManager;
 use App\Tests\Support\CreatesProjects;
 use App\Tests\Support\CreatesTimeEntries;
+use App\Tests\Support\CreatesTimeOff;
 use App\Tests\Support\CreatesUsers;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
@@ -23,6 +27,7 @@ final class TimesheetManagerTest extends KernelTestCase
     use ClockSensitiveTrait;
     use CreatesProjects;
     use CreatesTimeEntries;
+    use CreatesTimeOff;
     use CreatesUsers;
 
     protected function setUp(): void
@@ -118,6 +123,39 @@ final class TimesheetManagerTest extends KernelTestCase
 
         $this->manager()->record($belgian, $lot, new \DateTimeImmutable('2026-07-14'), 4);
         self::assertSame([4], $this->quartersOf($belgian, '2026-07-13', '2026-07-17'));
+    }
+
+    public function testNothingIsRecordedOnAWholeDayOffPendingOrApprovedUntilItIsRefusedOrCancelled(): void
+    {
+        $user = $this->createUser();
+        $lot = $this->createLot($this->createProject());
+        $request = $this->createTimeOff($user, '2026-09-28', '2026-09-28', TimeOffStatus::Pending);
+
+        try {
+            $this->manager()->record($user, $lot, new \DateTimeImmutable('2026-09-28'), 1);
+            self::fail('A day off is never recorded on.');
+        } catch (TimeEntryRefusedException $exception) {
+            self::assertSame('Le 28/09 est posé (Congé · CP · en attente) : on n\'y saisit pas de temps.', $exception->getMessage());
+        }
+
+        $request->refuse($user, new \DateTimeImmutable(), 'Non');
+        $this->entityManager()->flush();
+        $this->manager()->record($user, $lot, new \DateTimeImmutable('2026-09-28'), 1);
+        self::assertSame([1], $this->quartersOf($user, '2026-09-28', '2026-09-28'));
+    }
+
+    public function testAHalfDayOffLeavesHalfADayToEnter(): void
+    {
+        $user = $this->createUser();
+        $lot = $this->createLot($this->createProject());
+        $this->createTimeOff($user, '2026-09-29', '2026-09-29', TimeOffStatus::Approved, TimeOffType::Rtt, HalfDay::Morning, HalfDay::Morning);
+
+        $this->manager()->record($user, $lot, new \DateTimeImmutable('2026-09-29'), 2);
+
+        $this->expectException(TimeEntryRefusedException::class);
+        $this->expectExceptionMessage('Il ne reste que 0,5 j à saisir le 29/09.');
+
+        $this->manager()->record($user, $lot, new \DateTimeImmutable('2026-09-29'), 3);
     }
 
     public function testTheWeeklyMaximumLeavesHolidaysOut(): void

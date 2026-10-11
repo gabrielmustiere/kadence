@@ -8,6 +8,7 @@ use App\Entity\User;
 use App\Repository\UserRepository;
 use App\Tests\Support\CreatesProjects;
 use App\Tests\Support\CreatesTimeEntries;
+use App\Tests\Support\CreatesTimeOff;
 use App\Tests\Support\CreatesUsers;
 use Doctrine\Bundle\DoctrineBundle\DataCollector\DoctrineDataCollector;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -22,6 +23,7 @@ final class PersonControllerTest extends WebTestCase
     use ClockSensitiveTrait;
     use CreatesProjects;
     use CreatesTimeEntries;
+    use CreatesTimeOff;
     use CreatesUsers;
 
     private const array RESERVED = ['person-role', 'person-tags-competence', 'person-load', 'person-free-from', 'person-load-row', 'person-manager'];
@@ -208,6 +210,24 @@ final class PersonControllerTest extends WebTestCase
      * on 07/09–11/09 and 21/09–25/09, on « Maintenance » (Support) outside its team on 14/09–16/09, and at 50 % on
      * « Login » (Mobile, lot Front, 8 j) from 05/10.
      */
+    public function testTheTypeOfTheTimeOffShowsToThePersonAndTheDirectionOnly(): void
+    {
+        $client = self::createClient();
+        $person = $this->createUser();
+        $this->createTimeOff($person, '2026-11-16', '2026-11-20');
+
+        $client->loginUser($this->fixtureUserByEmail('prod@example.com'));
+        $client->request('GET', $this->url($person));
+        self::assertSelectorExists('[data-test="person-absences-upcoming"] [data-test="person-absence"]');
+        self::assertSelectorNotExists('[data-test="person-absence-type"]');
+
+        foreach ([$person, $this->fixtureUserByEmail('admin@example.com')] as $viewer) {
+            $client->loginUser($viewer);
+            $client->request('GET', $this->url($person));
+            self::assertSelectorTextContains('[data-test="person-absence-type"]', 'CP');
+        }
+    }
+
     private function createExample(): User
     {
         $alice = $this->createUser()->setFirstName('Alice')->setLastName('Martin');
@@ -253,6 +273,16 @@ final class PersonControllerTest extends WebTestCase
         self::assertInstanceOf(DoctrineDataCollector::class, $collector);
 
         return $collector->getQueryCount();
+    }
+
+    private function fixtureUserByEmail(string $email): User
+    {
+        $userRepository = self::getContainer()->get(UserRepository::class);
+        \assert($userRepository instanceof UserRepository);
+        $user = $userRepository->findOneByEmail($email);
+        self::assertNotNull($user);
+
+        return $user;
     }
 
     private function clientAs(string $email): KernelBrowser
