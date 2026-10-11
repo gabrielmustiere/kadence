@@ -1,0 +1,11 @@
+{#
+    A signal of a row as a badge, whose tooltip roadmap/_signal_tooltips.html.twig lays out given the same `prefix`.
+    Expects `row` and `signal`; `prefix` tells apart the tooltips of a row shown twice on a page, and `focusable` set to
+    false keeps the badge out of the tab order, as inside a summary, which may not hold a button. The overrun shows its
+    percent when the row knows it.
+#}
+{% set focusable = focusable ?? true %}
+{% set tooltip = (prefix ?? 'roadmap-signal') ~ '-' ~ (row.lot ? 'lot-' ~ row.lot.id : 'project-' ~ row.project.id) ~ '-' ~ signal.value %}
+<twig:Badge variant="{{ signal.variant }}" :as="focusable ? 'button' : 'div'" :type="focusable ? 'button' : null" class="cursor-help" aria-describedby="{{ tooltip }}" data-roadmap-tooltip="{{ tooltip }}" data-test="signal-{{ signal.value }}">
+    {{- signal.label }}{% if signal is same as(constant('App\\Enum\\Type\\RoadmapSignal::Overrun')) and row.overrunPercent is defined %} +{{ row.overrunPercent }} %{% endif -%}
+</twig:Badge>

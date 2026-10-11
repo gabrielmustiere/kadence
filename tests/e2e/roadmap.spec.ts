@@ -145,6 +145,28 @@ test('le récap d\'une feuille s\'ouvre au clavier', async ({ page }) => {
   await expect(leaf.locator('[data-test="roadmap-recap"]')).toBeHidden();
 });
 
+test('une pastille explique au survol et au clavier ce qu\'elle signifie et pourquoi elle s\'affiche', async ({ page }) => {
+  await login(page, 'prod@example.com');
+  await page.goto('/roadmap');
+  await projectRow(page).locator('summary').click();
+  const leaf = projectRow(page).locator('[data-test="roadmap-leaf"][data-title="Interrompue"]');
+  const signal = leaf.locator('[data-test="signal-team_to_review"]');
+  const tooltip = leaf.locator('[data-test="signal-tooltip-team_to_review"]');
+  await expect(tooltip).toBeHidden();
+
+  await signal.hover();
+  await expect(page.locator('[role="tooltip"]:visible')).toHaveCount(1);
+  await expect(tooltip).toBeVisible();
+  await expect(tooltip.locator('[data-test="signal-reason"]')).toContainText('Un membre de l\'équipe est désactivé');
+
+  await page.mouse.move(0, 0);
+  await expect(tooltip).toBeHidden();
+  await signal.focus();
+  await expect(tooltip).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(tooltip).toBeHidden();
+});
+
 test('une infobulle ouverte se ferme avant que Turbo ne mette la page en cache', async ({ page }) => {
   await login(page, 'prod@example.com');
   await page.goto('/roadmap');

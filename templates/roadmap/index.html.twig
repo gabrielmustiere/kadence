@@ -43,12 +43,13 @@
                                         <twig:ux:icon name="tabler:chevron-right" class="size-4 shrink-0 text-body-subtle transition-transform duration-200 group-open:rotate-90"/>
                                         <span class="text-sm font-semibold text-heading">{{ project.title }}</span>
                                         {% for signal in project.signals %}
-                                            <twig:Badge variant="{{ signal.variant }}" data-test="signal-{{ signal.value }}">{{ signal.label }}</twig:Badge>
+                                            {{ include('roadmap/_signal.html.twig', {row: project, focusable: false}) }}
                                         {% endfor %}
                                     </div>
                                 </div>
                                 <div class="roadmap-track relative min-h-12">
                                     {{ include('roadmap/_today.html.twig') }}
+                                    {{ include('roadmap/_signal_tooltips.html.twig', {row: project}) }}
                                     {% if project.span %}
                                         {{ include('roadmap/_bar.html.twig', {row: project, bar: project.span, kind: 'span', class: 'h-2.5 rounded-full bg-brand-medium', test: 'roadmap-bar-span'}) }}
                                     {% endif %}

@@ -7,7 +7,7 @@
         Aucune affectation à venir.
     </twig:EmptyState>
 {% else %}
-    <ul class="divide-y divide-default-subtle rounded-card border border-default bg-surface text-sm" data-test="person-upcoming">
+    <ul class="divide-y divide-default-subtle rounded-card border border-default bg-surface text-sm" data-controller="roadmap-tooltip" data-action="pointerover->roadmap-tooltip#show pointerout->roadmap-tooltip#leave focusin->roadmap-tooltip#show focusout->roadmap-tooltip#leave scroll@window->roadmap-tooltip#hide keydown.esc@window->roadmap-tooltip#hide turbo:before-cache@document->roadmap-tooltip#hide" data-test="person-upcoming">
         {% for row in page.upcoming %}
             <li class="grid grid-cols-1 gap-x-6 gap-y-2.5 px-5 py-4 sm:grid-cols-[minmax(0,1fr)_auto]" data-test="person-upcoming-entry" data-leaf="{{ row.leafPath }}">
                 <div class="min-w-0">
@@ -16,9 +16,10 @@
                     {% if row.signals is not empty %}
                         <div class="mt-2 flex flex-wrap gap-1.5">
                             {% for signal in row.signals %}
-                                <twig:Badge variant="{{ signal.variant }}" data-test="signal-{{ signal.value }}">{{ signal.label }}</twig:Badge>
+                                {{ include('roadmap/_signal.html.twig', {prefix: 'upcoming-signal'}) }}
                             {% endfor %}
                         </div>
+                        {{ include('roadmap/_signal_tooltips.html.twig', {prefix: 'upcoming-signal'}) }}
                     {% endif %}
                 </div>
                 <div class="flex flex-col gap-1.5 sm:items-end">

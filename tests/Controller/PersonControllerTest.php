@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Controller;
 
 use App\Entity\User;
+use App\Enum\Type\RoadmapSignal;
 use App\Repository\UserRepository;
 use App\Tests\Support\CreatesProjects;
 use App\Tests\Support\CreatesTimeEntries;
@@ -133,6 +134,26 @@ final class PersonControllerTest extends WebTestCase
         $crawler = $this->clientAs('prod@example.com')->request('GET', $this->url($alice));
         self::assertCount(0, $crawler->filter('[data-test="signal-to_replan"]'));
         self::assertCount(0, $crawler->filter('[data-test="person-load-span"]'));
+    }
+
+    public function testSignalsOfTheUpcomingListAndOfTheFriezeEachHaveTheirTooltip(): void
+    {
+        $alice = $this->createUser();
+        $project = $this->createProject();
+        foreach (['Première', 'Seconde'] as $title) {
+            $this->planLot($this->createLot($project, 5, $alice, title: $title), new \DateTimeImmutable('2026-10-05'), [[$alice, 100]]);
+        }
+
+        $crawler = $this->clientAs('lead@example.com')->request('GET', $this->url($alice));
+
+        $friezeSignal = $crawler->filter('[data-test="person-leaf"][data-title="Première"] [data-test="signal-to_replan"]');
+        $upcomingSignal = $crawler->filter('[data-test="person-upcoming"][data-controller="roadmap-tooltip"] [data-leaf="Première"] [data-test="signal-to_replan"]');
+        self::assertSame('button', $friezeSignal->nodeName());
+        self::assertSame('button', $upcomingSignal->nodeName());
+        self::assertNotSame($friezeSignal->attr('data-roadmap-tooltip'), $upcomingSignal->attr('data-roadmap-tooltip'), 'The leaf shows twice on the page.');
+        foreach ([$friezeSignal, $upcomingSignal] as $signal) {
+            self::assertSame('Pourquoi : ' . RoadmapSignal::ToReplan->reason(), $crawler->filter('#' . $signal->attr('data-roadmap-tooltip') . ' [data-test="signal-reason"]')->text());
+        }
     }
 
     public function testFreeDayIsUnknownWhileALeafOfTheirTeamsHasNoEnd(): void

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Controller;
 
 use App\Entity\User;
+use App\Enum\Type\RoadmapSignal;
 use App\Repository\UserRepository;
 use App\Tests\Support\CreatesProgress;
 use App\Tests\Support\CreatesProjects;
@@ -229,6 +230,31 @@ final class RoadmapControllerTest extends WebTestCase
         self::assertSame('aucune saisie', $recap('Sans début', 'roadmap-recap-period'));
         self::assertSame('sans équipe', $recap('Sans équipe', 'roadmap-recap-team'));
         self::assertCount(1, $crawler->filter('[data-test="roadmap-project"][data-title="Évolution du portail"] [data-test="signal-unsplit"]'));
+    }
+
+    public function testEachSignalSaysInATooltipWhatItMeansAndWhyItShows(): void
+    {
+        $client = $this->clientAs('prod@example.com');
+        $project = $this->createProject();
+        $this->createLot($project, 5, $this->createUser(), title: 'Sans début');
+
+        $crawler = $client->request('GET', '/roadmap');
+
+        $projectRow = $crawler->filter(\sprintf('[data-test="roadmap-project"][data-title="%s"]', $project->getTitle()));
+        $leafSignal = $projectRow->filter('[data-title="Sans début"] [data-test="signal-without_start"]');
+        $leafTooltip = $projectRow->filter('[data-title="Sans début"] [data-test="signal-tooltip-without_start"]');
+        self::assertSame('button', $leafSignal->nodeName());
+        self::assertSame($leafTooltip->attr('id'), $leafSignal->attr('data-roadmap-tooltip'));
+        self::assertSame($leafTooltip->attr('id'), $leafSignal->attr('aria-describedby'));
+        self::assertSame('Sans début', $leafTooltip->filter('p')->first()->text());
+        self::assertSame(RoadmapSignal::WithoutStart->meaning(), $leafTooltip->filter('[data-test="signal-meaning"]')->text());
+        self::assertSame('Pourquoi : ' . RoadmapSignal::WithoutStart->reason(), $leafTooltip->filter('[data-test="signal-reason"]')->text());
+
+        $projectSignal = $projectRow->filter('summary [data-test="signal-partial_planning"]');
+        $projectTooltip = $projectRow->filter('summary [data-test="signal-tooltip-partial_planning"]');
+        self::assertSame('div', $projectSignal->nodeName(), 'A summary may not hold a button.');
+        self::assertSame($projectTooltip->attr('id'), $projectSignal->attr('data-roadmap-tooltip'));
+        self::assertSame('Pourquoi : ' . RoadmapSignal::PartialPlanning->reason(), $projectTooltip->filter('[data-test="signal-reason"]')->text());
     }
 
     public function testOverloadIsShownToLeadsAndAbsentFromThePageOfProd(): void

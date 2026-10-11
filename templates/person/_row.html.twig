@@ -7,12 +7,13 @@
         <div class="flex flex-wrap items-center gap-1.5">
             <span class="text-[13px] font-medium text-heading">{{ row.leafPath }}</span>
             {% for signal in row.signals %}
-                <twig:Badge variant="{{ signal.variant }}" data-test="signal-{{ signal.value }}">{{ signal.label }}</twig:Badge>
+                {{ include('roadmap/_signal.html.twig') }}
             {% endfor %}
         </div>
     </div>
     <div class="roadmap-track relative min-h-12">
         {{ include('roadmap/_today.html.twig') }}
+        {{ include('roadmap/_signal_tooltips.html.twig') }}
         {% set bars = {tooltip_template: 'person/_tooltip.html.twig'} %}
         {% if row.realized %}{{ include('roadmap/_bar.html.twig', bars|merge({bar: row.realized, kind: 'realized', class: 'h-3.5 rounded-[4px] bg-brand', test: 'person-bar-realized'})) }}{% endif %}
         {% if row.overrun %}{{ include('roadmap/_bar.html.twig', bars|merge({bar: row.overrun, kind: 'overrun', class: 'h-3.5 rounded-[4px] bg-danger', test: 'person-bar-overrun'})) }}{% endif %}

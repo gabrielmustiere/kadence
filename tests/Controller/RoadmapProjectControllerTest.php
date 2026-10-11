@@ -6,6 +6,7 @@ namespace App\Tests\Controller;
 
 use App\Entity\Project;
 use App\Entity\User;
+use App\Enum\Type\RoadmapSignal;
 use App\Repository\UserRepository;
 use App\Tests\Support\CreatesProgress;
 use App\Tests\Support\CreatesProjects;
@@ -149,6 +150,26 @@ final class RoadmapProjectControllerTest extends WebTestCase
         self::assertCount(1, $crawler->filter('[data-test="project-page-estimate"] [data-test="estimate-partial"]'));
         self::assertCount(0, $crawler->filter('[data-test="roadmap-leaf"][data-title="Cadrage"] [data-test^="roadmap-bar"]'));
         self::assertSame(['Cadrage'], $crawler->filter('[data-test="timeline-entry-leaf"]')->each(static fn (Crawler $leafPath): string => $leafPath->text()));
+    }
+
+    public function testSignalsOfTheHeaderAndOfTheFriezeEachHaveTheirTooltip(): void
+    {
+        $client = $this->clientAs('prod@example.com');
+        $alice = $this->createUser();
+        $project = $this->createProject();
+        $this->createTimeEntry($alice, $this->createLot($project, 5, $alice, title: 'Sans début'), '2026-09-30', 4);
+
+        $crawler = $client->request('GET', $this->url($project));
+
+        $headerSignal = $crawler->filter('header [data-controller="roadmap-tooltip"] [data-test="signal-partial_planning"]');
+        $friezeSignal = $crawler->filter('[data-test="roadmap"] [data-test="signal-partial_planning"]');
+        self::assertSame('button', $headerSignal->nodeName());
+        self::assertSame('button', $friezeSignal->nodeName());
+        self::assertNotSame($headerSignal->attr('data-roadmap-tooltip'), $friezeSignal->attr('data-roadmap-tooltip'), 'The project shows its signals twice on the page.');
+        foreach ([$headerSignal, $friezeSignal] as $signal) {
+            self::assertSame('Pourquoi : ' . RoadmapSignal::PartialPlanning->reason(), $crawler->filter('#' . $signal->attr('data-roadmap-tooltip') . ' [data-test="signal-reason"]')->text());
+        }
+        self::assertSame(RoadmapSignal::WithoutStart->meaning(), $crawler->filter('[data-test="roadmap-leaf"][data-title="Sans début"] [data-test="signal-tooltip-without_start"] [data-test="signal-meaning"]')->text());
     }
 
     public function testFriezeSpansTheProjectAndOpensUnzoomedWithoutRememberingItsZoom(): void

@@ -15,12 +15,13 @@
                 <span class="text-[13px] font-semibold text-heading">{{ row.title }}</span>
             {% endif %}
             {% for signal in row.signals %}
-                <twig:Badge variant="{{ signal.variant }}" data-test="signal-{{ signal.value }}">{{ signal.label }}{% if signal is same as(constant('App\\Enum\\Type\\RoadmapSignal::Overrun')) %} +{{ row.overrunPercent }} %{% endif %}</twig:Badge>
+                {{ include('roadmap/_signal.html.twig') }}
             {% endfor %}
         </div>
     </div>
     <div class="roadmap-track relative min-h-12">
         {{ include('roadmap/_today.html.twig') }}
+        {{ include('roadmap/_signal_tooltips.html.twig') }}
         {% if row.leaf %}
             {{ include('roadmap/_recap.html.twig') }}
             {% if row.realized %}{{ include('roadmap/_bar.html.twig', {bar: row.realized, kind: 'realized', class: 'h-3.5 rounded-[4px] bg-brand', test: 'roadmap-bar-realized'}) }}{% endif %}
