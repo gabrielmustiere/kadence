@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "title": "Parler la même langue sur tous les écrans : « lot » à la place de « feuille », un seul mot et une seule unité par notion",
+  "created": "2026-10-12",
+  "updated": "2026-10-12",
+  "tags": [
+    "vocabulaire",
+    "ux"
+  ],
+  "changelog": [
+    {
+      "date": "2026-10-12",
+      "type": "Création",
+      "description": "Pitch cadré hors backlog, issu de l'audit UX du 2026-10-12 : choix utilisateur « lot » partout à la place de « feuille », lexique d'un mot par notion (Saisi, Dépassement, Estimation, Fin calculée, Équipe d'un lot, Pôle), écart à l'estimation toujours en jours suivis de sa part de l'estimation, à livrer avant les stories 016, 017 et 018."
+    },
+    {
+      "date": "2026-10-12",
+      "type": "Planification",
+      "description": "Plan technique proposé, à valider avec le pitch avant implémentation : libellés réécrits en place dans les gabarits, RoadmapSignal, TagCategory et les messages de contraintes, filtre Twig gap appuyé sur Quarters::percentOf, test garde-fou sur les pages rendues, aucune migration."
+    }
+  ]
+}

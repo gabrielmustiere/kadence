@@ -1,0 +1,27 @@
+{
+  "version": 2,
+  "title": "Lire et gérer un projet sur une seule page, chacun selon ses droits",
+  "created": "2026-10-12",
+  "updated": "2026-10-12",
+  "tags": [
+    "fiche-projet",
+    "projets"
+  ],
+  "changelog": [
+    {
+      "date": "2026-10-12",
+      "type": "Création",
+      "description": "Pitch cadré hors backlog, issu de l'audit UX du 2026-10-12 : choix utilisateur d'une seule page par projet, actions selon les droits, à l'adresse de la page de gestion (l'ancienne fiche redirige) ; en-tête au total à terme (« au moins » quand un restant est inconnu), tableau des lots unique, journal replié au-delà de trois mois ; revient sur les règles 3, 4 et 16 et le hors-scope de la story 010, sur la règle 4 et le hors-scope « coût projeté cumulé » de la story 012."
+    },
+    {
+      "date": "2026-10-12",
+      "type": "Planification",
+      "description": "Plan technique proposé, à valider avec le pitch avant implémentation : app_project_show sert la page unique (buildProject + summarize), redirection 301 de app_roadmap_project, fusion de _lot_row et _consumption_row dans un tableau unique, méthodes de projeté sur ProjectSummary et LotSummary, journal replié par <details>, origine « roadmap » portée par les formulaires de la page, zoom de la frise réappliqué après le morph Turbo."
+    },
+    {
+      "date": "2026-10-12",
+      "type": "Alignement",
+      "description": "Pitch aligné sur le lexique de la story 015 à la relecture croisée : « responsable à désigner / à remplacer », « estimation partielle », écart au format « +72,25 j (+19 %) » ; question ouverte ajoutée sur le « Projeté » à l'échelle du projet."
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "version": 2,
+  "title": "Lire sur la roadmap, sans rien survoler, quand chaque projet et chaque lot se termine",
+  "created": "2026-10-12",
+  "updated": "2026-10-12",
+  "tags": [
+    "roadmap"
+  ],
+  "changelog": [
+    {
+      "date": "2026-10-12",
+      "type": "Création",
+      "description": "Pitch cadré hors backlog, issu de l'audit UX du 2026-10-12 : ligne de date sous le titre de chaque projet, lot découpé et lot de la roadmap (fin calculée, fin inconnue avec les lots en cause et leurs raisons, non planifié avec ce qui manque, pas encore découpé), repère au bord pour une barre hors de la période affichée, colonne des titres resserrée sur téléphone ; prépare sans la réaliser la ligne roadmap-interne (ni date annoncée, ni liste de jalons)."
+    },
+    {
+      "date": "2026-10-12",
+      "type": "Planification",
+      "description": "Plan technique proposé, à valider avec le pitch avant implémentation : aucun calcul ni requête nouvelle, RoadmapRow::unplannedLeaves() et RoadmapWindow::isBefore()/isAfter(), partiels _end.html.twig (ligne de date, infobulle via _unknown_ends.html.twig, aria-describedby) et _outside.html.twig, variable CSS --roadmap-labels (11rem sous md, 20rem au-delà) dans les sept grilles des frises de la roadmap, de la page d'un projet et de celle d'une personne."
+    },
+    {
+      "date": "2026-10-12",
+      "type": "Alignement",
+      "description": "Pitch aligné sur le lexique de la story 015 à la relecture croisée : « fin calculée » à la place de « date projetée », pastille « planification partielle » dans la question ouverte."
+    }
+  ]
+}

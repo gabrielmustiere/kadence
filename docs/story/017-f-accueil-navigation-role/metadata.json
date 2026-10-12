@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "title": "Voir à l'accueil ce qui attend chacun, et trouver dans le menu le quotidien, le pilotage et l'administration",
+  "created": "2026-10-12",
+  "updated": "2026-10-12",
+  "tags": [
+    "navigation",
+    "accueil",
+    "equipe"
+  ],
+  "changelog": [
+    {
+      "date": "2026-10-12",
+      "type": "Création",
+      "description": "Pitch cadré hors backlog, issu de l'audit UX du 2026-10-12 ; choix utilisateur : accueil « À faire » par rôle, accueil et menu dans une même story ; menu en trois zones (quotidien, Pilotage ouvert à tous, Administration réservée à la direction), page Personnes ouverte à tous qui absorbe la page Équipe, droits à congés déplacés dans Administration, arrivée toujours sur Ma semaine ; revient sur la section « Administration » unique et le groupe « Pilotage » écarté par la story 005."
+    },
+    {
+      "date": "2026-10-12",
+      "type": "Planification",
+      "description": "Plan technique proposé, à valider avec le pitch avant implémentation : nav_section() enrichie (home, people, entitlements avant time_off), TeamList ouverte à tous avec colonnes, filtres et actions par rôle, TeamController sous /personnes avec trois redirections permanentes depuis /equipe, HomeAgendaBuilder qui réutilise RoadmapBuilder::build() et une règle des jours extraite de TimesheetBuilder, logout.target vers /login ; livraison en cinq tranches commitables."
+    }
+  ]
+}
