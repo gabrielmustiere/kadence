@@ -78,8 +78,8 @@ final class LotType extends AbstractType
                     'entry_options' => ['label' => false, 'people' => [...$active, ...self::inactiveMembers($builder->getData())]],
                     'allow_add' => true,
                     'allow_delete' => true,
-                    'prototype_data' => new LotMemberInput(),
-                    'delete_empty' => static fn (?LotMemberInput $member): bool => null === $member || null === $member->user,
+                    'prototype' => false,
+                    'delete_empty' => true === $options['keep_empty_members'] ? false : static fn (?LotMemberInput $member): bool => null === $member || null === $member->user,
                     'required' => false,
                     'error_bubbling' => false,
                 ]);
@@ -94,11 +94,13 @@ final class LotType extends AbstractType
             'with_owner' => true,
             'with_planning' => false,
             'current_owner' => null,
+            'keep_empty_members' => false,
         ]);
         $resolver->setAllowedTypes('with_estimate', 'bool');
         $resolver->setAllowedTypes('with_owner', 'bool');
         $resolver->setAllowedTypes('with_planning', 'bool');
         $resolver->setAllowedTypes('current_owner', ['null', User::class]);
+        $resolver->setAllowedTypes('keep_empty_members', 'bool');
     }
 
     /**

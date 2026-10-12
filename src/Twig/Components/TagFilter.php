@@ -10,11 +10,15 @@ use App\Repository\TagRepository;
 use Symfony\UX\TwigComponent\Attribute\AsTwigComponent;
 
 /**
- * The tag filter above the team of a leaf: one list per category, read by the tag-filter Stimulus controller.
+ * The tag filter above the team of a leaf: one list per category, each bound to the tagFilter prop of the live lot form
+ * that holds it.
  */
 #[AsTwigComponent]
 final class TagFilter
 {
+    /** @var array<string, string> the tag id chosen in each category, '' for any, by category value */
+    public array $selected = [];
+
     public function __construct(
         private readonly TagRepository $tagRepository,
     ) {

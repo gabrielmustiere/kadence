@@ -10,7 +10,7 @@ use App\Entity\Project;
 use App\Entity\User;
 use App\Exception\LotHasTimeEntriesException;
 use App\Exception\LotProgressRefusedException;
-use App\Form\LotType;
+use App\Form\LotFormFactory;
 use App\Model\Quarters;
 use App\Model\Week;
 use App\Repository\TimeEntryRepository;
@@ -18,6 +18,7 @@ use App\Security\Voter\LotVoter;
 use App\Service\LotProgressManager;
 use App\Service\ProjectManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
@@ -31,6 +32,7 @@ final class LotController extends AbstractController
 
     public function __construct(
         private readonly ProjectManager $projectManager,
+        private readonly LotFormFactory $lotFormFactory,
     ) {
     }
 
@@ -38,12 +40,11 @@ final class LotController extends AbstractController
     #[IsGranted('ROLE_LEAD')]
     public function new(Request $request, Project $project): Response
     {
-        $input = LotInput::forLotOf($project);
-        $form = $this->createForm(LotType::class, $input, ['with_planning' => true]);
+        $form = $this->lotFormFactory->forNewLot($project);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $lot = $this->projectManager->addLot($project, $input);
+            $lot = $this->projectManager->addLot($project, self::inputOf($form));
             $this->addFlash('success', \sprintf('Le lot « %s » est ajouté.', $lot->getTitle()));
 
             return $request->request->has(self::ADD_ANOTHER)
@@ -62,13 +63,12 @@ final class LotController extends AbstractController
             throw $this->createNotFoundException('Un sous-lot ne peut pas être découpé.');
         }
 
-        $input = LotInput::forSubLotOf($parent);
         $takesOver = $parent->isLeaf();
-        $form = $this->createForm(LotType::class, $input, ['current_owner' => $input->owner, 'with_planning' => true]);
+        $form = $this->lotFormFactory->forNewSubLot($parent);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $subLot = $this->projectManager->addSubLot($parent, $input);
+            $subLot = $this->projectManager->addSubLot($parent, self::inputOf($form));
             $this->addFlash('success', \sprintf('Le sous-lot « %s » est ajouté.', $subLot->getTitle()));
 
             return $request->request->has(self::ADD_ANOTHER)
@@ -93,17 +93,11 @@ final class LotController extends AbstractController
             ? $this->generateUrl('app_project_show', ['id' => $lot->getProject()->getId()])
             : $this->generateUrl('app_roadmap_week', ['week' => $back->iso()]);
 
-        $input = LotInput::fromLot($lot);
-        $form = $this->createForm(LotType::class, $input, [
-            'with_estimate' => $lot->isLeaf(),
-            'with_owner' => $lot->isLeaf() && $this->isGranted('ROLE_LEAD'),
-            'with_planning' => $lot->isLeaf() && $this->isGranted('ROLE_LEAD'),
-            'current_owner' => $lot->getOwner(),
-        ]);
+        $form = $this->lotFormFactory->forLot($lot);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $this->projectManager->updateLot($lot, $input);
+            $this->projectManager->updateLot($lot, self::inputOf($form));
             $this->addFlash('success', \sprintf('« %s » est mis à jour.', $lot->getTitle()));
 
             return $this->redirect($backPath);
@@ -157,5 +151,13 @@ final class LotController extends AbstractController
         }
 
         return $this->redirectToRoute('app_project_show', ['id' => $lot->getProject()->getId()]);
+    }
+
+    private static function inputOf(FormInterface $form): LotInput
+    {
+        $input = $form->getData();
+        \assert($input instanceof LotInput);
+
+        return $input;
     }
 }

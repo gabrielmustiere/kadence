@@ -1,0 +1,59 @@
+{% set offered = this.offeredPeople %}
+{% set team = this.team %}
+{% set tag_filter = this.tagFilter %}
+<div {{ attributes }}>
+    {{ form_start(form, {attr: {'data-model': 'on(change)|*', 'data-test': 'lot-form'}}) }}
+        <div class="divide-y divide-default-subtle">
+            <twig:FormSection title="Présentation" description="Ce que recouvre la partie, tel que l'équipe la lira dans sa semaine." class="pt-0">
+                {{ form_row(form.title) }}
+                {{ form_row(form.description) }}
+            </twig:FormSection>
+            {% if form.estimateDays is defined or form.owner is defined %}
+                <twig:FormSection :title="form.owner is defined ? 'Estimation et responsable' : 'Estimation'">
+                    <div class="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
+                        {% if form.estimateDays is defined %}{{ form_row(form.estimateDays) }}{% endif %}
+                        {% if form.owner is defined %}{{ form_row(form.owner) }}{% endif %}
+                    </div>
+                </twig:FormSection>
+            {% endif %}
+            {% if form.startDate is defined %}
+                {% set members = form.members %}
+                <div class="divide-y divide-default-subtle" data-test="lot-planning">
+                    <twig:FormSection title="Planification" description="La date de début et l'équipe dessinent la feuille sur la roadmap.">
+                        <div class="sm:w-1/2 sm:pe-3">{{ form_row(form.startDate) }}</div>
+                    </twig:FormSection>
+                    <twig:FormSection title="Équipe" description="Le responsable fait toujours partie de l'équipe.">
+                        <twig:TagFilter :selected="tag_filter"/>
+                        <span class="mb-2 block text-[13px] font-medium text-heading">{{ members.vars.label }}</span>
+                        {{ form_errors(members) }}
+                        <ul class="space-y-2" data-test="lot-members">
+                            {% for member in members %}
+                                {{ include('lot/_member_row.html.twig') }}
+                            {% endfor %}
+                        </ul>
+                        {% do members.setRendered %}
+                        <twig:Button type="button" size="sm" variant="outline" class="mt-3" data-action="live#action" data-live-action-param="addMember" data-test="lot-member-add">
+                            <twig:ux:icon name="tabler:user-plus" class="size-4"/>
+                            Ajouter un membre
+                        </twig:Button>
+                        {% if team is not empty %}
+                            <p class="mt-4 text-[13px] leading-relaxed text-body" aria-live="polite" data-test="lot-team">
+                                Équipe enregistrée :
+                                {% for line in team %}
+                                    <span class="whitespace-nowrap text-heading">{{ line.person.firstName }} {{ line.person.lastName }}{% if line.owner %} (responsable){% endif %} · {{ line.share }} %</span>{{ loop.last ? '' : ',' }}
+                                {% endfor %}
+                            </p>
+                        {% endif %}
+                    </twig:FormSection>
+                </div>
+            {% endif %}
+        </div>
+        <div class="-mx-6 -mb-6 mt-2 flex flex-wrap items-center gap-3 rounded-b-card border-t border-default bg-neutral-secondary-soft px-6 py-4">
+            <twig:Button type="submit" data-test="lot-submit">{{ submitLabel }}</twig:Button>
+            {% if addAnother %}
+                <twig:Button type="submit" variant="outline" name="{{ constant('App\\Controller\\LotController::ADD_ANOTHER') }}" value="1" data-test="lot-submit-add-another">Enregistrer et ajouter un autre</twig:Button>
+            {% endif %}
+            <twig:Button as="a" variant="ghost" href="{{ cancelPath }}">Annuler</twig:Button>
+        </div>
+    {{ form_end(form) }}
+</div>

@@ -369,7 +369,7 @@ final class LotControllerTest extends WebTestCase
         self::assertSame([[$lead->getId(), 50]], $this->team($this->reloadLot($lot)), 'The owner keeps the share they had.');
     }
 
-    public function testTheLeadSeesTheTagsOfEachPersonOfferedForTheTeamAndCanFilterOnThem(): void
+    public function testTheLeadSeesTheTagsOfEachPersonOfferedForTheTeamAndTheFilterOnThem(): void
     {
         $client = $this->clientAs('lead@example.com');
         $skill = $this->createTag(TagCategory::TechnicalSkill);
@@ -383,12 +383,9 @@ final class LotControllerTest extends WebTestCase
 
         $option = $crawler->filter(\sprintf('[data-test="lot-member-row"] [data-test="lot-member-user"] option[value="%d"]', $member->getId()));
         self::assertSame(\sprintf('Test User — %s · %s · %s', $teamType->getLabel(), $skill->getLabel(), $experience->getLabel()), $option->text());
-        self::assertEqualsCanonicalizing([(string) $skill->getId(), (string) $experience->getId(), (string) $teamType->getId()], explode(' ', (string) $option->attr('data-tags')));
         $untaggedOption = $crawler->filter(\sprintf('[data-test="lot-member-row"] [data-test="lot-member-user"] option[value="%d"]', $untagged->getId()));
         self::assertSame('Test User', $untaggedOption->text());
-        self::assertSame('', $untaggedOption->attr('data-tags'));
 
-        self::assertSame('tag-filter', $crawler->filter('[data-test="lot-planning"]')->attr('data-controller'));
         self::assertCount(1, $crawler->filter(\sprintf('[data-test="lot-tag-filter-competence"] option[value="%d"]', $skill->getId())));
         self::assertCount(1, $crawler->filter(\sprintf('[data-test="lot-tag-filter-equipe"] option[value="%d"]', $teamType->getId())));
     }
@@ -436,21 +433,9 @@ final class LotControllerTest extends WebTestCase
         $crawler = $client->request('GET', '/lots/' . $lot->getId() . '/modifier');
         self::assertCount(1, $crawler->filter('[data-test="lot-member-row"] ' . \sprintf('[data-test="lot-member-user"] option[value="%d"]', $member->getId())));
         self::assertCount(0, $crawler->filter($option));
-        self::assertStringNotContainsString(\sprintf('value=&quot;%d&quot;', $former->getId()), (string) $crawler->filter('[data-controller="form-collection"]')->attr('data-form-collection-prototype-value'));
 
         $crawler = $client->request('GET', '/lots/' . $withFormer->getId() . '/modifier');
         self::assertStringContainsString('désactivée', $crawler->filter($option)->text());
-    }
-
-    public function testAMemberAddedToTheTeamGivesAFullShareByDefault(): void
-    {
-        $client = $this->clientAs('lead@example.com');
-        $lot = $this->createLot($this->createProject(), 5);
-
-        $crawler = $client->request('GET', '/lots/' . $lot->getId() . '/modifier');
-        $prototype = (string) $crawler->filter('[data-controller="form-collection"]')->attr('data-form-collection-prototype-value');
-
-        self::assertStringContainsString('<option value="100" selected="selected">100 %</option>', $prototype);
     }
 
     public function testAPersonAppearsOnlyOnceInATeam(): void

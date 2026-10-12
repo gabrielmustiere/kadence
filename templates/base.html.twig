@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     {# Turbo 8 : pas de préchargement au survol (évite notamment un GET /logout au survol) #}
     <meta name="turbo-prefetch" content="false">
+    {# Une action qui revient sur sa page la met à jour en place, sans perdre le défilement #}
+    <meta name="turbo-refresh-method" content="morph">
+    <meta name="turbo-refresh-scroll" content="preserve">
+    {% block turbo_meta %}{% endblock %}
     <meta name="theme-color" content="#faf9f7" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#0f0e0c" media="(prefers-color-scheme: dark)">
     <title>{% block title %}Kadence{% endblock %}</title>

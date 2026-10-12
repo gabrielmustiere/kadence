@@ -4,16 +4,12 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Dto\TeamListFilter;
 use App\Dto\TeamMemberInput;
 use App\Entity\User;
 use App\Entity\WeeklyMax;
 use App\Exception\LastActiveDirectorException;
-use App\Exception\ManagerWithActiveReportsException;
-use App\Form\TeamFilterType;
 use App\Form\TeamMemberType;
 use App\Model\Week;
-use App\Repository\UserRepository;
 use App\Repository\WeeklyMaxRepository;
 use App\Service\TeamManager;
 use App\Service\WeeklyMaxManager;
@@ -40,17 +36,9 @@ final class TeamController extends AbstractController
     }
 
     #[Route('', name: 'app_team_index', methods: ['GET'])]
-    public function index(Request $request, UserRepository $userRepository): Response
+    public function index(): Response
     {
-        $filter = new TeamListFilter();
-        $filterForm = $this->createForm(TeamFilterType::class, $filter);
-        $filterForm->handleRequest($request);
-
-        return $this->render('team/index.html.twig', [
-            'members' => $userRepository->findForTeamList($filter),
-            'filter_form' => $filterForm,
-            'filtered' => [] !== $filter->tags() || null !== $filter->manager,
-        ]);
+        return $this->render('team/index.html.twig');
     }
 
     #[Route('/nouveau', name: 'app_team_new', methods: ['GET', 'POST'])]
@@ -109,32 +97,6 @@ final class TeamController extends AbstractController
         $this->addFlash('success', \sprintf('La valeur du maximum hebdomadaire de %s est supprimée.', $user->getFirstName()));
 
         return $this->redirectToRoute('app_team_edit', ['id' => $user->getId()]);
-    }
-
-    #[Route('/{id}/desactiver', name: 'app_team_deactivate', requirements: ['id' => '\d+'], methods: ['POST'])]
-    public function deactivate(Request $request, User $user): Response
-    {
-        $this->denyUnlessValidCsrfToken($request, $user);
-
-        try {
-            $this->teamManager->deactivate($user);
-            $this->addFlash('success', \sprintf('Le compte de %s %s est désactivé.', $user->getFirstName(), $user->getLastName()));
-        } catch (LastActiveDirectorException|ManagerWithActiveReportsException $exception) {
-            $this->addFlash('error', $exception->getMessage());
-        }
-
-        return $this->redirectToRoute('app_team_index');
-    }
-
-    #[Route('/{id}/reactiver', name: 'app_team_reactivate', requirements: ['id' => '\d+'], methods: ['POST'])]
-    public function reactivate(Request $request, User $user): Response
-    {
-        $this->denyUnlessValidCsrfToken($request, $user);
-
-        $this->teamManager->reactivate($user);
-        $this->addFlash('success', \sprintf('Le compte de %s %s est réactivé.', $user->getFirstName(), $user->getLastName()));
-
-        return $this->redirectToRoute('app_team_index');
     }
 
     #[Route('/{id}/mot-de-passe-provisoire', name: 'app_team_reset_password', requirements: ['id' => '\d+'], methods: ['POST'])]

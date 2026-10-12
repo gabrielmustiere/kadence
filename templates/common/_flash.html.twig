@@ -1,0 +1,31 @@
+{#
+    A flash message. Expects `type` and `message`; `alert` set to false leaves the role out of a template, which the
+    flash-stack controller gives it once shown.
+#}
+{% set flash_styles = {
+    'success': { icon: 'tabler:circle-check-filled',    iconClass: 'text-success', title: 'Succès !' },
+    'error':   { icon: 'tabler:circle-x-filled',        iconClass: 'text-danger',  title: 'Erreur' },
+    'warning': { icon: 'tabler:alert-triangle-filled',  iconClass: 'text-warning', title: 'Attention' },
+    'info':    { icon: 'tabler:info-circle-filled',     iconClass: 'text-brand',   title: 'Information' },
+    'notice':  { icon: 'tabler:info-circle-filled',     iconClass: 'text-brand',   title: 'Information' }
+} %}
+{% set style = flash_styles[type] ?? flash_styles['info'] %}
+<div data-controller="flash-messages"
+     data-flash-messages-type-value="{{ type }}"
+     data-flash-messages-auto-close-value="true"
+     data-flash-messages-delay-value="5000"
+     data-action="mouseenter->flash-messages#pauseAutoClose mouseleave->flash-messages#resumeAutoClose focusin->flash-messages#pauseAutoClose focusout->flash-messages#resumeAutoClose"
+     {% if alert ?? true %}role="alert"{% endif %}
+     class="pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-card border border-default bg-surface/95 p-4 shadow-lg backdrop-blur transition duration-300 ease-out opacity-100 translate-y-0 sm:translate-x-0 starting:opacity-0 starting:translate-y-2 starting:sm:translate-x-2 starting:sm:translate-y-0">
+    <twig:ux:icon name="{{ style.icon }}" class="mt-px size-5 shrink-0 {{ style.iconClass }}"/>
+    <div class="min-w-0 flex-1">
+        <p class="text-sm font-semibold text-heading">{{ style.title }}</p>
+        <p class="mt-0.5 text-sm leading-relaxed text-body" data-flash-message>{{ message }}</p>
+    </div>
+    <button type="button"
+            data-action="flash-messages#close"
+            aria-label="Fermer"
+            class="-me-1 -mt-1 inline-flex size-7 shrink-0 items-center justify-center rounded-md text-body-subtle transition-colors hover:bg-neutral-tertiary hover:text-heading focus:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-medium">
+        <twig:ux:icon name="tabler:x" class="size-4"/>
+    </button>
+</div>

@@ -62,3 +62,22 @@ test('revenir sur une feuille filtrée par le bouton retour propose de nouveau t
   await expect(page.locator('[data-test="lot-tag-filter-competence"]')).toHaveValue('');
   await expect(people(firstRow)).toHaveCount(everyone);
 });
+
+test('le formulaire d\'une feuille signale aussitôt une personne choisie deux fois, sans rien enregistrer', async ({ page }) => {
+  await login(page, 'lead@example.com');
+  await openLeaf(page, 'Atlas — Plateforme de paie', 'Régularisations');
+  const rows = page.locator('[data-test="lot-member-row"]');
+  const count = await rows.count();
+  const first = await rows.first().locator('[data-test="lot-member-user"]').inputValue();
+
+  await page.click('[data-test="lot-member-add"]');
+  await expect(rows).toHaveCount(count + 1);
+  await expect(rows.last().locator('[data-test="lot-member-share"]')).toHaveValue('100');
+  await rows.last().locator('[data-test="lot-member-user"]').selectOption(first);
+
+  await expect(page.locator('[data-test="lot-planning"]')).toContainText('Une personne ne figure qu\'une fois dans l\'équipe.');
+  await expect(page).toHaveURL(/\/modifier$/);
+  await rows.last().locator('[data-test="lot-member-remove"]').click();
+  await expect(rows).toHaveCount(count);
+  await expect(page.locator('[data-test="lot-planning"]')).not.toContainText('Une personne ne figure qu\'une fois dans l\'équipe.');
+});

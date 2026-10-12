@@ -1,0 +1,175 @@
+<div {{ attributes.defaults({'data-test': 'team-list'}) }}>
+    {% set categories = enum('App\\Enum\\Type\\TagCategory') %}
+    {% set tags = this.tags %}
+    {% set members = this.members %}
+    {% set selected = {competence: this.competence, experience: this.experience, equipe: this.equipe, manager: this.manager} %}
+    <div class="mb-5 flex flex-wrap items-end gap-x-3 gap-y-3 rounded-card border border-default bg-surface p-4 shadow-card" data-test="team-filter">
+        {% for category in categories.cases() %}
+            <div class="w-full sm:w-48">
+                <twig:Label for="team-filter-{{ category.value }}" class="mb-1.5">{{ category.label }}</twig:Label>
+                <twig:Select id="team-filter-{{ category.value }}" data-model="{{ category.value }}" data-test="team-filter-{{ category.value }}">
+                    <option value="">{{ category is same as(categories.TeamType) ? 'Tous' : 'Toutes' }}</option>
+                    {% for tag in tags[category.value] %}
+                        <option value="{{ tag.id }}" {% if selected[category.value] == tag.id %}selected{% endif %}>{{ tag.label }}</option>
+                    {% endfor %}
+                </twig:Select>
+            </div>
+        {% endfor %}
+        <div class="w-full sm:w-48">
+            <twig:Label for="team-filter-manager" class="mb-1.5">Manager</twig:Label>
+            {% set managers = this.managers %}
+            <twig:Select id="team-filter-manager" data-model="manager" data-test="team-filter-manager">
+                <option value="">Tous</option>
+                {% for manager in managers %}
+                    <option value="{{ manager.id }}" {% if selected.manager == manager.id %}selected{% endif %}>{{ manager.firstName }} {{ manager.lastName }}</option>
+                {% endfor %}
+            </twig:Select>
+        </div>
+        {% if this.filtered %}
+            <twig:Button variant="ghost" data-action="live#action" data-live-action-param="clear" data-test="team-filter-reset">
+                <twig:ux:icon name="tabler:x" class="size-4"/>
+                Tout afficher
+            </twig:Button>
+        {% endif %}
+    </div>
+
+    <twig:TableCard>
+        <twig:Table data-test="team-table">
+            <twig:Table:Header>
+                <twig:Table:Row>
+                    <twig:Table:Head>Personne</twig:Table:Head>
+                    <twig:Table:Head>Rôle</twig:Table:Head>
+                    <twig:Table:Head>Équipe</twig:Table:Head>
+                    <twig:Table:Head class="whitespace-nowrap">Compétences et expériences</twig:Table:Head>
+                    <twig:Table:Head>Manager</twig:Table:Head>
+                    <twig:Table:Head><span class="sr-only">Actions</span></twig:Table:Head>
+                </twig:Table:Row>
+            </twig:Table:Header>
+            <twig:Table:Body>
+                {% for member in members %}
+                    {% set skills = member.tagsOf(categories.TechnicalSkill) %}
+                    {% set experiences = member.tagsOf(categories.FunctionalExperience) %}
+                    <twig:Table:Row data-test="team-member-row" data-email="{{ member.email }}">
+                        <twig:Table:Cell>
+                            <div class="flex items-center gap-3">
+                                <twig:Avatar :user="member" class="{{ member.active ? '' : 'opacity-40' }}"/>
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-2">
+                                        <a href="{{ path('app_team_edit', {id: member.id}) }}" class="whitespace-nowrap font-medium decoration-default-strong underline-offset-4 hover:underline {{ member.active ? 'text-heading' : 'text-body' }}">{{ member.firstName }} {{ member.lastName }}</a>
+                                        {% if not member.active %}
+                                            <twig:Badge variant="alternative" border="bordered" data-test="member-status">Désactivée</twig:Badge>
+                                        {% endif %}
+                                    </div>
+                                    <span class="block text-xs text-body-subtle">{{ member.email }}</span>
+                                </div>
+                            </div>
+                        </twig:Table:Cell>
+                        <twig:Table:Cell class="text-heading" data-test="member-role">{{ member.role.label }}</twig:Table:Cell>
+                        <twig:Table:Cell data-test="member-team-type">
+                            {% if member.teamType %}
+                                <twig:Badge variant="brand" data-test="member-tag">{{ member.teamType.label }}</twig:Badge>
+                            {% else %}
+                                <span class="text-body" aria-label="Aucune">—</span>
+                            {% endif %}
+                        </twig:Table:Cell>
+                        <twig:Table:Cell>
+                            <div class="space-y-1.5" data-test="member-tags">
+                                {% for group in [
+                                    {tags: skills, icon: 'tabler:code', label: categories.TechnicalSkill.pluralLabel, variant: 'gray', border: 'none'},
+                                    {tags: experiences, icon: 'tabler:briefcase', label: categories.FunctionalExperience.pluralLabel, variant: 'alternative', border: 'bordered'},
+                                ] %}
+                                    {% if group.tags is not empty %}
+                                        <div class="flex items-start gap-2">
+                                            <span class="mt-0.5 shrink-0 text-body" title="{{ group.label }}">
+                                                <twig:ux:icon name="{{ group.icon }}" class="size-4" aria-hidden="true"/>
+                                                <span class="sr-only">{{ group.label }} :</span>
+                                            </span>
+                                            <div class="flex flex-wrap gap-1">
+                                                {% for tag in group.tags %}
+                                                    <twig:Badge :variant="group.variant" :border="group.border" data-test="member-tag">{{ tag.label }}</twig:Badge>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                                {% if skills is empty and experiences is empty %}
+                                    <span class="text-body" aria-label="Aucune">—</span>
+                                {% endif %}
+                            </div>
+                        </twig:Table:Cell>
+                        <twig:Table:Cell class="whitespace-nowrap" data-test="member-manager">
+                            {% if member.manager %}{{ member.manager.firstName }} {{ member.manager.lastName }}{% else %}<span class="text-body" aria-label="Aucun">—</span>{% endif %}
+                        </twig:Table:Cell>
+                        <twig:Table:Cell>
+                            <div class="flex justify-end gap-0.5">
+                                <twig:Button as="a" size="icon-xs" variant="ghost" class="text-body-subtle" href="{{ path('app_person', {id: member.id}) }}" data-tooltip="Fiche" aria-label="Fiche de {{ member.firstName }} {{ member.lastName }}" data-test="member-person">
+                                    <twig:ux:icon name="tabler:file-description" class="size-4"/>
+                                </twig:Button>
+                                <twig:Button as="a" size="icon-xs" variant="ghost" class="text-body-subtle" href="{{ path('app_team_edit', {id: member.id}) }}" data-tooltip="Modifier" aria-label="Modifier {{ member.firstName }} {{ member.lastName }}" data-test="member-edit">
+                                    <twig:ux:icon name="tabler:pencil" class="size-4"/>
+                                </twig:Button>
+
+                                {% if member.active %}
+                                    <twig:Modal id="reset-password-{{ member.id }}">
+                                        <twig:Modal:Trigger>
+                                            <twig:Button size="icon-xs" variant="ghost" class="text-body-subtle" data-tooltip="Nouveau mot de passe provisoire" aria-label="Nouveau mot de passe provisoire pour {{ member.firstName }} {{ member.lastName }}" data-test="member-reset-password" {{ ...modal_trigger_attrs }}>
+                                                <twig:ux:icon name="tabler:key" class="size-4"/>
+                                            </twig:Button>
+                                        </twig:Modal:Trigger>
+                                        <twig:Modal:Content>
+                                            <twig:Modal:Header>
+                                                <twig:Modal:Title>Nouveau mot de passe provisoire</twig:Modal:Title>
+                                            </twig:Modal:Header>
+                                            <twig:Modal:Body>
+                                                <p class="text-body">L'actuel mot de passe de {{ member.firstName }} {{ member.lastName }} cessera immédiatement de fonctionner. Un mot de passe provisoire vous sera affiché une seule fois.</p>
+                                            </twig:Modal:Body>
+                                            <twig:Modal:Footer>
+                                                <form method="post" action="{{ path('app_team_reset_password', {id: member.id}) }}">
+                                                    <input type="hidden" name="_token" value="{{ csrf_token('team-member-' ~ member.id) }}">
+                                                    <twig:Button type="submit" data-test="member-reset-password-confirm">Générer</twig:Button>
+                                                </form>
+                                                <twig:Modal:Close>
+                                                    <twig:Button variant="outline" {{ ...modal_close_attrs }}>Annuler</twig:Button>
+                                                </twig:Modal:Close>
+                                            </twig:Modal:Footer>
+                                        </twig:Modal:Content>
+                                    </twig:Modal>
+
+                                    <twig:Modal id="deactivate-{{ member.id }}">
+                                        <twig:Modal:Trigger>
+                                            <twig:Button size="icon-xs" variant="ghost" class="text-body-subtle hover:bg-danger-soft hover:text-fg-danger" data-tooltip="Désactiver" aria-label="Désactiver {{ member.firstName }} {{ member.lastName }}" data-test="member-deactivate" {{ ...modal_trigger_attrs }}>
+                                                <twig:ux:icon name="tabler:user-off" class="size-4"/>
+                                            </twig:Button>
+                                        </twig:Modal:Trigger>
+                                        <twig:Modal:Content>
+                                            <twig:Modal:Header>
+                                                <twig:Modal:Title>Désactiver {{ member.firstName }} {{ member.lastName }} ?</twig:Modal:Title>
+                                            </twig:Modal:Header>
+                                            <twig:Modal:Body>
+                                                <p class="text-body">La personne ne pourra plus se connecter et sa session en cours sera coupée. Son historique est conservé, et vous pourrez la réactiver à tout moment.</p>
+                                            </twig:Modal:Body>
+                                            <twig:Modal:Footer>
+                                                <twig:Button variant="danger" data-action="live#action flowbite-modal#close" data-live-action-param="deactivate" data-live-member-param="{{ member.id }}" data-test="member-deactivate-confirm">Désactiver</twig:Button>
+                                                <twig:Modal:Close>
+                                                    <twig:Button variant="outline" data-test="member-deactivate-cancel" {{ ...modal_close_attrs }}>Annuler</twig:Button>
+                                                </twig:Modal:Close>
+                                            </twig:Modal:Footer>
+                                        </twig:Modal:Content>
+                                    </twig:Modal>
+                                {% else %}
+                                    <twig:Button size="icon-xs" variant="ghost" class="text-fg-success hover:bg-success-soft hover:text-fg-success-strong" data-tooltip="Réactiver" aria-label="Réactiver {{ member.firstName }} {{ member.lastName }}" data-action="live#action" data-live-action-param="reactivate" data-live-member-param="{{ member.id }}" data-test="member-reactivate">
+                                        <twig:ux:icon name="tabler:user-check" class="size-4"/>
+                                    </twig:Button>
+                                {% endif %}
+                            </div>
+                        </twig:Table:Cell>
+                    </twig:Table:Row>
+                {% else %}
+                    <twig:Table:Row>
+                        <twig:Table:Cell colspan="6" class="py-12 text-center text-body" data-test="team-empty">Personne ne correspond à ces filtres.</twig:Table:Cell>
+                    </twig:Table:Row>
+                {% endfor %}
+            </twig:Table:Body>
+        </twig:Table>
+    </twig:TableCard>
+</div>

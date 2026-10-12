@@ -2,6 +2,9 @@
 
 {% block title %}Modifier {{ lot.title }} · Kadence{% endblock %}
 
+{# Restored from the cache, the form would come back with the tag filter of the visit left, under a fresh team. #}
+{% block turbo_meta %}<meta name="turbo-cache-control" content="no-cache">{% endblock %}
+
 {% block body %}
     <twig:PageHeader title="Modifier « {{ lot.title }} »" :eyebrow="lot.project.title" :back="back_path" backLabel="Retour">
         <twig:block name="description">
@@ -23,9 +26,6 @@
         </twig:block>
     </twig:PageHeader>
     <twig:Card>
-        {{ include('lot/_form.html.twig', {
-            submit_label: 'Enregistrer',
-            cancel_path: back_path,
-        }) }}
+        <twig:LotForm :form="form" :lot="lot" :cancelPath="back_path"/>
     </twig:Card>
 {% endblock %}

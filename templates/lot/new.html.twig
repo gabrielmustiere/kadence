@@ -4,6 +4,9 @@
 
 {% block title %}{{ heading }} · Kadence{% endblock %}
 
+{# Restored from the cache, the form would come back with the tag filter of the visit left, under a fresh team. #}
+{% block turbo_meta %}<meta name="turbo-cache-control" content="no-cache">{% endblock %}
+
 {% block body %}
     <twig:PageHeader :title="heading" :back="path('app_project_show', {id: project.id})" :backLabel="project.title">
         <twig:block name="description">
@@ -18,10 +21,6 @@
         </twig:block>
     </twig:PageHeader>
     <twig:Card>
-        {{ include('lot/_form.html.twig', {
-            submit_label: 'Enregistrer',
-            add_another: true,
-            cancel_path: path('app_project_show', {id: project.id}),
-        }) }}
+        <twig:LotForm :form="form" :project="project" :parent="parent" :addAnother="true" :cancelPath="path('app_project_show', {id: project.id})"/>
     </twig:Card>
 {% endblock %}

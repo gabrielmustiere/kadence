@@ -11,6 +11,7 @@ function sql(query: string) {
 
 function purge() {
   sql(`DELETE FROM time_off_request WHERE start_day BETWEEN '2030-01-01' AND '2030-12-31'`);
+  sql(`DELETE FROM time_off_entitlement WHERE year = 2030`);
 }
 
 test.beforeAll(purge);
@@ -78,4 +79,59 @@ test('le congé validé apparaît dans les absences, avec son type pour la direc
   await page.goto('/conges');
   const row = page.locator('[data-test="time-off-request-row"]').filter({ hasText: '05/03/2030' });
   await expect(row.locator('[data-test="time-off-request-status"]')).toHaveText('Validé');
+});
+
+test('le manager refuse une demande sans quitter la liste, et un motif vide ne ferme pas la fenêtre', async ({ page }) => {
+  await login(page, 'prod@example.com');
+  await page.goto('/conges');
+  await page.fill('[data-test="time-off-start"]', '2030-04-09');
+  await page.fill('[data-test="time-off-end"]', '2030-04-09');
+  await page.locator('[data-test="time-off-end"]').blur();
+  await expect(page.locator('[data-test="time-off-preview-days"]')).toHaveText('1 j');
+  await page.click('[data-test="time-off-submit"]');
+  await expect(page.locator('[data-test="time-off-request-row"]').filter({ hasText: '09/04/2030' })).toBeVisible();
+
+  await login(page, 'lead@example.com');
+  await page.goto('/conges/a-valider');
+  const item = page.locator('[data-test="time-off-inbox-item"]').filter({ hasText: 'Paula Durand' }).filter({ hasText: '09/04/2030' });
+  const count = Number(await page.locator('[data-test="time-off-inbox-count"]').textContent());
+  await item.locator('[data-test="time-off-refuse"]').click();
+  const dialog = item.locator('dialog');
+  await expect(dialog).toBeVisible();
+
+  await dialog.locator('[data-test="time-off-refuse-reason"]').fill('   ');
+  await dialog.locator('[data-test="time-off-refuse-confirm"]').click();
+  await expect(dialog.locator('[data-test="time-off-refuse-error"]')).toBeVisible();
+  await expect(dialog).toBeVisible();
+
+  await dialog.locator('[data-test="time-off-refuse-reason"]').fill('Mise en production');
+  await dialog.locator('[data-test="time-off-refuse-confirm"]').click();
+  await expect(item).toHaveCount(0);
+  await expect(page.locator('[role="alert"]')).toContainText('La demande de Paula est refusée.');
+  await expect(page).toHaveURL(/\/conges\/a-valider$/);
+  if (count > 1) {
+    await expect(page.locator('[data-test="time-off-inbox-count"]')).toHaveText(String(count - 1));
+  } else {
+    await expect(page.locator('[data-test="time-off-inbox-count"]')).toHaveCount(0);
+  }
+});
+
+test('la direction voit le solde suivre les droits saisis, les enregistre sur place et est prévenue avant de les abandonner', async ({ page }) => {
+  await login(page, 'admin@example.com');
+  await page.goto('/conges/compteurs/rtt/2030');
+  const row = page.locator('[data-test="entitlements-row"]').filter({ hasText: 'Paula Durand' });
+
+  await row.locator('[data-test="time-off-entitlement"]').fill('12.5');
+  await expect(row.locator('[data-test="entitlements-remaining"]')).toHaveText('12,5 j');
+  await expect(page.locator('[data-test="entitlements-dirty"]')).toBeVisible();
+
+  page.once('dialog', (dialog) => dialog.dismiss());
+  await page.click('[data-test="entitlements-next"]');
+  await expect(page).toHaveURL(/\/conges\/compteurs\/rtt\/2030$/);
+
+  await page.click('[data-test="entitlements-submit"]');
+  await expect(page.locator('[role="alert"]')).toContainText('Les droits RTT 2030 sont enregistrés.');
+  await expect(page.locator('[data-test="entitlements-dirty"]')).toHaveCount(0);
+  await page.reload();
+  await expect(row.locator('[data-test="time-off-entitlement"]')).toHaveValue('12.5');
 });

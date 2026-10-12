@@ -30,8 +30,7 @@ final class LotMemberType extends AbstractType
                 'choices' => $people,
                 'choice_value' => static fn (?User $user): ?int => $user?->getId(),
                 'choice_label' => static fn (User $user): string => \sprintf('%s %s', $user->getFirstName(), $user->getLastName()) . ($user->isActive() ? '' : ' — désactivée') . self::tagSummary($user),
-                'choice_attr' => static fn (User $user): array => ['data-tags' => implode(' ', array_map(static fn (Tag $tag): int => (int) $tag->getId(), self::tags($user)))],
-                'attr' => ['data-test' => 'lot-member-user', 'data-tag-filter-target' => 'person'],
+                'attr' => ['data-test' => 'lot-member-user'],
             ])
             ->add('share', ChoiceType::class, [
                 'label' => 'Part',
@@ -63,13 +62,5 @@ final class LotMemberType extends AbstractType
         }
 
         return [] === $groups ? '' : ' — ' . implode(' · ', $groups);
-    }
-
-    /**
-     * @return list<Tag>
-     */
-    private static function tags(User $user): array
-    {
-        return array_merge(...array_map(static fn (TagCategory $category): array => $user->tagsOf($category), self::CATEGORIES));
     }
 }

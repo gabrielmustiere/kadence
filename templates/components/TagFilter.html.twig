@@ -1,4 +1,5 @@
 {% set categories = this.categories %}
+{% set selected = this.selected %}
 <div{{ attributes.defaults({class: 'mb-5', 'data-test': 'lot-tag-filter'}) }}>
     {% if categories is not empty %}
         <div class="rounded-xl border border-dashed border-default-medium p-4">
@@ -11,10 +12,11 @@
                     {% set id = 'tag-filter-' ~ item.category.value %}
                     <div class="w-full sm:w-48">
                         <twig:Label for="{{ id }}" class="mb-1.5">{{ item.category.label }}</twig:Label>
-                        <twig:Select id="{{ id }}" data-tag-filter-target="filter" data-action="tag-filter#apply" data-test="lot-tag-filter-{{ item.category.value }}">
+                        {% set chosen = selected[item.category.value] ?? '' %}
+                        <twig:Select id="{{ id }}" data-model="tagFilter[{{ item.category.value }}]" data-test="lot-tag-filter-{{ item.category.value }}">
                             <option value="">{{ item.category.allowsMany ? 'Toutes' : 'Tous' }}</option>
                             {% for tag in item.tags %}
-                                <option value="{{ tag.id }}">{{ tag.label }}</option>
+                                <option value="{{ tag.id }}" {% if chosen == tag.id %}selected{% endif %}>{{ tag.label }}</option>
                             {% endfor %}
                         </twig:Select>
                     </div>

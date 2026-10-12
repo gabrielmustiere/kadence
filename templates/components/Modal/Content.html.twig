@@ -9,7 +9,7 @@
     aria-hidden="true"
     class="{{ ('relative m-auto w-[calc(100%-2rem)] max-w-md rounded-card border border-default bg-surface p-6 text-left text-body shadow-lg z-50 backdrop:bg-dark-backdrop/45 backdrop:backdrop-blur-[2px] backdrop:transition-discrete backdrop:duration-150 ' ~ attributes.render('class'))|tailwind_merge }}"
     data-flowbite-modal-target="modal"
-    data-action="keydown.esc->flowbite-modal#close:prevent {{ backdrop is not same as('static') ? 'click->flowbite-modal#closeOnClickOutside' }}"
+    data-action="keydown.esc->flowbite-modal#close:prevent turbo:submit-end->flowbite-modal#close {{ backdrop is not same as('static') ? 'click->flowbite-modal#closeOnClickOutside' }}"
 >
     {%- block content %}{% endblock -%}
     {% if showCloseButton %}

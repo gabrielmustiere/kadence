@@ -41,7 +41,7 @@ final class TeamControllerTest extends WebTestCase
             self::assertResponseStatusCodeSame(403, $url);
         }
 
-        $client->request('POST', '/equipe/' . $member->getId() . '/desactiver');
+        $client->request('POST', '/equipe/' . $member->getId() . '/mot-de-passe-provisoire');
         self::assertResponseStatusCodeSame(403);
     }
 
@@ -241,23 +241,7 @@ final class TeamControllerTest extends WebTestCase
         self::assertCount(1, $this->weeklyMaxRepository()->findForUser($owner));
     }
 
-    public function testDeactivateThenReactivateMember(): void
-    {
-        $client = $this->directorClient();
-        $member = $this->createUser();
-
-        $this->clickRowButton($client, $member, 'member-deactivate-confirm');
-        self::assertResponseRedirects('/equipe');
-        self::assertFalse($this->reloadUser($member)->isActive());
-
-        $this->clickRowButton($client, $member, 'member-reactivate');
-        self::assertResponseRedirects('/equipe');
-        $member = $this->reloadUser($member);
-        self::assertTrue($member->isActive());
-        self::assertTrue($this->passwordHasher()->isPasswordValid($member, 'password'));
-    }
-
-    public function testLastActiveDirectorCannotDeactivateOrDemoteThemself(): void
+    public function testLastActiveDirectorCannotDemoteThemself(): void
     {
         $client = $this->directorClient();
         $director = $this->fixtureUser('admin@example.com');
@@ -268,17 +252,10 @@ final class TeamControllerTest extends WebTestCase
         $this->setActive($otherDirectors, false);
 
         try {
-            $this->clickRowButton($client, $director, 'member-deactivate-confirm');
-            self::assertResponseRedirects('/equipe');
-            $client->followRedirect();
-            self::assertSelectorTextContains('[role="alert"]', 'au moins un membre de la direction actif');
-
             $this->submitMemberForm($client, '/equipe/' . $director->getId() . '/modifier', ['role' => 'lead']);
             self::assertResponseRedirects('/equipe');
 
-            $director = $this->reloadUser($director);
-            self::assertTrue($director->isActive());
-            self::assertSame(Role::Direction, $director->getRole());
+            self::assertSame(Role::Direction, $this->reloadUser($director)->getRole());
         } finally {
             $this->setActive($otherDirectors, true);
         }
@@ -398,35 +375,6 @@ final class TeamControllerTest extends WebTestCase
         self::assertNull($this->reloadUser($report)->getManager());
     }
 
-    public function testDeactivatingSomeoneWhoManagesActivePeopleIsRefusedNamingThem(): void
-    {
-        $client = $this->directorClient();
-        $manager = $this->createUser();
-        $report = $this->createUser()->setFirstName('Zoé')->setLastName(uniqid('Rattachée', false))->setManager($manager);
-        $this->entityManager()->flush();
-
-        $this->clickRowButton($client, $manager, 'member-deactivate-confirm');
-        self::assertResponseRedirects('/equipe');
-        $client->followRedirect();
-
-        self::assertSelectorTextContains('[role="alert"]', 'Zoé ' . $report->getLastName());
-        self::assertTrue($this->reloadUser($manager)->isActive());
-    }
-
-    public function testDeactivatingAManagerOfDeactivatedPeopleOnlyClearsTheirManager(): void
-    {
-        $client = $this->directorClient();
-        $manager = $this->createUser();
-        $former = $this->createUser()->setManager($manager)->setActive(false);
-        $this->entityManager()->flush();
-
-        $this->clickRowButton($client, $manager, 'member-deactivate-confirm');
-        self::assertResponseRedirects('/equipe');
-
-        self::assertFalse($this->reloadUser($manager)->isActive());
-        self::assertNull($this->reloadUser($former)->getManager());
-    }
-
     public function testListShowsTagsAndManagerAndFiltersByTagOfEachCategoryAndByDirectManager(): void
     {
         $client = $this->directorClient();
@@ -465,15 +413,15 @@ final class TeamControllerTest extends WebTestCase
         self::assertSame($small, $this->queryCount($client, '/equipe'));
     }
 
-    public function testStateChangeWithInvalidCsrfTokenIsRefused(): void
+    public function testPasswordResetWithInvalidCsrfTokenIsRefused(): void
     {
         $client = $this->directorClient();
         $member = $this->createUser();
 
-        $client->request('POST', '/equipe/' . $member->getId() . '/desactiver', ['_token' => 'invalid']);
+        $client->request('POST', '/equipe/' . $member->getId() . '/mot-de-passe-provisoire', ['_token' => 'invalid']);
 
         self::assertResponseStatusCodeSame(403);
-        self::assertTrue($this->reloadUser($member)->isActive());
+        self::assertTrue($this->passwordHasher()->isPasswordValid($this->reloadUser($member), 'password'));
     }
 
     private function directorClient(): KernelBrowser

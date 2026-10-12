@@ -1,8 +1,8 @@
 {#
     The tabs of the time off pages, as links. Expects `inbox_count`: the requests the signed-in person has to decide on,
-    null when they have none to decide.
+    null when they have none to decide; `route` names the page within a live component, which renders on its own route.
 #}
-{% set route = app.current_route %}
+{% set route = route ?? app.current_route %}
 {% set tabs = [
     {route: 'app_time_off_index', label: 'Mes congés', icon: 'tabler:beach', test: 'mine'},
     inbox_count is not null ? {route: 'app_time_off_inbox', label: 'À valider', icon: 'tabler:checklist', test: 'inbox', count: inbox_count} : null,

@@ -1,11 +1,17 @@
-<li class="flex items-start gap-2 rounded-xl border border-default bg-neutral-secondary-soft p-2" data-form-collection-item data-test="lot-member-row">
+{#
+    A team row of the lot form. Expects `member`, and `offered`: the ids of the people the tag filter keeps, null without
+    filter; the row keeps the person already chosen.
+#}
+{% set person = member.user %}
+{% set choices = offered is null ? person.vars.choices : person.vars.choices|filter(choice => choice.value in offered or choice.value == person.vars.value) %}
+<li class="flex items-start gap-2 rounded-xl border border-default bg-neutral-secondary-soft p-2" data-test="lot-member-row">
     <div class="min-w-0 flex-1">
-        {{ form_row(member.user, {label_attr: {class: 'sr-only'}, row_attr: {class: 'mb-0'}}) }}
+        {{ form_row(person, {choices: choices, label_attr: {class: 'sr-only'}, row_attr: {class: 'mb-0'}}) }}
     </div>
     <div class="w-28 shrink-0">
         {{ form_row(member.share, {label_attr: {class: 'sr-only'}, row_attr: {class: 'mb-0'}}) }}
     </div>
-    <twig:Button type="button" size="icon" variant="ghost" class="shrink-0 text-body-subtle hover:text-fg-danger" data-action="form-collection#remove" data-test="lot-member-remove" aria-label="Retirer ce membre">
+    <twig:Button type="button" size="icon" variant="ghost" class="shrink-0 text-body-subtle hover:text-fg-danger" data-action="live#action" data-live-action-param="removeMember" data-live-index-param="{{ member.vars.name }}" data-test="lot-member-remove" aria-label="Retirer ce membre">
         <twig:ux:icon name="tabler:x" class="size-4"/>
     </twig:Button>
 </li>

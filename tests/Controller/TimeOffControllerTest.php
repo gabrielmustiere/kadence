@@ -10,8 +10,6 @@ use App\Enum\Type\HalfDay;
 use App\Enum\Type\Role;
 use App\Enum\Type\TimeOffStatus;
 use App\Enum\Type\TimeOffType;
-use App\Model\TimeOff\TimeOffPeriod;
-use App\Repository\TimeOffEntitlementRepository;
 use App\Repository\UserRepository;
 use App\Tests\Support\CreatesTimeOff;
 use App\Tests\Support\CreatesUsers;
@@ -63,63 +61,15 @@ final class TimeOffControllerTest extends WebTestCase
         self::assertSame('Motif : Refus de test', $crawler->filter(\sprintf('[data-test="time-off-request-row"][data-id="%d"] [data-test="time-off-refusal-reason"]', $refused->getId()))->text());
     }
 
-    public function testTheManagerApprovesFromTheInbox(): void
-    {
-        [$manager, $requester] = $this->team();
-        $request = $this->createTimeOff($requester, '2026-11-16', '2026-11-20', TimeOffStatus::Pending);
-        $this->client->loginUser($manager);
-
-        $crawler = $this->client->request('GET', '/conges/a-valider');
-        self::assertSame('1', $crawler->filter('[data-test="time-off-inbox-count"]')->text());
-        $item = $crawler->filter(\sprintf('[data-test="time-off-inbox-item"][data-id="%d"]', $request->getId()));
-        $this->client->submit($item->filter('[data-test="time-off-approve"]')->form());
-
-        self::assertResponseRedirects('/conges/a-valider');
-        self::assertSame(TimeOffStatus::Approved, $this->reload($request)->getStatus());
-        self::assertEmailCount(1);
-    }
-
-    public function testARefusalNeedsAReason(): void
-    {
-        [$manager, $requester] = $this->team();
-        $request = $this->createTimeOff($requester, '2026-11-16', '2026-11-20', TimeOffStatus::Pending);
-        $this->client->loginUser($manager);
-        $form = $this->client->request('GET', '/conges/a-valider')->filter('[data-test="time-off-refuse-confirm"]')->form();
-
-        $this->client->submit($form, ['reason' => '  ']);
-        self::assertResponseRedirects('/conges/a-valider');
-        self::assertSame(TimeOffStatus::Pending, $this->reload($request)->getStatus());
-
-        $this->client->submit($form, ['reason' => 'Mise en production']);
-        $refused = $this->reload($request);
-        self::assertSame(TimeOffStatus::Refused, $refused->getStatus());
-        self::assertSame('Mise en production', $refused->getRefusalReason());
-    }
-
-    public function testALeadWhoIsNotTheManagerCannotDecide(): void
+    public function testALeadWithNoOneToDecideForHasNoInbox(): void
     {
         [, $requester] = $this->team();
-        $request = $this->createTimeOff($requester, '2026-11-16', '2026-11-20', TimeOffStatus::Pending);
+        $this->createTimeOff($requester, '2026-11-16', '2026-11-20', TimeOffStatus::Pending);
         $lead = $this->createUser(Role::Lead);
         $this->client->loginUser($lead);
 
         $this->client->request('GET', '/conges/a-valider');
         self::assertResponseStatusCodeSame(403);
-
-        $this->client->request('POST', '/conges/' . $request->getId() . '/valider');
-        self::assertResponseStatusCodeSame(403);
-    }
-
-    public function testAnInvalidTokenIsRefused(): void
-    {
-        [$manager, $requester] = $this->team();
-        $request = $this->createTimeOff($requester, '2026-11-16', '2026-11-20', TimeOffStatus::Pending);
-        $this->client->loginUser($manager);
-
-        $this->client->request('POST', '/conges/' . $request->getId() . '/valider', ['_token' => 'invalide']);
-
-        self::assertResponseStatusCodeSame(403);
-        self::assertSame(TimeOffStatus::Pending, $this->reload($request)->getStatus());
     }
 
     public function testThePersonCancelsTimeOffBeforeItStartsButNotOnceStarted(): void
@@ -219,34 +169,17 @@ final class TimeOffControllerTest extends WebTestCase
         }
     }
 
-    public function testTheDirectionDeclaresTheEntitlementsOfThePeriod(): void
+    public function testTheDirectionOpensTheEntitlementsOfAPeriod(): void
     {
         $person = $this->createUser();
         $this->client->loginUser($this->fixtureUser('admin@example.com'));
 
         $crawler = $this->client->request('GET', '/conges/compteurs/rtt/2026');
+
+        self::assertResponseIsSuccessful();
         self::assertSame('RTT 2026', $crawler->filter('[data-test="entitlements-period"]')->text());
-        $form = $crawler->filter('[data-test="entitlements-form"]')->form();
-        $form[\sprintf('time_off_entitlements[days][%d]', $person->getId())] = '10.5';
-        $this->client->submit($form);
-
-        self::assertResponseRedirects('/conges/compteurs/rtt/2026');
-        $repository = self::getContainer()->get(TimeOffEntitlementRepository::class);
-        \assert($repository instanceof TimeOffEntitlementRepository);
-        self::assertSame(21, $repository->findOneFor($person, TimeOffPeriod::of(TimeOffType::Rtt, 2026))?->getHalfDays());
-    }
-
-    public function testEntitlementsOffTheHalfDayAreRefused(): void
-    {
-        $person = $this->createUser();
-        $this->client->loginUser($this->fixtureUser('admin@example.com'));
-        $form = $this->client->request('GET', '/conges/compteurs/cp/2026')->filter('[data-test="entitlements-form"]')->form();
-        $form[\sprintf('time_off_entitlements[days][%d]', $person->getId())] = '10.3';
-
-        $this->client->submit($form);
-
-        self::assertResponseStatusCodeSame(422);
-        self::assertSelectorTextContains('[data-test="entitlements-form"]', 'Les droits se déclarent au demi-jour près.');
+        self::assertCount(1, $crawler->filter(\sprintf('[data-test="entitlements-form"] [name="time_off_entitlements[days][%d]"]', $person->getId())));
+        self::assertSame('/conges/compteurs/cp/2026', $crawler->filter('[data-test="entitlements-type-cp"]')->attr('href'));
     }
 
     /**

@@ -55,3 +55,31 @@ test('un membre de prod ne voit pas la gestion d\'équipe', async ({ page }) => 
   const response = await page.goto('/equipe');
   expect(response?.status()).toBe(403);
 });
+
+test('la direction filtre l\'équipe dès qu\'elle choisit un tag, et désactive puis réactive sans perdre ses filtres', async ({ page }) => {
+  await login(page, 'admin@example.com', 'password');
+  await expect(page).not.toHaveURL(/\/login/);
+  await page.goto('/equipe');
+  const rows = page.locator('[data-test="team-member-row"]');
+  const all = await rows.count();
+
+  await page.selectOption('[data-test="team-filter-competence"]', { label: 'Symfony' });
+  await expect(page).toHaveURL(/[?&]competence=\d+/);
+  await expect(rows).toHaveCount(5);
+  expect(all).toBeGreaterThan(5);
+
+  const camille = page.locator('[data-email="camille.roux@example.com"]');
+  await camille.locator('[data-test="member-deactivate"]').click();
+  await camille.locator('[data-test="member-deactivate-confirm"]').click();
+  await expect(page.locator('[role="alert"]')).toContainText('est désactivé');
+  await expect(camille.locator('[data-test="member-status"]')).toHaveText('Désactivée');
+  await expect(page).toHaveURL(/[?&]competence=\d+/);
+  await expect(rows).toHaveCount(5);
+
+  await camille.locator('[data-test="member-reactivate"]').click();
+  await expect(camille.locator('[data-test="member-status"]')).toHaveCount(0);
+
+  await page.click('[data-test="team-filter-reset"]');
+  await expect(rows).toHaveCount(all);
+  await expect(page).not.toHaveURL(/competence=/);
+});

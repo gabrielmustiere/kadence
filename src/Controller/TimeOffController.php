@@ -4,18 +4,15 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Dto\TimeOffEntitlementsInput;
 use App\Entity\TimeOffRequest;
 use App\Entity\User;
 use App\Enum\Type\TimeOffType;
 use App\Exception\TimeOffRefusedException;
-use App\Form\TimeOffEntitlementsType;
 use App\Model\TimeOff\TimeOffPeriod;
 use App\Repository\TimeOffRequestRepository;
 use App\Repository\UserRepository;
 use App\Security\Voter\TimeOffVoter;
 use App\Service\TimeOffBook;
-use App\Service\TimeOffEntitlementManager;
 use App\Service\TimeOffManager;
 use App\Service\TimeOffOverview;
 use Psr\Clock\ClockInterface;
@@ -48,43 +45,11 @@ final class TimeOffController extends AbstractController
     }
 
     #[Route('/a-valider', name: 'app_time_off_inbox', methods: ['GET'])]
-    public function inbox(#[CurrentUser] User $user): Response
+    public function inbox(): Response
     {
         $this->denyAccessUnlessGranted(TimeOffVoter::INBOX);
 
-        return $this->page($user, 'time_off/inbox.html.twig', [
-            'items' => $this->timeOffOverview->inbox($user, $this->isGranted('ROLE_DIRECTION')),
-        ]);
-    }
-
-    #[Route('/{id}/valider', name: 'app_time_off_approve', requirements: ['id' => '\d+'], methods: ['POST'])]
-    public function approve(Request $request, TimeOffRequest $timeOff, #[CurrentUser] User $user): RedirectResponse
-    {
-        $this->assertDecidable($request, $timeOff);
-
-        try {
-            $this->timeOffManager->approve($timeOff, $user);
-            $this->addFlash('success', \sprintf('Le congé de %s est validé.', $timeOff->getUser()->getFirstName()));
-        } catch (TimeOffRefusedException $exception) {
-            $this->addFlash('error', $exception->getMessage());
-        }
-
-        return $this->redirectToRoute('app_time_off_inbox');
-    }
-
-    #[Route('/{id}/refuser', name: 'app_time_off_refuse', requirements: ['id' => '\d+'], methods: ['POST'])]
-    public function refuse(Request $request, TimeOffRequest $timeOff, #[CurrentUser] User $user): RedirectResponse
-    {
-        $this->assertDecidable($request, $timeOff);
-
-        try {
-            $this->timeOffManager->refuse($timeOff, $user, $request->getPayload()->getString('reason'));
-            $this->addFlash('success', \sprintf('La demande de %s est refusée.', $timeOff->getUser()->getFirstName()));
-        } catch (TimeOffRefusedException $exception) {
-            $this->addFlash('error', $exception->getMessage());
-        }
-
-        return $this->redirectToRoute('app_time_off_inbox');
+        return $this->render('time_off/inbox.html.twig');
     }
 
     #[Route('/absences', name: 'app_time_off_absences', methods: ['GET'])]
@@ -98,34 +63,16 @@ final class TimeOffController extends AbstractController
         ]);
     }
 
-    #[Route('/compteurs', name: 'app_time_off_entitlements', methods: ['GET', 'POST'])]
-    #[Route('/compteurs/{type}/{year}', name: 'app_time_off_entitlements_period', requirements: ['type' => 'cp|rtt', 'year' => '[1-9]\d{3}'], methods: ['GET', 'POST'])]
-    public function entitlements(Request $request, UserRepository $userRepository, TimeOffEntitlementManager $timeOffEntitlementManager, #[CurrentUser] User $user, string $type = 'cp', ?int $year = null): Response
+    #[Route('/compteurs', name: 'app_time_off_entitlements', methods: ['GET'])]
+    #[Route('/compteurs/{type}/{year}', name: 'app_time_off_entitlements_period', requirements: ['type' => 'cp|rtt', 'year' => '[1-9]\d{3}'], methods: ['GET'])]
+    public function entitlements(#[CurrentUser] User $user, string $type = 'cp', ?int $year = null): Response
     {
         $this->denyAccessUnlessGranted('ROLE_DIRECTION');
         $timeOffType = TimeOffType::from($type);
         $period = null === $year ? TimeOffPeriod::containing($timeOffType, $this->clock->now()) : TimeOffPeriod::of($timeOffType, $year);
-        $people = $userRepository->findActiveWithManager();
-        $balances = $this->timeOffOverview->balancesOver($period, $people);
-
-        $input = TimeOffEntitlementsInput::fromBalances($balances);
-        $form = $this->createForm(TimeOffEntitlementsType::class, $input, [
-            'action' => $this->generateUrl('app_time_off_entitlements_period', ['type' => $timeOffType->value, 'year' => $period->year]),
-        ]);
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
-            $timeOffEntitlementManager->declare($period, $input->halfDaysOf($people));
-            $this->addFlash('success', \sprintf('Les droits %s %s sont enregistrés.', $timeOffType->label(), $period->label()));
-
-            return $this->redirectToRoute('app_time_off_entitlements_period', ['type' => $timeOffType->value, 'year' => $period->year]);
-        }
 
         return $this->page($user, 'time_off/entitlements.html.twig', [
-            'form' => $form,
             'period' => $period,
-            'people' => $people,
-            'balances' => $balances,
         ]);
     }
 
@@ -145,14 +92,6 @@ final class TimeOffController extends AbstractController
         }
 
         return $this->back($request);
-    }
-
-    private function assertDecidable(Request $request, TimeOffRequest $timeOff): void
-    {
-        $this->denyAccessUnlessGranted(TimeOffVoter::DECIDE, $timeOff);
-        if (!$this->isCsrfTokenValid('time-off-decide-' . $timeOff->getId(), $request->getPayload()->getString('_token'))) {
-            throw $this->createAccessDeniedException('Jeton CSRF invalide.');
-        }
     }
 
     /**

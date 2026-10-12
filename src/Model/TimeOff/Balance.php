@@ -51,6 +51,14 @@ final readonly class Balance
     }
 
     /**
+     * The balance were the entitlements these half-days instead.
+     */
+    public function withEntitlement(int $halfDays): self
+    {
+        return new self($this->period, $halfDays, $this->approvedHalfDays, $this->pendingHalfDays);
+    }
+
+    /**
      * The balance once these half-days are requested as well.
      */
     public function with(int $halfDays): self

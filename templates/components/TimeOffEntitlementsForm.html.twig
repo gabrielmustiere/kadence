@@ -1,0 +1,69 @@
+{% set period = this.period %}
+{% set balances = this.balances %}
+{% set dirty = this.dirty %}
+{% set leave = dirty ? 'Les droits saisis ne sont pas enregistrés : les abandonner ?' : null %}
+<div {{ attributes.defaults({'data-test': 'entitlements'}) }}>
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <nav class="inline-flex items-center gap-0.5 rounded-xl border border-default bg-surface p-1 shadow-xs" aria-label="Type de congé">
+            {% for type in ['cp', 'rtt'] %}
+                <a href="{{ path('app_time_off_entitlements_period', {type: type, year: period.year}) }}"
+                   data-test="entitlements-type-{{ type }}"
+                   {% if leave %}data-turbo-method="get" data-turbo-confirm="{{ leave }}"{% endif %}
+                   class="inline-flex h-8 items-center rounded-lg px-3 text-sm font-medium transition-colors {{ type == period.type.value ? 'bg-brand-softer text-fg-brand' : 'text-body hover:bg-neutral-tertiary hover:text-heading' }}">{{ type|upper }}</a>
+            {% endfor %}
+        </nav>
+        <nav class="inline-flex items-center gap-0.5 rounded-xl border border-default bg-surface p-1 shadow-xs" aria-label="Navigation entre périodes">
+            <a href="{{ path('app_time_off_entitlements_period', {type: period.type.value, year: period.previous.year}) }}" data-test="entitlements-prev"
+               {% if leave %}data-turbo-method="get" data-turbo-confirm="{{ leave }}"{% endif %}
+               class="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-sm tabular-nums text-body transition-colors hover:bg-neutral-tertiary hover:text-heading">
+                <twig:ux:icon name="tabler:chevron-left" class="size-4"/>
+                {{ period.previous.label }}
+            </a>
+            <span class="inline-flex h-8 items-center rounded-lg px-3 text-sm font-semibold tabular-nums text-heading" data-test="entitlements-period">{{ period.type.label }} {{ period.label }}</span>
+            <a href="{{ path('app_time_off_entitlements_period', {type: period.type.value, year: period.next.year}) }}" data-test="entitlements-next"
+               {% if leave %}data-turbo-method="get" data-turbo-confirm="{{ leave }}"{% endif %}
+               class="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-sm tabular-nums text-body transition-colors hover:bg-neutral-tertiary hover:text-heading">
+                {{ period.next.label }}
+                <twig:ux:icon name="tabler:chevron-right" class="size-4"/>
+            </a>
+        </nav>
+    </div>
+
+    {{ form_start(form, {attr: {'data-action': 'live#action:prevent', 'data-live-action-param': 'save', 'data-model': 'debounce(250)|*', novalidate: 'novalidate', 'data-test': 'entitlements-form'}}) }}
+        {{ form_errors(form) }}
+        <div class="overflow-x-auto rounded-card border border-default bg-surface shadow-card">
+            <table class="w-full text-sm">
+                <thead class="border-b border-default bg-neutral-secondary-soft text-left">
+                    <tr>
+                        <th scope="col" class="eyebrow px-5 py-3 font-medium text-body-subtle">Personne</th>
+                        <th scope="col" class="eyebrow px-5 py-3 text-right font-medium text-body-subtle">Droits (j)</th>
+                        <th scope="col" class="eyebrow px-5 py-3 text-right font-medium text-body-subtle">Validés</th>
+                        <th scope="col" class="eyebrow px-5 py-3 text-right font-medium text-body-subtle">En attente</th>
+                        <th scope="col" class="eyebrow px-5 py-3 text-right font-medium text-body-subtle">Solde</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for person in this.people %}
+                        {% set balance = balances[person.id] %}
+                        <tr class="border-t border-default-subtle first:border-t-0" data-test="entitlements-row" data-person="{{ person.id }}">
+                            <th scope="row" class="px-5 py-2.5 text-left font-medium text-heading">{{ person.firstName }} {{ person.lastName }}</th>
+                            <td class="px-5 py-2.5 text-right">
+                                {{ form_widget(form.days[person.id]) }}
+                                {{ form_errors(form.days[person.id]) }}
+                            </td>
+                            <td class="px-5 py-2.5 text-right tabular-nums">{{ balance.approvedHalfDays|half_days }}</td>
+                            <td class="px-5 py-2.5 text-right tabular-nums">{{ balance.pendingHalfDays|half_days }}</td>
+                            <td class="px-5 py-2.5 text-right font-semibold tabular-nums {{ balance.overrun ? 'text-fg-danger-strong' : 'text-heading' }}" aria-live="polite" data-test="entitlements-remaining">{{ balance.remainingHalfDays|half_days }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="mt-5 flex flex-wrap items-center gap-3">
+            <twig:Button type="submit" data-test="entitlements-submit" data-loading="action(save)|addAttribute(disabled)">Enregistrer les droits</twig:Button>
+            {% if dirty %}
+                <span class="text-sm text-body-subtle" data-test="entitlements-dirty">Modifications non enregistrées : le solde en tient déjà compte.</span>
+            {% endif %}
+        </div>
+    {{ form_end(form) }}
+</div>
