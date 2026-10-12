@@ -123,7 +123,7 @@ final class AccountControllerTest extends WebTestCase
         self::assertResponseRedirects('/saisie');
         $client->request('GET', '/mon-compte/mot-de-passe');
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('h1', 'Changer mon mot de passe');
+        self::assertSelectorTextContains('h1', 'Mon compte');
     }
 
     private function submitNewPassword(KernelBrowser $client, string $newPassword, ?string $currentPassword = null): void

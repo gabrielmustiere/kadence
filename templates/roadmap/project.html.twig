@@ -57,6 +57,11 @@
                                 —
                             {%- endif -%}
                         </dd>
+                        {% if projectRow.isEndUnknown %}
+                            <div class="max-w-72">
+                                {{ include('roadmap/_unknown_ends.html.twig', {rows: projectRow.unknownEndLeaves}) }}
+                            </div>
+                        {% endif %}
                     </div>
                 </dl>
             </div>

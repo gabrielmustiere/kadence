@@ -66,6 +66,11 @@ final readonly class RoadmapRow
         return null !== $this->lot && $this->lot->isLeaf();
     }
 
+    public function leafPath(): string
+    {
+        return null === $this->lot ? $this->title() : LeafPath::of($this->lot);
+    }
+
     /**
      * Time entered on the leaf, whoever entered it.
      */
@@ -108,6 +113,20 @@ final readonly class RoadmapRow
     public function isEndUnknown(): bool
     {
         return null !== $this->start && null === $this->end;
+    }
+
+    /**
+     * The leaves under the row whose unknown end leaves its own end unknown.
+     *
+     * @return list<RoadmapRow>
+     */
+    public function unknownEndLeaves(): array
+    {
+        if ($this->isLeaf()) {
+            return $this->isEndUnknown() ? [$this] : [];
+        }
+
+        return array_merge(...array_map(static fn (RoadmapRow $child): array => $child->unknownEndLeaves(), $this->children));
     }
 
     public function hasSignal(RoadmapSignal $signal): bool

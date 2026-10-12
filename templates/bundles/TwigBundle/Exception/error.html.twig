@@ -1,0 +1,23 @@
+{% extends 'security.html.twig' %}
+
+{% set error = {
+    403: {heading: 'Accès refusé', message: 'Cette page n\'est pas ouverte à votre rôle.'},
+    404: {heading: 'Page introuvable', message: 'Cette page n\'existe pas, ou plus : le lien que vous avez suivi est peut-être ancien.'},
+}[status_code] ?? {heading: 'Une erreur est survenue', message: 'Kadence n\'a pas pu afficher cette page. Réessayez dans un instant ; si l\'erreur persiste, signalez-la.'} %}
+
+{% block title %}{{ error.heading }} · Kadence{% endblock %}
+
+{% block body %}
+    <div class="flex min-h-screen flex-col items-center justify-center gap-8 px-4 py-10">
+        <div class="flex items-center gap-2.5">
+            <twig:Logo class="size-8"/>
+            <span class="text-lg font-semibold tracking-tight text-heading" translate="no">Kadence</span>
+        </div>
+        <twig:Card class="w-full max-w-lg p-8" data-test="error-page">
+            <p class="eyebrow text-body-subtle">Erreur {{ status_code }}</p>
+            <h1 class="mt-1.5 font-display text-[2rem] leading-tight text-heading">{{ error.heading }}</h1>
+            <p class="mt-2 text-sm leading-relaxed text-body">{{ error.message }}</p>
+            <twig:Button as="a" href="{{ path('app_page') }}" class="mt-6">Revenir à l'accueil</twig:Button>
+        </twig:Card>
+    </div>
+{% endblock %}

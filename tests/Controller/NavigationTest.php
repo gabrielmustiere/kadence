@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace App\Tests\Controller;
 
 use App\Entity\User;
+use App\Enum\Type\Role;
+use App\Enum\Type\TimeOffStatus;
 use App\Repository\UserRepository;
 use App\Tests\Support\CreatesProjects;
+use App\Tests\Support\CreatesTimeOff;
 use App\Tests\Support\CreatesUsers;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -16,6 +19,7 @@ use Symfony\Component\DomCrawler\Crawler;
 final class NavigationTest extends WebTestCase
 {
     use CreatesProjects;
+    use CreatesTimeOff;
     use CreatesUsers;
 
     public function testTheDirectionSeesItsDailyEntriesOnTopAndTheAdministrationSectionBelow(): void
@@ -79,6 +83,23 @@ final class NavigationTest extends WebTestCase
             self::assertResponseIsSuccessful($url);
             self::assertSame([], $this->currentEntries($crawler), $url);
         }
+    }
+
+    public function testTheTimeOffEntryCountsTheRequestsToDecideOn(): void
+    {
+        $client = self::createClient();
+        $manager = $this->createUser(Role::Lead);
+        $this->createTimeOff($this->createUser()->setManager($manager), '2026-11-16', '2026-11-20', TimeOffStatus::Pending);
+        $this->createTimeOff($this->createUser()->setManager($manager), '2026-12-07', '2026-12-07', TimeOffStatus::Pending);
+        $this->createTimeOff($this->createUser()->setManager($manager), '2026-12-14', '2026-12-14');
+
+        $client->loginUser($manager);
+        $client->request('GET', '/');
+        self::assertSelectorTextSame('[data-test="nav-time-off"] [data-test="nav-count"]', '2 à valider');
+
+        $client->loginUser($this->createUser());
+        $client->request('GET', '/');
+        self::assertSelectorNotExists('[data-test="nav-time-off"] [data-test="nav-count"]');
     }
 
     public function testTheAccountMenuLeadsToMyPage(): void

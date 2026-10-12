@@ -302,6 +302,27 @@ final class RoadmapProjectControllerTest extends WebTestCase
         self::assertSelectorNotExists('[data-test="timeline-empty"]');
     }
 
+    public function testAnUnknownEndNamesTheLeavesWithoutOneAndWhy(): void
+    {
+        $client = $this->clientAs('prod@example.com');
+        $project = $this->createExample();
+        $client->request('GET', $this->url($project));
+        self::assertSelectorNotExists('[data-test="unknown-ends"]');
+
+        $login = $project->getLots()->filter(static fn ($lot): bool => 'Login' === $lot->getTitle())->first();
+        self::assertNotFalse($login);
+        $bob = $login->getOwner();
+        self::assertNotNull($bob);
+        foreach (['2026-09-17', '2026-09-18', '2026-09-28', '2026-09-29', '2026-09-30', '2026-10-01'] as $day) {
+            $this->createTimeEntry($bob, $login, $day, 4);
+        }
+
+        $crawler = $client->request('GET', $this->url($project));
+
+        self::assertSelectorTextSame('[data-test="project-page-end"]', 'inconnue');
+        self::assertSame(['Front · Login : en dépassement'], $crawler->filter('[data-test="unknown-end"]')->each(static fn (Crawler $leaf): string => $leaf->text()));
+    }
+
     public function testUnknownProjectIsNotFound(): void
     {
         $this->clientAs('prod@example.com')->request('GET', '/roadmap/projets/999999');

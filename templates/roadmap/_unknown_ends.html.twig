@@ -1,0 +1,16 @@
+{#
+    Why an end is unknown: the leaves without a calculated end, each with the signals that withhold it. Expects `rows`,
+    leaves with a `leafPath` and their `signals`; `projects` set to true names the project of each leaf.
+#}
+<div class="mt-1.5 text-xs leading-relaxed font-normal tracking-normal text-body" data-test="unknown-ends">
+    <p>Faute d'une fin calculée pour :</p>
+    <ul class="mt-0.5 space-y-0.5">
+        {% for row in rows %}
+            {% set reasons = row.signals|filter(signal => signal.withholdsEnd)|map(signal => signal.label) %}
+            <li data-test="unknown-end">
+                <span class="font-medium text-heading">{{ (projects ?? false) ? row.lot.project.title ~ ' · ' }}{{ row.leafPath }}</span>
+                {%- if reasons is not empty %} : {{ reasons|join(', ') }}{% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+</div>

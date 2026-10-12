@@ -53,13 +53,16 @@
                     <p class="eyebrow text-body-subtle">Libre à partir du</p>
                     <p class="mt-2 text-2xl font-semibold tracking-tight text-heading tabular-nums" data-test="person-free-from">
                         {%- if load.unknownEnds is not empty -%}
-                            inconnue <span class="block text-sm font-normal tracking-normal text-body">({% for row in load.unknownEnds %}{{ row.lot.project.title }} · {{ row.leafPath }}{{ loop.last ? '' : ', ' }}{% endfor %})</span>
+                            inconnue
                         {%- elseif load.freeFrom -%}
                             {{ load.freeFrom|weekday }} {{ load.freeFrom|date('d/m/Y') }}
                         {%- else -%}
                             <span class="text-lg font-normal tracking-normal text-body-subtle">aucune affectation à venir</span>
                         {%- endif -%}
                     </p>
+                    {% if load.unknownEnds is not empty %}
+                        {{ include('roadmap/_unknown_ends.html.twig', {rows: load.unknownEnds, projects: true}) }}
+                    {% endif %}
                 </div>
             {% endif %}
         </section>

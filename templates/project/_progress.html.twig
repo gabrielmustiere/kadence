@@ -8,9 +8,12 @@
     <form method="post" action="{{ path('app_lot_progress', {id: lot.id}) }}" class="flex items-center gap-1.5" data-test="progress-form">
         <input type="hidden" name="_token" value="{{ csrf_token('lot-progress-' ~ lot.id) }}">
         <label for="progress-{{ lot.id }}" class="sr-only">Avancement de « {{ lot.title }} »</label>
-        <twig:Select id="progress-{{ lot.id }}" name="percent" autocomplete="off" class="h-8 w-[5.5rem] ps-2.5 text-[13px] tabular-nums" data-test="progress-select">
+        <twig:Select id="progress-{{ lot.id }}" name="percent" required autocomplete="off" class="h-8 w-[7.5rem] ps-2.5 text-[13px] tabular-nums" data-test="progress-select">
+            {% if declaration is null %}
+                <option value="" selected>Non déclaré</option>
+            {% endif %}
             {% for percent in constant('App\\Entity\\LotProgress::PERCENTS') %}
-                <option value="{{ percent }}" {{ percent == (declaration.percent ?? 0) ? 'selected' }}>{{ percent }} %</option>
+                <option value="{{ percent }}" {{ declaration and percent == declaration.percent ? 'selected' }}>{{ percent }} %</option>
             {% endfor %}
         </twig:Select>
         <twig:Button type="submit" size="xs" variant="outline" class="h-8" data-test="progress-submit">Enregistrer<span class="sr-only"> l'avancement de « {{ lot.title }} »</span></twig:Button>

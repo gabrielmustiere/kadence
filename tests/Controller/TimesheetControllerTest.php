@@ -102,7 +102,7 @@ final class TimesheetControllerTest extends WebTestCase
 
         $smallCount = $this->queryCount($client, $small);
 
-        self::assertLessThanOrEqual(7, $smallCount);
+        self::assertLessThanOrEqual(8, $smallCount, 'The week, and the time off requests to decide on that the menu counts.');
         self::assertSame($smallCount, $this->queryCount($client, $large));
     }
 

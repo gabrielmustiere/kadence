@@ -98,6 +98,17 @@ enum RoadmapSignal: string
     }
 
     /**
+     * Whether the signal tells why a leaf has no calculated end.
+     */
+    public function withholdsEnd(): bool
+    {
+        return match ($this) {
+            self::ToEstimate, self::WithoutStart, self::WithoutTeam, self::Overrun, self::ProgressToRefresh, self::TeamToReview => true,
+            self::LateStart, self::EstimateReached, self::Completed, self::ToReplan, self::PartialPlanning, self::Unsplit => false,
+        };
+    }
+
+    /**
      * The badge variant of the design system.
      */
     public function variant(): string

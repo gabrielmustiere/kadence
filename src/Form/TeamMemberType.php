@@ -90,7 +90,7 @@ final class TeamMemberType extends AbstractType
         $memberId = $builder->getData() instanceof TeamMemberInput ? $builder->getData()->id : null;
         $builder->add('manager', ChoiceType::class, [
             'label' => 'Manager',
-            'help' => 'La personne à qui elle rapporte. Purement informatif : cela n\'ouvre aucun droit.',
+            'help' => 'La personne à qui elle rapporte, et qui décide de ses demandes de congé. Sans manager, c\'est la direction qui en décide.',
             'required' => false,
             'placeholder' => 'Aucun',
             'choices' => array_values(array_filter(

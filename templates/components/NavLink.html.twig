@@ -1,8 +1,10 @@
 {# @prop href string The link target #}
 {# @prop icon string The icon name, e.g. `tabler:folders` #}
 {# @prop active bool Whether the link leads to the page being shown. Defaults to `false` #}
+{# @prop count int What awaits the person behind the link, shown when above 0. Defaults to `0` #}
+{# @prop countLabel string What the count counts, for screen readers. Defaults to `''` #}
 {# @block content The link label #}
-{%- props href, icon, active = false -%}
+{%- props href, icon, active = false, count = 0, countLabel = '' -%}
 <a href="{{ href }}"
    class="{{ ('group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-[background-color,color,box-shadow] duration-150 ' ~ (active ? 'bg-surface text-heading shadow-sm ring-1 ring-default' : 'text-body hover:bg-neutral-tertiary hover:text-heading') ~ ' ' ~ attributes.render('class'))|tailwind_merge }}"
    {% if active %}aria-current="page"{% endif %}
@@ -10,4 +12,7 @@
 >
     <twig:ux:icon name="{{ icon }}" class="size-[18px] shrink-0 transition-colors {{ active ? 'text-fg-brand' : 'text-body-subtle group-hover:text-heading' }}"/>
     <span>{%- block content %}{% endblock -%}</span>
+    {% if count > 0 %}
+        <twig:Badge as="span" variant="brand" shape="pill" class="ms-auto tabular-nums" data-test="nav-count">{{ count }}<span class="sr-only"> {{ countLabel }}</span></twig:Badge>
+    {% endif %}
 </a>

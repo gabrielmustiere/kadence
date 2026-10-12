@@ -164,7 +164,8 @@ final class PersonControllerTest extends WebTestCase
 
         $crawler = $client->request('GET', $this->url($alice));
 
-        self::assertSelectorTextSame('[data-test="person-free-from"]', 'inconnue (Zèbre · Sans début)');
+        self::assertSelectorTextSame('[data-test="person-free-from"]', 'inconnue');
+        self::assertSame(['Zèbre · Sans début : sans début'], $crawler->filter('[data-test="unknown-end"]')->each(static fn (Crawler $leaf): string => $leaf->text()));
         self::assertSame(['Front · Login', 'Sans début'], $crawler->filter('[data-test="person-upcoming-entry"]')->each(static fn (Crawler $entry): string => (string) $entry->attr('data-leaf')));
         self::assertCount(1, $crawler->filter('[data-test="person-upcoming-entry"]')->last()->filter('[data-test="signal-without_start"]'));
     }
