@@ -37,6 +37,15 @@
       "date": "2026-10-13",
       "type": "Sync",
       "description": "9 écarts réalignés dans le plan, 14/14 critères d'acceptation et 6/7 critères de sortie cochés, 1 non livré (E2E roadmap préexistant), 2 dettes ouvertes."
+    },
+    {
+      "date": "2026-10-13",
+      "type": "Livraison",
+      "description": "Story livrée dans le commit 30a2162 sur la branche main."
     }
-  ]
+  ],
+  "delivery": {
+    "release": null,
+    "commit": "30a2162"
+  }
 }
