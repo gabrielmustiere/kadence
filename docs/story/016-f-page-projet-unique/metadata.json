@@ -42,6 +42,15 @@
       "date": "2026-10-13",
       "type": "Sync",
       "description": "8 écarts réalignés (plan, pitch, DESIGN.md), 14/15 critères cochés, C5.5 et C7.4 du backlog édités, 4 dettes ouvertes dont 1 critique."
+    },
+    {
+      "date": "2026-10-13",
+      "type": "Livraison",
+      "description": "Commité en 4b84f43 sur main."
     }
-  ]
+  ],
+  "delivery": {
+    "release": null,
+    "commit": "4b84f43"
+  }
 }
