@@ -15,12 +15,12 @@
                 {{ form_row(form.weeklyMaxFrom) }}
             </div>
         </twig:FormSection>
-        <twig:FormSection title="Rattachement" description="L'équipe dont la personne fait partie et celle à qui elle rapporte.">
+        <twig:FormSection title="Rattachement" description="Le pôle dont la personne fait partie, et la personne à qui elle rapporte.">
             {{ form_row(form.teamType) }}
             <div class="sm:w-1/2 sm:pe-3">{{ form_row(form.newTeamType) }}</div>
             <div class="sm:w-1/2 sm:pe-3">{{ form_row(form.manager) }}</div>
         </twig:FormSection>
-        <twig:FormSection title="Compétences" description="Elles aident les leads à composer l'équipe des feuilles. Cochez les tags existants ou saisissez-en de nouveaux." data-test="member-profile">
+        <twig:FormSection title="Compétences" description="Elles aident les leads à composer l'équipe de chaque lot. Cochez les tags existants ou saisissez-en de nouveaux." data-test="member-profile">
             {{ form_row(form.technicalSkills) }}
             {{ form_row(form.newTechnicalSkills) }}
             {{ form_row(form.functionalExperiences, {row_attr: {class: 'mt-8 mb-5'}}) }}

@@ -6,7 +6,7 @@
     <twig:PageHeader title="Tableau de bord">
         <twig:block name="description">
             <p class="mt-2.5 max-w-3xl text-[15px] leading-relaxed text-body" data-test="home-greeting">
-                Bonjour {{ app.user.firstName }}. Suivez la charge, l'avancement et les dates de livraison de l'équipe.
+                Bonjour {{ app.user.firstName }}. Suivez la charge, l'avancement et la fin calculée de chaque projet.
             </p>
         </twig:block>
     </twig:PageHeader>
@@ -29,7 +29,7 @@
         <section>
             <h2 class="mb-3 text-lg font-semibold tracking-tight text-heading">Suivre</h2>
             <ul class="divide-y divide-default-subtle border-y border-default-subtle">
-                <li>{{ _self.shortcut(path('app_roadmap'), 'tabler:timeline-event', 'Roadmap', 'La chronologie de chaque projet et sa date de fin projetée.', 'home-roadmap') }}</li>
+                <li>{{ _self.shortcut(path('app_roadmap'), 'tabler:timeline-event', 'Roadmap', 'La chronologie de chaque projet et sa fin calculée.', 'home-roadmap') }}</li>
                 <li>{{ _self.shortcut(path('app_account_password'), 'tabler:user-circle', 'Mon compte', 'Voir votre profil et changer votre mot de passe.', 'home-account') }}</li>
             </ul>
         </section>
@@ -37,10 +37,10 @@
         <section data-test="home-admin">
             <h2 class="mb-3 text-lg font-semibold tracking-tight text-heading">Administration</h2>
             <ul class="divide-y divide-default-subtle border-y border-default-subtle">
-                <li>{{ _self.shortcut(path('app_project_index'), 'tabler:folders', 'Projets', 'Découper les projets en lots et sous-lots, estimer et confier chaque partie.', 'home-projects') }}</li>
+                <li>{{ _self.shortcut(path('app_project_index'), 'tabler:folders', 'Projets', 'Découper les projets en lots et sous-lots, estimer et confier chaque lot.', 'home-projects') }}</li>
                 {% if is_granted('ROLE_DIRECTION') %}
                     <li>{{ _self.shortcut(path('app_team_index'), 'tabler:users', 'Équipe', 'Inscrire les personnes, gérer leurs rôles et leurs accès.', 'home-team') }}</li>
-                    <li>{{ _self.shortcut(path('app_tag_index'), 'tabler:tags', 'Tags', 'Tenir le vocabulaire des compétences, des expériences et des types d\'équipe.', 'home-tags') }}</li>
+                    <li>{{ _self.shortcut(path('app_tag_index'), 'tabler:tags', 'Tags', 'Tenir le vocabulaire des compétences, des expériences et des pôles.', 'home-tags') }}</li>
                     <li>{{ _self.shortcut(path('app_holiday_index'), 'tabler:calendar-off', 'Jours fériés', 'Consulter les jours fériés de chaque calendrier et les ajuster.', 'home-holidays') }}</li>
                 {% endif %}
             </ul>

@@ -3,9 +3,9 @@
         <twig:Badge variant="warning" data-test="signal-to-estimate">{{ summary.toEstimate }} à estimer</twig:Badge>
     {% endif %}
     {% if summary.toAssign > 0 %}
-        <twig:Badge variant="warning" data-test="signal-to-assign">{{ summary.toAssign }} à désigner</twig:Badge>
+        <twig:Badge variant="warning" data-test="signal-to-assign">{{ summary.toAssign }} responsable{{ summary.toAssign > 1 ? 's' }} à désigner</twig:Badge>
     {% endif %}
     {% if summary.toReassign > 0 %}
-        <twig:Badge variant="danger" data-test="signal-to-reassign">{{ summary.toReassign }} à redésigner</twig:Badge>
+        <twig:Badge variant="danger" data-test="signal-to-reassign">{{ summary.toReassign }} responsable{{ summary.toReassign > 1 ? 's' }} à remplacer</twig:Badge>
     {% endif %}
 </div>

@@ -2,7 +2,7 @@
   "version": 2,
   "title": "Parler la même langue sur tous les écrans : « lot » à la place de « feuille », un seul mot et une seule unité par notion",
   "created": "2026-10-12",
-  "updated": "2026-10-12",
+  "updated": "2026-10-13",
   "tags": [
     "vocabulaire",
     "ux"
@@ -17,6 +17,26 @@
       "date": "2026-10-12",
       "type": "Planification",
       "description": "Plan technique proposé, à valider avec le pitch avant implémentation : libellés réécrits en place dans les gabarits, RoadmapSignal, TagCategory et les messages de contraintes, filtre Twig gap appuyé sur Quarters::percentOf, test garde-fou sur les pages rendues, aucune migration."
+    },
+    {
+      "date": "2026-10-13",
+      "type": "Implémentation",
+      "description": "8/8 étapes livrées : Quarters::percentOf et filtre Twig gap (7 écarts chiffrés), RoadmapSignal et TagCategory (« Pôle ») réécrits, messages et gabarits au nouveau lexique, garde-fou VocabularyTest (direction et prod). QA : PHPUnit 666 tests verts, PHPStan 10 et CS-Fixer propres, build OK, E2E 43 verts ; 2 scénarios de roadmap.spec.ts (l. 73 et 106) échouent aussi sur main, sans lien avec la story. Écarts : RoadmapRow::overrunPercent() supprimée au lieu de déléguer, car plus aucun gabarit ne l'appelle (règle « supprimer ce que ses changements rendent orphelin »), ses cas d'arrondi rejoignant QuartersTest ; data-test roadmap-overrun-percent fusionné dans roadmap-overrun, le filtre gap rendant jours et part d'un seul tenant ; pastille « terminée à 100 % » accordée au masculin (« terminé »), règle 3 du pitch ; RoadmapProjectControllerTest l. 124 (projeté d'un lot) mis au nouveau format, absent de l'inventaire du plan ; en-tête de la fiche : « 0 j » sans part quand il n'y a pas de dépassement."
+    },
+    {
+      "date": "2026-10-13",
+      "type": "Review",
+      "description": "Ouverture de la review : PRÊT À COMMITER, 0 bloquant, 0 important, 3 mineurs ([PLAN] « dates de livraison de l'équipe » sur l'accueil, [TEST] format d'écart de la page d'administration et pastille de la fiche personne non assertés, [STYLE] variable gap homonyme du filtre)."
+    },
+    {
+      "date": "2026-10-13",
+      "type": "Review",
+      "description": "Fin de passe : PRÊT À COMMITER ; 3 mineurs corrigés : [PLAN] accueil « la fin calculée de chaque projet » au lieu de « les dates de livraison de l'équipe », [TEST] écart de la page d'administration et pastille de la fiche personne assertés, [STYLE] variable projectedGap. review.md conservé pour sa section Hors review (contrôle visuel de la pastille, échecs E2E préexistants de roadmap.spec.ts)."
+    },
+    {
+      "date": "2026-10-13",
+      "type": "Sync",
+      "description": "9 écarts réalignés dans le plan, 14/14 critères d'acceptation et 6/7 critères de sortie cochés, 1 non livré (E2E roadmap préexistant), 2 dettes ouvertes."
     }
   ]
 }

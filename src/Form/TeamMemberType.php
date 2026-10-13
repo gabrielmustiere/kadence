@@ -85,7 +85,7 @@ final class TeamMemberType extends AbstractType
             ->addTags($builder, 'functionalExperiences', TagCategory::FunctionalExperience)
             ->addNewTags($builder, 'newFunctionalExperiences', 'member-new-functional-experiences', 'Nouvelles expériences fonctionnelles', 'Séparées par des virgules, par exemple « Paie, Facturation ». Elles rejoignent la liste des tags.')
             ->addTags($builder, 'teamType', TagCategory::TeamType)
-            ->addNewTags($builder, 'newTeamType', 'member-new-team-type', 'Nouveau type d\'équipe', 'Un seul, s\'il manque à la liste ci-dessus. Il la rejoint.');
+            ->addNewTags($builder, 'newTeamType', 'member-new-team-type', 'Nouveau pôle', 'Un seul, s\'il manque à la liste ci-dessus. Il la rejoint.');
 
         $memberId = $builder->getData() instanceof TeamMemberInput ? $builder->getData()->id : null;
         $builder->add('manager', ChoiceType::class, [

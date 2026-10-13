@@ -18,13 +18,13 @@
                 non calculée
             {%- endif -%}
         </dd>
-        <dt>Estimé</dt>
+        <dt>Estimation</dt>
         <dd class="text-heading" data-test="roadmap-recap-estimate">{{ lot.estimateDays is null ? 'à estimer' : lot.estimateDays ~ ' j' }}</dd>
         <dt>Saisi</dt>
         <dd class="text-heading" data-test="roadmap-recap-entered">{{ row.enteredQuarters|days }}</dd>
         {% if row.overrunQuarters > 0 %}
             <dt>Dépassement</dt>
-            <dd class="text-heading"><span class="font-medium text-fg-danger-strong"><span data-test="roadmap-overrun">{{ row.overrunQuarters|days }}</span> (<span data-test="roadmap-overrun-percent">+{{ row.overrunPercent }} %</span>)</span></dd>
+            <dd class="text-heading"><span class="font-medium text-fg-danger-strong" data-test="roadmap-overrun">{{ row.overrunQuarters|gap(lot.estimateDays ?? 0) }}</span></dd>
         {% endif %}
         {% if row.remainingQuarters is not null and (row.overrunQuarters == 0 or row.remainingQuarters > 0) %}
             <dt>Restant</dt>

@@ -339,7 +339,7 @@ final class TeamControllerTest extends WebTestCase
         $this->postMemberForm($client, '/equipe/' . $member->getId() . '/modifier', ['teamType' => (string) $teamType->getId(), 'newTeamType' => uniqid('Front ', true)]);
 
         self::assertResponseStatusCodeSame(422);
-        self::assertSelectorTextContains('[data-test="team-member-form"]', 'Choisissez un type d\'équipe existant ou saisissez-en un nouveau, pas les deux.');
+        self::assertSelectorTextContains('[data-test="team-member-form"]', 'Choisissez un pôle existant ou saisissez-en un nouveau, pas les deux.');
         self::assertNull($this->reloadUser($member)->teamType());
     }
 

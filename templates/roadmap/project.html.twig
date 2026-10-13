@@ -69,13 +69,13 @@
                 <ul class="flex flex-wrap gap-x-7 gap-y-2 text-sm text-body">
                     <li class="inline-flex items-center gap-2"><span class="h-3 w-4 rounded-[2px] bg-brand" aria-hidden="true"></span>Saisi</li>
                     <li class="inline-flex items-center gap-2"><span class="hatch-brand h-3 w-4 rounded-[2px] bg-brand-softer" aria-hidden="true"></span>Restant <strong class="font-semibold tabular-nums text-heading" data-test="project-page-remaining">{{ summary.remainingQuarters|days }}</strong></li>
-                    <li class="inline-flex items-center gap-2"><span class="h-3 w-4 rounded-[2px] bg-danger" aria-hidden="true"></span>Dépassement <strong class="font-semibold tabular-nums {{ summary.overrunQuarters > 0 ? 'text-fg-danger-strong' : 'text-heading' }}" data-test="project-page-overrun">{{ summary.overrunQuarters|days }}</strong></li>
+                    <li class="inline-flex items-center gap-2"><span class="h-3 w-4 rounded-[2px] bg-danger" aria-hidden="true"></span>Dépassement <strong class="font-semibold tabular-nums {{ summary.overrunQuarters > 0 ? 'text-fg-danger-strong' : 'text-heading' }}" data-test="project-page-overrun">{{ summary.overrunQuarters > 0 ? summary.overrunQuarters|gap(summary.estimateDays) : summary.overrunQuarters|days }}</strong></li>
                 </ul>
             </twig:Ruler>
         </section>
 
         <section class="mb-12">
-            <h2 class="mb-4 text-lg font-semibold tracking-tight text-heading">Lots, consommé face à l'estimé</h2>
+            <h2 class="mb-4 text-lg font-semibold tracking-tight text-heading">Lots, saisi face à l'estimation</h2>
             {{ include('roadmap/_consumption.html.twig') }}
         </section>
 
@@ -114,7 +114,7 @@
                 {% endembed %}
             {% else %}
                 <twig:EmptyState icon="tabler:timeline-event" data-test="project-page-no-frieze">
-                    Aucune feuille n'a encore de date de début ni de temps saisi : rien à placer sur la frise.
+                    Aucun lot n'a encore de date de début ni de temps saisi : rien à placer sur la frise.
                 </twig:EmptyState>
             {% endif %}
         </section>

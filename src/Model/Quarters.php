@@ -15,6 +15,23 @@ final class Quarters
         return rtrim(rtrim(number_format($quarters / self::PER_DAY, 2, ',', ''), '0'), ',') . ' j';
     }
 
+    /**
+     * Share of the estimate in percent, rounded but never down to 0 once there is a gap; null on a 0-day estimate.
+     */
+    public static function percentOf(int $quarters, int $estimateDays): ?int
+    {
+        if (0 === $estimateDays) {
+            return null;
+        }
+
+        $percent = (int) round(100 * abs($quarters) / ($estimateDays * self::PER_DAY));
+        if (0 !== $quarters) {
+            $percent = max(1, $percent);
+        }
+
+        return $quarters < 0 ? -$percent : $percent;
+    }
+
     public static function daysRoundedUp(int $quarters): int
     {
         return intdiv($quarters + self::PER_DAY - 1, self::PER_DAY);

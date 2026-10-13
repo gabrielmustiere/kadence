@@ -156,6 +156,20 @@ final class PersonControllerTest extends WebTestCase
         }
     }
 
+    public function testTheOverrunSignalOfAPersonDoesNotTellTheGap(): void
+    {
+        $alice = $this->createUser();
+        $leaf = $this->planLot($this->createLot($this->createProject(), 1, $alice, title: 'Dépassée'), new \DateTimeImmutable('2026-09-28'), [[$alice, 100]]);
+        $this->createTimeEntry($alice, $leaf, '2026-09-28', 4);
+        $this->createTimeEntry($alice, $leaf, '2026-09-29', 4);
+
+        $crawler = $this->clientAs('lead@example.com')->request('GET', $this->url($alice));
+
+        $signals = $crawler->filter('[data-test="signal-overrun"]');
+        self::assertGreaterThan(0, $signals->count());
+        self::assertSame(array_fill(0, $signals->count(), 'en dépassement'), $signals->each(static fn (Crawler $signal): string => $signal->text()));
+    }
+
     public function testFreeDayIsUnknownWhileALeafOfTheirTeamsHasNoEnd(): void
     {
         $client = $this->clientAs('lead@example.com');

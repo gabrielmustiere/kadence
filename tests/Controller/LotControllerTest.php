@@ -243,7 +243,7 @@ final class LotControllerTest extends WebTestCase
 
         $this->submitLotForm($client, $url, ['estimateDays' => '3']);
         self::assertResponseStatusCodeSame(422);
-        self::assertSelectorTextContains('[data-test="lot-form"]', '3,25 j déjà saisis sur cette feuille : l\'estimation ne peut pas descendre sous 4 j.');
+        self::assertSelectorTextContains('[data-test="lot-form"]', '3,25 j déjà saisis sur ce lot : l\'estimation ne peut pas descendre sous 4 j.');
 
         $this->submitLotForm($client, $url, ['estimateDays' => '']);
         self::assertResponseStatusCodeSame(422);

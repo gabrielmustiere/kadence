@@ -4,9 +4,9 @@
 #}
 {% set legend = {
     realized: ['Saisi', 'rounded-[3px] bg-brand'],
-    overrun: ["Saisi au-delà de l'estimation", 'rounded-[3px] bg-danger'],
+    overrun: ['Saisi en dépassement', 'rounded-[3px] bg-danger'],
     future: ['Restant, calculé', 'rounded-[3px] border border-dashed border-brand bg-brand-softer hatch-brand'],
-    span: [row.lot ? 'Lot' : 'Projet', 'rounded-full bg-brand-medium'],
+    span: [row.lot ? 'Lot découpé' : 'Projet', 'rounded-full bg-brand-medium'],
 }[kind] %}
 {% set run = kind in ['realized', 'overrun'] ? run : null %}
 <div id="{{ id }}" role="tooltip" hidden class="pointer-events-none z-30 {{ run is null ? 'w-80' : 'w-96' }} rounded-xl border border-default bg-surface p-3.5 text-xs text-body shadow-lg" data-test="roadmap-tooltip-{{ kind }}">
@@ -29,7 +29,7 @@
             {{ include('roadmap/_progress.html.twig') }}
         {% elseif kind == 'future' %}
             <dt>Restant</dt>
-            <dd class="text-heading"><span data-test="roadmap-remaining">{{ row.remainingQuarters|days }}</span> sur {{ row.lot.estimateDays }} j estimés</dd>
+            <dd class="text-heading"><span data-test="roadmap-remaining">{{ row.remainingQuarters|days }}</span> sur une estimation de {{ row.lot.estimateDays }} j</dd>
         {% endif %}
         {% if row.leaf and (run.team ?? row.members) is not empty %}
             <dt>Équipe</dt>

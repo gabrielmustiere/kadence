@@ -30,7 +30,7 @@
                                 <span><span class="font-medium tabular-nums text-heading" data-test="timeline-entry-entered">{{ run.quarters|days }}</span> saisis</span>
                                 <span><span class="font-medium tabular-nums text-heading" data-test="timeline-entry-days">{{ run.dayCount }}</span> {{ run.dayCount > 1 ? 'jours' : 'jour' }} avec saisie</span>
                                 {% if entry.beyondEstimate %}
-                                    <twig:Badge variant="danger" data-test="timeline-entry-overrun">au-delà de l'estimation</twig:Badge>
+                                    <twig:Badge variant="danger" data-test="timeline-entry-overrun">en dépassement</twig:Badge>
                                 {% endif %}
                             </div>
                             {% if with_team ?? true %}

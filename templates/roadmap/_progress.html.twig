@@ -2,11 +2,11 @@
     The progress in force on a leaf and the cost it projects, as lines of a description list. Expects `row`, whose
     progress is set.
 #}
-{% set gap = row.projectedGapQuarters %}
+{% set projectedGap = row.projectedGapQuarters %}
 <dt>Avancement</dt>
 <dd class="text-heading" data-test="roadmap-progress">{{ row.progress.percent }} % au {{ row.progress.declaredOn|date('d/m') }}</dd>
 <dt>Projeté</dt>
 <dd class="text-heading" data-test="roadmap-projected">
-    {{- row.projectedQuarters|days }} pour {{ row.lot.estimateDays }} j estimés
-    {%- if gap != 0 %} <span class="{{ gap > 0 ? 'font-medium text-fg-danger-strong' : 'text-body' }}">({{ gap > 0 ? '+' }}{{ gap|days }})</span>{% endif -%}
+    {{- row.projectedQuarters|days }} pour une estimation de {{ row.lot.estimateDays }} j
+    {%- if projectedGap != 0 %}, <span class="{{ projectedGap > 0 ? 'font-medium text-fg-danger-strong' : 'text-body' }}">{{ projectedGap|gap(row.lot.estimateDays ?? 0, signed: true) }}</span>{% endif -%}
 </dd>

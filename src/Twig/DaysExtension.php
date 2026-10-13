@@ -17,6 +17,23 @@ final class DaysExtension
         return Quarters::toDays($quarters);
     }
 
+    /**
+     * A gap to the estimate: days then share of the estimate, signed on both with a typographic minus when asked.
+     */
+    #[AsTwigFilter('gap')]
+    public function gap(int $quarters, int $estimateDays, bool $signed = false): string
+    {
+        $sign = match (true) {
+            !$signed => '',
+            $quarters < 0 => "\u{2212}",
+            default => '+',
+        };
+        $gap = $sign . Quarters::toDays(abs($quarters));
+        $percent = Quarters::percentOf($quarters, $estimateDays);
+
+        return null === $percent ? $gap : \sprintf('%s (%s%d %%)', $gap, $sign, abs($percent));
+    }
+
     #[AsTwigFilter('half_days')]
     public function halfDays(int $halfDays): string
     {

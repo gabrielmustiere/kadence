@@ -136,10 +136,9 @@ final class RoadmapControllerTest extends WebTestCase
         $crawler = $client->request('GET', '/roadmap');
 
         $row = $crawler->filter(\sprintf('[data-test="roadmap-project"][data-title="%s"] [data-test="roadmap-leaf"][data-title="Dépassée"]', $project->getTitle()));
-        self::assertSame('en dépassement +50 %', $row->filter('[data-test="signal-overrun"]')->text());
+        self::assertSame('en dépassement de 1 j (50 %)', $row->filter('[data-test="signal-overrun"]')->text());
         $recap = $row->filter('[data-test="roadmap-recap"]');
-        self::assertSame('1 j', $recap->filter('[data-test="roadmap-overrun"]')->text());
-        self::assertSame('+50 %', $recap->filter('[data-test="roadmap-overrun-percent"]')->text());
+        self::assertSame('1 j (50 %)', $recap->filter('[data-test="roadmap-overrun"]')->text());
         self::assertSame('inconnue, estimation à réviser', $recap->filter('[data-test="roadmap-recap-end"]')->text());
         self::assertSame('3 j', $recap->filter('[data-test="roadmap-recap-entered"]')->text());
         $overrun = $row->filter('[data-test="roadmap-tooltip-overrun"]');
@@ -176,13 +175,13 @@ final class RoadmapControllerTest extends WebTestCase
         $leaf = static fn (string $title): Crawler => $crawler->filter(\sprintf('[data-test="roadmap-project"][data-title="%s"] [data-test="roadmap-leaf"][data-title="%s"]', $project->getTitle(), $title));
         $future = $leaf('Avancée')->filter('[data-test="roadmap-tooltip-future"]');
         self::assertSame(
-            ['18 j', '10 % au 06/10', '20 j pour 10 j estimés (+10 j)'],
+            ['18 j', '10 % au 06/10', '20 j pour une estimation de 10 j, +10 j (+100 %)'],
             array_map(static fn (string $field): string => $future->filter(\sprintf('[data-test="%s"]', $field))->text(), ['roadmap-remaining', 'roadmap-progress', 'roadmap-projected']),
         );
         $recap = $leaf('Avancée')->filter('[data-test="roadmap-recap"]');
         self::assertSame(['Lun 02/11/2026', '18 j', '10 % au 06/10'], [$recap->filter('[data-test="roadmap-recap-end"]')->text(), $recap->filter('[data-test="roadmap-recap-remaining"]')->text(), $recap->filter('[data-test="roadmap-progress"]')->text()]);
 
-        self::assertSame('terminée à 100 %', $leaf('Terminée')->filter('[data-test="signal-completed"]')->text());
+        self::assertSame('terminé à 100 %', $leaf('Terminée')->filter('[data-test="signal-completed"]')->text());
         self::assertSame('Lun 28/09/2026', $leaf('Terminée')->filter('[data-test="roadmap-recap-end"]')->text());
         self::assertSame('avancement à actualiser', $leaf('À actualiser')->filter('[data-test="signal-progress_to_refresh"]')->text());
         self::assertSame('inconnue, avancement à actualiser', $leaf('À actualiser')->filter('[data-test="roadmap-recap-end"]')->text());

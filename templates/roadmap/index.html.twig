@@ -7,7 +7,7 @@
 {% block body %}
     <div data-controller="roadmap" data-roadmap-center-value="{{ (roadmap.todayPosition ?? window.position(window.anchor.monday))|number_format(4, '.', '') }}">
     {% set current = window.anchor.equals(current_week) %}
-    <twig:PageHeader title="Roadmap" compact description="La chronologie de chaque projet : ce qui a été saisi, puis ce qui reste, réparti sur la capacité de l'équipe.">
+    <twig:PageHeader title="Roadmap" compact description="La chronologie de chaque projet : ce qui a été saisi, puis ce qui reste, réparti sur la capacité de son équipe.">
         <nav class="inline-flex items-center gap-0.5 rounded-xl border border-default bg-surface p-1 shadow-xs" aria-label="Période affichée">
             <a href="{{ path('app_roadmap_week', {week: window.previous.iso}) }}" data-test="roadmap-previous"
                class="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-sm font-medium text-body transition-colors hover:bg-neutral-tertiary hover:text-heading">

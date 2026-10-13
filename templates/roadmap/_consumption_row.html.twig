@@ -36,7 +36,7 @@
                 <span data-test="consumption-remaining">{{ line.remainingQuarters|days }}</span>
             {% endif %}
             {% if line.overrunQuarters > 0 %}
-                <span class="block font-medium text-fg-danger-strong" data-test="consumption-overrun">{{ line.overrunQuarters|days }} de dépassement</span>
+                <span class="block font-medium text-fg-danger-strong" data-test="consumption-overrun">{{ line.overrunQuarters|gap(line.estimateDays) }} de dépassement</span>
             {% endif %}
         {% endif %}
     </twig:Table:Cell>
@@ -50,16 +50,16 @@
             {% endif %}
         {% elseif line.progressPercent is not null %}
             {{ line.progressPercent }} %
-            {% if line.isPartial %}<span class="block text-xs text-body" data-test="consumption-progress-partial">partiel</span>{% endif %}
+            {% if line.isPartial %}<span class="block text-xs text-body" data-test="consumption-progress-partial">sur les lots estimés</span>{% endif %}
         {% else %}
             <span class="text-body">—</span>
         {% endif %}
     </twig:Table:Cell>
     <twig:Table:Cell class="whitespace-nowrap tabular-nums" data-test="consumption-projected">
         {% if leaf is not null and line.projectedQuarters is not null %}
-            {% set gap = line.projectedGapQuarters %}
+            {% set projectedGap = line.projectedGapQuarters %}
             {{ line.projectedQuarters|days }}
-            {% if gap != 0 %}<span class="{{ gap > 0 ? 'font-medium text-fg-danger-strong' : 'text-body' }}">({{ gap > 0 ? '+' }}{{ gap|days }})</span>{% endif %}
+            {% if projectedGap != 0 %}<span class="block {{ projectedGap > 0 ? 'font-medium text-fg-danger-strong' : 'text-body' }}">{{ projectedGap|gap(line.estimateDays, signed: true) }}</span>{% endif %}
         {% else %}
             <span class="text-body">—</span>
         {% endif %}

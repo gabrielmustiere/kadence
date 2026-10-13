@@ -80,19 +80,6 @@ final readonly class RoadmapRow
     }
 
     /**
-     * Time entered beyond the estimate in percent of it, rounded but never down to 0 % once overrun; null within it.
-     */
-    public function overrunPercent(): ?int
-    {
-        $estimate = $this->lot?->getEstimateDays();
-        if (null === $estimate || 0 === $this->overrunQuarters) {
-            return null;
-        }
-
-        return max(1, (int) round(100 * $this->overrunQuarters / ($estimate * Quarters::PER_DAY)));
-    }
-
-    /**
      * What the leaf will have cost once done, according to the progress in force; null without one.
      */
     public function projectedQuarters(): ?int

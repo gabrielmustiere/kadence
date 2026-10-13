@@ -4,7 +4,7 @@
 <div {{ attributes }}>
     {{ form_start(form, {attr: {'data-model': 'on(change)|*', 'data-test': 'lot-form'}}) }}
         <div class="divide-y divide-default-subtle">
-            <twig:FormSection title="Présentation" description="Ce que recouvre la partie, tel que l'équipe la lira dans sa semaine." class="pt-0">
+            <twig:FormSection title="Présentation" description="Ce que recouvre le lot, tel que chacun le lira dans sa semaine." class="pt-0">
                 {{ form_row(form.title) }}
                 {{ form_row(form.description) }}
             </twig:FormSection>
@@ -19,7 +19,7 @@
             {% if form.startDate is defined %}
                 {% set members = form.members %}
                 <div class="divide-y divide-default-subtle" data-test="lot-planning">
-                    <twig:FormSection title="Planification" description="La date de début et l'équipe dessinent la feuille sur la roadmap.">
+                    <twig:FormSection title="Planification" description="La date de début et l'équipe placent le lot sur la roadmap.">
                         <div class="sm:w-1/2 sm:pe-3">{{ form_row(form.startDate) }}</div>
                     </twig:FormSection>
                     <twig:FormSection title="Équipe" description="Le responsable fait toujours partie de l'équipe.">

@@ -67,7 +67,7 @@ final class TeamMemberInput
 
     public ?User $manager = null;
 
-    #[Assert\IsTrue(message: 'Choisissez un type d\'équipe existant ou saisissez-en un nouveau, pas les deux.')]
+    #[Assert\IsTrue(message: 'Choisissez un pôle existant ou saisissez-en un nouveau, pas les deux.')]
     public function isTeamTypeUnambiguous(): bool
     {
         return null === $this->teamType || '' === trim($this->newTeamType ?? '');

@@ -26,13 +26,13 @@
                                 {% set balance = period[1] %}
                                 <p class="{{ balance.overrun ? 'font-medium text-fg-danger-strong' : 'text-body' }}" data-test="time-off-inbox-balance">
                                     Solde {{ balance.period.type.label }} {{ balance.period.label }} après la demande : <span class="tabular-nums">{{ balance.remainingHalfDays|half_days }}</span>
-                                    {% if balance.overrun %}· dépassement{% endif %}
+                                    {% if balance.overrun %}· solde dépassé{% endif %}
                                 </p>
                             {% endfor %}
                             {% if item.colleagues is not null %}
                                 <p class="text-body" data-test="time-off-inbox-colleagues">
                                     {% if item.colleagues is empty %}
-                                        Personne d'autre de l'équipe n'est absent sur la période.
+                                        Aucun autre collaborateur du même manager n'est absent sur la période.
                                     {% else %}
                                         Aussi absents :
                                         {% for other in item.colleagues %}

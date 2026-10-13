@@ -30,11 +30,11 @@ enum RoadmapSignal: string
             self::LateStart => 'démarrage en retard',
             self::EstimateReached => 'estimation atteinte',
             self::Overrun => 'en dépassement',
-            self::Completed => 'terminée à 100 %',
+            self::Completed => 'terminé à 100 %',
             self::ProgressToRefresh => 'avancement à actualiser',
             self::TeamToReview => 'équipe à revoir',
             self::ToReplan => 'à replanifier',
-            self::PartialPlanning => 'planning partiel',
+            self::PartialPlanning => 'planification partielle',
             self::Unsplit => 'à découper',
         };
     }
@@ -42,17 +42,17 @@ enum RoadmapSignal: string
     public function meaning(): string
     {
         return match ($this) {
-            self::ToEstimate => 'Sans estimation, ni le restant ni la fin de la feuille ne peuvent être calculés : elle n\'a pas de partie future.',
-            self::WithoutStart => 'Le restant de la feuille n\'est pas placé sur la frise : elle n\'a ni partie future ni fin calculée.',
-            self::WithoutTeam => 'Le restant de la feuille n\'est réparti sur la capacité de personne : elle n\'a ni partie future ni fin calculée.',
-            self::LateStart => 'Le travail aurait déjà dû commencer : la partie future est recalculée à partir de demain.',
-            self::EstimateReached => 'La feuille se termine au dernier jour saisi. C\'est le cas normal d\'une feuille terminée, sans alarme.',
-            self::Overrun => 'Le travail peut continuer, mais rien ne dit combien de temps : sans avancement déclaré, la fin reste inconnue tant que l\'estimation n\'est pas révisée. Les jours saisis au-delà apparaissent en rouge sur la barre.',
-            self::Completed => 'La feuille se termine au dernier jour saisi.',
-            self::ProgressToRefresh => 'La fin de la feuille est inconnue, comme celle de son lot et de son projet, jusqu\'à une nouvelle déclaration d\'avancement.',
+            self::ToEstimate => 'Sans estimation, ni le restant ni la fin du lot ne peuvent être calculés : rien n\'est placé après aujourd\'hui.',
+            self::WithoutStart => 'Le restant du lot n\'est pas placé sur la frise : il n\'a pas de fin calculée.',
+            self::WithoutTeam => 'Le restant du lot n\'est réparti sur la capacité de personne : il n\'a pas de fin calculée.',
+            self::LateStart => 'Le travail aurait déjà dû commencer : le restant est replacé à partir de demain.',
+            self::EstimateReached => 'Le lot se termine au dernier jour saisi. C\'est le cas normal d\'un lot terminé, sans alarme.',
+            self::Overrun => 'Le travail peut continuer, mais rien ne dit combien de temps : sans avancement déclaré, la fin reste inconnue tant que l\'estimation n\'est pas révisée. Les jours saisis en dépassement apparaissent en rouge sur la barre.',
+            self::Completed => 'Le lot se termine au dernier jour saisi.',
+            self::ProgressToRefresh => 'La fin du lot est inconnue, comme celle de son lot découpé et de son projet, jusqu\'à une nouvelle déclaration d\'avancement.',
             self::TeamToReview => 'L\'équipe n\'apporte plus la capacité attendue : la fin calculée est repoussée, voire inconnue.',
             self::ToReplan => 'Une personne de l\'équipe est chargée au-delà de 100 % de sa capacité certains jours : la planification ne tient pas en l\'état.',
-            self::PartialPlanning => 'La barre et la fin du projet ne couvrent que ses feuilles planifiées.',
+            self::PartialPlanning => 'La barre et la fin du projet ne couvrent que ses lots planifiés.',
             self::Unsplit => 'Le projet n\'a encore rien à placer sur la frise.',
         };
     }
@@ -60,17 +60,17 @@ enum RoadmapSignal: string
     public function reason(): string
     {
         return match ($this) {
-            self::ToEstimate => 'Aucune estimation n\'est saisie sur la feuille.',
-            self::WithoutStart => 'Aucune date de début n\'est posée sur la feuille.',
-            self::WithoutTeam => 'Personne n\'est affecté à l\'équipe de la feuille.',
-            self::LateStart => 'La date de début est passée et aucun temps n\'est encore saisi sur la feuille.',
+            self::ToEstimate => 'Aucune estimation n\'est saisie sur le lot.',
+            self::WithoutStart => 'Aucune date de début n\'est posée sur le lot.',
+            self::WithoutTeam => 'Personne n\'est affecté à l\'équipe du lot.',
+            self::LateStart => 'La date de début est passée et aucun temps n\'est encore saisi sur le lot.',
             self::EstimateReached => 'Le temps saisi égale exactement l\'estimation, sans avancement déclaré.',
-            self::Overrun => 'Le temps saisi dépasse l\'estimation de la feuille.',
+            self::Overrun => 'Le temps saisi dépasse l\'estimation du lot.',
             self::Completed => 'Son avancement est déclaré à 100 %.',
             self::ProgressToRefresh => 'Le temps saisi depuis la dernière déclaration d\'avancement a épuisé le restant qu\'elle annonçait.',
             self::TeamToReview => 'Un membre de l\'équipe est désactivé, ou l\'équipe ne couvre pas le restant dans les trois ans.',
-            self::ToReplan => 'Un même jour, cette feuille et d\'autres chargent une même personne à plus de 100 %, après une saisie plus lente que prévu, une estimation révisée, un avancement déclaré ou une capacité réduite.',
-            self::PartialPlanning => 'Au moins une feuille du projet n\'est pas planifiée : il lui manque une estimation, une date de début ou une équipe.',
+            self::ToReplan => 'Un même jour, ce lot et d\'autres chargent une même personne à plus de 100 %, après une saisie plus lente que prévu, une estimation révisée, un avancement déclaré ou une capacité réduite.',
+            self::PartialPlanning => 'Au moins un lot du projet n\'est pas planifié : il lui manque une estimation, une date de début ou une équipe.',
             self::Unsplit => 'Il n\'est pas découpé en lots : ce sont eux qui portent les estimations, les dates de début et les équipes.',
         };
     }

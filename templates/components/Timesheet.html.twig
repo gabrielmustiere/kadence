@@ -13,12 +13,12 @@
             <twig:Modal:Trigger>
                 <twig:Button data-test="add-line-open" {{ ...modal_trigger_attrs }}>
                     <twig:ux:icon name="tabler:plus" class="size-4"/>
-                    Ajouter une ligne
+                    Ajouter un lot
                 </twig:Button>
             </twig:Modal:Trigger>
             <twig:Modal:Content class="max-w-xl">
                 <twig:Modal:Header>
-                    <twig:Modal:Title>Ajouter une ligne</twig:Modal:Title>
+                    <twig:Modal:Title>Ajouter un lot</twig:Modal:Title>
                 </twig:Modal:Header>
                 <twig:Modal:Body class="pb-0">
                     <div>
@@ -43,7 +43,7 @@
                                         {{ include('timesheet/_favorite_star.html.twig', {lot: lot, favorite: false, close_modal: true}) }}
                                     </li>
                                 {% else %}
-                                    <li class="px-3.5 py-3 text-sm text-body" data-test="add-line-none">Aucune feuille ne correspond.</li>
+                                    <li class="px-3.5 py-3 text-sm text-body" data-test="add-line-none">Aucun lot ne correspond.</li>
                                 {% endfor %}
                             </ul>
                         {% endif %}
@@ -162,7 +162,7 @@
                             <span class="mx-auto mb-3 grid size-10 place-items-center rounded-full bg-neutral-tertiary" aria-hidden="true">
                                 <twig:ux:icon name="tabler:calendar-plus" class="size-5"/>
                             </span>
-                            Aucune saisie cette semaine ni la précédente : ajoutez une ligne pour commencer.
+                            Aucune saisie cette semaine ni la précédente : ajoutez un lot pour commencer.
                         </td>
                     </tr>
                 {% endfor %}

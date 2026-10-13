@@ -67,7 +67,7 @@ test('un lead déclare l\'avancement d\'une feuille et le retrouve sur la fiche 
   const line = page.locator('[data-test="consumption-row"][data-title="Synchronisation"]');
   await expect(line.locator('[data-test="consumption-remaining"]')).toHaveText('14 j');
   await expect(line.locator('[data-test="consumption-progress"]')).toContainText(`30 % au ${today()}`);
-  await expect(line.locator('[data-test="consumption-projected"]')).toContainText('14 j (-6 j)');
+  await expect(line.locator('[data-test="consumption-projected"]')).toContainText('14 j \u22126 j (\u221230 %)');
   await expect(page.locator('[data-test="progress-history-leaf"][data-title="Synchronisation"] [data-test="progress-history-entry"]')).toHaveCount(1);
 
   const leaf = page.locator('[data-test="roadmap-leaf"][data-title="Synchronisation"]');
@@ -79,5 +79,5 @@ test('un lead déclare l\'avancement d\'une feuille et le retrouve sur la fiche 
   await expect(tooltip).toBeVisible();
   await expect(tooltip.locator('[data-test="roadmap-remaining"]')).toHaveText('14 j');
   await expect(tooltip.locator('[data-test="roadmap-progress"]')).toHaveText(`30 % au ${today()}`);
-  await expect(tooltip.locator('[data-test="roadmap-projected"]')).toHaveText('14 j pour 20 j estimés (-6 j)');
+  await expect(tooltip.locator('[data-test="roadmap-projected"]')).toHaveText('14 j pour une estimation de 20 j, \u22126 j (\u221230 %)');
 });

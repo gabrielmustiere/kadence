@@ -96,10 +96,10 @@ final class RoadmapProjectControllerTest extends WebTestCase
 
         $row = $crawler->filter('[data-test="consumption-row"][data-title="Back-office"]');
         self::assertSame('3 j', $row->filter('[data-test="consumption-remaining"]')->text());
-        self::assertSame('5 j de dépassement', $row->filter('[data-test="consumption-overrun"]')->text());
-        self::assertSame('5 j de dépassement', $crawler->filter('[data-test="consumption-row"][data-title="Dépassé"] [data-test="consumption-overrun"]')->text());
+        self::assertSame('5 j (50 %) de dépassement', $row->filter('[data-test="consumption-overrun"]')->text());
+        self::assertSame('5 j (100 %) de dépassement', $crawler->filter('[data-test="consumption-row"][data-title="Dépassé"] [data-test="consumption-overrun"]')->text());
         self::assertCount(0, $crawler->filter('[data-test="consumption-row"][data-title="Dépassé"] [data-test="consumption-remaining"]'));
-        self::assertSame(['3 j', '5 j'], [$crawler->filter('[data-test="project-page-remaining"]')->text(), $crawler->filter('[data-test="project-page-overrun"]')->text()]);
+        self::assertSame(['3 j', '5 j (50 %)'], [$crawler->filter('[data-test="project-page-remaining"]')->text(), $crawler->filter('[data-test="project-page-overrun"]')->text()]);
     }
 
     public function testProgressRulesWhatIsLeftAndShowsTheProjectedCostAndTheDeclarationsOfEachLeaf(): void
@@ -121,7 +121,7 @@ final class RoadmapProjectControllerTest extends WebTestCase
         self::assertSame(['9 j', 'Mar 20/10/2026'], [$crawler->filter('[data-test="project-page-remaining"]')->text(), $crawler->filter('[data-test="project-page-end"]')->text()]);
         self::assertSame(['8 j', '3 j', '9 j'], self::consumption($crawler)['Login']);
         $progress = static fn (string $title, string $field): string => $crawler->filter(\sprintf('[data-test="consumption-row"][data-title="%s"] [data-test="consumption-%s"]', $title, $field))->text();
-        self::assertSame(['25 % au 05/10', '12 j (+4 j)'], [$progress('Login', 'progress'), $progress('Login', 'projected')]);
+        self::assertSame(['25 % au 05/10', '12 j +4 j (+50 %)'], [$progress('Login', 'progress'), $progress('Login', 'projected')]);
         self::assertSame(['—', '—'], [$progress('API', 'progress'), $progress('API', 'projected')]);
         self::assertSame('25 %', $progress('Front', 'progress'));
         self::assertSame('67 %', $progress('Projet', 'progress'), '10 j entered on API weigh 100 %, Login 25 % of its 8 j.');

@@ -131,8 +131,8 @@ final class ProjectControllerTest extends WebTestCase
         self::assertSelectorTextContains($kadence . ' [data-test="estimate"]', '38 j');
         self::assertSelectorExists($kadence . ' [data-test="estimate-partial"]');
         self::assertSelectorTextContains($kadence . ' [data-test="signal-to-estimate"]', '1 à estimer');
-        self::assertSelectorTextContains($kadence . ' [data-test="signal-to-assign"]', '1 à désigner');
-        self::assertSelectorTextContains($kadence . ' [data-test="signal-to-reassign"]', '1 à redésigner');
+        self::assertSelectorTextContains($kadence . ' [data-test="signal-to-assign"]', '1 responsable à désigner');
+        self::assertSelectorTextContains($kadence . ' [data-test="signal-to-reassign"]', '1 responsable à remplacer');
         self::assertSelectorExists('[data-title="Évolution du portail"] [data-test="signal-unsplit"]');
     }
 
@@ -160,6 +160,21 @@ final class ProjectControllerTest extends WebTestCase
         self::assertSelectorExists('[data-title="Saisie des temps"] [data-test="leaf-to-estimate"]');
         self::assertSelectorExists('[data-title="Roadmap"] [data-test="leaf-to-assign"]');
         self::assertSelectorExists('[data-title="Rappels de saisie"] [data-test="leaf-to-reassign"]');
+    }
+
+    public function testProjectPageWritesTheOverrunInDaysThenShareOfTheEstimate(): void
+    {
+        $client = $this->clientAs('prod@example.com');
+        $owner = $this->fixtureUser('lead@example.com');
+        $project = $this->createProject();
+        $lot = $this->createLot($project, 2, $owner, title: 'Dépassé');
+        foreach (['2026-09-28' => 4, '2026-09-29' => 4, '2026-09-30' => 2] as $day => $quarters) {
+            $this->createTimeEntry($owner, $lot, $day, $quarters);
+        }
+
+        $client->request('GET', '/projets/' . $project->getId());
+
+        self::assertSelectorTextContains('[data-test="lot-row"][data-title="Dépassé"]', '2,5 j saisis, 0,5 j (25 %) de dépassement');
     }
 
     public function testProjectPageQueryCountDoesNotGrowWithItsLots(): void

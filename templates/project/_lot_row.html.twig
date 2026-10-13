@@ -21,7 +21,7 @@
                 <twig:Avatar :user="owner" size="sm" class="{{ owner.active ? '' : 'opacity-50' }}"/>
                 <span class="whitespace-nowrap {{ owner.active ? 'text-heading' : 'text-body line-through' }}">{{ owner.firstName }} {{ owner.lastName }}</span>
                 {% if not owner.active %}
-                    <twig:Badge variant="danger" data-test="leaf-to-reassign">à redésigner</twig:Badge>
+                    <twig:Badge variant="danger" data-test="leaf-to-reassign">à remplacer</twig:Badge>
                 {% elseif mine %}
                     <twig:Badge variant="brand" data-test="leaf-mine">vous</twig:Badge>
                 {% endif %}
@@ -43,7 +43,7 @@
     <twig:Table:Cell>
         <span class="block whitespace-nowrap text-xs tabular-nums text-body">
             {{ summary.enteredQuarters|days }} saisis
-            {%- if summary.overrunQuarters > 0 %}, <span class="font-medium text-fg-danger-strong">{{ summary.overrunQuarters|days }} au-delà</span>{% endif -%}
+            {%- if summary.overrunQuarters > 0 %}, <span class="font-medium text-fg-danger-strong">{{ summary.overrunQuarters|gap(summary.estimateDays) }} de dépassement</span>{% endif -%}
             {%- if summary.remainingQuarters > 0 %}<span class="sr-only">, {{ summary.remainingQuarters|days }} restants</span>{% endif -%}
         </span>
         <twig:Ruler class="mt-1.5" :entered="summary.enteredQuarters" :remaining="summary.remainingQuarters" :overrun="summary.overrunQuarters" :estimate="summary.estimateDays * 4" :scale="scale"/>

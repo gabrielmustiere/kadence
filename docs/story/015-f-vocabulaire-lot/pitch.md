@@ -118,20 +118,20 @@ L'utilisateur a tranché le mot principal au cadrage : « lot » partout, « feu
 
 ## Critères d'acceptation
 
-- [ ] Connecté en direction, en lead ou en prod, aucun écran, aucune infobulle et aucun message de validation n'affiche le mot « feuille ».
-- [ ] Les tableaux de lots de la fiche et de la page d'administration d'un projet titrent « Saisi » et « Estimation », jamais « Consommé », « Consommation » ou « Estimé ».
-- [ ] Un dépassement chiffré s'affiche au format « 3,25 j (13 %) » sur la pastille de la roadmap, dans le tableau des lots de la fiche, dans la liste des lots de la page d'administration, dans l'en-tête de la fiche et dans le récapitulatif au survol.
-- [ ] Un coût projeté affiche son écart au format « +6,5 j (+25 %) » ou « −6 j (−30 %) », sur la fiche et au survol de la roadmap.
-- [ ] La légende des frises dit « Saisi en dépassement » et « Lot découpé ou projet » ; le journal d'un projet marque « en dépassement » les tronçons saisis au-delà de l'estimation.
-- [ ] Les infobulles des pastilles de la roadmap parlent du lot, accordé au masculin, et ne parlent plus de « partie future ».
-- [ ] La catégorie de tags s'appelle « Pôle » (« Pôles » au pluriel) sur la page Tags, dans le formulaire et la liste des personnes, ses filtres, la fiche d'une personne, Mon compte et le filtre de composition de l'équipe d'un lot ; tous les tags existants y figurent.
-- [ ] Un projet dont des lots restent à estimer affiche « estimation partielle » ; un projet dont des lots ne sont pas planifiés affiche la pastille « planification partielle ».
-- [ ] La liste des projets affiche « responsable à désigner » et « responsable à remplacer » ; la liste des lots d'un projet n'affiche plus « à redésigner ».
-- [ ] Ma semaine propose « Ajouter un lot », et une recherche sans résultat dit « Aucun lot ne correspond. ».
-- [ ] Le refus d'une estimation inférieure au temps déjà saisi parle du lot.
-- [ ] Dans les congés à valider, la ligne des autres absents parle des collaborateurs du même manager.
-- [ ] Aucun écran ne parle de « date de fin projetée » : une date calculée s'appelle « fin calculée ».
-- [ ] Les données existantes (tags, temps, estimations, avancements, congés) s'affichent à l'identique, seuls les libellés ont changé.
+- [x] Connecté en direction, en lead ou en prod, aucun écran, aucune infobulle et aucun message de validation n'affiche le mot « feuille ».
+- [x] Les tableaux de lots de la fiche et de la page d'administration d'un projet titrent « Saisi » et « Estimation », jamais « Consommé », « Consommation » ou « Estimé ».
+- [x] Un dépassement chiffré s'affiche au format « 3,25 j (13 %) » sur la pastille de la roadmap, dans le tableau des lots de la fiche, dans la liste des lots de la page d'administration, dans l'en-tête de la fiche et dans le récapitulatif au survol.
+- [x] Un coût projeté affiche son écart au format « +6,5 j (+25 %) » ou « −6 j (−30 %) », sur la fiche et au survol de la roadmap.
+- [x] La légende des frises dit « Saisi en dépassement » et « Lot découpé ou projet » ; le journal d'un projet marque « en dépassement » les tronçons saisis au-delà de l'estimation.
+- [x] Les infobulles des pastilles de la roadmap parlent du lot, accordé au masculin, et ne parlent plus de « partie future ».
+- [x] La catégorie de tags s'appelle « Pôle » (« Pôles » au pluriel) sur la page Tags, dans le formulaire et la liste des personnes, ses filtres, la fiche d'une personne, Mon compte et le filtre de composition de l'équipe d'un lot ; tous les tags existants y figurent.
+- [x] Un projet dont des lots restent à estimer affiche « estimation partielle » ; un projet dont des lots ne sont pas planifiés affiche la pastille « planification partielle ».
+- [x] La liste des projets affiche « responsable à désigner » et « responsable à remplacer » ; la liste des lots d'un projet n'affiche plus « à redésigner ».
+- [x] Ma semaine propose « Ajouter un lot », et une recherche sans résultat dit « Aucun lot ne correspond. ».
+- [x] Le refus d'une estimation inférieure au temps déjà saisi parle du lot.
+- [x] Dans les congés à valider, la ligne des autres absents parle des collaborateurs du même manager.
+- [x] Aucun écran ne parle de « date de fin projetée » : une date calculée s'appelle « fin calculée ».
+- [x] Les données existantes (tags, temps, estimations, avancements, congés) s'affichent à l'identique, seuls les libellés ont changé.
 
 ## Hors scope
 

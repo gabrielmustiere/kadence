@@ -15,7 +15,7 @@ enum TagCategory: string
         return match ($this) {
             self::TechnicalSkill => 'Compétence technique',
             self::FunctionalExperience => 'Expérience fonctionnelle',
-            self::TeamType => 'Type d\'équipe',
+            self::TeamType => 'Pôle',
         };
     }
 
@@ -24,7 +24,7 @@ enum TagCategory: string
         return match ($this) {
             self::TechnicalSkill => 'Compétences techniques',
             self::FunctionalExperience => 'Expériences fonctionnelles',
-            self::TeamType => 'Types d\'équipe',
+            self::TeamType => 'Pôles',
         };
     }
 
