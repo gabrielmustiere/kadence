@@ -62,7 +62,7 @@
                         {# Laid over the summary rather than inside it: browsers expose a summary as a button, which may not hold a link. #}
                         <div class="pointer-events-none absolute inset-x-0 top-0">
                             <div class="sticky left-0 z-20 w-80">
-                                <a href="{{ path('app_roadmap_project', {id: project.project.id, roadmap: roadmap.window.anchor.iso}) }}" class="pointer-events-auto absolute end-3 top-3 grid size-7 place-items-center rounded-lg text-body-subtle transition-colors hover:bg-neutral-tertiary hover:text-heading focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-medium" title="Ouvrir la fiche" aria-label="Ouvrir la fiche de {{ project.title }}" data-test="roadmap-project-open">
+                                <a href="{{ path('app_project_show', {id: project.project.id, roadmap: roadmap.window.anchor.iso}) }}" class="pointer-events-auto absolute end-3 top-3 grid size-7 place-items-center rounded-lg text-body-subtle transition-colors hover:bg-neutral-tertiary hover:text-heading focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-medium" title="Ouvrir la fiche" aria-label="Ouvrir la fiche de {{ project.title }}" data-test="roadmap-project-open">
                                     <twig:ux:icon name="tabler:arrow-up-right" class="size-4"/>
                                 </a>
                             </div>

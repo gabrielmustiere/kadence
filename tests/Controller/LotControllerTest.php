@@ -232,6 +232,22 @@ final class LotControllerTest extends WebTestCase
         self::assertSame($lead->getId(), $lot->getOwner()?->getId());
     }
 
+    public function testDeletingALotFromAPageOpenedFromTheRoadmapComesBackToItWithTheWeek(): void
+    {
+        $client = $this->clientAs('lead@example.com');
+        $project = $this->createProject();
+        $this->createLot($project, 3, null, null, 'Éphémère');
+        $url = '/projets/' . $project->getId() . '?roadmap=2026-W50';
+
+        $crawler = $client->request('GET', $url);
+        $client->submit($crawler->filter('[data-test="lot-row"][data-title="Éphémère"] [data-test="lot-delete-confirm"]')->form());
+
+        self::assertResponseRedirects($url);
+        $client->followRedirect();
+        self::assertSelectorNotExists('[data-test="lot-row"][data-title="Éphémère"]');
+        self::assertSame('/roadmap/2026-W50', $client->getCrawler()->filter('[data-test="project-page-back"]')->attr('href'));
+    }
+
     public function testEstimateCannotGoBelowTheConsumedTimeRoundedUp(): void
     {
         $client = $this->clientAs('lead@example.com');

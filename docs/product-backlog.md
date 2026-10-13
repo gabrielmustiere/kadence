@@ -2,7 +2,7 @@
 
 > Carte des capacités fonctionnelles et backlog priorisé dérivé de `docs/vision.md`.
 
-_Document vivant — enrichi/édité au fil du cycle de vie, refondu lors d'un pivot. Date de dernière mise à jour : 2026-10-11._
+_Document vivant — enrichi/édité au fil du cycle de vie, refondu lors d'un pivot. Date de dernière mise à jour : 2026-10-13._
 
 ## Changelog
 
@@ -21,6 +21,7 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
 | 2026-10-02 | Enrichir | C5.5, C6.2, P3, règles transverses « responsable » et « estimation déclarative », ligne `avancement-feuilles`, notes `alerte-derive`, `jalons-dates-annoncees` et `charge-vs-capacite` | Sync post-livraison de la story 012-f-avancement-feuilles, cadrée hors backlog : avancement en % d'une feuille estimée déclaré par un lead, la direction ou son responsable ; restant extrapolé du rythme observé et ancré à la déclaration, qui alimente la fin calculée ; coût projeté, avancement cumulé et historique sur la fiche projet ; ligne ajoutée en V2 |
 | 2026-10-04 | Enrichir | C3.2, ligne `feuilles-favorites`, notes `jalons-dates-annoncees` et `archivage-projets` | Sync post-livraison de la story 013-f-feuilles-favorites, cadrée hors backlog : chacun met ses feuilles en favori, et elles sont des lignes de sa grille de saisie chaque semaine, en tête, même sans temps récent ; l'épinglage écarté par la story 003 est rétabli ; ligne ajoutée en V2 |
 | 2026-10-11 | Éditer | C1.5, C1.6, C4.2, règles transverses « manager », « profil » et « lecture individuelle », workflow des demandes de congé, convention « congés », notes `rappel-saisie`, `capacite-equipe` et `charge-vs-capacite` | Sync post-livraison de la story 014-f-conges : congés et RTT demandés au manager, droits déclarés par la direction par période, verrou de la saisie dès la demande, congés validés déduits de la capacité, absences visibles de tous sans leur type ; le manager décide des congés de ses collaborateurs, ce qui contredit la règle « être manager n'ouvre aucun droit » de la story 007 (contradiction assumée au cadrage) |
+| 2026-10-13 | Éditer | C5.5, C7.4 | Sync post-livraison de la story 016-f-page-projet-unique, cadrée hors backlog : une seule page par projet, à l'adresse de la page de gestion (l'ancienne fiche de la roadmap redirige), avec les actions de chacun selon ses droits ; total projeté du projet en tête, « au moins » quand un restant est inconnu ; journal replié au-delà de trois mois |
 
 ## Domaines fonctionnels
 
@@ -75,7 +76,7 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
 - **C5.2** — Le système peut alerter le responsable quand le rythme de consommation d'une feuille dépasse le rythme prévu sur sa période.
 - **C5.3** — La direction peut consulter la liste des feuilles en dérive.
 - **C5.4** — La direction peut consulter l'écart entre estimation initiale et réalisé des feuilles clôturées (pour mesurer la qualité d'estimation).
-- **C5.5** — Un lead, la direction ou le responsable d'une feuille estimée peut en déclarer l'avancement (0 à 100 % par pas de 5 %) : son restant est alors extrapolé du rythme observé à la déclaration, puis diminué du temps saisi depuis ; la fiche projet montre le coût projeté face à l'estimation, l'avancement cumulé des lots et du projet, et l'historique des déclarations. Posée par la story `012-f-avancement-feuilles`.
+- **C5.5** — Un lead, la direction ou le responsable d'une feuille estimée peut en déclarer l'avancement (0 à 100 % par pas de 5 %) : son restant est alors extrapolé du rythme observé à la déclaration, puis diminué du temps saisi depuis ; la fiche projet montre le coût projeté face à l'estimation, l'avancement cumulé des lots et du projet, et l'historique des déclarations. Posée par la story `012-f-avancement-feuilles`. La page du projet annonce aussi le total projeté du projet (saisi plus restant de toutes ses feuilles, sans compensation), « au moins » tant qu'un restant est inconnu, et l'avancement s'y déclare sur place (story `016-f-page-projet-unique`).
 
 ### D6 — Prévision
 
@@ -88,7 +89,7 @@ Historique des évolutions structurantes (création, enrichissements, éditions 
 - **C7.1** — Tout le monde peut consulter la roadmap : les jalons à venir, avec leur date annoncée et leur date projetée côte à côte.
 - **C7.2** — La direction peut modifier une date annoncée ; l'historique des annonces est conservé.
 - **C7.3** — La direction peut consulter la North Star (% de jalons livrés à ± 1 semaine de leur première date annoncée) sur une période.
-- **C7.4** — Tout le monde peut ouvrir depuis la roadmap la fiche d'un projet : sa frise sur toute sa durée et la timeline de tous ses tronçons de travail, du plus récent au plus ancien. Posée par la story `010-f-fiche-projet`.
+- **C7.4** — Tout le monde peut ouvrir depuis la roadmap la page d'un projet : sa frise sur toute sa durée et la timeline de tous ses tronçons de travail, du plus récent au plus ancien. Posée par la story `010-f-fiche-projet` ; depuis la story `016-f-page-projet-unique`, c'est la seule page du projet, qui porte aussi les actions de gestion selon les droits de chacun, et son journal replie les mois au-delà des trois plus récents.
 
 ## Parcours utilisateurs principaux
 

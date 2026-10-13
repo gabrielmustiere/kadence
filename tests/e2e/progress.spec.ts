@@ -48,27 +48,31 @@ async function login(page: Page, email: string) {
   await expect(page).not.toHaveURL(/\/login/);
 }
 
-test('un lead déclare l\'avancement d\'une feuille et le retrouve sur la fiche du projet', async ({ page }) => {
+test('un lead déclare l\'avancement d\'une feuille et en lit l\'effet sans changer de page', async ({ page }) => {
   await login(page, 'lead@example.com');
   await page.click('[data-test="nav-projects"]');
   await page.click(`[data-title="${project}"] [data-test="project-link"]`);
+  await expect(page.locator('[data-test="project-page-heading"]')).toHaveText(project);
+  const url = page.url();
+
+  await page.click('[data-test="roadmap-zoom-in"]');
+  await expect(page.locator('[data-test="roadmap-zoom-level"]')).toHaveText('×2');
 
   const row = page.locator('[data-test="lot-row"][data-title="Synchronisation"]');
   await row.locator('[data-test="progress-select"]').selectOption('30');
   await row.locator('[data-test="progress-submit"]').click();
 
   await expect(page.locator('[role="alert"]')).toContainText('Avancement de « Synchronisation » : 30 %.');
+  await expect(page).toHaveURL(url);
   await expect(row.locator('[data-test="progress-select"]')).toHaveValue('30');
   await expect(row.locator('[data-test="progress-declared-on"]')).toHaveText(`déclaré le ${today()}`);
-
-  const projectId = new URL(page.url()).pathname.split('/').pop();
-  await page.goto(`/roadmap/projets/${projectId}`);
-
-  const line = page.locator('[data-test="consumption-row"][data-title="Synchronisation"]');
-  await expect(line.locator('[data-test="consumption-remaining"]')).toHaveText('14 j');
-  await expect(line.locator('[data-test="consumption-progress"]')).toContainText(`30 % au ${today()}`);
-  await expect(line.locator('[data-test="consumption-projected"]')).toContainText('14 j \u22126 j (\u221230 %)');
+  await expect(row.locator('[data-test="consumption-remaining"]')).toHaveText('14 j');
+  await expect(row.locator('[data-test="consumption-projected"]')).toContainText('14 j \u22126 j (\u221230 %)');
   await expect(page.locator('[data-test="progress-history-leaf"][data-title="Synchronisation"] [data-test="progress-history-entry"]')).toHaveCount(1);
+
+  await expect(page.locator('[data-test="roadmap-zoom-level"]')).toHaveText('×2');
+  await expect(page.locator('[data-test="roadmap-zoom-reset"]')).toBeEnabled();
+  expect(await page.locator('[data-test="roadmap"]').evaluate((frame) => frame.style.getPropertyValue('--roadmap-zoom'))).toBe('2');
 
   const leaf = page.locator('[data-test="roadmap-leaf"][data-title="Synchronisation"]');
   const tooltip = leaf.locator('[data-test="roadmap-tooltip-future"]');

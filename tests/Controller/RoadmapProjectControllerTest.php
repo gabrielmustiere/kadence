@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Controller;
 
+use App\Entity\Lot;
 use App\Entity\Project;
 use App\Entity\User;
 use App\Enum\Type\RoadmapSignal;
@@ -34,7 +35,7 @@ final class RoadmapProjectControllerTest extends WebTestCase
     }
 
     #[DataProvider('roleProvider')]
-    public function testEveryoneReadsThePageOfAProjectWithoutAnyWayToManageIt(string $email): void
+    public function testLeadAndDirectionManageTheWholeProjectFromItsPage(string $email): void
     {
         $client = $this->clientAs($email);
         $project = $this->createExample();
@@ -43,10 +44,12 @@ final class RoadmapProjectControllerTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         self::assertSelectorTextSame('[data-test="project-page-heading"]', (string) $project->getTitle());
-        self::assertSame(['nav-roadmap'], $crawler->filter('#app-sidebar [aria-current="page"]')->each(static fn (Crawler $link): string => (string) $link->attr('data-test')));
+        self::assertSame(['nav-projects'], $crawler->filter('#app-sidebar [aria-current="page"]')->each(static fn (Crawler $link): string => (string) $link->attr('data-test')));
+        foreach (['project-edit' => 1, 'project-delete' => 1, 'lot-new' => 1, 'lot-edit' => 3, 'lot-new-sub-lot' => 2, 'lot-delete' => 3, 'progress-form' => 2] as $action => $count) {
+            self::assertCount($count, $crawler->filter(\sprintf('main [data-test="%s"]', $action)), $action);
+        }
         self::assertCount(0, $crawler->filter('[data-test="roadmap-leaf-link"]'), 'The title of a leaf never links to its edition here.');
         self::assertCount(2, $crawler->filter('[data-test="roadmap-leaf-title"]'));
-        self::assertCount(0, $crawler->filter('main a[href*="/modifier"], main form'));
     }
 
     /**
@@ -56,7 +59,31 @@ final class RoadmapProjectControllerTest extends WebTestCase
     {
         yield 'direction' => ['admin@example.com'];
         yield 'lead' => ['lead@example.com'];
-        yield 'prod' => ['prod@example.com'];
+    }
+
+    public function testProdReadsThePageWithoutAnyActionButOnTheLeafTheyHold(): void
+    {
+        $project = $this->createExample();
+        $client = $this->clientAs('prod@example.com');
+
+        $crawler = $client->request('GET', $this->url($project));
+
+        self::assertResponseIsSuccessful();
+        self::assertCount(0, $crawler->filter('main form, main a[href*="/modifier"], main a[href*="/nouveau"], main [data-test="lot-delete"]'), 'Responsible for no lot of the project, prod sees no action.');
+
+        $login = $this->lot($project, 'Login');
+        $owner = $login->getOwner();
+        self::assertNotNull($owner);
+        $crawler = $this->clientOf($owner)->request('GET', $this->url($project));
+
+        $mine = $crawler->filter('[data-test="lot-row"][data-title="Login"]');
+        self::assertCount(1, $mine->filter('[data-test="lot-edit"]'));
+        self::assertCount(1, $mine->filter('[data-test="progress-form"]'));
+        self::assertCount(1, $crawler->filter('main [data-test="lot-edit"]'));
+        self::assertCount(1, $crawler->filter('main form'));
+        foreach (['project-edit', 'project-delete', 'lot-new', 'lot-new-sub-lot', 'lot-delete'] as $action) {
+            self::assertCount(0, $crawler->filter(\sprintf('main [data-test="%s"]', $action)), $action);
+        }
     }
 
     public function testSummaryAndConsumptionTellWhereTheProjectStands(): void
@@ -70,6 +97,11 @@ final class RoadmapProjectControllerTest extends WebTestCase
             ['18 j', '13 j', '5 j', '0 j', 'Lun 07/09/2026', 'Mer 14/10/2026'],
             array_map(static fn (string $field): string => $crawler->filter(\sprintf('[data-test="project-page-%s"]', $field))->text(), ['estimate', 'entered', 'remaining', 'overrun', 'start', 'end']),
         );
+        self::assertSelectorTextSame('[data-test="project-page-projected"]', '18 j');
+        self::assertSelectorNotExists('[data-test="project-page-gap"]', 'Projected on its estimate, the project shows no gap.');
+        self::assertSelectorNotExists('[data-test="project-page-at-least"]');
+        self::assertSelectorNotExists('[data-test="project-page-projected-partial"]');
+        self::assertSelectorTextContains('[data-test="project-page-no-offset"]', 'ne compense jamais le dépassement');
         self::assertSame([
             'API' => ['10 j', '10 j', '0 j'],
             'Front' => ['8 j', '3 j', '5 j'],
@@ -94,11 +126,11 @@ final class RoadmapProjectControllerTest extends WebTestCase
 
         $crawler = $client->request('GET', $this->url($project));
 
-        $row = $crawler->filter('[data-test="consumption-row"][data-title="Back-office"]');
+        $row = $crawler->filter('[data-test="lot-row"][data-title="Back-office"]');
         self::assertSame('3 j', $row->filter('[data-test="consumption-remaining"]')->text());
         self::assertSame('5 j (50 %) de dépassement', $row->filter('[data-test="consumption-overrun"]')->text());
-        self::assertSame('5 j (100 %) de dépassement', $crawler->filter('[data-test="consumption-row"][data-title="Dépassé"] [data-test="consumption-overrun"]')->text());
-        self::assertCount(0, $crawler->filter('[data-test="consumption-row"][data-title="Dépassé"] [data-test="consumption-remaining"]'));
+        self::assertSame('5 j (100 %) de dépassement', $crawler->filter('[data-test="lot-row"][data-title="Dépassé"] [data-test="consumption-overrun"]')->text());
+        self::assertCount(0, $crawler->filter('[data-test="lot-row"][data-title="Dépassé"] [data-test="consumption-remaining"]'));
         self::assertSame(['3 j', '5 j (50 %)'], [$crawler->filter('[data-test="project-page-remaining"]')->text(), $crawler->filter('[data-test="project-page-overrun"]')->text()]);
     }
 
@@ -120,17 +152,17 @@ final class RoadmapProjectControllerTest extends WebTestCase
 
         self::assertSame(['9 j', 'Mar 20/10/2026'], [$crawler->filter('[data-test="project-page-remaining"]')->text(), $crawler->filter('[data-test="project-page-end"]')->text()]);
         self::assertSame(['8 j', '3 j', '9 j'], self::consumption($crawler)['Login']);
-        $progress = static fn (string $title, string $field): string => $crawler->filter(\sprintf('[data-test="consumption-row"][data-title="%s"] [data-test="consumption-%s"]', $title, $field))->text();
+        $progress = static fn (string $title, string $field): string => $crawler->filter(\sprintf('[data-test="lot-row"][data-title="%s"] [data-test="consumption-%s"]', $title, $field))->text();
         self::assertSame(['25 % au 05/10', '12 j +4 j (+50 %)'], [$progress('Login', 'progress'), $progress('Login', 'projected')]);
         self::assertSame(['—', '—'], [$progress('API', 'progress'), $progress('API', 'projected')]);
         self::assertSame('25 %', $progress('Front', 'progress'));
-        self::assertSame('67 %', $progress('Projet', 'progress'), '10 j entered on API weigh 100 %, Login 25 % of its 8 j.');
+        self::assertSame('67 %', $crawler->filter('[data-test="lot-total-row"] [data-test="consumption-progress"]')->text(), '10 j entered on API weigh 100 %, Login 25 % of its 8 j.');
 
         $history = $crawler->filter('[data-test="progress-history-leaf"][data-title="Login"]');
         self::assertStringContainsString('Front · Login', $history->text());
         self::assertSame(['Lun 05/10/2026 25 % Test User', 'Jeu 01/10/2026 20 % Test User'], $history->filter('[data-test="progress-history-entry"]')->each(static fn (Crawler $entry): string => $entry->text()));
         self::assertCount(1, $crawler->filter('[data-test="progress-history-leaf"]'));
-        self::assertCount(0, $crawler->filter('main form'), 'The progress is declared from the page of the project, not from here.');
+        self::assertCount(0, $crawler->filter('main form'), 'Prod declares the progress of the leaves they hold only.');
     }
 
     public function testLeafToEstimateIsPartOfTheTableAndOfTheTimelineWithoutABarOnTheFrieze(): void
@@ -143,11 +175,12 @@ final class RoadmapProjectControllerTest extends WebTestCase
 
         $crawler = $client->request('GET', $this->url($project));
 
-        $row = $crawler->filter('[data-test="consumption-row"][data-title="Cadrage"]');
+        $row = $crawler->filter('[data-test="lot-row"][data-title="Cadrage"]');
         self::assertCount(1, $row->filter('[data-test="leaf-to-estimate"]'));
         self::assertSame('1 j', $row->filter('[data-test="consumption-entered"]')->text());
         self::assertCount(0, $row->filter('[data-test="consumption-remaining"]'));
         self::assertCount(1, $crawler->filter('[data-test="project-page-estimate"] [data-test="estimate-partial"]'));
+        self::assertSame('Estimation partielle : 1 lot reste à estimer, et leur restant n\'est pas compté dans le total projeté.', $crawler->filter('[data-test="project-page-projected-partial"]')->text());
         self::assertCount(0, $crawler->filter('[data-test="roadmap-leaf"][data-title="Cadrage"] [data-test^="roadmap-bar"]'));
         self::assertSame(['Cadrage'], $crawler->filter('[data-test="timeline-entry-leaf"]')->each(static fn (Crawler $leafPath): string => $leafPath->text()));
     }
@@ -220,6 +253,40 @@ final class RoadmapProjectControllerTest extends WebTestCase
         self::assertCount(0, $crawler->filter('[data-test="timeline-entry-overrun"]'));
     }
 
+    public function testTimelineFoldsTheMonthsBeyondTheThreeLatest(): void
+    {
+        $client = $this->clientAs('prod@example.com');
+        $alice = $this->createUser();
+        $project = $this->createProject();
+        $leaf = $this->createLot($project, 300, $alice, title: 'Socle');
+        foreach (['2026-05-04', '2026-06-01', '2026-07-06', '2026-08-03', '2026-09-07'] as $day) {
+            $this->createTimeEntry($alice, $leaf, $day, 4);
+        }
+
+        $crawler = $client->request('GET', $this->url($project));
+
+        $label = static fn (Crawler $month): string => $month->text();
+        self::assertSame(['Septembre 2026', 'Août 2026', 'Juillet 2026', 'Juin 2026', 'Mai 2026'], $crawler->filter('[data-test="timeline-month-label"]')->each($label));
+        $earlier = $crawler->filter('[data-test="timeline-earlier"]');
+        self::assertSame('details', $earlier->nodeName());
+        self::assertNull($earlier->attr('open'));
+        $toggle = $earlier->filter('[data-test="timeline-earlier-toggle"]');
+        self::assertStringEndsWith('les mois précédents (2)', trim($toggle->text()));
+        self::assertSame(['Afficher', 'Masquer'], $toggle->filter('span')->each(static fn (Crawler $word): string => $word->text()), 'The word follows the state of the details, in CSS.');
+        self::assertSame(['Juin 2026', 'Mai 2026'], $earlier->filter('[data-test="timeline-month-label"]')->each($label));
+    }
+
+    public function testTimelineOfThreeMonthsHasNothingToFold(): void
+    {
+        $client = $this->clientAs('prod@example.com');
+        $project = $this->createExample();
+
+        $client->request('GET', $this->url($project));
+
+        self::assertSelectorExists('[data-test="timeline-month"]');
+        self::assertSelectorNotExists('[data-test="timeline-earlier"]');
+    }
+
     public function testRunBeyondTheEstimateIsMarkedOnTheTimeline(): void
     {
         $client = $this->clientAs('prod@example.com');
@@ -266,11 +333,40 @@ final class RoadmapProjectControllerTest extends WebTestCase
         self::assertSame('Ouvrir la fiche de ' . $project->getTitle(), $link->attr('aria-label'));
 
         $crawler = $client->request('GET', (string) $link->attr('href'));
-        self::assertSame('/roadmap/2026-W50', $crawler->filter('[data-test="project-page-back"]')->attr('href'));
+        $back = $crawler->filter('[data-test="project-page-back"]');
+        self::assertSame(['/roadmap/2026-W50', 'Roadmap'], [$back->attr('href'), $back->text()]);
 
         $crawler = $client->request('GET', $this->url($project) . '?roadmap=2026-W60');
         self::assertResponseIsSuccessful();
-        self::assertSame('/roadmap', $crawler->filter('[data-test="project-page-back"]')->attr('href'));
+        $back = $crawler->filter('[data-test="project-page-back"]');
+        self::assertSame(['/projets', 'Projets'], [$back->attr('href'), $back->text()]);
+    }
+
+    public function testComesBackToTheListOfProjectsItWasOpenedFrom(): void
+    {
+        $client = $this->clientAs('prod@example.com');
+        $project = $this->createExample();
+
+        $crawler = $client->request('GET', $this->url($project));
+
+        $back = $crawler->filter('[data-test="project-page-back"]');
+        self::assertSame(['/projets', 'Projets'], [$back->attr('href'), $back->text()]);
+        self::assertSame(['nav-projects'], $crawler->filter('#app-sidebar [aria-current="page"]')->each(static fn (Crawler $link): string => (string) $link->attr('data-test')));
+    }
+
+    public function testTheFormerAddressOfThePageRedirectsToItKeepingTheWeekOfTheRoadmap(): void
+    {
+        $client = $this->clientAs('prod@example.com');
+        $project = $this->createProject();
+
+        $client->request('GET', '/roadmap/projets/' . $project->getId() . '?roadmap=2026-W50');
+        self::assertResponseRedirects($this->url($project) . '?roadmap=2026-W50', 301);
+
+        $client->request('GET', '/roadmap/projets/' . $project->getId());
+        self::assertResponseRedirects($this->url($project), 301);
+
+        $client->request('GET', '/roadmap/projets/' . $project->getId() . '?roadmap=2026-W60');
+        self::assertResponseRedirects($this->url($project), 301, 'An invalid week is not carried over.');
     }
 
     public function testProjectWithoutDateHasNoFriezeNorTimeline(): void
@@ -281,7 +377,7 @@ final class RoadmapProjectControllerTest extends WebTestCase
 
         $client->request('GET', $this->url($project));
 
-        self::assertSelectorExists('[data-test="consumption"]');
+        self::assertSelectorExists('[data-test="lots-table"]');
         self::assertSelectorExists('[data-test="project-page-no-frieze"]');
         self::assertSelectorNotExists('[data-test="roadmap"]');
         self::assertSelectorNotExists('[data-controller="roadmap"]');
@@ -296,10 +392,15 @@ final class RoadmapProjectControllerTest extends WebTestCase
         $client->request('GET', $this->url($project));
 
         self::assertSelectorTextContains('[data-test="project-page-unsplit"]', 'pas encore découpé');
-        self::assertSelectorNotExists('[data-test="consumption"]');
+        self::assertSelectorNotExists('[data-test="project-page-summary"]');
+        self::assertSelectorNotExists('[data-test="lots-table"]');
         self::assertSelectorNotExists('[data-test="roadmap"]');
         self::assertSelectorNotExists('[data-test="timeline"]');
         self::assertSelectorNotExists('[data-test="timeline-empty"]');
+        self::assertSelectorNotExists('[data-test="lot-new"]');
+
+        $this->clientAs('lead@example.com')->request('GET', $this->url($project));
+        self::assertSelectorExists('[data-test="lot-new"]');
     }
 
     public function testAnUnknownEndNamesTheLeavesWithoutOneAndWhy(): void
@@ -323,11 +424,41 @@ final class RoadmapProjectControllerTest extends WebTestCase
         self::assertSame(['Front · Login : en dépassement'], $crawler->filter('[data-test="unknown-end"]')->each(static fn (Crawler $leaf): string => $leaf->text()));
     }
 
+    public function testTheProjectedCostIsAMinimumWhileALeafOverrunsWithoutProgress(): void
+    {
+        $client = $this->clientAs('prod@example.com');
+        $project = $this->createExample();
+        $login = $this->lot($project, 'Login');
+        $bob = $login->getOwner();
+        self::assertNotNull($bob);
+        foreach (['2026-09-17', '2026-09-18', '2026-09-28', '2026-09-29', '2026-09-30', '2026-10-01'] as $day) {
+            $this->createTimeEntry($bob, $login, $day, 4);
+        }
+
+        $crawler = $client->request('GET', $this->url($project));
+
+        self::assertSelectorTextSame('[data-test="project-page-at-least"]', 'au moins');
+        self::assertSelectorTextSame('[data-test="project-page-projected"]', '19 j');
+        self::assertSelectorTextSame('[data-test="project-page-gap"]', '+1 j (+6 %)');
+        self::assertSelectorExists('[data-test="project-page-at-least-reason"]');
+        self::assertSame(['19 j', '0 j', '1 j (6 %)'], array_map(static fn (string $field): string => $crawler->filter(\sprintf('[data-test="project-page-%s"]', $field))->text(), ['entered', 'remaining', 'overrun']));
+
+        $this->createProgress($login, $bob, '2026-10-05', 90, 36);
+        $client->request('GET', $this->url($project));
+
+        self::assertSelectorNotExists('[data-test="project-page-at-least"]', 'Its progress tells what is left on the leaf.');
+        self::assertSelectorNotExists('[data-test="project-page-at-least-reason"]');
+        self::assertSelectorTextSame('[data-test="project-page-projected"]', '20 j');
+    }
+
     public function testUnknownProjectIsNotFound(): void
     {
-        $this->clientAs('prod@example.com')->request('GET', '/roadmap/projets/999999');
+        $client = $this->clientAs('prod@example.com');
 
-        self::assertResponseStatusCodeSame(404);
+        foreach (['/projets/999999', '/roadmap/projets/999999'] as $url) {
+            $client->request('GET', $url);
+            self::assertResponseStatusCodeSame(404, $url);
+        }
     }
 
     public function testQueryCountDoesNotGrowWithTheNumberOfLeaves(): void
@@ -375,7 +506,7 @@ final class RoadmapProjectControllerTest extends WebTestCase
     private static function consumption(Crawler $crawler): array
     {
         $lines = [];
-        $crawler->filter('[data-test="consumption-row"]')->each(static function (Crawler $row) use (&$lines): void {
+        $crawler->filter('[data-test="lot-row"], [data-test="lot-total-row"]')->each(static function (Crawler $row) use (&$lines): void {
             $lines[(string) $row->attr('data-title')] = array_map(static fn (string $field): string => trim($row->filter(\sprintf('[data-test="%s"]', $field))->text()), ['consumption-estimate', 'consumption-entered', 'consumption-remaining']);
         });
 
@@ -384,7 +515,7 @@ final class RoadmapProjectControllerTest extends WebTestCase
 
     private function url(Project $project): string
     {
-        return '/roadmap/projets/' . $project->getId();
+        return '/projets/' . $project->getId();
     }
 
     private function queryCount(KernelBrowser $client, Project $project): int
@@ -401,6 +532,14 @@ final class RoadmapProjectControllerTest extends WebTestCase
         return $collector->getQueryCount();
     }
 
+    private function lot(Project $project, string $title): Lot
+    {
+        $lot = $project->getLots()->findFirst(static fn (int $key, Lot $lot): bool => $title === $lot->getTitle());
+        self::assertInstanceOf(Lot::class, $lot);
+
+        return $lot;
+    }
+
     private function clientAs(string $email): KernelBrowser
     {
         self::ensureKernelShutdown();
@@ -409,6 +548,15 @@ final class RoadmapProjectControllerTest extends WebTestCase
         \assert($userRepository instanceof UserRepository);
         $user = $userRepository->findOneByEmail($email);
         self::assertInstanceOf(User::class, $user);
+        $client->loginUser($user);
+
+        return $client;
+    }
+
+    private function clientOf(User $user): KernelBrowser
+    {
+        self::ensureKernelShutdown();
+        $client = self::createClient();
         $client->loginUser($user);
 
         return $client;

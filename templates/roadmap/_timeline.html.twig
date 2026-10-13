@@ -1,7 +1,8 @@
 {#
     Every run of a page, from the latest to the earliest, under the month of its last day. Expects `page`; on the page
     of a person, `with_team` false leaves out who entered what, `with_project` true heads each leaf with its project and
-    `empty_message` replaces the message of a project without time entered.
+    `empty_message` replaces the message of a project without time entered; `recent_months` folds the months beyond
+    the latest ones.
 #}
 {% if page.timeline is empty %}
     <twig:EmptyState icon="tabler:clock" data-test="timeline-empty">
@@ -9,7 +10,16 @@
     </twig:EmptyState>
 {% else %}
     <div class="space-y-6" data-test="timeline">
+        {% set recent_months = recent_months ?? null %}
         {% for month in page.timeline %}
+            {% if recent_months is not null and loop.index0 == recent_months %}
+                <details class="group" data-test="timeline-earlier">
+                <summary class="inline-flex cursor-pointer list-none items-center gap-1.5 text-sm font-medium text-fg-brand hover:underline group-open:mb-6 [&::-webkit-details-marker]:hidden" data-test="timeline-earlier-toggle">
+                    <twig:ux:icon name="tabler:chevron-down" class="size-4 transition-transform group-open:rotate-180"/>
+                    <span class="group-open:hidden">Afficher</span><span class="hidden group-open:inline">Masquer</span> les mois précédents ({{ page.timeline|length - recent_months }})
+                </summary>
+                <div class="space-y-6">
+            {% endif %}
             <section class="grid grid-cols-1 gap-3 lg:grid-cols-[9rem_minmax(0,1fr)] lg:gap-6" data-test="timeline-month">
                 <h3 class="eyebrow pt-3.5 text-body-subtle lg:sticky lg:top-20 lg:self-start" data-test="timeline-month-label">{{ month.label }}</h3>
                 <ol class="max-w-4xl divide-y divide-default-subtle overflow-hidden rounded-card border border-default bg-surface shadow-card">
@@ -20,7 +30,7 @@
                             <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                                 <p class="font-medium text-heading" data-test="timeline-entry-leaf">
                                     {%- if with_project ?? false -%}
-                                        <a href="{{ path('app_roadmap_project', {id: entry.leaf.project.id}) }}" class="underline decoration-default-medium underline-offset-4 hover:decoration-default-strong" data-test="person-project-link">{{ entry.leaf.project.title }}</a> ·{{ ' ' }}
+                                        <a href="{{ path('app_project_show', {id: entry.leaf.project.id}) }}" class="underline decoration-default-medium underline-offset-4 hover:decoration-default-strong" data-test="person-project-link">{{ entry.leaf.project.title }}</a> ·{{ ' ' }}
                                     {%- endif -%}
                                     {{ entry.leafPath -}}
                                 </p>
@@ -42,6 +52,10 @@
                     {% endfor %}
                 </ol>
             </section>
+            {% if loop.last and recent_months is not null and loop.index0 >= recent_months %}
+                </div>
+                </details>
+            {% endif %}
         {% endfor %}
     </div>
 {% endif %}

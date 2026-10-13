@@ -64,8 +64,7 @@ Réutiliser `templates/components/` avant d'écrire des classes ad hoc :
 
 ## Fiches
 
-- **Fiche projet** (`roadmap/project.html.twig`) : en tête, une phrase d'état (« N j saisis sur une estimation de M j »), les dates de début et de fin calculée, la règle graduée et sa légende chiffrée ; puis les lots avec une règle par ligne sur une échelle commune ; la frise ; le journal et, à côté, les avancements déclarés.
-- **Page projet d'administration** (`project/show.html.twig`) : la même règle par lot, à côté du responsable, de l'estimation et de la déclaration d'avancement ; lien vers la fiche du projet.
+- **Page projet** (`project/show.html.twig`) : une seule page par projet, ses actions selon les droits (absentes plutôt que grisées). En tête, le total projeté en chiffre de tête face à l'estimation et l'écart (« au moins » quand un restant est inconnu, mention de l'estimation partielle), les dates de début et de fin calculée, la règle graduée et sa légende chiffrée (saisi, restant, dépassement) ; puis un seul tableau des lots, une règle par ligne sur une échelle commune, à côté du responsable, de l'estimation, du restant ou dépassement, de l'avancement (déclaré sur place par qui peut), du projeté et des actions, et une ligne de cumul ; la frise ; le journal, mois anciens repliés au-delà des trois plus récents, et à côté les avancements déclarés.
 - **Fiche personne** (`person/show.html.twig`) : pour qui planifie, un bandeau charge (jauge bleue jusqu'à une journée pleine, rouge au-delà) et date de disponibilité ; puis ce qui vient, le temps saisi par projet (barres relatives) et le profil ; la frise ; le journal.
 
 ## Données (frise, règles, jauges)

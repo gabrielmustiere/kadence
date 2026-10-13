@@ -114,7 +114,7 @@ final class PersonControllerTest extends WebTestCase
         $projectLinks = array_unique($crawler->filter('[data-test="person-project-link"]')->each(static fn (Crawler $link): string => (string) $link->attr('href')));
         self::assertCount(3, $projectLinks);
         foreach ($projectLinks as $href) {
-            self::assertMatchesRegularExpression('#^/roadmap/projets/\d+$#', $href);
+            self::assertMatchesRegularExpression('#^/projets/\d+$#', $href);
         }
     }
 

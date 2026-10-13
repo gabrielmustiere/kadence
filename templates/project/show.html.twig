@@ -1,34 +1,36 @@
 {% extends 'base.html.twig' %}
 
 {% set project = summary.project %}
+{% set roadmap = page.roadmap %}
+{% set projectRow = page.project %}
 
 {% block title %}{{ project.title }} · Kadence{% endblock %}
 
 {% block body %}
-    <twig:PageHeader :title="project.title" :back="path('app_project_index')" backLabel="Projets" :headingAttrs="{'data-test': 'project-heading'}">
+    <twig:PageHeader
+        :title="project.title"
+        :back="back ? path('app_roadmap_week', {week: back.iso}) : path('app_project_index')"
+        :backLabel="back ? 'Roadmap' : 'Projets'"
+        backTest="project-page-back"
+        :headingAttrs="{'data-test': 'project-page-heading'}"
+    >
         <twig:block name="description">
             {% if project.description %}
-                <p class="mt-2.5 max-w-3xl whitespace-pre-line break-words text-[15px] leading-relaxed text-body" data-test="project-description">{{ project.description }}</p>
+                <p class="mt-2.5 max-w-3xl whitespace-pre-line break-words text-[15px] leading-relaxed text-body" data-test="project-page-description">{{ project.description }}</p>
             {% endif %}
         </twig:block>
         <twig:block name="meta">
-            <div class="mt-5 flex flex-wrap items-center gap-x-5 gap-y-3 text-sm text-body">
-                <div class="inline-flex items-baseline gap-2">
-                    Estimation totale
-                    <strong class="text-base font-semibold text-heading" data-test="project-total">{{ include('project/_estimate.html.twig') }}</strong>
-                </div>
-                {% if summary.isUnsplit %}
-                    <twig:Badge variant="gray" data-test="signal-unsplit">à découper</twig:Badge>
-                {% else %}
+            {% if projectRow.signals is not empty or summary.toEstimate + summary.toAssign + summary.toReassign > 0 %}
+                <div class="mt-4 flex flex-wrap items-center gap-1.5" data-controller="roadmap-tooltip" data-action="pointerover->roadmap-tooltip#show pointerout->roadmap-tooltip#leave focusin->roadmap-tooltip#show focusout->roadmap-tooltip#leave scroll@window->roadmap-tooltip#hide keydown.esc@window->roadmap-tooltip#hide turbo:before-cache@document->roadmap-tooltip#hide">
+                    {% for signal in projectRow.signals %}
+                        {{ include('roadmap/_signal.html.twig', {row: projectRow, prefix: 'header-signal'}) }}
+                    {% endfor %}
                     {{ include('project/_signals.html.twig') }}
-                {% endif %}
-            </div>
+                    {{ include('roadmap/_signal_tooltips.html.twig', {row: projectRow, prefix: 'header-signal'}) }}
+                </div>
+            {% endif %}
         </twig:block>
 
-        <twig:Button as="a" variant="ghost" href="{{ path('app_roadmap_project', {id: project.id}) }}">
-            <twig:ux:icon name="tabler:timeline-event" class="size-4"/>
-            Fiche du projet
-        </twig:Button>
         {% if is_granted('ROLE_LEAD') %}
             <twig:Button as="a" variant="outline" href="{{ path('app_project_edit', {id: project.id}) }}" data-test="project-edit">
                 <twig:ux:icon name="tabler:pencil" class="size-4"/>
@@ -77,51 +79,140 @@
         {% endif %}
     </twig:PageHeader>
 
-    <div class="mb-4 flex items-center justify-between gap-4">
-        <h2 class="flex items-center gap-2 text-lg font-semibold tracking-tight text-heading">
-            Lots
-            {% if not summary.isUnsplit %}<span class="rounded-full bg-neutral-tertiary px-2 py-0.5 text-xs font-medium tabular-nums text-body">{{ summary.lots|length }}</span>{% endif %}
-        </h2>
-        {% if is_granted('ROLE_LEAD') %}
-            <twig:Button as="a" size="sm" variant="brand" href="{{ path('app_lot_new', {id: project.id}) }}" data-test="lot-new">
-                <twig:ux:icon name="tabler:plus" class="size-4"/>
-                Ajouter un lot
-            </twig:Button>
-        {% endif %}
-    </div>
+    {% if not summary.isUnsplit %}
+        {% set projectedGap = summary.projectedGapQuarters %}
+        <section class="mb-12 rounded-card border border-default bg-surface px-5 pt-6 pb-5 sm:px-7" aria-labelledby="project-state" data-test="project-page-summary">
+            <h2 id="project-state" class="sr-only">Où en est le projet</h2>
+            <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+                <div class="min-w-0">
+                    <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-heading">
+                        {% if summary.isProjectedAtLeast %}
+                            <span class="text-lg text-body" data-test="project-page-at-least">au moins</span>
+                        {% endif %}
+                        <span class="font-display text-[3rem] leading-none tabular-nums sm:text-[3.75rem]" data-test="project-page-projected">{{ summary.projectedQuarters|days }}</span>
+                        <span class="text-lg text-body">projetés pour une estimation de
+                            <span class="font-semibold text-heading" data-test="project-page-estimate">{{ include('project/_estimate.html.twig') }}</span>
+                        </span>
+                    </div>
+                    {% if projectedGap != 0 %}
+                        <p class="mt-2 text-base font-semibold tabular-nums {{ projectedGap > 0 ? 'text-fg-danger-strong' : 'text-body' }}" data-test="project-page-gap">{{ projectedGap|gap(summary.estimateDays, signed: true) }}</p>
+                    {% endif %}
+                    <div class="mt-3 max-w-2xl space-y-1 text-sm leading-relaxed text-body">
+                        {% if summary.isPartial %}
+                            <p data-test="project-page-projected-partial">Estimation partielle : {{ summary.toEstimate }} lot{{ summary.toEstimate > 1 ? 's' }} reste{{ summary.toEstimate > 1 ? 'nt' }} à estimer, et leur restant n'est pas compté dans le total projeté.</p>
+                        {% endif %}
+                        {% if summary.isProjectedAtLeast %}
+                            <p data-test="project-page-at-least-reason">C'est un minimum : le restant d'un lot qui dépasse son estimation sans avancement déclaré, ou qui a épuisé celui de son dernier avancement, est inconnu.</p>
+                        {% endif %}
+                        <p data-test="project-page-no-offset">Le restant d'un lot ne compense jamais le dépassement d'un autre : ils s'additionnent séparément.</p>
+                    </div>
+                </div>
+                <dl class="grid shrink-0 grid-cols-2 gap-x-10 gap-y-4 tabular-nums">
+                    <div>
+                        <dt class="eyebrow text-body-subtle">Début</dt>
+                        <dd class="mt-1 text-base font-semibold text-heading" data-test="project-page-start">{{ projectRow.start ? projectRow.start|weekday ~ ' ' ~ projectRow.start|date('d/m/Y') : '—' }}</dd>
+                    </div>
+                    <div>
+                        <dt class="eyebrow text-body-subtle">Fin calculée</dt>
+                        <dd class="mt-1 text-base font-semibold text-heading" data-test="project-page-end">
+                            {%- if projectRow.end -%}
+                                {{ projectRow.end|weekday }} {{ projectRow.end|date('d/m/Y') }}
+                            {%- elseif projectRow.start -%}
+                                inconnue
+                            {%- else -%}
+                                —
+                            {%- endif -%}
+                        </dd>
+                        {% if projectRow.isEndUnknown %}
+                            <div class="max-w-72">
+                                {{ include('roadmap/_unknown_ends.html.twig', {rows: projectRow.unknownEndLeaves}) }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </dl>
+            </div>
+            <twig:Ruler size="lg" class="mt-7" :entered="summary.enteredQuarters" :remaining="summary.remainingQuarters" :overrun="summary.overrunQuarters" :estimate="summary.estimateDays * 4">
+                <ul class="flex flex-wrap gap-x-7 gap-y-2 text-sm text-body">
+                    <li class="inline-flex items-center gap-2"><span class="h-3 w-4 rounded-[2px] bg-brand" aria-hidden="true"></span>Saisi <strong class="font-semibold tabular-nums text-heading" data-test="project-page-entered">{{ summary.enteredQuarters|days }}</strong></li>
+                    <li class="inline-flex items-center gap-2"><span class="hatch-brand h-3 w-4 rounded-[2px] bg-brand-softer" aria-hidden="true"></span>Restant <strong class="font-semibold tabular-nums text-heading" data-test="project-page-remaining">{{ summary.remainingQuarters|days }}</strong></li>
+                    <li class="inline-flex items-center gap-2"><span class="h-3 w-4 rounded-[2px] bg-danger" aria-hidden="true"></span>Dépassement <strong class="font-semibold tabular-nums {{ summary.overrunQuarters > 0 ? 'text-fg-danger-strong' : 'text-heading' }}" data-test="project-page-overrun">{{ summary.overrunQuarters > 0 ? summary.overrunQuarters|gap(summary.estimateDays) : summary.overrunQuarters|days }}</strong></li>
+                </ul>
+            </twig:Ruler>
+        </section>
+    {% endif %}
 
-    {% if summary.isUnsplit %}
-        <twig:EmptyState icon="tabler:stack-2" data-test="lots-empty">
-            Ce projet n'est pas encore découpé en lots.
-        </twig:EmptyState>
-    {% else %}
-        {% set scale = 0 %}
-        {% for lotSummary in summary.lots %}
-            {% for line in [lotSummary]|merge(lotSummary.children) %}
-                {% set scale = max(scale, line.enteredQuarters + line.remainingQuarters, line.estimateDays * 4) %}
-            {% endfor %}
-        {% endfor %}
-        <twig:TableCard>
-            <twig:Table data-test="lots-table">
-                <twig:Table:Header>
-                    <twig:Table:Row>
-                        <twig:Table:Head>Lot</twig:Table:Head>
-                        <twig:Table:Head>Responsable</twig:Table:Head>
-                        <twig:Table:Head>Estimation</twig:Table:Head>
-                        <twig:Table:Head class="min-w-44">Saisi</twig:Table:Head>
-                        <twig:Table:Head>Avancement</twig:Table:Head>
-                        <twig:Table:Head><span class="sr-only">Actions</span></twig:Table:Head>
-                    </twig:Table:Row>
-                </twig:Table:Header>
-                <twig:Table:Body>
-                    {% for lotSummary in summary.lots %}
-                        {{ include('project/_lot_row.html.twig', {summary: lotSummary, nested: false, scale: scale}) }}
-                        {% for subLotSummary in lotSummary.children %}
-                            {{ include('project/_lot_row.html.twig', {summary: subLotSummary, nested: true, scale: scale}) }}
+    <section class="mb-12">
+        <div class="mb-4 flex items-center justify-between gap-4">
+            <h2 class="flex items-center gap-2 text-lg font-semibold tracking-tight text-heading">
+                Lots
+                {% if not summary.isUnsplit %}<span class="rounded-full bg-neutral-tertiary px-2 py-0.5 text-xs font-medium tabular-nums text-body">{{ summary.lots|length }}</span>{% endif %}
+            </h2>
+            {% if is_granted('ROLE_LEAD') %}
+                <twig:Button as="a" size="sm" variant="brand" href="{{ path('app_lot_new', {id: project.id}) }}" data-test="lot-new">
+                    <twig:ux:icon name="tabler:plus" class="size-4"/>
+                    Ajouter un lot
+                </twig:Button>
+            {% endif %}
+        </div>
+        {% if summary.isUnsplit %}
+            <twig:EmptyState icon="tabler:stack-2" data-test="project-page-unsplit">
+                Ce projet n'est pas encore découpé en lots.
+            </twig:EmptyState>
+        {% else %}
+            {{ include('project/_lots_table.html.twig') }}
+        {% endif %}
+    </section>
+
+    {% if not summary.isUnsplit %}
+        <section class="mb-12" {% if page.dated %}data-controller="roadmap" data-action="turbo:before-render@document->roadmap#hold turbo:morph@document->roadmap#refresh" data-roadmap-remember-value="false" data-roadmap-center-value="{{ roadmap.centerPosition|number_format(4, '.', '') }}"{% endif %}>
+            <div class="mb-4 flex flex-wrap items-end justify-between gap-3">
+                <h2 class="text-lg font-semibold tracking-tight text-heading">Frise</h2>
+                {% if page.dated %}
+                    {{ include('roadmap/_zoom.html.twig') }}
+                {% endif %}
+            </div>
+            {% if page.dated %}
+                {{ include('roadmap/_legend.html.twig') }}
+                {% embed 'roadmap/_frieze.html.twig' %}
+                    {% block rows %}
+                        <div class="grid grid-cols-[20rem_1fr]" data-test="roadmap-project" data-title="{{ projectRow.title }}">
+                            <div class="sticky left-0 z-10 border-e border-default-subtle bg-surface px-4 py-3.5">
+                                <div class="flex flex-wrap items-center gap-1.5">
+                                    <span class="text-sm font-semibold text-heading">{{ projectRow.title }}</span>
+                                    {% for signal in projectRow.signals %}
+                                        {{ include('roadmap/_signal.html.twig', {row: projectRow}) }}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="roadmap-track relative min-h-12">
+                                {{ include('roadmap/_today.html.twig') }}
+                                {{ include('roadmap/_signal_tooltips.html.twig', {row: projectRow}) }}
+                                {% if projectRow.span %}
+                                    {{ include('roadmap/_bar.html.twig', {row: projectRow, bar: projectRow.span, kind: 'span', class: 'h-2.5 rounded-full bg-brand-medium', test: 'roadmap-bar-span'}) }}
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% for row in projectRow.children %}
+                            {{ include('roadmap/_row.html.twig', {row: row, depth: 1, links: false}) }}
                         {% endfor %}
-                    {% endfor %}
-                </twig:Table:Body>
-            </twig:Table>
-        </twig:TableCard>
+                    {% endblock %}
+                {% endembed %}
+            {% else %}
+                <twig:EmptyState icon="tabler:timeline-event" data-test="project-page-no-frieze">
+                    Aucun lot n'a encore de date de début ni de temps saisi : rien à placer sur la frise.
+                </twig:EmptyState>
+            {% endif %}
+        </section>
+
+        <div class="grid grid-cols-1 items-start gap-x-10 gap-y-12 xl:grid-cols-[minmax(0,1fr)_22rem]">
+            <section>
+                <h2 class="mb-4 text-lg font-semibold tracking-tight text-heading">Journal</h2>
+                {{ include('roadmap/_timeline.html.twig', {recent_months: 3}) }}
+            </section>
+            <section>
+                <h2 class="mb-4 text-lg font-semibold tracking-tight text-heading">Avancements déclarés</h2>
+                {{ include('roadmap/_progress_history.html.twig') }}
+            </section>
+        </div>
     {% endif %}
 {% endblock %}

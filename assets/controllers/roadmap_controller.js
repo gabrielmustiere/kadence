@@ -10,6 +10,7 @@ export default class extends Controller {
     static values = { center: Number, remember: { type: Boolean, default: true } };
 
     #zoom = 1;
+    #heldCenter = null;
 
     connect() {
         const stored = this.rememberValue ? Number(sessionStorage.getItem(ZOOM_KEY)) : 1;
@@ -28,6 +29,19 @@ export default class extends Controller {
         const openProjects = this.#openProjects();
         project.open ? openProjects.add(project.dataset.projectId) : openProjects.delete(project.dataset.projectId);
         sessionStorage.setItem(OPEN_PROJECTS_KEY, JSON.stringify([...openProjects]));
+    }
+
+    // A refresh in morph writes back the zoom the server renders, ×1: the zoom kept here is applied again on the same
+    // centre, held before the page renders.
+    hold() {
+        this.#heldCenter = this.#centerRatio();
+    }
+
+    refresh() {
+        this.#render();
+        if (null !== this.#heldCenter) {
+            this.#centerOn(this.#heldCenter);
+        }
     }
 
     zoomIn() {

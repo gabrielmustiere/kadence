@@ -1,12 +1,13 @@
 {#
     The progress of a leaf on the page of its project: the form to declare it for whoever may, the progress in force
-    otherwise. Expects `summary`, the summary of the leaf.
+    otherwise. Expects `summary`, the summary of the leaf, and `back`, the week of the roadmap the page was opened from.
 #}
 {% set lot = summary.lot %}
 {% set declaration = summary.progress %}
 {% if is_granted('LOT_PROGRESS', lot) %}
     <form method="post" action="{{ path('app_lot_progress', {id: lot.id}) }}" class="flex items-center gap-1.5" data-test="progress-form">
         <input type="hidden" name="_token" value="{{ csrf_token('lot-progress-' ~ lot.id) }}">
+        {% if back %}<input type="hidden" name="roadmap" value="{{ back.iso }}">{% endif %}
         <label for="progress-{{ lot.id }}" class="sr-only">Avancement de « {{ lot.title }} »</label>
         <twig:Select id="progress-{{ lot.id }}" name="percent" required autocomplete="off" class="h-8 w-[7.5rem] ps-2.5 text-[13px] tabular-nums" data-test="progress-select">
             {% if declaration is null %}
@@ -22,11 +23,8 @@
         <span class="mt-1 block whitespace-nowrap text-xs text-body-subtle" data-test="progress-declared-on">déclaré le {{ declaration.declaredOn|date('d/m') }}</span>
     {% endif %}
 {% elseif declaration and declaration.percent > 0 %}
-    <div class="flex items-center gap-2">
-        <span class="h-1.5 w-16 overflow-hidden rounded-full bg-neutral-quaternary" aria-hidden="true"><span class="block h-full rounded-full bg-brand" style="width: {{ declaration.percent }}%"></span></span>
-        <span class="whitespace-nowrap tabular-nums text-heading" data-test="progress">{{ declaration.percent }} %</span>
-    </div>
-    <span class="mt-0.5 block whitespace-nowrap text-xs text-body-subtle" data-test="progress-declared-on">au {{ declaration.declaredOn|date('d/m') }}</span>
+    <span class="whitespace-nowrap tabular-nums text-heading" data-test="progress">{{ declaration.percent }} %</span>
+    <span class="block whitespace-nowrap text-xs text-body" data-test="progress-declared-on">au {{ declaration.declaredOn|date('d/m') }}</span>
 {% else %}
     <span class="text-body-subtle" data-test="progress-none">—</span>
 {% endif %}

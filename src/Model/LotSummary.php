@@ -59,6 +59,21 @@ final readonly class LotSummary
         return null === $this->projectedQuarters ? null : $this->projectedQuarters - $this->estimateDays * Quarters::PER_DAY;
     }
 
+    /**
+     * A leaf whose work goes on with nothing left to do on record: overrun without a progress, or past what its progress
+     * in force announced short of 100 %. Never a split lot, whose leaves answer for it.
+     */
+    public function isRemainingUnknown(): bool
+    {
+        if ([] !== $this->children || 0 !== $this->remainingQuarters) {
+            return false;
+        }
+
+        return null === $this->projectedQuarters
+            ? $this->overrunQuarters > 0
+            : 100 !== $this->progress?->getPercent();
+    }
+
     public function isPartial(): bool
     {
         return $this->toEstimate > 0;

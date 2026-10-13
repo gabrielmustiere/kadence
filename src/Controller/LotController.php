@@ -131,7 +131,7 @@ final class LotController extends AbstractController
             $this->addFlash('error', $exception->getMessage());
         }
 
-        return $this->redirectToRoute('app_project_show', ['id' => $projectId]);
+        return $this->redirectToRoute('app_project_show', ['id' => $projectId, 'roadmap' => self::backWeek($request)]);
     }
 
     #[Route('/lots/{id}/avancement', name: 'app_lot_progress', requirements: ['id' => '\d+'], methods: ['POST'])]
@@ -150,7 +150,15 @@ final class LotController extends AbstractController
             $this->addFlash('error', $exception->getMessage());
         }
 
-        return $this->redirectToRoute('app_project_show', ['id' => $lot->getProject()->getId()]);
+        return $this->redirectToRoute('app_project_show', ['id' => $lot->getProject()->getId(), 'roadmap' => self::backWeek($request)]);
+    }
+
+    /**
+     * The week of the roadmap the page of the project was opened from, which an action made on it keeps.
+     */
+    private static function backWeek(Request $request): ?string
+    {
+        return Week::tryFromIso($request->getPayload()->getString('roadmap'))?->iso();
     }
 
     private static function inputOf(FormInterface $form): LotInput

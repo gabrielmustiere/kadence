@@ -32,8 +32,8 @@ test('un lead crée un projet et enchaîne trois lots estimés et confiés', asy
   await page.click('[data-test="project-new"]');
   await page.fill('[data-test="project-title"]', title);
   await page.click('[data-test="project-submit"]');
-  await expect(page.locator('[data-test="project-heading"]')).toHaveText(title);
-  await expect(page.locator('[data-test="lots-empty"]')).toBeVisible();
+  await expect(page.locator('[data-test="project-page-heading"]')).toHaveText(title);
+  await expect(page.locator('[data-test="project-page-unsplit"]')).toBeVisible();
 
   await page.click('[data-test="lot-new"]');
   await fillLot(page, 'Socle', '5', 'Paula Durand');
@@ -46,7 +46,7 @@ test('un lead crée un projet et enchaîne trois lots estimés et confiés', asy
   await page.click('[data-test="lot-submit"]');
 
   await expect(page.locator('[data-test="lot-row"]')).toHaveCount(3);
-  await expect(page.locator('[data-test="project-total"]')).toContainText('16 j');
+  await expect(page.locator('[data-test="project-page-estimate"]')).toContainText('16 j');
 });
 
 test('le responsable modifie l\'estimation de sa feuille, et seulement de la sienne', async ({ page }) => {
@@ -66,5 +66,5 @@ test('le responsable modifie l\'estimation de sa feuille, et seulement de la sie
   await page.click('[data-test="lot-submit"]');
 
   await expect(socle.locator('[data-test="estimate"]')).toHaveText('7 j');
-  await expect(page.locator('[data-test="project-total"]')).toContainText('18 j');
+  await expect(page.locator('[data-test="project-page-estimate"]')).toContainText('18 j');
 });

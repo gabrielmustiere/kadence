@@ -1,0 +1,14 @@
+{#
+    What is left on a line of the lots table, then its overrun, never offset by one another. Expects `line`, a lot or
+    project summary.
+#}
+{% if line.lot is defined and line.lot.leaf and line.lot.estimateDays is null %}
+    <span class="text-body">—</span>
+{% else %}
+    {% if line.remainingQuarters > 0 or line.overrunQuarters == 0 %}
+        <span data-test="consumption-remaining">{{ line.remainingQuarters|days }}</span>
+    {% endif %}
+    {% if line.overrunQuarters > 0 %}
+        <span class="block font-medium text-fg-danger-strong" data-test="consumption-overrun">{{ line.overrunQuarters|gap(line.estimateDays) }} de dépassement</span>
+    {% endif %}
+{% endif %}

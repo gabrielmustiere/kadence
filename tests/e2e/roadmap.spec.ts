@@ -261,7 +261,7 @@ test('un lead ouvre une feuille depuis la roadmap et y revient à la même fenê
   await expect(projectRow(page).locator('[data-test="roadmap-leaf"][data-title="Socle"] [data-test="roadmap-remaining"]')).toHaveText('12 j');
 });
 
-test('l\'icône d\'un projet ouvre sa fiche sans le déplier, et la fiche ramène à la même fenêtre', async ({ page }) => {
+test('l\'icône d\'un projet ouvre sa page sans le déplier, et la page ramène à la même fenêtre', async ({ page }) => {
   await login(page, 'prod@example.com');
   await page.goto('/roadmap');
   await page.click('[data-test="roadmap-next"]');
@@ -271,9 +271,10 @@ test('l\'icône d\'un projet ouvre sa fiche sans le déplier, et la fiche ramèn
   await expect(leaf).toBeHidden();
 
   await projectRow(page).locator('[data-test="roadmap-project-open"]').click();
-  await expect(page).toHaveURL(/\/roadmap\/projets\/\d+\?roadmap=\d{4}-W\d{2}$/);
+  await expect(page).toHaveURL(/\/projets\/\d+\?roadmap=\d{4}-W\d{2}$/);
   await expect(page.locator('[data-test="project-page-heading"]')).toHaveText(project);
-  await expect(page.locator('[data-test="nav-roadmap"]')).toHaveAttribute('aria-current', 'page');
+  await expect(page.locator('[data-test="nav-projects"]')).toHaveAttribute('aria-current', 'page');
+  await expect(page.locator('[data-test="project-page-back"]')).toHaveText('Roadmap');
 
   await page.click('[data-test="project-page-back"]');
   await expect(page).toHaveURL(window);

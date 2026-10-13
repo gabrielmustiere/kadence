@@ -31,10 +31,12 @@ final class ProjectControllerTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorNotExists('[data-test="project-new"]');
 
+        $this->createLot($project, 3, $this->createUser(), title: 'Socle');
         $client->request('GET', '/projets/' . $project->getId());
         self::assertResponseIsSuccessful();
-        self::assertSelectorNotExists('[data-test="project-edit"]');
-        self::assertSelectorNotExists('[data-test="project-delete"]');
+        foreach (['project-edit', 'project-delete', 'lot-new', 'lot-edit', 'lot-new-sub-lot', 'lot-delete', 'progress-form'] as $action) {
+            self::assertSelectorNotExists(\sprintf('[data-test="%s"]', $action), $action);
+        }
 
         foreach (['/projets/nouveau', '/projets/' . $project->getId() . '/modifier'] as $url) {
             $client->request('GET', $url);
@@ -64,8 +66,8 @@ final class ProjectControllerTest extends WebTestCase
 
         self::assertResponseRedirects();
         $client->followRedirect();
-        self::assertSelectorTextContains('[data-test="project-heading"]', $title);
-        self::assertSelectorTextContains('[data-test="project-description"]', 'Refonte du portail client.');
+        self::assertSelectorTextContains('[data-test="project-page-heading"]', $title);
+        self::assertSelectorTextContains('[data-test="project-page-description"]', 'Refonte du portail client.');
         self::assertSelectorExists('[data-test="signal-unsplit"]');
     }
 
@@ -90,7 +92,7 @@ final class ProjectControllerTest extends WebTestCase
 
         self::assertResponseRedirects('/projets/' . $project->getId());
         $client->followRedirect();
-        self::assertSelectorTextContains('[data-test="project-heading"]', $title);
+        self::assertSelectorTextContains('[data-test="project-page-heading"]', $title);
     }
 
     public function testRenamingAProjectToAnExistingTitleIsRefused(): void
@@ -156,7 +158,7 @@ final class ProjectControllerTest extends WebTestCase
 
         self::assertSelectorExists('[data-test="lot-row"][data-title="Modèle et règles"][data-mine="true"]');
         self::assertSelectorExists('[data-test="lot-row"][data-title="Écrans"][data-mine="false"]');
-        self::assertSelectorTextContains('[data-title="Projets et lots"] [data-test="lot-estimate-cell"]', '13 j');
+        self::assertSelectorTextContains('[data-title="Projets et lots"] [data-test="consumption-estimate"]', '13 j');
         self::assertSelectorExists('[data-title="Saisie des temps"] [data-test="leaf-to-estimate"]');
         self::assertSelectorExists('[data-title="Roadmap"] [data-test="leaf-to-assign"]');
         self::assertSelectorExists('[data-title="Rappels de saisie"] [data-test="leaf-to-reassign"]');
@@ -174,7 +176,9 @@ final class ProjectControllerTest extends WebTestCase
 
         $client->request('GET', '/projets/' . $project->getId());
 
-        self::assertSelectorTextContains('[data-test="lot-row"][data-title="Dépassé"]', '2,5 j saisis, 0,5 j (25 %) de dépassement');
+        $row = '[data-test="lot-row"][data-title="Dépassé"]';
+        self::assertSelectorTextSame($row . ' [data-test="consumption-entered"]', '2,5 j');
+        self::assertSelectorTextSame($row . ' [data-test="consumption-overrun"]', '0,5 j (25 %) de dépassement');
     }
 
     public function testProjectPageQueryCountDoesNotGrowWithItsLots(): void

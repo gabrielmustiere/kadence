@@ -11,7 +11,7 @@
         {% for row in page.upcoming %}
             <li class="grid grid-cols-1 gap-x-6 gap-y-2.5 px-5 py-4 sm:grid-cols-[minmax(0,1fr)_auto]" data-test="person-upcoming-entry" data-leaf="{{ row.leafPath }}">
                 <div class="min-w-0">
-                    <a href="{{ path('app_roadmap_project', {id: row.lot.project.id}) }}" class="text-[13px] text-body underline decoration-default-medium underline-offset-4 hover:text-heading hover:decoration-default-strong" data-test="person-project-link">{{ row.lot.project.title }}</a>
+                    <a href="{{ path('app_project_show', {id: row.lot.project.id}) }}" class="text-[13px] text-body underline decoration-default-medium underline-offset-4 hover:text-heading hover:decoration-default-strong" data-test="person-project-link">{{ row.lot.project.title }}</a>
                     <p class="mt-0.5 font-semibold text-heading">{{ row.leafPath }}</p>
                     {% if row.signals is not empty %}
                         <div class="mt-2 flex flex-wrap gap-1.5">

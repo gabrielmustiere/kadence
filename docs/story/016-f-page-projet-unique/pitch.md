@@ -107,7 +107,7 @@ Les règles de calcul de la story 010 ne changent pas : cumul séparé du restan
 ### Frise, journal, avancements déclarés
 
 21. **Frise** : celle de la fiche actuelle, inchangée (story 010, règles 9 à 14). Les titres des lots n'y sont pas des liens : les actions vivent dans le tableau.
-22. **Journal replié** : les trois mois les plus récents qui ont des tronçons sont affichés. Les mois plus anciens sont repliés derrière « Afficher les mois précédents », qui indique leur nombre. Le contenu et l'ordre des entrées ne changent pas.
+22. **Journal replié** : les trois mois les plus récents qui ont des tronçons sont affichés. Les mois plus anciens sont repliés derrière « Afficher les mois précédents », qui indique leur nombre et devient « Masquer les mois précédents » une fois dépliés. Le contenu et l'ordre des entrées ne changent pas.
 23. **Avancements déclarés** : la liste des déclarations de chaque lot reste à côté du journal, inchangée.
 
 ### Cas limites
@@ -118,21 +118,21 @@ Les règles de calcul de la story 010 ne changent pas : cumul séparé du restan
 
 ## Critères d'acceptation
 
-- [ ] La liste des projets, l'icône de la roadmap et les liens de la fiche d'une personne mènent tous à la même page du projet.
-- [ ] L'adresse de l'ancienne fiche d'un projet mène à sa page, et, venue de la roadmap, le lien « Roadmap » ramène à la même semaine.
-- [ ] Venue de la liste des projets, la page propose un lien de retour « Projets » ; sur la page d'un projet, l'entrée « Projets » du menu est mise en évidence.
+- [x] La liste des projets, l'icône de la roadmap et les liens de la fiche d'une personne mènent tous à la même page du projet.
+- [x] L'adresse de l'ancienne fiche d'un projet mène à sa page, et, venue de la roadmap, le lien « Roadmap » ramène à la même semaine.
+- [x] Venue de la liste des projets, la page propose un lien de retour « Projets » ; sur la page d'un projet, l'entrée « Projets » du menu est mise en évidence.
 - [ ] Sur Atlas, l'en-tête annonce 462,25 j projetés pour une estimation de 390 j, soit +72,25 j (+19 %), comme un minimum puisque des lots dépassent leur estimation sans avancement déclaré, et détaille 362,5 j saisis, 99,75 j de restant et 26 j de dépassement.
-- [ ] Sur un projet dont aucun lot ne dépasse son estimation sans avancement déclaré, le total à terme est annoncé sans « au moins ».
-- [ ] La synthèse rappelle que le restant d'un lot ne compense jamais le dépassement d'un autre.
-- [ ] Un lead et la direction voient sur la page « Modifier », « Supprimer » et « Ajouter un lot », et sur chaque lot ses actions de modification, d'ajout de sous-lot et de suppression.
-- [ ] Un responsable de lot de rôle prod voit la modification et la déclaration d'avancement de son lot seulement ; un membre de prod qui n'est responsable d'aucun lot du projet ne voit aucune action.
-- [ ] Une personne qui peut déclarer l'avancement d'un lot le fait depuis le tableau ; après l'envoi, elle revient sur la page, au même endroit, et lit le nouveau restant, le projeté du lot et la fin calculée mise à jour.
-- [ ] Le tableau présente une seule ligne par lot et par sous-lot, avec le responsable, l'estimation, le saisi, le restant ou le dépassement, l'avancement, le projeté et les actions permises, puis le cumul du projet.
-- [ ] Un lot dont un sous-lot dépasse de 5 j et dont un autre a 3 j de restant affiche 3 j de restant et 5 j de dépassement, et le projet les cumule de la même façon.
-- [ ] Sur un projet dont le journal couvre plus de trois mois, seuls les trois mois les plus récents sont affichés, et « Afficher les mois précédents » déplie les autres.
-- [ ] La frise, ses infobulles et la liste des avancements déclarés sont identiques à celles de l'ancienne fiche.
-- [ ] Un projet non découpé affiche « pas encore découpé » et, pour un lead ou la direction, « Ajouter un lot ».
-- [ ] Aucune personne n'obtient une action qu'elle ne pouvait pas faire avant ; aucune action de l'ancienne page de gestion n'a disparu.
+- [x] Sur un projet dont aucun lot ne dépasse son estimation sans avancement déclaré, le total à terme est annoncé sans « au moins ».
+- [x] La synthèse rappelle que le restant d'un lot ne compense jamais le dépassement d'un autre.
+- [x] Un lead et la direction voient sur la page « Modifier », « Supprimer » et « Ajouter un lot », et sur chaque lot ses actions de modification, d'ajout de sous-lot et de suppression.
+- [x] Un responsable de lot de rôle prod voit la modification et la déclaration d'avancement de son lot seulement ; un membre de prod qui n'est responsable d'aucun lot du projet ne voit aucune action.
+- [x] Une personne qui peut déclarer l'avancement d'un lot le fait depuis le tableau ; après l'envoi, elle revient sur la page, au même endroit, et lit le nouveau restant, le projeté du lot et la fin calculée mise à jour.
+- [x] Le tableau présente une seule ligne par lot et par sous-lot, avec le responsable, l'estimation, le saisi, le restant ou le dépassement, l'avancement, le projeté et les actions permises, puis le cumul du projet.
+- [x] Un lot dont un sous-lot dépasse de 5 j et dont un autre a 3 j de restant affiche 3 j de restant et 5 j de dépassement, et le projet les cumule de la même façon.
+- [x] Sur un projet dont le journal couvre plus de trois mois, seuls les trois mois les plus récents sont affichés, et « Afficher les mois précédents » déplie les autres.
+- [x] La frise, ses infobulles et la liste des avancements déclarés sont identiques à celles de l'ancienne fiche.
+- [x] Un projet non découpé affiche « pas encore découpé » et, pour un lead ou la direction, « Ajouter un lot ».
+- [x] Aucune personne n'obtient une action qu'elle ne pouvait pas faire avant ; aucune action de l'ancienne page de gestion n'a disparu.
 
 ## Hors scope
 
@@ -160,9 +160,9 @@ Les règles de calcul de la story 010 ne changent pas : cumul séparé du restan
 
 ## Questions ouvertes
 
-- **Lien de retour après une action** : venue de la roadmap, une personne déclare un avancement. La page qui se recharge garde-t-elle le lien « Roadmap » ? Options : (a) non, la page rechargée propose « Projets » ; (b) oui pour les actions faites sur la page même (avancement, suppression d'un lot), « Projets » après un passage par un écran de modification ; (c) oui partout, écrans de modification compris. Recommandé : (b), qui couvre le rituel hebdomadaire sans alourdir les écrans de modification.
-- **Ampleur du journal affiché** : Options : (a) les trois mois les plus récents qui ont des tronçons ; (b) les vingt entrées les plus récentes, quel que soit le mois ; (c) tout afficher, comme aujourd'hui. Recommandé : (a), qui garde l'intertitre de mois comme unité de lecture.
-- **« Projeté » à l'échelle du projet** : le lexique de la story 015 définit le projeté d'un lot d'après son avancement déclaré ; cette story annonce aussi le projeté du projet entier, saisi plus restant de tous ses lots, déclarés ou non. Options : (a) élargir la définition du lexique au projet (« ce qu'un lot ou un projet aura coûté une fois terminé : son saisi plus son restant ») ; (b) nommer ce total autrement, « total à terme », et l'ajouter au lexique. Recommandé : (a), un seul mot pour une seule notion.
+- **Lien de retour après une action** : venue de la roadmap, une personne déclare un avancement. La page qui se recharge garde-t-elle le lien « Roadmap » ? Options : (a) non, la page rechargée propose « Projets » ; (b) oui pour les actions faites sur la page même (avancement, suppression d'un lot), « Projets » après un passage par un écran de modification ; (c) oui partout, écrans de modification compris. Recommandé : (b), qui couvre le rituel hebdomadaire sans alourdir les écrans de modification. **Tranché : (b).**
+- **Ampleur du journal affiché** : Options : (a) les trois mois les plus récents qui ont des tronçons ; (b) les vingt entrées les plus récentes, quel que soit le mois ; (c) tout afficher, comme aujourd'hui. Recommandé : (a), qui garde l'intertitre de mois comme unité de lecture. **Tranché : (a).**
+- **« Projeté » à l'échelle du projet** : le lexique de la story 015 définit le projeté d'un lot d'après son avancement déclaré ; cette story annonce aussi le projeté du projet entier, saisi plus restant de tous ses lots, déclarés ou non. Options : (a) élargir la définition du lexique au projet (« ce qu'un lot ou un projet aura coûté une fois terminé : son saisi plus son restant ») ; (b) nommer ce total autrement, « total à terme », et l'ajouter au lexique. Recommandé : (a), un seul mot pour une seule notion. **Tranché : (a)** : l'en-tête annonce « N j projetés » pour le projet.
 
 ---
 

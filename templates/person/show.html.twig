@@ -94,7 +94,7 @@
                         {% for item in entered %}
                             <li class="px-5 py-3.5" data-test="person-project" data-title="{{ item.project.title }}">
                                 <div class="flex items-baseline justify-between gap-3">
-                                    <a href="{{ path('app_roadmap_project', {id: item.project.id}) }}" class="min-w-0 truncate font-medium text-heading decoration-default-strong underline-offset-4 hover:underline" title="{{ item.project.title }}" data-test="person-project-link">{{ item.project.title }}</a>
+                                    <a href="{{ path('app_project_show', {id: item.project.id}) }}" class="min-w-0 truncate font-medium text-heading decoration-default-strong underline-offset-4 hover:underline" title="{{ item.project.title }}" data-test="person-project-link">{{ item.project.title }}</a>
                                     <span class="shrink-0 font-semibold tabular-nums text-heading" data-test="person-project-entered">{{ item.enteredQuarters|days }}</span>
                                 </div>
                                 <span class="mt-2 block h-1.5 overflow-hidden rounded-[2px] bg-neutral-tertiary" aria-hidden="true">
@@ -193,7 +193,7 @@
                     {% for item in page.projects %}
                         <div class="grid grid-cols-[20rem_1fr] border-t border-default" data-test="person-project-row" data-title="{{ item.project.title }}">
                             <div class="sticky left-0 z-10 border-e border-default-subtle bg-surface px-4 py-3">
-                                <a href="{{ path('app_roadmap_project', {id: item.project.id}) }}" class="text-sm font-semibold text-heading decoration-default-strong underline-offset-4 hover:underline" data-test="person-project-link">{{ item.project.title }}</a>
+                                <a href="{{ path('app_project_show', {id: item.project.id}) }}" class="text-sm font-semibold text-heading decoration-default-strong underline-offset-4 hover:underline" data-test="person-project-link">{{ item.project.title }}</a>
                             </div>
                             <div class="roadmap-track relative min-h-10">
                                 {{ include('roadmap/_today.html.twig') }}

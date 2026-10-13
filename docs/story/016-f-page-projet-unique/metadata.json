@@ -2,7 +2,7 @@
   "version": 2,
   "title": "Lire et gérer un projet sur une seule page, chacun selon ses droits",
   "created": "2026-10-12",
-  "updated": "2026-10-12",
+  "updated": "2026-10-13",
   "tags": [
     "fiche-projet",
     "projets"
@@ -22,6 +22,26 @@
       "date": "2026-10-12",
       "type": "Alignement",
       "description": "Pitch aligné sur le lexique de la story 015 à la relecture croisée : « responsable à désigner / à remplacer », « estimation partielle », écart au format « +72,25 j (+19 %) » ; question ouverte ajoutée sur le « Projeté » à l'échelle du projet."
+    },
+    {
+      "date": "2026-10-13",
+      "type": "Implémentation",
+      "description": "Sept étapes livrées : projeté du projet et restant inconnu (ProjectSummary, LotSummary), page unique sur app_project_show (buildProject + summarize, retour Roadmap/Projets), tableau unique des lots avec ligne de cumul, 301 de /roadmap/projets/{id} et liens basculés, champ roadmap conservé après avancement et suppression de lot, journal replié au-delà de trois mois (<details>), zoom de la frise réappliqué après morph. QA : PHPStan et CS-Fixer propres, PHPUnit 686 tests verts, E2E 43/44 (échec préexistant sur main : roadmap.spec « un lead planifie une feuille », sans lien). Écarts : sous-tâches 2 et 3 menées ensemble, la page incluant le tableau ; RoadmapController::project() résout le projet sans findOneForDetail(), inutile pour une redirection (404 conservé) ; roadmap_controller gagne hold() sur turbo:before-render en plus de refresh(), pour recentrer la frise sur le même point après le morph ; partiel project/_remaining.html.twig partagé par les lignes et le cumul ; data-test renommés vers la convention project-page-*/consumption-* (project-description, lot-estimate-cell, lots-empty, project-total) et cellule Saisi scindée de la colonne Restant ou dépassement, d'où la migration de VocabularyTest (l'ancienne URL répond 301), PersonControllerTest et projects.spec au-delà de ce que listait le plan ; lecture de l'avancement sans la mini-jauge, alignée sur l'ancienne fiche comme prévu."
+    },
+    {
+      "date": "2026-10-13",
+      "type": "Review",
+      "description": "Ouverture de la passe : CORRECTIONS REQUISES ; 0 bloquant, 1 important ([PLAN] total projeté non marqué « estimation partielle », règle 10), 1 mineur ([UX] journal déplié replié après chaque action, libellé « Afficher » figé)."
+    },
+    {
+      "date": "2026-10-13",
+      "type": "Review",
+      "description": "Fin de passe : PRÊT À COMMITER ; 1 important et 1 mineur corrigés : [PLAN] total projeté marqué « estimation partielle » (règle 10), [UX] libellé Afficher/Masquer du journal replié. 1 mineur laissé en dette : [UX] le journal déplié se replie après un rafraîchissement en morph."
+    },
+    {
+      "date": "2026-10-13",
+      "type": "Sync",
+      "description": "8 écarts réalignés (plan, pitch, DESIGN.md), 14/15 critères cochés, C5.5 et C7.4 du backlog édités, 4 dettes ouvertes dont 1 critique."
     }
   ]
 }
