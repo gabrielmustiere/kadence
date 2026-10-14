@@ -10,6 +10,25 @@ Chaque version porte un **titre** et distingue les **évolutions fonctionnelles*
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-10-14 — Accueil par rôle & roadmap lisible
+
+### ✨ Fonctionnel
+- **La fin de chaque projet se lit sur la roadmap** — sous le titre de chaque projet et de chaque lot, la roadmap écrit sa fin calculée, sans survol. Quand la fin est inconnue ou que rien n'est planifié, elle dit pourquoi et combien de lots sont en cause ; leur détail s'ouvre en infobulle. Un repère signale un projet qui se termine avant la période affichée ou commence après, et la colonne des titres se resserre sur téléphone pour que la date reste visible.
+- **Un accueil « À faire » pour chacun** — l'accueil montre ce qui attend la personne connectée : les jours qu'il lui reste à saisir, ses lots, les projets à surveiller avec ce qui les signale, et l'état de ses demandes de congés. Un lot déclaré terminé n'y remonte plus.
+- **Un menu en trois zones** — le quotidien (Accueil, Ma semaine, Congés), le Pilotage, ouvert à tous, et l'Administration, réservée à la direction, où se trouvent désormais les droits à congés. Après une déconnexion, on revient toujours sur Ma semaine.
+- **Page Personnes ouverte à tous** — l'ancienne page Équipe devient un annuaire accessible à chacun. Les colonnes, les filtres et les actions dépendent du rôle, et le nom d'une personne mène à sa fiche. Les anciens liens vers « Équipe » restent valables.
+- **Un projet, une seule page** — on lit et on gère un projet au même endroit, chacun avec les actions que ses droits permettent. L'en-tête met le total projeté face à l'estimation et montre l'écart, un seul tableau regroupe les lots et les sous-lots, et le journal se replie au-delà des trois derniers mois. Les anciens liens de la roadmap restent valables.
+- **Un vocabulaire unique** — on parle partout de « lot » au lieu de « feuille », et un même mot désigne une même notion (Saisi, Estimation, Dépassement, fin calculée). Un écart s'écrit toujours en jours, puis en part de l'estimation. La catégorie de tags « Type d'équipe » devient « Pôle ».
+- **Des pastilles expliquées** — sur la roadmap et les fiches, chaque pastille ouvre une infobulle, à la souris comme au clavier, qui dit ce qu'elle signifie et pourquoi elle s'affiche.
+- **Des écrans plus fluides** — les filtres, la validation des congés, les compteurs et le formulaire de lot se mettent à jour sans rechargement de page, sans perdre la position de défilement ni les filtres en cours.
+- **Petites retouches** — le menu Congés affiche le nombre de demandes à valider, les pages d'erreur sont en français, une fin inconnue indique les lots qui la bloquent, et un avancement jamais déclaré s'affiche « Non déclaré » au lieu de 0 %.
+
+### 🔧 Technique
+- **Live components et morph Turbo** — les actions qui modifiaient une page en place (désactiver, réactiver, valider, refuser) passent par des live components au lieu de routes POST dédiées, et des notifications s'affichent sans rechargement.
+- **Garde-fou de vocabulaire** — un test vérifie que les pages principales, infobulles comprises, n'emploient aucun terme banni.
+- **Redirections permanentes** — `/equipe` redirige vers `/personnes` et `/roadmap/projets/{id}` vers `/projets/{id}`, en 301. Aucune migration à appliquer.
+- **Largeur de la frise paramétrable** — la colonne des titres de la frise passe par une variable CSS commune à la roadmap, à la page projet et à la page personne, sans calcul ni requête supplémentaire.
+
 ## [0.15.0] - 2026-10-11 — Congés & RTT
 
 ### ✨ Fonctionnel
@@ -211,7 +230,8 @@ Chaque version porte un **titre** et distingue les **évolutions fonctionnelles*
 - **Connexion rapide en dev** — choix d'un compte de fixtures sur la page de connexion, uniquement en environnement de développement.
 - **Nettoyage du template d'amorçage** — suppression de la page design system et de la route de test d'e-mail.
 
-[Unreleased]: https://github.com/gabrielmustiere/kadence/compare/v0.15.0...HEAD
+[Unreleased]: https://github.com/gabrielmustiere/kadence/compare/v0.16.0...HEAD
+[0.16.0]: https://github.com/gabrielmustiere/kadence/compare/v0.15.0...v0.16.0
 [0.15.0]: https://github.com/gabrielmustiere/kadence/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/gabrielmustiere/kadence/compare/v0.13.1...v0.14.0
 [0.13.1]: https://github.com/gabrielmustiere/kadence/compare/v0.13.0...v0.13.1
