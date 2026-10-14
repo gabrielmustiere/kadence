@@ -10,6 +10,11 @@ Chaque version porte un **titre** et distingue les **évolutions fonctionnelles*
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-10-14 — Parts d'équipe par dizaines
+
+### ✨ Fonctionnel
+- **Des parts d'équipe plus fines** — la part qu'une personne consacre à un lot se choisit désormais de 10 à 100 %, par pas de 10, au lieu de 25, 50, 75 ou 100 %. On peut ainsi répartir quelqu'un sur trois lots (30 + 30 + 40 %) ou poser une contribution d'appoint à 10 ou 20 % sans surestimer sa charge. La part reste à 100 % par défaut, le refus au-delà de 100 % de charge ne change pas, et la saisie en quarts de journée non plus.
+
 ## [0.16.0] - 2026-10-14 — Accueil par rôle & roadmap lisible
 
 ### ✨ Fonctionnel
@@ -230,7 +235,8 @@ Chaque version porte un **titre** et distingue les **évolutions fonctionnelles*
 - **Connexion rapide en dev** — choix d'un compte de fixtures sur la page de connexion, uniquement en environnement de développement.
 - **Nettoyage du template d'amorçage** — suppression de la page design system et de la route de test d'e-mail.
 
-[Unreleased]: https://github.com/gabrielmustiere/kadence/compare/v0.16.0...HEAD
+[Unreleased]: https://github.com/gabrielmustiere/kadence/compare/v0.17.0...HEAD
+[0.17.0]: https://github.com/gabrielmustiere/kadence/compare/v0.16.0...v0.17.0
 [0.16.0]: https://github.com/gabrielmustiere/kadence/compare/v0.15.0...v0.16.0
 [0.15.0]: https://github.com/gabrielmustiere/kadence/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/gabrielmustiere/kadence/compare/v0.13.1...v0.14.0
