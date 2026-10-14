@@ -2,7 +2,7 @@
   "version": 2,
   "title": "Parler la même langue sur tous les écrans : « lot » à la place de « feuille », un seul mot et une seule unité par notion",
   "created": "2026-10-12",
-  "updated": "2026-10-13",
+  "updated": "2026-10-14",
   "tags": [
     "vocabulaire",
     "ux"
@@ -42,10 +42,15 @@
       "date": "2026-10-13",
       "type": "Livraison",
       "description": "Story livrée dans le commit 30a2162 sur la branche main."
+    },
+    {
+      "date": "2026-10-14",
+      "type": "Release",
+      "description": "Publiée dans la release v0.16.0 « Accueil par rôle & roadmap lisible »."
     }
   ],
   "delivery": {
-    "release": null,
+    "release": "v0.16.0",
     "commit": "30a2162"
   }
 }

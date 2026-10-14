@@ -43,10 +43,15 @@
       "date": "2026-10-14",
       "type": "Livraison",
       "description": "Commité en 8fcc6f3 sur main."
+    },
+    {
+      "date": "2026-10-14",
+      "type": "Release",
+      "description": "Publiée dans la release v0.16.0 « Accueil par rôle & roadmap lisible »."
     }
   ],
   "delivery": {
-    "release": null,
+    "release": "v0.16.0",
     "commit": "8fcc6f3"
   }
 }
