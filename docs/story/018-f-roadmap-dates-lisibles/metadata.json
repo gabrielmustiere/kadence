@@ -41,6 +41,15 @@
       "date": "2026-10-14",
       "type": "Sync",
       "description": "11 écarts réalignés dans le plan et le pitch, 14/14 critères d'acceptation et 6/6 critères de sortie cochés, product-backlog.md (note roadmap-interne) et DESIGN.md édités, 3 dettes ouvertes."
+    },
+    {
+      "date": "2026-10-14",
+      "type": "Livraison",
+      "description": "Commité en 2129524 sur main."
     }
-  ]
+  ],
+  "delivery": {
+    "release": null,
+    "commit": "2129524"
+  }
 }
