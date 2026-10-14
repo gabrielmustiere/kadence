@@ -42,10 +42,15 @@
       "date": "2026-10-14",
       "type": "Livraison",
       "description": "Commit d483036 : code, tests, pitch, plan, report et backlog réalignés."
+    },
+    {
+      "date": "2026-10-14",
+      "type": "Release",
+      "description": "Publiée dans la v0.17.0 — Parts d'équipe par dizaines."
     }
   ],
   "delivery": {
-    "release": null,
+    "release": "v0.17.0",
     "commit": "d483036"
   }
 }
