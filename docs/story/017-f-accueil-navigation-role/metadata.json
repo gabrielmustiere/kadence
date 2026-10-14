@@ -38,6 +38,15 @@
       "date": "2026-10-14",
       "type": "Sync",
       "description": "11 écarts réalignés dans le plan et le pitch, 19/19 critères d'acceptation et 8/8 critères de sortie cochés, stack.md et product-backlog.md édités, aucune dette."
+    },
+    {
+      "date": "2026-10-14",
+      "type": "Livraison",
+      "description": "Commité en 8fcc6f3 sur main."
     }
-  ]
+  ],
+  "delivery": {
+    "release": null,
+    "commit": "8fcc6f3"
+  }
 }
