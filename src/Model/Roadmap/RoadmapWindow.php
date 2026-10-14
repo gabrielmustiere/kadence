@@ -77,6 +77,16 @@ final readonly class RoadmapWindow
         return $date >= $this->firstDay()->format('Y-m-d') && $date <= $this->lastDay()->format('Y-m-d');
     }
 
+    public function isBefore(\DateTimeImmutable $day): bool
+    {
+        return $day->format('Y-m-d') < $this->firstDay()->format('Y-m-d');
+    }
+
+    public function isAfter(\DateTimeImmutable $day): bool
+    {
+        return $day->format('Y-m-d') > $this->lastDay()->format('Y-m-d');
+    }
+
     /**
      * The bar of the days from $from to $to included, or null when none of them is within the window.
      */

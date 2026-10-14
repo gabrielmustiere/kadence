@@ -71,6 +71,7 @@ Réutiliser `templates/components/` avant d'écrire des classes ad hoc :
 
 - Saisi : `bg-brand` plein. Dépassement : `bg-danger` (statut réservé, toujours accompagné d'un badge ou d'un chiffre). Restant calculé : `bg-brand-softer` + `hatch-brand` (+ bord pointillé sur la frise). Lot ou projet : `bg-brand-medium` fin.
 - Ligne « aujourd'hui » à l'encre (`bg-primary/70`), jamais en rouge.
+- Colonne des titres de la frise sur `--roadmap-labels`, posée par `roadmap/_frieze.html.twig` : 11rem sous `md`, 20rem au-delà ; les pastilles y passent à la ligne sous `md`. Sous le titre de chaque projet, lot découpé et lot, une ligne de date en `text-xs` (« Fin calculée : » et la date en `<time>`, « Fin inconnue : », « Non planifié : »), dont les lots en cause s'ouvrent en infobulle. Une ligne entièrement hors de la période affichée porte un repère texte discret (`text-body-subtle`) au bord de la piste visible.
 - Palette validée en clair et en sombre (séparation daltonisme ΔE ≥ 24 entre saisi et dépassement, contraste ≥ 3:1 sur les surfaces).
 
 ## Règles

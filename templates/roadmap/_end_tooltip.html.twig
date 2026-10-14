@@ -1,0 +1,11 @@
+{#
+    The leaves that withhold the end of a project or a split lot, or that its end leaves out, shown by roadmap-tooltip
+    when the line of roadmap/_end.html.twig is hovered or focused. Expects `row`; renders nothing without such leaves.
+#}
+{% set causes = row.endCauses %}
+{% if not row.leaf and causes is not empty %}
+    <div id="{{ row.endTooltipId }}" role="tooltip" hidden class="pointer-events-none z-30 w-80 rounded-xl border border-default bg-surface p-3.5 text-xs text-body shadow-lg" data-test="roadmap-end-tooltip">
+        <p class="text-[13px] font-semibold text-heading">{{ row.title }}</p>
+        {{ include('roadmap/_unknown_ends.html.twig', {rows: causes, heading: row.end ? 'Laissés hors de sa fin calculée, faute de planification :' : null}) }}
+    </div>
+{% endif %}

@@ -1,9 +1,10 @@
 {#
     Why an end is unknown: the leaves without a calculated end, each with the signals that withhold it. Expects `rows`,
-    leaves with a `leafPath` and their `signals`; `projects` set to true names the project of each leaf.
+    leaves with a `leafPath` and their `signals`; `projects` set to true names the project of each leaf, and `heading`
+    replaces the sentence that introduces them.
 #}
 <div class="mt-1.5 text-xs leading-relaxed font-normal tracking-normal text-body" data-test="unknown-ends">
-    <p>Faute d'une fin calculée pour :</p>
+    <p>{{ heading ?? "Faute d'une fin calculée pour :" }}</p>
     <ul class="mt-0.5 space-y-0.5">
         {% for row in rows %}
             {% set reasons = row.signals|filter(signal => signal.withholdsEnd)|map(signal => signal.label) %}

@@ -116,6 +116,36 @@ final readonly class RoadmapRow
         return array_merge(...array_map(static fn (RoadmapRow $child): array => $child->unknownEndLeaves(), $this->children));
     }
 
+    /**
+     * The leaves under the row that are not planned, whose time its end leaves out.
+     *
+     * @return list<RoadmapRow>
+     */
+    public function unplannedLeaves(): array
+    {
+        if ($this->isLeaf()) {
+            return null === $this->start ? [$this] : [];
+        }
+
+        return array_merge(...array_map(static fn (RoadmapRow $child): array => $child->unplannedLeaves(), $this->children));
+    }
+
+    /**
+     * The leaves that keep the end of the row from covering it all: those without a calculated end, then those not
+     * planned.
+     *
+     * @return list<RoadmapRow>
+     */
+    public function endCauses(): array
+    {
+        return [...$this->unknownEndLeaves(), ...$this->unplannedLeaves()];
+    }
+
+    public function endTooltipId(): string
+    {
+        return 'roadmap-end-' . (null === $this->lot ? 'project-' . $this->project->getId() : 'lot-' . $this->lot->getId());
+    }
+
     public function hasSignal(RoadmapSignal $signal): bool
     {
         return \in_array($signal, $this->signals, true);

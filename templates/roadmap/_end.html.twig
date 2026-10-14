@@ -1,0 +1,25 @@
+{#
+    The end of a row of a frieze, under its title: its calculated end, or what withholds it. Expects `row`. A project or
+    a split lot counts the leaves in cause, which roadmap/_end_tooltip.html.twig lists when the line is hovered or
+    focused; `focusable` set to false keeps the line out of the tab order, as inside a summary, which may not hold a
+    button, and `indented` aligns it with a title that follows a chevron, where the column of titles leaves room for it.
+#}
+{% set unplanned = row.unplannedLeaves|length %}
+{% set causes = row.leaf ? 0 : row.endCauses|length %}
+{% set reasons = row.signals|filter(signal => signal.withholdsEnd)|map(signal => signal.label)|join(', ') %}
+{% set state = not row.leaf and row.children is empty ? 'unsplit' : (row.end ? 'known' : (row.start ? 'unknown' : 'unplanned')) %}
+{% set tag = causes > 0 and (focusable ?? true) ? 'button' : 'div' %}
+<{{ tag }} {% if tag == 'button' %}type="button" aria-describedby="{{ row.endTooltipId }}"{% endif %} {% if causes > 0 %}data-roadmap-tooltip="{{ row.endTooltipId }}"{% endif %} class="mt-1 block text-left text-xs text-body {{ causes > 0 ? 'cursor-help rounded-xs' }} {{ (indented ?? false) ? 'md:ps-5.5' }}" data-test="roadmap-end" data-state="{{ state }}">
+    {%- if state == 'unsplit' -%}
+        Pas encore découpé en lots
+    {%- elseif state == 'known' -%}
+        Fin calculée : <time datetime="{{ row.end|date('Y-m-d') }}" class="font-medium text-heading tabular-nums">{{ row.end|weekday }} {{ row.end|date('d/m/Y') }}</time>
+        {%- if not row.leaf and unplanned > 0 %}, hors {{ unplanned }} {{ unplanned > 1 ? 'lots non planifiés' : 'lot non planifié' }}{% endif %}
+    {%- elseif row.leaf -%}
+        {{ state == 'unknown' ? 'Fin inconnue' : 'Non planifié' }}{% if reasons is not empty %} : {{ reasons }}{% endif %}
+    {%- elseif state == 'unknown' -%}
+        Fin inconnue : {{ causes }} {{ causes > 1 ? 'lots' : 'lot' }} en cause
+    {%- else -%}
+        Non planifié : {{ unplanned }} {{ unplanned > 1 ? 'lots' : 'lot' }}
+    {%- endif -%}
+</{{ tag }}>

@@ -2,10 +2,10 @@
     A signal of a row as a badge, whose tooltip roadmap/_signal_tooltips.html.twig lays out given the same `prefix`.
     Expects `row` and `signal`; `prefix` tells apart the tooltips of a row shown twice on a page, and `focusable` set to
     false keeps the badge out of the tab order, as inside a summary, which may not hold a button. The overrun shows its
-    gap when the row knows it.
+    gap when the row knows it. Below md, the badge wraps rather than overflow the narrower column of titles.
 #}
 {% set focusable = focusable ?? true %}
 {% set tooltip = (prefix ?? 'roadmap-signal') ~ '-' ~ (row.lot ? 'lot-' ~ row.lot.id : 'project-' ~ row.project.id) ~ '-' ~ signal.value %}
-<twig:Badge variant="{{ signal.variant }}" :as="focusable ? 'button' : 'div'" :type="focusable ? 'button' : null" class="cursor-help" aria-describedby="{{ tooltip }}" data-roadmap-tooltip="{{ tooltip }}" data-test="signal-{{ signal.value }}">
+<twig:Badge variant="{{ signal.variant }}" :as="focusable ? 'button' : 'div'" :type="focusable ? 'button' : null" class="cursor-help max-md:h-auto max-md:min-h-5 max-md:justify-start max-md:whitespace-normal max-md:py-0.5 max-md:text-left max-md:leading-tight" aria-describedby="{{ tooltip }}" data-roadmap-tooltip="{{ tooltip }}" data-test="signal-{{ signal.value }}">
     {{- signal.label }}{% if signal is same as(constant('App\\Enum\\Type\\RoadmapSignal::Overrun')) and row.overrunQuarters is defined and row.overrunQuarters > 0 %} de {{ row.overrunQuarters|gap(row.lot.estimateDays ?? 0) }}{% endif -%}
 </twig:Badge>

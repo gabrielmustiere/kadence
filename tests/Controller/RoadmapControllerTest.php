@@ -231,6 +231,147 @@ final class RoadmapControllerTest extends WebTestCase
         self::assertCount(1, $crawler->filter('[data-test="roadmap-project"][data-title="Évolution du portail"] [data-test="signal-unsplit"]'));
     }
 
+    public function testPlannedProjectWritesTheEndOfItsLatestLeafNextToItsTitle(): void
+    {
+        $client = $this->clientAs('prod@example.com');
+        $alice = $this->createUser();
+        $project = $this->createProject();
+        $bob = $this->createUser();
+        $this->planLot($this->createLot($project, 10, $alice, title: 'Socle'), new \DateTimeImmutable('2026-10-12'), [[$alice, 100]]);
+        $this->planLot($this->createLot($project, 2, $bob, title: 'Recette'), new \DateTimeImmutable('2026-10-12'), [[$bob, 100]]);
+
+        $crawler = $client->request('GET', '/roadmap');
+
+        $projectRow = $crawler->filter(\sprintf('[data-test="roadmap-project"][data-title="%s"]', $project->getTitle()));
+        $end = $projectRow->filter('summary [data-test="roadmap-end"]');
+        self::assertSame('Fin calculée : Ven 23/10/2026', $end->text());
+        self::assertSame('known', $end->attr('data-state'));
+        self::assertSame('2026-10-23', $end->filter('time')->attr('datetime'));
+        self::assertNull($projectRow->filter('summary')->attr('aria-describedby'));
+        self::assertCount(0, $projectRow->filter('[data-test="roadmap-end-tooltip"]'));
+        $leaf = $projectRow->filter('[data-test="roadmap-leaf"][data-title="Socle"]');
+        self::assertSame('Fin calculée : ' . $leaf->filter('[data-test="roadmap-recap-end"]')->text(), $leaf->filter('[data-test="roadmap-end"]')->text());
+        self::assertSame('Fin calculée : Mar 13/10/2026', $projectRow->filter('[data-test="roadmap-leaf"][data-title="Recette"] [data-test="roadmap-end"]')->text());
+    }
+
+    #[DataProvider('roleProvider')]
+    public function testUnknownEndCountsTheLeavesInCauseAndListsThemInATooltip(string $email): void
+    {
+        $client = $this->clientAs($email);
+        $alice = $this->createUser();
+        $project = $this->createProject();
+        $front = $this->createLot($project, title: 'Front');
+        $leaf = $this->planLot($this->createLot($project, 2, $alice, $front, 'Dépassée'), new \DateTimeImmutable('2026-10-01'), [[$alice, 100]]);
+        foreach (['2026-10-01', '2026-10-02', '2026-10-05'] as $day) {
+            $this->createTimeEntry($alice, $leaf, $day, 4);
+        }
+        $this->planLot($this->createLot($project, 5, $alice, $front, 'Écrans'), new \DateTimeImmutable('2026-10-12'), [[$alice, 100]]);
+
+        $crawler = $client->request('GET', '/roadmap');
+
+        $projectRow = $crawler->filter(\sprintf('[data-test="roadmap-project"][data-title="%s"]', $project->getTitle()));
+        $summary = $projectRow->filter('summary');
+        $end = $summary->filter('[data-test="roadmap-end"]');
+        self::assertSame('Fin inconnue : 1 lot en cause', $end->text());
+        self::assertSame('unknown', $end->attr('data-state'));
+        self::assertSame('div', $end->nodeName(), 'A summary may not hold a button.');
+        $tooltip = $summary->filter('[data-test="roadmap-end-tooltip"]');
+        self::assertSame('roadmap-end-project-' . $project->getId(), $tooltip->attr('id'));
+        self::assertSame($tooltip->attr('id'), $end->attr('data-roadmap-tooltip'));
+        self::assertSame($tooltip->attr('id'), $summary->attr('aria-describedby'));
+        self::assertSame(['Front · Dépassée : en dépassement'], $tooltip->filter('[data-test="unknown-end"]')->each(static fn (Crawler $item): string => $item->text()));
+
+        $lot = $projectRow->filter('[data-test="roadmap-lot"][data-title="Front"]');
+        $lotEnd = $lot->filter('[data-test="roadmap-end"]');
+        self::assertSame('Fin inconnue : 1 lot en cause', $lotEnd->text());
+        self::assertSame('button', $lotEnd->nodeName());
+        self::assertSame('roadmap-end-lot-' . $front->getId(), $lotEnd->attr('aria-describedby'));
+        self::assertSame($lotEnd->attr('aria-describedby'), $lot->filter('[data-test="roadmap-end-tooltip"]')->attr('id'));
+        self::assertSame('Fin inconnue : en dépassement', $projectRow->filter('[data-test="roadmap-leaf"][data-title="Dépassée"] [data-test="roadmap-end"]')->text());
+        self::assertSame('known', $projectRow->filter('[data-test="roadmap-leaf"][data-title="Écrans"] [data-test="roadmap-end"]')->attr('data-state'));
+    }
+
+    public function testPartialProjectLeavesOutItsUnplannedLeavesAndSaysWhatTheyMiss(): void
+    {
+        $client = $this->clientAs('lead@example.com');
+        $alice = $this->createUser();
+        $project = $this->createProject();
+        $this->planLot($this->createLot($project, 10, $alice, title: 'Socle'), new \DateTimeImmutable('2026-10-12'), [[$alice, 100]]);
+        $this->createLot($project, null, title: 'À estimer');
+        $this->createLot($project, 5, $alice, title: 'Sans début');
+
+        $crawler = $client->request('GET', '/roadmap');
+
+        $projectRow = $crawler->filter(\sprintf('[data-test="roadmap-project"][data-title="%s"]', $project->getTitle()));
+        self::assertSame('Fin calculée : Ven 23/10/2026, hors 2 lots non planifiés', $projectRow->filter('summary [data-test="roadmap-end"]')->text());
+        $tooltip = $projectRow->filter('summary [data-test="roadmap-end-tooltip"]');
+        self::assertStringStartsWith('Laissés hors de sa fin calculée', $tooltip->filter('[data-test="unknown-ends"] p')->text());
+        self::assertSame(['À estimer : à estimer, sans début, sans équipe', 'Sans début : sans début'], $tooltip->filter('[data-test="unknown-end"]')->each(static fn (Crawler $item): string => $item->text()));
+        $leafEnd = $projectRow->filter('[data-test="roadmap-leaf"][data-title="À estimer"] [data-test="roadmap-end"]');
+        self::assertSame('Non planifié : à estimer, sans début, sans équipe', $leafEnd->text());
+        self::assertSame('unplanned', $leafEnd->attr('data-state'));
+    }
+
+    public function testProjectWithNothingPlannedOrNoLotSaysSo(): void
+    {
+        $client = $this->clientAs('lead@example.com');
+        $project = $this->createProject();
+        $this->createLot($project, null, title: 'À estimer');
+        $this->createLot($project, 5, $this->createUser(), title: 'Sans début');
+        $this->planLot($this->createLot($project, 5, title: 'Sans équipe'), new \DateTimeImmutable('2026-10-12'), []);
+
+        $crawler = $client->request('GET', '/roadmap');
+
+        $end = $crawler->filter(\sprintf('[data-test="roadmap-project"][data-title="%s"] summary [data-test="roadmap-end"]', $project->getTitle()));
+        self::assertSame('Non planifié : 3 lots', $end->text());
+        self::assertSame('unplanned', $end->attr('data-state'));
+        self::assertCount(3, $crawler->filter(\sprintf('[data-test="roadmap-project"][data-title="%s"] summary [data-test="unknown-end"]', $project->getTitle())));
+        $unsplit = $crawler->filter('[data-test="roadmap-project"][data-title="Évolution du portail"] summary [data-test="roadmap-end"]');
+        self::assertSame('Pas encore découpé en lots', $unsplit->text());
+        self::assertSame('unsplit', $unsplit->attr('data-state'));
+    }
+
+    public function testNoEndExplanationEverSaysToReplan(): void
+    {
+        $alice = $this->createUser();
+        $project = $this->createProject();
+        $this->planLot($this->createLot($project, 10, $alice, title: 'Première'), new \DateTimeImmutable('2026-10-12'), [[$alice, 100]]);
+        $this->planLot($this->createLot($project, 10, $alice, title: 'Seconde'), new \DateTimeImmutable('2026-10-19'), [[$alice, 50]]);
+        $this->createLot($project, null, title: 'À estimer');
+
+        $crawler = $this->clientAs('lead@example.com')->request('GET', '/roadmap');
+
+        $projectRow = $crawler->filter(\sprintf('[data-test="roadmap-project"][data-title="%s"]', $project->getTitle()));
+        self::assertCount(2, $projectRow->filter('[data-test="signal-to_replan"]'));
+        foreach ($projectRow->filter('[data-test="roadmap-end"], [data-test="roadmap-end-tooltip"]') as $node) {
+            self::assertStringNotContainsString('replanifier', (string) $node->textContent);
+        }
+    }
+
+    public function testEndOutsideTheWindowIsStillWrittenAndMarkedAtTheEdgeOfTheFrieze(): void
+    {
+        $client = $this->clientAs('prod@example.com');
+        $alice = $this->createUser();
+        $past = $this->createProject();
+        $this->planLot($this->createLot($past, 10, $alice, title: 'Socle'), new \DateTimeImmutable('2026-10-12'), [[$alice, 100]]);
+        $future = $this->createProject();
+        $this->planLot($this->createLot($future, 5, $alice, title: 'Suite'), new \DateTimeImmutable('2027-09-06'), [[$alice, 100]]);
+        $row = static fn (Crawler $crawler, string $title): Crawler => $crawler->filter(\sprintf('[data-test="roadmap-project"][data-title="%s"]', $title));
+
+        $crawler = $client->request('GET', '/roadmap/2027-W30');
+        $projectRow = $row($crawler, (string) $past->getTitle());
+        self::assertSame('Fin calculée : Ven 23/10/2026', $projectRow->filter('summary [data-test="roadmap-end"]')->text());
+        self::assertSame('before', $projectRow->filter('summary [data-test="roadmap-outside"]')->attr('data-side'));
+        self::assertSame('before', $projectRow->filter('[data-test="roadmap-leaf"] [data-test="roadmap-outside"]')->attr('data-side'));
+        self::assertCount(0, $projectRow->filter('[data-test^="roadmap-bar-"]'));
+        self::assertCount(0, $row($crawler, (string) $future->getTitle())->filter('[data-test="roadmap-outside"]'), 'A bar within the window has no mark.');
+
+        $crawler = $client->request('GET', '/roadmap');
+        self::assertSame('after', $row($crawler, (string) $future->getTitle())->filter('summary [data-test="roadmap-outside"]')->attr('data-side'));
+        self::assertCount(0, $row($crawler, (string) $past->getTitle())->filter('[data-test="roadmap-outside"]'));
+        self::assertCount(0, $crawler->filter('[data-test="roadmap-project"][data-title="Évolution du portail"] [data-test="roadmap-outside"]'), 'A project without dates has no mark.');
+    }
+
     public function testEachSignalSaysInATooltipWhatItMeansAndWhyItShows(): void
     {
         $client = $this->clientAs('prod@example.com');

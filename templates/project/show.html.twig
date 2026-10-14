@@ -175,7 +175,7 @@
                 {{ include('roadmap/_legend.html.twig') }}
                 {% embed 'roadmap/_frieze.html.twig' %}
                     {% block rows %}
-                        <div class="grid grid-cols-[20rem_1fr]" data-test="roadmap-project" data-title="{{ projectRow.title }}">
+                        <div class="grid grid-cols-[var(--roadmap-labels)_1fr]" data-test="roadmap-project" data-title="{{ projectRow.title }}">
                             <div class="sticky left-0 z-10 border-e border-default-subtle bg-surface px-4 py-3.5">
                                 <div class="flex flex-wrap items-center gap-1.5">
                                     <span class="text-sm font-semibold text-heading">{{ projectRow.title }}</span>

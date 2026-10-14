@@ -2,8 +2,8 @@
     A leaf on the frieze of a person: their runs, then their share of its future part. Expects `row` (PersonLeafRow) and
     `roadmap`.
 #}
-<div class="grid grid-cols-[20rem_1fr] group/row border-t border-default-subtle transition-colors hover:bg-neutral-secondary-soft" data-test="person-leaf" data-title="{{ row.leafPath }}">
-    <div class="sticky left-0 z-10 border-e border-default-subtle bg-surface transition-colors group-hover/row:bg-neutral-secondary-soft px-4 py-2.5 ps-9">
+<div class="grid grid-cols-[var(--roadmap-labels)_1fr] group/row border-t border-default-subtle transition-colors hover:bg-neutral-secondary-soft" data-test="person-leaf" data-title="{{ row.leafPath }}">
+    <div class="sticky left-0 z-10 border-e border-default-subtle bg-surface transition-colors group-hover/row:bg-neutral-secondary-soft px-4 py-2.5 ps-6 md:ps-9">
         <div class="flex flex-wrap items-center gap-1.5">
             <span class="text-[13px] font-medium text-heading">{{ row.leafPath }}</span>
             {% for signal in row.signals %}

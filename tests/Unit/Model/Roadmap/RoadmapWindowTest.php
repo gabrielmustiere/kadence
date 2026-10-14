@@ -73,6 +73,16 @@ final class RoadmapWindowTest extends TestCase
         self::assertNull($window->bar(new \DateTimeImmutable('2027-06-14'), new \DateTimeImmutable('2027-07-01')));
     }
 
+    public function testDayIsBeforeOrAfterTheWindowOnlyBeyondItsEdges(): void
+    {
+        $window = $this->window();
+
+        self::assertTrue($window->isBefore(new \DateTimeImmutable('2026-08-30')));
+        self::assertFalse($window->isBefore(new \DateTimeImmutable('2026-08-31 18:00')));
+        self::assertFalse($window->isAfter(new \DateTimeImmutable('2027-06-13 18:00')));
+        self::assertTrue($window->isAfter(new \DateTimeImmutable('2027-06-14')));
+    }
+
     public function testSegmentedBarSpansItsRunsAndPlacesThemInPercentOfIt(): void
     {
         $bar = $this->window()->segmentedBar([$this->days('2026-09-07', '2026-09-11'), $this->days('2026-09-21', '2026-09-25')]);

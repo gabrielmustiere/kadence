@@ -2,7 +2,7 @@
   "version": 2,
   "title": "Lire sur la roadmap, sans rien survoler, quand chaque projet et chaque lot se termine",
   "created": "2026-10-12",
-  "updated": "2026-10-12",
+  "updated": "2026-10-14",
   "tags": [
     "roadmap"
   ],
@@ -21,6 +21,26 @@
       "date": "2026-10-12",
       "type": "Alignement",
       "description": "Pitch aligné sur le lexique de la story 015 à la relecture croisée : « fin calculée » à la place de « date projetée », pastille « planification partielle » dans la question ouverte."
+    },
+    {
+      "date": "2026-10-14",
+      "type": "Implémentation",
+      "description": "Quatre étapes livrées : RoadmapRow::unplannedLeaves() et RoadmapWindow::isBefore()/isAfter(), ligne de date sous chaque projet, lot découpé et lot (roadmap et frise de la page projet) avec infobulle des lots en cause, repère hors période, colonne des titres sur --roadmap-labels (11rem sous md, 20rem au-delà). QA : make lint propre, 724 tests PHPUnit et 56 E2E verts ; audit AccessLint non lancé. Écarts : (1) deux partiels _end.html.twig et _end_tooltip.html.twig, car l'infobulle doit vivre dans la piste, hors de la cellule collante, comme celles des pastilles ; (2) sur un lot découpé, la ligne de date est un bouton focalisable porteur d'aria-describedby plutôt que la cellule de titre, pour ouvrir la liste au clavier ; (3) _unknown_ends.html.twig prend un paramètre heading : un projet partiel à fin connue présente ses lots « laissés hors de sa fin calculée » ; (4) pastilles autorisées à passer à la ligne sous md (_signal.html.twig) : à la recette, une pastille de dépassement débordait de la colonne de 11rem et masquait le repère hors période ; (5) repère hors période collant au bord de la piste visible ; retrait de la ligne de date d'un projet réservé à md et au-delà ; (6) frise de la page projet dans project/show.html.twig (story 016), comme le plan le prévoyait ; (7) test « après la période » sur un lot qui démarre le 2027-09-06 vu depuis /roadmap, la fenêtre de 2026-W20 couvrant octobre 2026 ; (8) tests hors plan : RoadmapProjectControllerTest::testAnUnknownEndNamesTheLeavesWithoutOneAndWhy restreint à l'en-tête, la frise listant désormais aussi les lots en cause ; roadmap.spec.ts durci (bringIntoView avant hover et focus, car des lignes plus hautes font défiler la page et le défilement ferme l'infobulle ; rendered() qui attend chaque rendu du formulaire de lot, sujet à une course préexistante qui perdait l'équipe) ; (9) questions ouvertes du plan tranchées par défaut : 11rem, retraits réduits sous md (ps-6, ps-8), repère en texte, pastille « planification partielle » inchangée."
+    },
+    {
+      "date": "2026-10-14",
+      "type": "Review",
+      "description": "Review ouverte : PRÊT À COMMITER ; 0 bloquant, 0 important, 2 mineurs : [STYLE] lots en cause et identifiant d'infobulle recalculés à trois endroits, [DOC] contrat de --roadmap-labels non écrit dans _frieze.html.twig ; audit AccessLint et deux régressions préexistantes en hors review."
+    },
+    {
+      "date": "2026-10-14",
+      "type": "Review",
+      "description": "Prêt à commiter ; 2 mineurs corrigés : [STYLE] lots en cause et identifiant d'infobulle centralisés dans RoadmapRow::endCauses() et endTooltipId(), [DOC] contrat de --roadmap-labels écrit dans _frieze.html.twig ; audit AccessLint et deux régressions préexistantes restent en hors review."
+    },
+    {
+      "date": "2026-10-14",
+      "type": "Sync",
+      "description": "11 écarts réalignés dans le plan et le pitch, 14/14 critères d'acceptation et 6/6 critères de sortie cochés, product-backlog.md (note roadmap-interne) et DESIGN.md édités, 3 dettes ouvertes."
     }
   ]
 }

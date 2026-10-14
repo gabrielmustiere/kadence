@@ -66,6 +66,22 @@ async function login(page: Page, email: string) {
   await expect(page).not.toHaveURL(/\/login/);
 }
 
+// An action fired while the live component still renders the previous one is rendered over by it, which no person
+// acting by hand would trigger: each step of the form waits for the component to render it.
+async function rendered(page: Page, act: () => Promise<unknown>) {
+  await Promise.all([page.waitForResponse((response) => response.url().includes('/_components/')), act()]);
+  await expect(page.locator('[data-live-name-value][aria-busy="true"]')).toHaveCount(0);
+}
+
+// A scroll made by focus() or hover() itself would close the tooltip it has just opened: the row is brought into view
+// first, and the scroll event it raises let through.
+async function bringIntoView(row: Locator) {
+  await row.evaluate((element) => new Promise((resolve) => {
+    element.scrollIntoView({ block: 'center' });
+    requestAnimationFrame(() => requestAnimationFrame(resolve));
+  }));
+}
+
 function projectRow(page: Page): Locator {
   return page.locator(`[data-test="roadmap-project"][data-title="${project}"]`);
 }
@@ -78,13 +94,15 @@ test('un lead planifie une feuille et la voit sur la roadmap', async ({ page }) 
 
   await page.fill('[data-test="lot-start-date"]', nextMonday());
   await expect(page.locator('[data-test="lot-member-row"]')).toHaveCount(0);
-  await page.click('[data-test="lot-member-add"]');
+  await rendered(page, () => page.click('[data-test="lot-member-add"]'));
   const row = page.locator('[data-test="lot-member-row"]').last();
-  await row.locator('[data-test="lot-member-user"]').selectOption({ label: 'Paula Durand' });
-  await row.locator('[data-test="lot-member-share"]').selectOption({ label: '50 %' });
-  await page.click('[data-test="lot-member-add"]');
-  await page.locator('[data-test="lot-member-remove"]').last().click();
+  await rendered(page, () => row.locator('[data-test="lot-member-user"]').selectOption({ label: 'Paula Durand' }));
+  await rendered(page, () => row.locator('[data-test="lot-member-share"]').selectOption({ label: '50 %' }));
+  await rendered(page, () => page.click('[data-test="lot-member-add"]'));
+  await rendered(page, () => page.locator('[data-test="lot-member-remove"]').last().click());
   await expect(page.locator('[data-test="lot-member-row"]')).toHaveCount(1);
+  await expect(page.locator('[name="lot[members][1][user]"]')).toHaveCount(0);
+  await expect(page.locator('[data-test="lot-member-user"] option:checked')).toHaveText('Paula Durand');
   await page.click('[data-test="lot-submit"]');
   await expect(page.locator('[data-test="lot-row"][data-title="Socle"]')).toBeVisible();
 
@@ -96,6 +114,7 @@ test('un lead planifie une feuille et la voit sur la roadmap', async ({ page }) 
   await expect(leaf).toBeVisible();
   const tooltip = leaf.locator('[data-test="roadmap-tooltip-future"]');
   await expect(tooltip).toBeHidden();
+  await bringIntoView(leaf);
   await leaf.locator('[data-test="roadmap-bar-future"]').hover();
   await expect(tooltip).toBeVisible();
   await expect(tooltip.locator('[data-test="roadmap-team"]')).toHaveText('Paula Durand 50 %');
@@ -111,6 +130,7 @@ test('chaque tronçon a son infobulle, une seule à la fois, et le titre donne l
   const segments = leaf.locator('[data-test="roadmap-segment-realized"]');
   const shown = page.locator('[role="tooltip"]:visible');
   await expect(segments).toHaveCount(3);
+  await bringIntoView(leaf);
 
   for (const [index, days] of [[0, '5'], [1, '1'], [2, '5']] as const) {
     await segments.nth(index).hover();
@@ -138,6 +158,7 @@ test('le récap d\'une feuille s\'ouvre au clavier', async ({ page }) => {
   await page.goto('/roadmap');
   await projectRow(page).locator('summary').click();
   const leaf = projectRow(page).locator('[data-test="roadmap-leaf"][data-title="Interrompue"]');
+  await bringIntoView(leaf);
 
   await leaf.locator('[data-test="roadmap-leaf-title"]').focus();
   await expect(leaf.locator('[data-test="roadmap-recap"]')).toBeVisible();
@@ -150,6 +171,7 @@ test('une pastille explique au survol et au clavier ce qu\'elle signifie et pour
   await page.goto('/roadmap');
   await projectRow(page).locator('summary').click();
   const leaf = projectRow(page).locator('[data-test="roadmap-leaf"][data-title="Interrompue"]');
+  await bringIntoView(leaf);
   const signal = leaf.locator('[data-test="signal-team_to_review"]');
   const tooltip = leaf.locator('[data-test="signal-tooltip-team_to_review"]');
   await expect(tooltip).toBeHidden();
@@ -172,7 +194,9 @@ test('une infobulle ouverte se ferme avant que Turbo ne mette la page en cache',
   await page.goto('/roadmap');
   await projectRow(page).locator('summary').click();
   await page.mouse.move(0, 0);
-  await projectRow(page).locator('[data-test="roadmap-leaf"][data-title="Interrompue"] [data-test="roadmap-leaf-title"]').focus();
+  const leaf = projectRow(page).locator('[data-test="roadmap-leaf"][data-title="Interrompue"]');
+  await bringIntoView(leaf);
+  await leaf.locator('[data-test="roadmap-leaf-title"]').focus();
   await expect(page.locator('[role="tooltip"]:visible')).toHaveCount(1);
 
   await page.evaluate(() => document.dispatchEvent(new Event('turbo:before-cache')));
@@ -313,4 +337,35 @@ test('la fiche s\'ouvre à ×1 sans toucher au zoom de la roadmap, et détaille 
   await page.click('[data-test="project-page-back"]');
   await expect(page).toHaveURL(/\/roadmap\/\d{4}-W\d{2}$/);
   await expect(level).toHaveText('×4');
+});
+
+test('sur un téléphone, la fin d\'un projet se lit sans faire défiler la frise, à tout zoom', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await login(page, 'prod@example.com');
+  await page.goto('/roadmap');
+  const end = projectRow(page).locator('summary [data-test="roadmap-end"]');
+  const level = page.locator('[data-test="roadmap-zoom-level"]');
+  await expect(level).toHaveText('×1');
+  await expect(end).toHaveText(/^Fin (calculée|inconnue) : /);
+  const text = await end.textContent();
+
+  const inView = async () => {
+    const box = (await end.boundingBox())!;
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(390);
+  };
+  await inView();
+  const labels = (await projectRow(page).locator('summary > div').first().boundingBox())!;
+  expect(labels.width).toBeLessThanOrEqual(11 * 16);
+
+  for (let i = 0; i < 3; i++) {
+    await page.click('[data-test="roadmap-zoom-in"]');
+  }
+  await expect(level).toHaveText('×8');
+  expect(await page.locator('[data-test="roadmap"]').evaluate((frieze) => frieze.scrollWidth > frieze.clientWidth)).toBe(true);
+  await expect(end).toHaveText(text ?? '');
+  await inView();
+
+  await page.click('[data-test="roadmap-zoom-reset"]');
+  await expect(level).toHaveText('×1');
 });

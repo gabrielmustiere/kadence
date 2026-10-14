@@ -421,7 +421,24 @@ final class RoadmapProjectControllerTest extends WebTestCase
         $crawler = $client->request('GET', $this->url($project));
 
         self::assertSelectorTextSame('[data-test="project-page-end"]', 'inconnue');
-        self::assertSame(['Front · Login : en dépassement'], $crawler->filter('[data-test="unknown-end"]')->each(static fn (Crawler $leaf): string => $leaf->text()));
+        self::assertSame(['Front · Login : en dépassement'], $crawler->filter('[data-test="project-page-summary"] [data-test="unknown-end"]')->each(static fn (Crawler $leaf): string => $leaf->text()));
+    }
+
+    public function testEachLotOfTheFriezeWritesItsEndButNotTheLineOfTheProject(): void
+    {
+        $client = $this->clientAs('prod@example.com');
+        $project = $this->createExample();
+
+        $crawler = $client->request('GET', $this->url($project));
+
+        $frieze = $crawler->filter('[data-test="roadmap"]');
+        self::assertCount(0, $frieze->filter('[data-test="roadmap-project"] [data-test="roadmap-end"]'));
+        foreach (['API', 'Login'] as $title) {
+            $leaf = $frieze->filter(\sprintf('[data-test="roadmap-leaf"][data-title="%s"]', $title));
+            self::assertSame('Fin calculée : ' . $leaf->filter('[data-test="roadmap-recap-end"]')->text(), $leaf->filter('[data-test="roadmap-end"]')->text());
+        }
+        self::assertSame('known', $frieze->filter('[data-test="roadmap-lot"][data-title="Front"] [data-test="roadmap-end"]')->attr('data-state'));
+        self::assertSame($frieze->filter('[data-test="roadmap-leaf"][data-title="Login"] [data-test="roadmap-end"] time')->text(), $crawler->filter('[data-test="project-page-end"]')->text());
     }
 
     public function testTheProjectedCostIsAMinimumWhileALeafOverrunsWithoutProgress(): void

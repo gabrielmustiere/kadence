@@ -37,7 +37,7 @@
                 {% for project in roadmap.projects %}
                     <div class="relative border-t border-default first:border-t-0" data-test="roadmap-project" data-title="{{ project.title }}">
                         <details class="group" data-roadmap-target="project" data-project-id="{{ project.project.id }}" data-action="toggle->roadmap#remember">
-                            <summary class="grid cursor-pointer list-none grid-cols-[20rem_1fr] transition-colors hover:bg-neutral-secondary-soft [&::-webkit-details-marker]:hidden">
+                            <summary class="grid cursor-pointer list-none grid-cols-[var(--roadmap-labels)_1fr] transition-colors hover:bg-neutral-secondary-soft [&::-webkit-details-marker]:hidden" {% if project.endCauses is not empty %}aria-describedby="{{ project.endTooltipId }}"{% endif %}>
                                 <div class="sticky left-0 z-10 border-e border-default-subtle bg-surface py-3 ps-4 pe-11 transition-colors group-hover:bg-neutral-secondary-soft">
                                     <div class="flex flex-wrap items-center gap-1.5">
                                         <twig:ux:icon name="tabler:chevron-right" class="size-4 shrink-0 text-body-subtle transition-transform duration-200 group-open:rotate-90"/>
@@ -46,13 +46,16 @@
                                             {{ include('roadmap/_signal.html.twig', {row: project, focusable: false}) }}
                                         {% endfor %}
                                     </div>
+                                    {{ include('roadmap/_end.html.twig', {row: project, focusable: false, indented: true}) }}
                                 </div>
                                 <div class="roadmap-track relative min-h-12">
                                     {{ include('roadmap/_today.html.twig') }}
                                     {{ include('roadmap/_signal_tooltips.html.twig', {row: project}) }}
+                                    {{ include('roadmap/_end_tooltip.html.twig', {row: project}) }}
                                     {% if project.span %}
                                         {{ include('roadmap/_bar.html.twig', {row: project, bar: project.span, kind: 'span', class: 'h-2.5 rounded-full bg-brand-medium', test: 'roadmap-bar-span'}) }}
                                     {% endif %}
+                                    {{ include('roadmap/_outside.html.twig', {row: project}) }}
                                 </div>
                             </summary>
                             {% for row in project.children %}
@@ -61,7 +64,7 @@
                         </details>
                         {# Laid over the summary rather than inside it: browsers expose a summary as a button, which may not hold a link. #}
                         <div class="pointer-events-none absolute inset-x-0 top-0">
-                            <div class="sticky left-0 z-20 w-80">
+                            <div class="sticky left-0 z-20 w-(--roadmap-labels)">
                                 <a href="{{ path('app_project_show', {id: project.project.id, roadmap: roadmap.window.anchor.iso}) }}" class="pointer-events-auto absolute end-3 top-3 grid size-7 place-items-center rounded-lg text-body-subtle transition-colors hover:bg-neutral-tertiary hover:text-heading focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-medium" title="Ouvrir la fiche" aria-label="Ouvrir la fiche de {{ project.title }}" data-test="roadmap-project-open">
                                     <twig:ux:icon name="tabler:arrow-up-right" class="size-4"/>
                                 </a>

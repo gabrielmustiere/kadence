@@ -4,8 +4,8 @@
 #}
 {% set lot = row.lot %}
 {% set recap = row.leaf ? 'roadmap-recap-lot-' ~ lot.id : null %}
-<div class="grid grid-cols-[20rem_1fr] group/row border-t border-default-subtle transition-colors hover:bg-neutral-secondary-soft" data-test="{{ row.leaf ? 'roadmap-leaf' : 'roadmap-lot' }}" data-title="{{ row.title }}">
-    <div class="sticky left-0 z-10 border-e border-default-subtle bg-surface transition-colors group-hover/row:bg-neutral-secondary-soft px-4 py-2.5 {{ depth > 1 ? 'ps-14' : 'ps-9' }}">
+<div class="grid grid-cols-[var(--roadmap-labels)_1fr] group/row border-t border-default-subtle transition-colors hover:bg-neutral-secondary-soft" data-test="{{ row.leaf ? 'roadmap-leaf' : 'roadmap-lot' }}" data-title="{{ row.title }}">
+    <div class="sticky left-0 z-10 border-e border-default-subtle bg-surface transition-colors group-hover/row:bg-neutral-secondary-soft px-4 py-2.5 {{ depth > 1 ? 'ps-8 md:ps-14' : 'ps-6 md:ps-9' }}">
         <div class="flex flex-wrap items-center gap-1.5">
             {% if row.leaf and (links ?? true) and is_granted('LOT_EDIT', lot) %}
                 <a href="{{ path('app_lot_edit', {id: lot.id, roadmap: roadmap.window.anchor.iso}) }}" class="text-[13px] font-medium text-heading decoration-default-strong underline-offset-4 hover:underline" aria-describedby="{{ recap }}" data-roadmap-tooltip="{{ recap }}" data-test="roadmap-leaf-link">{{ row.title }}</a>
@@ -18,10 +18,12 @@
                 {{ include('roadmap/_signal.html.twig') }}
             {% endfor %}
         </div>
+        {{ include('roadmap/_end.html.twig') }}
     </div>
     <div class="roadmap-track relative min-h-12">
         {{ include('roadmap/_today.html.twig') }}
         {{ include('roadmap/_signal_tooltips.html.twig') }}
+        {{ include('roadmap/_end_tooltip.html.twig') }}
         {% if row.leaf %}
             {{ include('roadmap/_recap.html.twig') }}
             {% if row.realized %}{{ include('roadmap/_bar.html.twig', {bar: row.realized, kind: 'realized', class: 'h-3.5 rounded-[4px] bg-brand', test: 'roadmap-bar-realized'}) }}{% endif %}
@@ -31,6 +33,7 @@
         {% elseif row.span %}
             {{ include('roadmap/_bar.html.twig', {bar: row.span, kind: 'span', class: 'h-2 rounded-full bg-brand-medium', test: 'roadmap-bar-span'}) }}
         {% endif %}
+        {{ include('roadmap/_outside.html.twig') }}
     </div>
 </div>
 {% for child in row.children %}

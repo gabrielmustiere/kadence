@@ -154,7 +154,7 @@
             {% embed 'roadmap/_frieze.html.twig' %}
                 {% block rows %}
                     {% if load is not null %}
-                        <div class="grid grid-cols-[20rem_1fr] bg-neutral-secondary-soft" data-test="person-load-row">
+                        <div class="grid grid-cols-[var(--roadmap-labels)_1fr] bg-neutral-secondary-soft" data-test="person-load-row">
                             <div class="sticky left-0 z-10 flex items-center border-e border-default-subtle bg-neutral-secondary-soft px-4 py-3">
                                 <span class="flex items-center gap-2 text-sm font-semibold text-heading">
                                     <twig:ux:icon name="tabler:gauge" class="size-4 text-body-subtle"/>
@@ -191,7 +191,7 @@
                         {% endfor %}
                     {% endif %}
                     {% for item in page.projects %}
-                        <div class="grid grid-cols-[20rem_1fr] border-t border-default" data-test="person-project-row" data-title="{{ item.project.title }}">
+                        <div class="grid grid-cols-[var(--roadmap-labels)_1fr] border-t border-default" data-test="person-project-row" data-title="{{ item.project.title }}">
                             <div class="sticky left-0 z-10 border-e border-default-subtle bg-surface px-4 py-3">
                                 <a href="{{ path('app_project_show', {id: item.project.id}) }}" class="text-sm font-semibold text-heading decoration-default-strong underline-offset-4 hover:underline" data-test="person-project-link">{{ item.project.title }}</a>
                             </div>

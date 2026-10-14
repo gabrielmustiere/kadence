@@ -1,0 +1,17 @@
+{#
+    The mark at the edge of the track of a row whose whole bar falls before or after the window, kept in sight by the
+    side of the column of titles while the frieze scrolls. Expects `row` and `roadmap`; renders nothing when the row has
+    a bar within the window, or no date.
+#}
+{% set window = roadmap.window %}
+{% if row.span is null and row.start is not null %}
+    {% if row.lastDay and window.isBefore(row.lastDay) %}
+        <div class="pointer-events-none absolute inset-0 flex items-center">
+            <span class="sticky left-(--roadmap-labels) whitespace-nowrap px-2 text-xs text-body-subtle" data-test="roadmap-outside" data-side="before">‹ avant cette période</span>
+        </div>
+    {% elseif window.isAfter(row.start) %}
+        <div class="pointer-events-none absolute inset-0 flex items-center justify-end">
+            <span class="sticky right-0 whitespace-nowrap px-2 text-xs text-body-subtle" data-test="roadmap-outside" data-side="after">après cette période ›</span>
+        </div>
+    {% endif %}
+{% endif %}

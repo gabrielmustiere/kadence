@@ -7,16 +7,16 @@
 
 ## Approche retenue
 
-La story est un rendu, pas un calcul. Tout ce que la ligne de date affiche est déjà dans les `RoadmapRow` que construit `RoadmapBuilder::build()` (`src/Service/RoadmapBuilder.php:42-55`). Une feuille porte `start`, `end`, `lastDay` et ses `signals` (`leafRow()`, l. 189-244). Un lot découpé et un projet portent `start`, `end` (connue seulement si aucune feuille planifiée n'a une fin inconnue, `spanRow()` l. 161-180), `lastDay`, leurs `children` et, pour le projet, les signaux `Unsplit` ou `PartialPlanning` (`projectRow()` l. 124-139). Les raisons d'une fin manquante sont déjà portées par `RoadmapSignal::withholdsEnd()` (`src/Enum/Type/RoadmapSignal.php:103`), et les feuilles qui retiennent une fin par `RoadmapRow::unknownEndLeaves()` (`src/Model/Roadmap/RoadmapRow.php:123`), toutes deux livrées par les corrections rapides du 2026-10-12. Il manque deux lectures, sans requête : les feuilles non planifiées sous une ligne (`RoadmapRow::unplannedLeaves()`), et la position d'un jour par rapport à la fenêtre (`RoadmapWindow::isBefore()` / `isAfter()`).
+La story est un rendu, pas un calcul. Tout ce que la ligne de date affiche est déjà dans les `RoadmapRow` que construit `RoadmapBuilder::build()` (`src/Service/RoadmapBuilder.php:42-55`). Une feuille porte `start`, `end`, `lastDay` et ses `signals` (`leafRow()`, l. 189-244). Un lot découpé et un projet portent `start`, `end` (connue seulement si aucune feuille planifiée n'a une fin inconnue, `spanRow()` l. 161-180), `lastDay`, leurs `children` et, pour le projet, les signaux `Unsplit` ou `PartialPlanning` (`projectRow()` l. 124-139). Les raisons d'une fin manquante sont déjà portées par `RoadmapSignal::withholdsEnd()` (`src/Enum/Type/RoadmapSignal.php:103`), et les feuilles qui retiennent une fin par `RoadmapRow::unknownEndLeaves()` (`src/Model/Roadmap/RoadmapRow.php:123`), toutes deux livrées par les corrections rapides du 2026-10-12. Il manque des lectures, sans requête : les feuilles non planifiées sous une ligne (`RoadmapRow::unplannedLeaves()`), les lots en cause d'une fin et l'identifiant de leur infobulle (`RoadmapRow::endCauses()`, `endTooltipId()`), et la position d'un jour par rapport à la fenêtre (`RoadmapWindow::isBefore()` / `isAfter()`).
 
-Un partiel `templates/roadmap/_end.html.twig` écrit la ligne de date d'une ligne de frise (règles 2 à 9 du pitch) et, quand des lots sont en cause, son infobulle. Celle-ci réutilise `templates/roadmap/_unknown_ends.html.twig`, déjà affiché sur la page d'un projet et celle d'une personne. Le partiel est inclus dans la cellule de titre du `<summary>` d'un projet (`templates/roadmap/index.html.twig:41-48`) et dans celle de `templates/roadmap/_row.html.twig` (l. 8-23), qui sert aux lots découpés et aux feuilles, sur la roadmap comme sur la frise de la page d'un projet. Un second partiel, `_outside.html.twig`, pose le repère de bord (règle 14) dans la piste quand une ligne a des dates mais aucune barre dans la fenêtre. Enfin, la largeur de la colonne des titres, écrite en dur à `20rem` dans sept grilles, un calcul de largeur et une superposition, devient une variable CSS posée sur le cadre de la frise (`_frieze.html.twig:5`), plus étroite sous le point de rupture `md` (règles 15 et 16).
+Un partiel `templates/roadmap/_end.html.twig` écrit la ligne de date d'une ligne de frise (règles 2 à 9 du pitch). Quand des lots sont en cause, un second partiel, `_end_tooltip.html.twig`, pose leur infobulle dans la piste, hors de la cellule de titre collante, comme les infobulles des pastilles ; il réutilise `templates/roadmap/_unknown_ends.html.twig`, déjà affiché sur la page d'un projet et celle d'une personne, introduit par « Laissés hors de sa fin calculée, faute de planification : » quand la fin est connue. Les deux partiels sont inclus dans le `<summary>` d'un projet (`templates/roadmap/index.html.twig`) et dans `templates/roadmap/_row.html.twig`, qui sert aux lots découpés et aux feuilles, sur la roadmap comme sur la frise de la page d'un projet (`templates/project/show.html.twig`). Un troisième partiel, `_outside.html.twig`, pose le repère de bord (règle 14) dans la piste quand une ligne a des dates mais aucune barre dans la fenêtre ; collant, il reste visible au bord de la piste quand la frise défile. Enfin, la largeur de la colonne des titres, écrite en dur à `20rem` dans sept grilles, un calcul de largeur et une superposition, devient une variable CSS posée sur le cadre de la frise (`_frieze.html.twig`), plus étroite sous le point de rupture `md` (règles 15 et 16) ; sous `md`, les pastilles passent à la ligne plutôt que de déborder de la colonne resserrée.
 
 ### Mécanismes mobilisés
 
-- **Modèles calculés `RoadmapRow` et `RoadmapWindow`** : les deux nouvelles lectures sont des méthodes pures sur ces objets immuables, testables en unitaire, sur le modèle de `unknownEndLeaves()` et `RoadmapWindow::contains()`. Aucun service ni repository n'est touché, donc aucune requête nouvelle : la règle « pas de requête dans un gabarit » tient, puisque les gabarits ne lisent que des propriétés déjà chargées (`Lot::getTitle()`, `getParent()` par `RoadmapRow::leafPath()`, déjà lus par les récapitulatifs).
+- **Modèles calculés `RoadmapRow` et `RoadmapWindow`** : les nouvelles lectures sont des méthodes pures sur ces objets immuables, testables en unitaire, sur le modèle de `unknownEndLeaves()` et `RoadmapWindow::contains()`. Aucun service ni repository n'est touché, donc aucune requête nouvelle : la règle « pas de requête dans un gabarit » tient, puisque les gabarits ne lisent que des propriétés déjà chargées (`Lot::getTitle()`, `getParent()` par `RoadmapRow::leafPath()`, déjà lus par les récapitulatifs).
 - **`RoadmapSignal::withholdsEnd()`** : filtre les raisons d'une explication. `ToReplan` y vaut `false`, ce qui garantit la règle 11 (jamais « à replanifier » dans une explication) sans condition de rôle dans les gabarits.
-- **Contrôleur Stimulus `roadmap-tooltip`** (story 009) : l'infobulle des lots en cause est un `div role="tooltip" hidden` déclenché par `data-roadmap-tooltip` sur la ligne de date, comme les pastilles. Dans un `<summary>`, le déclencheur reste non focalisable (même contrainte que `_signal.html.twig` avec `focusable: false`, `index.html.twig:45-47`).
-- **`aria-describedby`** : le `<summary>` d'un projet, et la cellule de titre d'un lot découpé, pointent vers l'infobulle. Un nœud masqué référencé par `aria-describedby` reste lu par les lecteurs d'écran : la liste est accessible sans survol, sans alourdir le nom accessible du `<summary>` (règle 17). La date elle-même est du texte dans le `<summary>` : elle fait partie de son nom accessible, à la suite du titre.
+- **Contrôleur Stimulus `roadmap-tooltip`** (story 009) : l'infobulle des lots en cause est un `div role="tooltip" hidden` déclenché par `data-roadmap-tooltip` sur la ligne de date, comme les pastilles. Dans un `<summary>`, le déclencheur reste non focalisable (même contrainte que `_signal.html.twig` avec `focusable: false`) ; sur un lot découpé, la ligne de date est un bouton, qui ouvre l'infobulle au clavier.
+- **`aria-describedby`** : le `<summary>` d'un projet, et le bouton de la ligne de date d'un lot découpé, pointent vers l'infobulle, par `RoadmapRow::endTooltipId()`. Un nœud masqué référencé par `aria-describedby` reste lu par les lecteurs d'écran : la liste est accessible sans survol, sans alourdir le nom accessible du `<summary>` (règle 17). La date elle-même est du texte dans le `<summary>` : elle fait partie de son nom accessible, à la suite du titre.
 - **Variable CSS et propriété arbitraire Tailwind** : `[--roadmap-labels:11rem] md:[--roadmap-labels:20rem]` sur le cadre de la frise, et `grid-cols-[var(--roadmap-labels)_1fr]` partout où `grid-cols-[20rem_1fr]` est écrit. Le `calc()` de la largeur minimale (`_frieze.html.twig:6`) et la superposition de l'icône d'ouverture (`index.html.twig:64`, `w-80`) lisent la même variable. `roadmap_controller.js` mesure la piste à l'exécution (`#trackGeometry()`, l. 88-94) : le zoom et le recentrage suivent sans changement.
 - **`<time datetime>`** : la date d'une ligne est balisée pour les technologies d'assistance, au format `Y-m-d`.
 
@@ -38,6 +38,7 @@ Aucun impact modèle.
 Deux méthodes s'ajoutent à des modèles calculés, non persistés :
 
 - `src/Model/Roadmap/RoadmapRow.php` : `unplannedLeaves(): list<RoadmapRow>`, les feuilles sous la ligne (ou la ligne elle-même si c'est une feuille) qui n'ont pas de début (`null === $start`), dans l'ordre des `children`, sur le modèle récursif de `unknownEndLeaves()`.
+- `src/Model/Roadmap/RoadmapRow.php` : `endCauses(): list<RoadmapRow>`, les feuilles à fin inconnue puis les feuilles non planifiées, que la ligne de date compte, que l'infobulle liste et dont dépend `aria-describedby` ; `endTooltipId(): string`, l'identifiant de cette infobulle (`roadmap-end-<lot|project>-<id>`).
 - `src/Model/Roadmap/RoadmapWindow.php` : `isBefore(\DateTimeImmutable $day): bool` (le jour précède `firstDay`) et `isAfter(\DateTimeImmutable $day): bool` (le jour suit `lastDay`), comparés au format `Y-m-d` comme `contains()` (l. 73-78).
 
 ## Périmètre
@@ -46,26 +47,29 @@ Deux méthodes s'ajoutent à des modèles calculés, non persistés :
 
 | Fichier | Rôle |
 |---|---|
-| `templates/roadmap/_end.html.twig` | Ligne de date d'une ligne de frise (`data-test="roadmap-end"`, `data-state` = `known`, `unknown`, `unplanned` ou `unsplit`) : date en `<time>`, raison d'une feuille par ses signaux filtrés sur `withholdsEnd`, compte des lots en cause d'un projet ou d'un lot découpé ; infobulle `role="tooltip"` (`roadmap-end-<lot|project>-<id>`) qui inclut `_unknown_ends.html.twig` sur `unknownEndLeaves()` puis `unplannedLeaves()`. |
-| `templates/roadmap/_outside.html.twig` | Repère de bord d'une ligne qui a des dates mais aucune barre dans la fenêtre : « ‹ avant cette période » au bord gauche si `window.isBefore(lastDay)`, « après cette période › » au bord droit si `window.isAfter(start)` (`data-test="roadmap-outside"`, `data-side`). |
+| `templates/roadmap/_end.html.twig` | Ligne de date d'une ligne de frise (`data-test="roadmap-end"`, `data-state` = `known`, `unknown`, `unplanned` ou `unsplit`) : date en `<time>`, raison d'une feuille par ses signaux filtrés sur `withholdsEnd`, compte des lots en cause d'un projet ou d'un lot découpé ; bouton sur un lot découpé qui a des lots en cause. |
+| `templates/roadmap/_end_tooltip.html.twig` | Infobulle `role="tooltip"` (`RoadmapRow::endTooltipId()`, `data-test="roadmap-end-tooltip"`) posée dans la piste, qui inclut `_unknown_ends.html.twig` sur `endCauses()`. |
+| `templates/roadmap/_outside.html.twig` | Repère de bord d'une ligne qui a des dates mais aucune barre dans la fenêtre : « ‹ avant cette période » au bord gauche si `window.isBefore(lastDay)`, « après cette période › » au bord droit si `window.isAfter(start)` (`data-test="roadmap-outside"`, `data-side`), collant au bord de la piste visible. |
 
 ### Fichiers à modifier
 
 | Fichier | Modification |
 |---|---|
-| `src/Model/Roadmap/RoadmapRow.php` | Ajouter `unplannedLeaves()`. |
+| `src/Model/Roadmap/RoadmapRow.php` | Ajouter `unplannedLeaves()`, `endCauses()` et `endTooltipId()`. |
 | `src/Model/Roadmap/RoadmapWindow.php` | Ajouter `isBefore()` et `isAfter()`. |
 | `templates/roadmap/_frieze.html.twig` | Poser `[--roadmap-labels:11rem] md:[--roadmap-labels:20rem]` sur le cadre ; `calc()` de la largeur minimale et grille de l'en-tête sur `var(--roadmap-labels)`. |
 | `templates/roadmap/index.html.twig` | `<summary>` : grille sur la variable, `aria-describedby` vers l'infobulle de fin quand des lots sont en cause, inclusion de `_end.html.twig` sous le titre et les pastilles, de `_outside.html.twig` dans la piste quand `project.span` est nul et `project.start` connu ; superposition de l'icône d'ouverture en `w-[var(--roadmap-labels)]`. |
 | `templates/roadmap/_row.html.twig` | Grille sur la variable ; retraits `ps-9` / `ps-14` réduits sous `md` ; inclusion de `_end.html.twig` sous le titre (feuille et lot découpé), `aria-describedby` de la cellule de titre d'un lot découpé ; inclusion de `_outside.html.twig` quand la ligne n'a aucune barre dans la fenêtre. |
-| `templates/roadmap/project.html.twig` | Grille de la ligne du projet en tête de frise sur la variable ; cette ligne ne reçoit pas de ligne de date (règle 18). Si la story 016 est livrée avant, la même modification s'applique au gabarit de la page projet unique qui reprend cette frise. |
+| `templates/project/show.html.twig` | Grille de la ligne du projet en tête de frise sur la variable ; cette ligne ne reçoit pas de ligne de date (règle 18). Gabarit de la page projet unique de la story 016, qui reprend la frise de l'ancien `roadmap/project.html.twig`. |
+| `templates/roadmap/_unknown_ends.html.twig` | Paramètre `heading`, qui remplace la phrase d'introduction de la liste. |
+| `templates/roadmap/_signal.html.twig` | Sous `md`, la pastille passe à la ligne plutôt que de déborder de la colonne des titres resserrée. |
 | `templates/person/show.html.twig` | Grilles de la ligne de charge et des lignes de projet sur la variable. |
 | `templates/person/_row.html.twig` | Grille sur la variable ; retrait `ps-9` réduit sous `md`. |
-| `tests/Unit/Model/Roadmap/RoadmapRowTest.php` | Cas de `unplannedLeaves()` et `unknownEndLeaves()`. |
+| `tests/Unit/Model/Roadmap/RoadmapRowTest.php` | Cas de `unplannedLeaves()`, `unknownEndLeaves()` et `endCauses()`. |
 | `tests/Unit/Model/Roadmap/RoadmapWindowTest.php` | Cas de `isBefore()` et `isAfter()` aux bornes. |
 | `tests/Controller/RoadmapControllerTest.php` | Lignes de date des projets et des lots, explications, repères hors période, accessibilité, rôles (voir §Stratégie de test). |
-| `tests/Controller/RoadmapProjectControllerTest.php` | Lignes de date des lots de la frise ; en-tête inchangé. |
-| `tests/e2e/roadmap.spec.ts` | Scénario téléphone et zoom (voir §Stratégie de test). |
+| `tests/Controller/RoadmapProjectControllerTest.php` | Lignes de date des lots de la frise ; en-tête inchangé ; `testAnUnknownEndNamesTheLeavesWithoutOneAndWhy` restreint à l'en-tête, la frise listant désormais elle aussi les lots en cause. |
+| `tests/e2e/roadmap.spec.ts` | Scénario téléphone et zoom (voir §Stratégie de test) ; scénarios existants des infobulles et du formulaire de lot durcis (`bringIntoView()`, `rendered()`). |
 
 ## Hors scope
 
@@ -91,12 +95,12 @@ Deux méthodes s'ajoutent à des modèles calculés, non persistés :
 
 | Code | Type | Ce qu'on vérifie |
 |---|---|---|
-| `tests/Unit/Model/Roadmap/RoadmapRowTest.php` | unit | `unplannedLeaves()` : une feuille sans début se rend elle-même, une feuille planifiée rien ; un lot découpé et un projet rendent leurs feuilles sans début dans l'ordre, sous-lots compris. `unknownEndLeaves()` : seules les feuilles planifiées sans fin, jamais une feuille sans début. |
+| `tests/Unit/Model/Roadmap/RoadmapRowTest.php` | unit | `unplannedLeaves()` : une feuille sans début se rend elle-même, une feuille planifiée rien ; un lot découpé et un projet rendent leurs feuilles sans début dans l'ordre, sous-lots compris. `unknownEndLeaves()` : seules les feuilles planifiées sans fin, jamais une feuille sans début. `endCauses()` : les feuilles à fin inconnue, puis les non planifiées. |
 | `tests/Unit/Model/Roadmap/RoadmapWindowTest.php` | unit | `isBefore()` vrai la veille du premier jour, faux le premier jour ; `isAfter()` vrai le lendemain du dernier jour, faux le dernier jour. |
-| `tests/Controller/RoadmapControllerTest.php` | functional (HTTP) | Projet planifié : `roadmap-end` du `<summary>` en `known` avec la date de la feuille la plus tardive, identique à `roadmap-recap-end` de cette feuille. Feuille en dépassement : la feuille dit « Fin inconnue : en dépassement », son projet « Fin inconnue : 1 lot en cause », l'infobulle liste la feuille, et le `<summary>` pointe vers elle par `aria-describedby`. Projet partiel : « hors 2 lots non planifiés » et l'infobulle liste ce qui leur manque. Projet sans feuille planifiée : « Non planifié : 3 lots ». Projet sans lot (« Évolution du portail ») : « Pas encore découpé en lots ». Feuille surchargée vue par un lead : « à replanifier » absent de toute `roadmap-end` et de toute infobulle de fin. Projet terminé avant la fenêtre (`/roadmap/2027-W30`) : date en clair et `roadmap-outside` à `data-side="before"` ; projet qui commence après (`/roadmap/2026-W20`) : `data-side="after"`. Mêmes lignes pour la prod. |
+| `tests/Controller/RoadmapControllerTest.php` | functional (HTTP) | Projet planifié : `roadmap-end` du `<summary>` en `known` avec la date de la feuille la plus tardive, identique à `roadmap-recap-end` de cette feuille. Feuille en dépassement : la feuille dit « Fin inconnue : en dépassement », son projet « Fin inconnue : 1 lot en cause », l'infobulle liste la feuille, et le `<summary>` pointe vers elle par `aria-describedby`. Projet partiel : « hors 2 lots non planifiés » et l'infobulle liste ce qui leur manque. Projet sans feuille planifiée : « Non planifié : 3 lots ». Projet sans lot (« Évolution du portail ») : « Pas encore découpé en lots ». Feuille surchargée vue par un lead : « à replanifier » absent de toute `roadmap-end` et de toute infobulle de fin. Projet terminé avant la fenêtre (`/roadmap/2027-W30`) : date en clair et `roadmap-outside` à `data-side="before"` ; projet qui commence après, un lot planifié au 2027-09-06 vu depuis `/roadmap` : `data-side="after"`. Mêmes lignes pour la prod. |
 | `tests/Controller/RoadmapControllerTest.php` | functional (HTTP) | `testQueryCountDoesNotGrowWithTheNumberOfLeaves` inchangé et vert : aucune requête par ligne. |
 | `tests/Controller/RoadmapProjectControllerTest.php` | functional (HTTP) | Chaque feuille de la frise de la page d'un projet porte sa `roadmap-end` ; `project-page-end` et `unknown-ends` de l'en-tête sont inchangés ; la ligne du projet en tête de frise n'a pas de `roadmap-end`. |
-| `tests/e2e/roadmap.spec.ts` | E2E | Écran de 390 × 844 : la ligne de date du projet E2E est entièrement dans la fenêtre du navigateur sans défilement horizontal de la frise ; la frise défile toujours. À ×8, la ligne de date reste visible et identique. Les scénarios existants du zoom, de la navigation et des infobulles restent verts. |
+| `tests/e2e/roadmap.spec.ts` | E2E | Écran de 390 × 844 : la ligne de date du projet E2E est entièrement dans la fenêtre du navigateur sans défilement horizontal de la frise ; la frise défile toujours. À ×8, la ligne de date reste visible et identique. Les scénarios existants du zoom, de la navigation et des infobulles restent verts : amener la ligne à l'écran avant `hover()` ou `focus()` (`bringIntoView()`), car les lignes plus hautes font défiler la page et le défilement ferme l'infobulle ; attendre chaque rendu du formulaire de lot (`rendered()`). |
 
 **Hors scope tests** :
 
@@ -106,25 +110,25 @@ Deux méthodes s'ajoutent à des modèles calculés, non persistés :
 
 ## Ordre d'exécution
 
-1. [ ] **Lectures du modèle**
+1. [x] **Lectures du modèle**
    - Objectif : `RoadmapRow::unplannedLeaves()`, `RoadmapWindow::isBefore()` et `isAfter()`.
    - Fichiers : `src/Model/Roadmap/RoadmapRow.php`, `src/Model/Roadmap/RoadmapWindow.php`, leurs tests unitaires.
    - Vérification : `make phpunit-filter 'RoadmapRowTest|RoadmapWindowTest'`.
    - Commitable seule : oui.
 
-2. [ ] **Ligne de date et explication**
+2. [x] **Ligne de date et explication**
    - Objectif : `_end.html.twig` inclus dans le `<summary>` d'un projet et dans `_row.html.twig` ; infobulle des lots en cause et `aria-describedby`.
    - Fichiers : `templates/roadmap/_end.html.twig`, `templates/roadmap/index.html.twig`, `templates/roadmap/_row.html.twig`, `tests/Controller/RoadmapControllerTest.php`, `tests/Controller/RoadmapProjectControllerTest.php`.
    - Vérification : `make phpunit-filter 'RoadmapControllerTest|RoadmapProjectControllerTest'` ; nombre de requêtes de `/roadmap` relevé avant et après sur les fixtures (profiler), identique.
    - Commitable seule : oui.
 
-3. [ ] **Repère hors période**
+3. [x] **Repère hors période**
    - Objectif : `_outside.html.twig` dans la piste d'un projet et d'une ligne de `_row.html.twig` sans barre dans la fenêtre.
    - Fichiers : `templates/roadmap/_outside.html.twig`, `templates/roadmap/index.html.twig`, `templates/roadmap/_row.html.twig`, `tests/Controller/RoadmapControllerTest.php`.
    - Vérification : `make phpunit-filter RoadmapControllerTest`.
    - Commitable seule : oui.
 
-4. [ ] **Colonne des titres selon la largeur d'écran**
+4. [x] **Colonne des titres selon la largeur d'écran**
    - Objectif : variable `--roadmap-labels` sur le cadre de la frise, lue par les sept grilles, le `calc()` et la superposition de l'icône ; retraits réduits sous `md`.
    - Fichiers : `templates/roadmap/_frieze.html.twig`, `templates/roadmap/index.html.twig`, `templates/roadmap/_row.html.twig`, `templates/roadmap/project.html.twig`, `templates/person/show.html.twig`, `templates/person/_row.html.twig`, `tests/e2e/roadmap.spec.ts`.
    - Vérification : `make build` génère les classes `[--roadmap-labels:…]` ; `make playwright-file tests/e2e/roadmap.spec.ts` et `tests/e2e/person.spec.ts` ; recette à 390 px et à 1440 px sur la roadmap, la page d'un projet et celle d'une personne.
@@ -138,12 +142,12 @@ Deux méthodes s'ajoutent à des modèles calculés, non persistés :
 
 ## Critères de sortie
 
-- [ ] `RoadmapBuilder`, `Scheduler`, `ScheduleLoader` et les repositories ne sont pas modifiés.
-- [ ] Le nombre de requêtes de `/roadmap`, de la page d'un projet et de celle d'une personne est identique avant et après la story, sur les fixtures.
-- [ ] Aucune occurrence de `grid-cols-[20rem_1fr]` ni de `20rem` en dur ne subsiste dans les gabarits de frise ; la largeur vient de `--roadmap-labels`.
-- [ ] Aucun gabarit ne teste le rôle pour composer une explication de fin ; seule `withholdsEnd()` filtre les raisons.
-- [ ] Suite de tests du projet verte (`make phpunit`, `make playwright`), sans nouvelle régression.
-- [ ] `make lint` propre (PHP-CS-Fixer, PHPStan niveau 10).
+- [x] `RoadmapBuilder`, `Scheduler`, `ScheduleLoader` et les repositories ne sont pas modifiés.
+- [x] Le nombre de requêtes de `/roadmap`, de la page d'un projet et de celle d'une personne est identique avant et après la story, sur les fixtures.
+- [x] Aucune occurrence de `grid-cols-[20rem_1fr]` ni de `20rem` en dur ne subsiste dans les gabarits de frise ; la largeur vient de `--roadmap-labels`.
+- [x] Aucun gabarit ne teste le rôle pour composer une explication de fin ; seule `withholdsEnd()` filtre les raisons.
+- [x] Suite de tests du projet verte (`make phpunit`, `make playwright`), sans nouvelle régression.
+- [x] `make lint` propre (PHP-CS-Fixer, PHPStan niveau 10).
 
 ## Risques et mitigations
 
@@ -159,5 +163,5 @@ Deux méthodes s'ajoutent à des modèles calculés, non persistés :
 
 ## Questions ouvertes
 
-- **Largeur de la colonne des titres sur téléphone** : 11rem laisse environ 180 px de frise visibles sur un écran de 390 px. Options : (a) 11rem ; (b) 12rem, plus confortable pour les titres longs. À régler à la recette, (a) par défaut.
-- **Sous-lots sur téléphone** : le retrait de deux niveaux (`ps-14`) mange la colonne resserrée. Options : (a) retraits réduits sous `md` (prévu) ; (b) retrait unique pour les deux niveaux sous `md`. À trancher à la recette.
+- **Largeur de la colonne des titres sur téléphone** : 11rem laisse environ 180 px de frise visibles sur un écran de 390 px. Options : (a) 11rem ; (b) 12rem, plus confortable pour les titres longs. Tranchée à la recette à 390 px : (a) 11rem.
+- **Sous-lots sur téléphone** : le retrait de deux niveaux (`ps-14`) mange la colonne resserrée. Options : (a) retraits réduits sous `md` (prévu) ; (b) retrait unique pour les deux niveaux sous `md`. Tranchée à la recette : (a), `ps-6` et `ps-8` sous `md`, `ps-9` et `ps-14` au-delà.

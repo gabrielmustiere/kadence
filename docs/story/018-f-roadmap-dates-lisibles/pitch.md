@@ -62,18 +62,18 @@ C'est le symptôme « roadmap opaque » que la vision met au centre, et le signa
 7. **Projet ou lot découpé dont la fin est inconnue** : « Fin inconnue : » suivi du nombre de lots en cause, par exemple « Fin inconnue : 3 lots en cause ». Sont en cause les lots planifiés sans fin calculée et les lots non planifiés.
 8. **Projet ou lot découpé où rien n'est planifié** : « Non planifié : » suivi du nombre de lots, par exemple « Non planifié : 6 lots ».
 9. **Projet sans lot** : « Pas encore découpé en lots ».
-10. **Détail à la demande** : sur une ligne de projet ou de lot découpé qui compte des lots en cause (règles 6 à 8), survoler la ligne de date affiche la liste de ces lots, chacun avec ce qui le retient ou ce qui lui manque. C'est la même explication que sur la page du projet. En dépliant le projet, chaque lot donne aussi sa propre raison sur sa ligne (règles 3 et 4).
+10. **Détail à la demande** : sur une ligne de projet ou de lot découpé qui compte des lots en cause (règles 6 à 8), survoler la ligne de date affiche la liste de ces lots, chacun avec ce qui le retient ou ce qui lui manque ; sur un lot découpé, elle s'ouvre aussi au clavier. C'est la même explication que sur la page du projet. En dépliant le projet, chaque lot donne aussi sa propre raison sur sa ligne (règles 3 et 4).
 11. **Mots des explications** : seules les raisons qui privent un lot de sa fin entrent dans une explication. « À replanifier », réservé aux leads et à la direction, n'y figure jamais, pas plus que « démarrage en retard », « estimation atteinte » ou « terminée à 100 % ».
 12. **Pastilles inchangées** : les pastilles de chaque ligne et leurs infobulles restent telles quelles. La ligne de date s'ajoute, elle ne les remplace pas.
 
 ### Hors de la période affichée
 
 13. **Date toujours lisible** : la ligne de date ne dépend pas de la période affichée. La fin d'un projet terminé avant cette période, ou qui commence après, se lit sur sa ligne comme les autres.
-14. **Repère au bord de la frise** : une ligne dont toute la barre tombe avant la période affichée porte, au bord gauche de la frise, l'indication qu'elle se situe avant. Une ligne dont toute la barre tombe après porte la même indication au bord droit. Les barres qui débordent seulement d'un côté restent coupées au bord, comme aujourd'hui.
+14. **Repère au bord de la frise** : une ligne dont toute la barre tombe avant la période affichée porte, au bord gauche de la frise, l'indication qu'elle se situe avant. Une ligne dont toute la barre tombe après porte la même indication au bord droit. L'indication reste visible au bord quand la frise défile. Les barres qui débordent seulement d'un côté restent coupées au bord, comme aujourd'hui.
 
 ### Téléphone
 
-15. **Colonne des titres resserrée** : sur un écran de téléphone, la colonne des titres de la frise est plus étroite, pour que la frise reste visible à côté. Les titres et la ligne de date passent à la ligne au besoin.
+15. **Colonne des titres resserrée** : sur un écran de téléphone, la colonne des titres de la frise est plus étroite, pour que la frise reste visible à côté. Les titres, les pastilles et la ligne de date passent à la ligne au besoin.
 16. **Date sans défilement** : sur un écran de téléphone, la ligne de date de chaque projet est visible sans faire défiler la frise horizontalement.
 
 ### Accessibilité
@@ -83,24 +83,24 @@ C'est le symptôme « roadmap opaque » que la vision met au centre, et le signa
 ### Pages qui partagent la frise
 
 18. **Page d'un projet** : les lignes de lots de sa frise portent la même ligne de date. La ligne du projet en tête de cette frise est inchangée, puisque la fin du projet et son explication figurent déjà en haut de la page.
-19. **Page d'une personne** : sa frise est inchangée, à la largeur de la colonne des titres près (règle 15).
+19. **Page d'une personne** : sa frise est inchangée, à la largeur de la colonne des titres et au retour à la ligne des pastilles près (règle 15).
 
 ## Critères d'acceptation
 
-- [ ] Sur la roadmap, projets repliés, chaque projet planifié affiche « Fin calculée : » suivi du jour et de la date de son lot le plus tardif, identique à la fin donnée par son récapitulatif.
-- [ ] Un projet dont un lot planifié est en dépassement sans avancement déclaré affiche « Fin inconnue : » avec le nombre de lots en cause ; survoler cette ligne liste ce lot avec « en dépassement ».
-- [ ] En dépliant ce projet, le lot en dépassement affiche « Fin inconnue : en dépassement », et un lot planifié dont la fin est connue affiche sa fin calculée.
-- [ ] Un projet dont une partie seulement des lots est planifiée affiche sa fin calculée suivie de « hors N lots non planifiés » ; survoler la ligne liste ces lots avec ce qui leur manque.
-- [ ] Un projet dont aucun lot n'est planifié affiche « Non planifié : » avec son nombre de lots, et un projet sans lot affiche « Pas encore découpé en lots ».
-- [ ] Un lot non planifié affiche « Non planifié : » suivi de ce qui lui manque (« à estimer », « sans début », « sans équipe »).
-- [ ] Le signal « à replanifier » n'apparaît dans aucune ligne de date ni aucune liste de lots en cause, quel que soit le rôle.
-- [ ] Un projet dont tous les lots se terminent avant la période affichée affiche sa fin calculée et un repère au bord gauche de la frise ; un projet qui commence après la période affichée, un repère au bord droit.
-- [ ] La ligne de date d'un projet est identique à ×1 et à ×8, et après une navigation de quatre semaines.
-- [ ] Sur un écran de 390 px de large, la ligne de date de chaque projet est entièrement visible sans défilement horizontal.
-- [ ] Un lecteur d'écran annonce, sur la ligne d'un projet, son titre et sa ligne de date, et donne accès à la liste des lots en cause sans survol.
-- [ ] Sur la page d'un projet, chaque lot de la frise affiche sa ligne de date ; l'en-tête de la page est inchangé.
-- [ ] Sur la page d'une personne, la frise affiche les mêmes barres et les mêmes pastilles qu'avant.
-- [ ] Un membre de prod voit les mêmes lignes de date qu'un lead ou la direction.
+- [x] Sur la roadmap, projets repliés, chaque projet planifié affiche « Fin calculée : » suivi du jour et de la date de son lot le plus tardif, identique à la fin donnée par son récapitulatif.
+- [x] Un projet dont un lot planifié est en dépassement sans avancement déclaré affiche « Fin inconnue : » avec le nombre de lots en cause ; survoler cette ligne liste ce lot avec « en dépassement ».
+- [x] En dépliant ce projet, le lot en dépassement affiche « Fin inconnue : en dépassement », et un lot planifié dont la fin est connue affiche sa fin calculée.
+- [x] Un projet dont une partie seulement des lots est planifiée affiche sa fin calculée suivie de « hors N lots non planifiés » ; survoler la ligne liste ces lots avec ce qui leur manque.
+- [x] Un projet dont aucun lot n'est planifié affiche « Non planifié : » avec son nombre de lots, et un projet sans lot affiche « Pas encore découpé en lots ».
+- [x] Un lot non planifié affiche « Non planifié : » suivi de ce qui lui manque (« à estimer », « sans début », « sans équipe »).
+- [x] Le signal « à replanifier » n'apparaît dans aucune ligne de date ni aucune liste de lots en cause, quel que soit le rôle.
+- [x] Un projet dont tous les lots se terminent avant la période affichée affiche sa fin calculée et un repère au bord gauche de la frise ; un projet qui commence après la période affichée, un repère au bord droit.
+- [x] La ligne de date d'un projet est identique à ×1 et à ×8, et après une navigation de quatre semaines.
+- [x] Sur un écran de 390 px de large, la ligne de date de chaque projet est entièrement visible sans défilement horizontal.
+- [x] Un lecteur d'écran annonce, sur la ligne d'un projet, son titre et sa ligne de date, et donne accès à la liste des lots en cause sans survol.
+- [x] Sur la page d'un projet, chaque lot de la frise affiche sa ligne de date ; l'en-tête de la page est inchangé.
+- [x] Sur la page d'une personne, la frise affiche les mêmes barres et les mêmes pastilles qu'avant.
+- [x] Un membre de prod voit les mêmes lignes de date qu'un lead ou la direction.
 
 ## Hors scope
 
@@ -127,8 +127,8 @@ C'est le symptôme « roadmap opaque » que la vision met au centre, et le signa
 
 ## Questions ouvertes
 
-- **Pastille « planification partielle » d'un projet où rien n'est planifié** (aujourd'hui « planning partiel », renommée par la story 015) : la pastille dit « partielle » alors qu'aucun lot n'est planifié (Kadence aujourd'hui). Options : (a) la garder, la ligne de date disant « Non planifié » ; (b) ne l'afficher que si au moins un lot est planifié. Recommandation : (a) ici, pour ne pas toucher aux signaux de la story 006 ; à trancher avec le pitch de la story 015, qui définit la planification partielle.
-- **Forme du repère hors période** : options : (a) un court texte au bord (« ‹ avant cette période », « après cette période › ») ; (b) une flèche seule, avec le texte pour les lecteurs d'écran. Recommandation : (a), plus explicite, la colonne des titres portant déjà la date.
+- **Pastille « planification partielle » d'un projet où rien n'est planifié** (aujourd'hui « planning partiel », renommée par la story 015) : la pastille dit « partielle » alors qu'aucun lot n'est planifié (Kadence aujourd'hui). Options : (a) la garder, la ligne de date disant « Non planifié » ; (b) ne l'afficher que si au moins un lot est planifié. Tranchée à la livraison : (a), les signaux de la story 006 sont inchangés et la ligne de date dit « Non planifié ».
+- **Forme du repère hors période** : options : (a) un court texte au bord (« ‹ avant cette période », « après cette période › ») ; (b) une flèche seule, avec le texte pour les lecteurs d'écran. Tranchée à la livraison : (a), un court texte au bord.
 
 ---
 
