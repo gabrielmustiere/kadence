@@ -37,6 +37,15 @@
       "date": "2026-10-14",
       "type": "Sync",
       "description": "2 écarts réalignés dans le plan, 6/6 critères d'acceptation et 6/6 critères de sortie cochés, C4.4 du backlog éditée, aucune dette."
+    },
+    {
+      "date": "2026-10-14",
+      "type": "Livraison",
+      "description": "Commit d483036 : code, tests, pitch, plan, report et backlog réalignés."
     }
-  ]
+  ],
+  "delivery": {
+    "release": null,
+    "commit": "d483036"
+  }
 }
