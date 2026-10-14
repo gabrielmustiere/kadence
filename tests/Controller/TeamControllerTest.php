@@ -36,12 +36,12 @@ final class TeamControllerTest extends WebTestCase
         $client->loginUser($this->fixtureUser($email));
         $member = $this->createUser();
 
-        foreach (['/equipe', '/equipe/nouveau', '/equipe/' . $member->getId() . '/modifier'] as $url) {
+        foreach (['/personnes/nouveau', '/personnes/' . $member->getId() . '/modifier'] as $url) {
             $client->request('GET', $url);
             self::assertResponseStatusCodeSame(403, $url);
         }
 
-        $client->request('POST', '/equipe/' . $member->getId() . '/mot-de-passe-provisoire');
+        $client->request('POST', '/personnes/' . $member->getId() . '/mot-de-passe-provisoire');
         self::assertResponseStatusCodeSame(403);
     }
 
@@ -54,26 +54,40 @@ final class TeamControllerTest extends WebTestCase
         yield 'prod' => ['prod@example.com'];
     }
 
-    public function testTeamEntryIsShownInNavigationToDirectionOnly(): void
+    public function testTheFormerTeamAddressesLeadPermanentlyToThePeoplePages(): void
     {
         $client = $this->directorClient();
-        $client->request('GET', '/');
-        self::assertSelectorExists('[data-test="nav-team"]');
-        self::assertSelectorExists('[data-test="home-team"]');
+        $member = $this->createUser();
 
-        $client->loginUser($this->fixtureUser('prod@example.com'));
-        $client->request('GET', '/');
-        self::assertSelectorNotExists('[data-test="nav-team"]');
-        self::assertSelectorNotExists('[data-test="home-team"]');
-        self::assertSelectorExists('[data-test="home-account"]');
-        self::assertSelectorTextContains('[data-test="user-menu-name"]', 'Paula Durand');
+        $client->request('GET', '/equipe?competence=12&manager=3');
+        self::assertResponseRedirects('/personnes?competence=12&manager=3', 301);
+
+        $client->request('GET', '/equipe/nouveau');
+        self::assertResponseRedirects('/personnes/nouveau', 301);
+
+        $client->request('GET', '/equipe/' . $member->getId() . '/modifier');
+        self::assertResponseRedirects('/personnes/' . $member->getId() . '/modifier', 301);
+        $client->followRedirect();
+        self::assertResponseIsSuccessful();
+    }
+
+    public function testOnlyTheDirectionIsOfferedToRegisterSomeone(): void
+    {
+        $client = $this->directorClient();
+        $client->request('GET', '/personnes');
+        self::assertSelectorExists('[data-test="team-new"]');
+
+        $client->loginUser($this->fixtureUser('lead@example.com'));
+        $client->request('GET', '/personnes');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorNotExists('[data-test="team-new"]');
     }
 
     public function testListShowsIdentityRoleAndStatus(): void
     {
         $client = $this->directorClient();
 
-        $client->request('GET', '/equipe');
+        $client->request('GET', '/personnes');
 
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('[data-email="lead@example.com"] [data-test="member-role"]', 'Lead');
@@ -86,11 +100,11 @@ final class TeamControllerTest extends WebTestCase
         $client = $this->directorClient();
         $member = $this->createUser();
 
-        $crawler = $client->request('GET', '/equipe');
+        $crawler = $client->request('GET', '/personnes');
 
         $link = $crawler->filter(\sprintf('[data-email="%s"] [data-test="member-person"]', $member->getEmail()));
         self::assertSame('/personnes/' . $member->getId(), $link->attr('href'));
-        self::assertSame('Fiche de Test User', $link->attr('aria-label'));
+        self::assertSame('Test User', $link->text());
     }
 
     public function testRegisterShowsTemporaryPasswordOnlyOnce(): void
@@ -98,11 +112,11 @@ final class TeamControllerTest extends WebTestCase
         $client = $this->directorClient();
         $email = uniqid('new-', true) . '@example.com';
 
-        $this->submitMemberForm($client, '/equipe/nouveau', ['firstName' => 'Jeanne', 'lastName' => 'Dupont', 'email' => $email, 'role' => 'lead']);
+        $this->submitMemberForm($client, '/personnes/nouveau', ['firstName' => 'Jeanne', 'lastName' => 'Dupont', 'email' => $email, 'role' => 'lead']);
 
         $user = $this->userRepository()->findOneByEmail($email);
         self::assertNotNull($user);
-        self::assertResponseRedirects('/equipe/' . $user->getId() . '/mot-de-passe-provisoire');
+        self::assertResponseRedirects('/personnes/' . $user->getId() . '/mot-de-passe-provisoire');
 
         $crawler = $client->followRedirect();
         $temporaryPassword = $crawler->filter('[data-test="temporary-password"]')->text();
@@ -112,15 +126,15 @@ final class TeamControllerTest extends WebTestCase
         self::assertSame(HolidayCalendar::France, $user->getHolidayCalendar());
         self::assertTrue($user->mustChangePassword());
 
-        $client->request('GET', '/equipe/' . $user->getId() . '/mot-de-passe-provisoire');
-        self::assertResponseRedirects('/equipe');
+        $client->request('GET', '/personnes/' . $user->getId() . '/mot-de-passe-provisoire');
+        self::assertResponseRedirects('/personnes');
     }
 
     public function testRegisterRefusesEmailOfActiveMemberWhateverTheCase(): void
     {
         $client = $this->directorClient();
 
-        $this->submitMemberForm($client, '/equipe/nouveau', ['firstName' => 'Louis', 'lastName' => 'Bis', 'email' => 'LEAD@example.com', 'role' => 'prod']);
+        $this->submitMemberForm($client, '/personnes/nouveau', ['firstName' => 'Louis', 'lastName' => 'Bis', 'email' => 'LEAD@example.com', 'role' => 'prod']);
 
         self::assertResponseStatusCodeSame(422);
         self::assertSelectorTextContains('[data-test="team-member-form"]', 'déjà utilisé');
@@ -130,7 +144,7 @@ final class TeamControllerTest extends WebTestCase
     {
         $client = $this->directorClient();
 
-        $this->submitMemberForm($client, '/equipe/nouveau', ['firstName' => 'Arthur', 'lastName' => 'Petit', 'email' => 'ancien@example.com', 'role' => 'prod']);
+        $this->submitMemberForm($client, '/personnes/nouveau', ['firstName' => 'Arthur', 'lastName' => 'Petit', 'email' => 'ancien@example.com', 'role' => 'prod']);
 
         self::assertResponseStatusCodeSame(422);
         self::assertSelectorTextContains('[data-test="team-member-form"]', 'réactivez-la');
@@ -142,9 +156,9 @@ final class TeamControllerTest extends WebTestCase
         $member = $this->createUser();
         $newEmail = uniqid('renamed-', true) . '@example.com';
 
-        $this->submitMemberForm($client, '/equipe/' . $member->getId() . '/modifier', ['lastName' => 'Renommé', 'email' => $newEmail, 'role' => 'lead']);
+        $this->submitMemberForm($client, '/personnes/' . $member->getId() . '/modifier', ['lastName' => 'Renommé', 'email' => $newEmail, 'role' => 'lead']);
 
-        self::assertResponseRedirects('/equipe');
+        self::assertResponseRedirects('/personnes');
         $member = $this->reloadUser($member);
         self::assertSame('Renommé', $member->getLastName());
         self::assertSame($newEmail, $member->getEmail());
@@ -157,12 +171,12 @@ final class TeamControllerTest extends WebTestCase
         $client = $this->directorClient();
         $member = $this->createUser();
 
-        $crawler = $client->request('GET', '/equipe/' . $member->getId() . '/modifier');
+        $crawler = $client->request('GET', '/personnes/' . $member->getId() . '/modifier');
         self::assertSame('fr', $crawler->filter('[data-test^="member-holiday-calendar-"]:checked')->attr('value'));
 
-        $this->submitMemberForm($client, '/equipe/' . $member->getId() . '/modifier', ['holidayCalendar' => 'be']);
+        $this->submitMemberForm($client, '/personnes/' . $member->getId() . '/modifier', ['holidayCalendar' => 'be']);
 
-        self::assertResponseRedirects('/equipe');
+        self::assertResponseRedirects('/personnes');
         self::assertSame(HolidayCalendar::Belgium, $this->reloadUser($member)->getHolidayCalendar());
     }
 
@@ -171,20 +185,20 @@ final class TeamControllerTest extends WebTestCase
         $client = $this->directorClient();
         $member = $this->createUser();
 
-        $this->submitMemberForm($client, '/equipe/' . $member->getId() . '/modifier', ['firstName' => 'Prénom']);
+        $this->submitMemberForm($client, '/personnes/' . $member->getId() . '/modifier', ['firstName' => 'Prénom']);
 
-        self::assertResponseRedirects('/equipe');
+        self::assertResponseRedirects('/personnes');
     }
 
     public function testDirectionSetsAWeeklyMaximumFromTheChosenWeek(): void
     {
         $client = $this->directorClient();
         $member = $this->createUser();
-        $url = '/equipe/' . $member->getId() . '/modifier';
+        $url = '/personnes/' . $member->getId() . '/modifier';
 
         $this->submitMemberForm($client, $url, ['weeklyMaxDays' => '4.5', 'weeklyMaxFrom' => '2026-10-07']);
 
-        self::assertResponseRedirects('/equipe');
+        self::assertResponseRedirects('/personnes');
         $history = $this->weeklyMaxRepository()->findForUser($member);
         self::assertCount(1, $history);
         self::assertSame(18, $history[0]->getQuarters());
@@ -200,7 +214,7 @@ final class TeamControllerTest extends WebTestCase
         $client = $this->directorClient();
         $member = $this->createUser();
 
-        $this->submitMemberForm($client, '/equipe/' . $member->getId() . '/modifier', ['weeklyMaxDays' => $days]);
+        $this->submitMemberForm($client, '/personnes/' . $member->getId() . '/modifier', ['weeklyMaxDays' => $days]);
 
         self::assertResponseStatusCodeSame(422);
         self::assertSame([], $this->weeklyMaxRepository()->findForUser($member));
@@ -222,10 +236,10 @@ final class TeamControllerTest extends WebTestCase
         $member = $this->createUser();
         $this->createWeeklyMax($member, '2026-09-07', 16);
 
-        $crawler = $client->request('GET', '/equipe/' . $member->getId() . '/modifier');
+        $crawler = $client->request('GET', '/personnes/' . $member->getId() . '/modifier');
         $client->submit($crawler->filter('[data-test="weekly-max-entry"] [data-test="weekly-max-delete"]')->form());
 
-        self::assertResponseRedirects('/equipe/' . $member->getId() . '/modifier');
+        self::assertResponseRedirects('/personnes/' . $member->getId() . '/modifier');
         self::assertSame([], $this->weeklyMaxRepository()->findForUser($member));
     }
 
@@ -235,7 +249,7 @@ final class TeamControllerTest extends WebTestCase
         $owner = $this->createUser();
         $weeklyMax = $this->createWeeklyMax($owner, '2026-09-07', 16);
 
-        $client->request('POST', '/equipe/' . $this->createUser()->getId() . '/maximum/' . $weeklyMax->getId() . '/supprimer');
+        $client->request('POST', '/personnes/' . $this->createUser()->getId() . '/maximum/' . $weeklyMax->getId() . '/supprimer');
 
         self::assertResponseStatusCodeSame(404);
         self::assertCount(1, $this->weeklyMaxRepository()->findForUser($owner));
@@ -252,8 +266,8 @@ final class TeamControllerTest extends WebTestCase
         $this->setActive($otherDirectors, false);
 
         try {
-            $this->submitMemberForm($client, '/equipe/' . $director->getId() . '/modifier', ['role' => 'lead']);
-            self::assertResponseRedirects('/equipe');
+            $this->submitMemberForm($client, '/personnes/' . $director->getId() . '/modifier', ['role' => 'lead']);
+            self::assertResponseRedirects('/personnes');
 
             self::assertSame(Role::Direction, $this->reloadUser($director)->getRole());
         } finally {
@@ -268,7 +282,7 @@ final class TeamControllerTest extends WebTestCase
 
         $this->clickRowButton($client, $member, 'member-reset-password-confirm');
 
-        self::assertResponseRedirects('/equipe/' . $member->getId() . '/mot-de-passe-provisoire');
+        self::assertResponseRedirects('/personnes/' . $member->getId() . '/mot-de-passe-provisoire');
         $temporaryPassword = $client->followRedirect()->filter('[data-test="temporary-password"]')->text();
         $member = $this->reloadUser($member);
         self::assertFalse($this->passwordHasher()->isPasswordValid($member, 'password'));
@@ -284,10 +298,10 @@ final class TeamControllerTest extends WebTestCase
 
         $this->clickRowButton($client, $member, 'member-reset-password-confirm');
 
-        $client->request('GET', '/equipe/' . $other->getId() . '/mot-de-passe-provisoire');
-        self::assertResponseRedirects('/equipe');
+        $client->request('GET', '/personnes/' . $other->getId() . '/mot-de-passe-provisoire');
+        self::assertResponseRedirects('/personnes');
 
-        $client->request('GET', '/equipe/' . $member->getId() . '/mot-de-passe-provisoire');
+        $client->request('GET', '/personnes/' . $member->getId() . '/mot-de-passe-provisoire');
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('[data-test="temporary-password"]');
     }
@@ -301,7 +315,7 @@ final class TeamControllerTest extends WebTestCase
         $newTeamType = uniqid('Plateforme ', true);
         $email = uniqid('tags-', true) . '@example.com';
 
-        $this->postMemberForm($client, '/equipe/nouveau', [
+        $this->postMemberForm($client, '/personnes/nouveau', [
             'firstName' => 'Zoé',
             'lastName' => 'Tags',
             'email' => $email,
@@ -324,7 +338,7 @@ final class TeamControllerTest extends WebTestCase
         $client = $this->directorClient();
         $newSkill = uniqid('Elixir ', true);
 
-        $this->postMemberForm($client, '/equipe/nouveau', ['firstName' => 'Zoé', 'lastName' => '', 'email' => uniqid('tags-', true) . '@example.com', 'newTechnicalSkills' => $newSkill]);
+        $this->postMemberForm($client, '/personnes/nouveau', ['firstName' => 'Zoé', 'lastName' => '', 'email' => uniqid('tags-', true) . '@example.com', 'newTechnicalSkills' => $newSkill]);
 
         self::assertResponseStatusCodeSame(422);
         self::assertSame(0, $this->countLabel(TagCategory::TechnicalSkill, $newSkill));
@@ -336,7 +350,7 @@ final class TeamControllerTest extends WebTestCase
         $member = $this->createUser();
         $teamType = $this->createTag(TagCategory::TeamType);
 
-        $this->postMemberForm($client, '/equipe/' . $member->getId() . '/modifier', ['teamType' => (string) $teamType->getId(), 'newTeamType' => uniqid('Front ', true)]);
+        $this->postMemberForm($client, '/personnes/' . $member->getId() . '/modifier', ['teamType' => (string) $teamType->getId(), 'newTeamType' => uniqid('Front ', true)]);
 
         self::assertResponseStatusCodeSame(422);
         self::assertSelectorTextContains('[data-test="team-member-form"]', 'Choisissez un pôle existant ou saisissez-en un nouveau, pas les deux.');
@@ -351,7 +365,7 @@ final class TeamControllerTest extends WebTestCase
         $former = $this->createUser()->setActive(false);
         $this->entityManager()->flush();
 
-        $crawler = $client->request('GET', '/equipe/' . $member->getId() . '/modifier');
+        $crawler = $client->request('GET', '/personnes/' . $member->getId() . '/modifier');
 
         $choices = $crawler->filter('[data-test="member-manager"] option')->each(static fn (Crawler $option): string => (string) $option->attr('value'));
         self::assertContains((string) $other->getId(), $choices);
@@ -366,12 +380,12 @@ final class TeamControllerTest extends WebTestCase
         $report = $this->createUser()->setManager($manager);
         $this->entityManager()->flush();
 
-        $this->postMemberForm($client, '/equipe/' . $manager->getId() . '/modifier', ['manager' => (string) $report->getId()]);
+        $this->postMemberForm($client, '/personnes/' . $manager->getId() . '/modifier', ['manager' => (string) $report->getId()]);
         self::assertResponseStatusCodeSame(422);
         self::assertSelectorTextContains('[data-test="team-member-form"]', 'formerait une boucle');
 
-        $this->postMemberForm($client, '/equipe/' . $report->getId() . '/modifier', ['manager' => '']);
-        self::assertResponseRedirects('/equipe');
+        $this->postMemberForm($client, '/personnes/' . $report->getId() . '/modifier', ['manager' => '']);
+        self::assertResponseRedirects('/personnes');
         self::assertNull($this->reloadUser($report)->getManager());
     }
 
@@ -386,7 +400,7 @@ final class TeamControllerTest extends WebTestCase
         $skillOnly = $this->giveTags($this->createUser(), $skill);
         $none = $this->createUser();
 
-        $crawler = $client->request('GET', '/equipe');
+        $crawler = $client->request('GET', '/personnes');
         $row = $crawler->filter(\sprintf('[data-email="%s"]', $both->getEmail()));
         self::assertSame($teamType->getLabel(), $row->filter('[data-test="member-team-type"]')->text());
         self::assertSame([$skill->getLabel(), $experience->getLabel()], $row->filter('[data-test="member-tags"] [data-test="member-tag"]')->each(static fn (Crawler $tag): string => $tag->text()));
@@ -396,21 +410,21 @@ final class TeamControllerTest extends WebTestCase
         self::assertSame([$both->getEmail()], $this->listedAmong($client, ['competence' => $skill->getId(), 'experience' => $experience->getId()], [$both, $skillOnly, $none]));
         self::assertSame([$both->getEmail()], $this->listedAmong($client, ['manager' => $manager->getId()], [$both, $skillOnly, $none]));
 
-        $crawler = $client->request('GET', '/equipe?' . http_build_query(['competence' => $skill->getId()]));
+        $crawler = $client->request('GET', '/personnes?' . http_build_query(['competence' => $skill->getId()]));
         self::assertCount(3, $crawler->filter(\sprintf('[data-email="%s"] [data-test="member-tag"]', $both->getEmail())), 'A filtered person keeps all their tags.');
     }
 
     public function testTheListQueryCountDoesNotGrowWithThePeopleListed(): void
     {
         $client = $this->directorClient();
-        $small = $this->queryCount($client, '/equipe');
+        $small = $this->queryCount($client, '/personnes');
 
         $manager = $this->createUser();
         for ($i = 0; $i < 3; ++$i) {
             $this->giveTags($this->createUser()->setManager($manager), $this->createTag(), $this->createTag(TagCategory::TeamType));
         }
 
-        self::assertSame($small, $this->queryCount($client, '/equipe'));
+        self::assertSame($small, $this->queryCount($client, '/personnes'));
     }
 
     public function testPasswordResetWithInvalidCsrfTokenIsRefused(): void
@@ -418,7 +432,7 @@ final class TeamControllerTest extends WebTestCase
         $client = $this->directorClient();
         $member = $this->createUser();
 
-        $client->request('POST', '/equipe/' . $member->getId() . '/mot-de-passe-provisoire', ['_token' => 'invalid']);
+        $client->request('POST', '/personnes/' . $member->getId() . '/mot-de-passe-provisoire', ['_token' => 'invalid']);
 
         self::assertResponseStatusCodeSame(403);
         self::assertTrue($this->passwordHasher()->isPasswordValid($this->reloadUser($member), 'password'));
@@ -470,7 +484,7 @@ final class TeamControllerTest extends WebTestCase
      */
     private function listedAmong(KernelBrowser $client, array $filter, array $among): array
     {
-        $crawler = $client->request('GET', '/equipe?' . http_build_query($filter));
+        $crawler = $client->request('GET', '/personnes?' . http_build_query($filter));
         self::assertResponseIsSuccessful();
         $listed = $crawler->filter('[data-test="team-member-row"]')->each(static fn (Crawler $row): string => (string) $row->attr('data-email'));
 
@@ -512,7 +526,7 @@ final class TeamControllerTest extends WebTestCase
 
     private function clickRowButton(KernelBrowser $client, User $member, string $button): void
     {
-        $crawler = $client->request('GET', '/equipe');
+        $crawler = $client->request('GET', '/personnes');
         $client->submit($crawler->filter('[data-email="' . $member->getEmail() . '"] [data-test="' . $button . '"]')->form());
     }
 

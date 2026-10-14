@@ -22,23 +22,25 @@ final class NavigationTest extends WebTestCase
     use CreatesTimeOff;
     use CreatesUsers;
 
-    public function testTheDirectionSeesItsDailyEntriesOnTopAndTheAdministrationSectionBelow(): void
+    public function testTheDirectionSeesTheDailyEntriesThenSteeringThenAdministration(): void
     {
         $crawler = $this->clientFor('admin@example.com')->request('GET', '/');
 
-        self::assertSame(['nav-dashboard', 'nav-timesheet', 'nav-time-off', 'nav-roadmap', 'nav-projects', 'nav-team', 'nav-tags', 'nav-holidays'], $this->entries($crawler->filter('#app-sidebar')));
-        self::assertSame(['nav-projects', 'nav-team', 'nav-tags', 'nav-holidays'], $this->entries($crawler->filter('[data-test="nav-admin"]')));
-        self::assertSelectorTextContains('[data-test="nav-admin"]', 'Administration');
+        self::assertSame(['nav-home', 'nav-timesheet', 'nav-time-off', 'nav-roadmap', 'nav-projects', 'nav-people', 'nav-tags', 'nav-holidays', 'nav-entitlements'], $this->entries($crawler->filter('#app-sidebar')));
+        self::assertSame(['nav-roadmap', 'nav-projects', 'nav-people'], $this->entries($crawler->filter('[data-test="nav-steering"]')));
+        self::assertSame(['nav-tags', 'nav-holidays', 'nav-entitlements'], $this->entries($crawler->filter('[data-test="nav-admin"]')));
+        self::assertSame('Pilotage', $crawler->filter('#' . $crawler->filter('[data-test="nav-steering"] ul')->attr('aria-labelledby'))->text());
         self::assertSame('Administration', $crawler->filter('#' . $crawler->filter('[data-test="nav-admin"] ul')->attr('aria-labelledby'))->text());
     }
 
     #[DataProvider('nonDirectorProvider')]
-    public function testLeadsAndProdSeeOnlyProjectsInTheAdministrationSection(string $email): void
+    public function testLeadsAndProdSeeSteeringButNoAdministration(string $email): void
     {
         $crawler = $this->clientFor($email)->request('GET', '/');
 
-        self::assertSame(['nav-dashboard', 'nav-timesheet', 'nav-time-off', 'nav-roadmap', 'nav-projects'], $this->entries($crawler->filter('#app-sidebar')));
-        self::assertSame(['nav-projects'], $this->entries($crawler->filter('[data-test="nav-admin"]')));
+        self::assertSame(['nav-home', 'nav-timesheet', 'nav-time-off', 'nav-roadmap', 'nav-projects', 'nav-people'], $this->entries($crawler->filter('#app-sidebar')));
+        self::assertSame(['nav-roadmap', 'nav-projects', 'nav-people'], $this->entries($crawler->filter('[data-test="nav-steering"]')));
+        self::assertSelectorNotExists('[data-test="nav-admin"]');
     }
 
     /**
@@ -58,17 +60,21 @@ final class NavigationTest extends WebTestCase
         $member = $this->createUser();
 
         $pages = [
-            '/' => 'nav-dashboard',
+            '/' => 'nav-home',
             '/saisie/2026-W40' => 'nav-timesheet',
             '/conges' => 'nav-time-off',
             '/conges/absences/2026-11' => 'nav-time-off',
-            '/conges/compteurs' => 'nav-time-off',
+            '/conges/compteurs' => 'nav-entitlements',
+            '/conges/compteurs/rtt/2026' => 'nav-entitlements',
             '/roadmap' => 'nav-roadmap',
             '/roadmap/2026-W40' => 'nav-roadmap',
             '/projets' => 'nav-projects',
             '/projets/' . $project->getId() => 'nav-projects',
             '/lots/' . $lot->getId() . '/modifier' => 'nav-projects',
-            '/equipe/' . $member->getId() . '/modifier' => 'nav-team',
+            '/personnes' => 'nav-people',
+            '/personnes/' . $member->getId() => 'nav-people',
+            '/personnes/nouveau' => 'nav-people',
+            '/personnes/' . $member->getId() . '/modifier' => 'nav-people',
             '/jours-feries/2031' => 'nav-holidays',
             '/tags' => 'nav-tags',
         ];
@@ -78,7 +84,7 @@ final class NavigationTest extends WebTestCase
             self::assertSame([$entry], $this->currentEntries($crawler), $url);
         }
 
-        foreach (['/mon-compte/mot-de-passe', '/personnes/' . $member->getId()] as $url) {
+        foreach (['/mon-compte/mot-de-passe'] as $url) {
             $crawler = $client->request('GET', $url);
             self::assertResponseIsSuccessful($url);
             self::assertSame([], $this->currentEntries($crawler), $url);
@@ -113,20 +119,6 @@ final class NavigationTest extends WebTestCase
         self::assertSelectorTextSame('[data-test="person-heading"]', $crawler->filter('[data-test="user-menu-name"]')->text());
     }
 
-    public function testTheHomePageGroupsTheAdministrationShortcutsByRole(): void
-    {
-        $crawler = $this->clientFor('admin@example.com')->request('GET', '/');
-
-        self::assertSelectorExists('[data-test="home-timesheet"]');
-        self::assertSelectorExists('[data-test="home-account"]');
-        self::assertSelectorTextContains('[data-test="home-admin"] h2', 'Administration');
-        self::assertSame(['home-projects', 'home-team', 'home-tags', 'home-holidays'], $this->shortcuts($crawler->filter('[data-test="home-admin"]')));
-
-        $crawler = $this->clientFor('prod@example.com')->request('GET', '/');
-
-        self::assertSame(['home-projects'], $this->shortcuts($crawler->filter('[data-test="home-admin"]')));
-    }
-
     private function clientFor(string $email): KernelBrowser
     {
         self::ensureKernelShutdown();
@@ -154,13 +146,5 @@ final class NavigationTest extends WebTestCase
     private function currentEntries(Crawler $crawler): array
     {
         return $crawler->filter('#app-sidebar [aria-current="page"]')->each(static fn (Crawler $link): string => (string) $link->attr('data-test'));
-    }
-
-    /**
-     * @return list<string>
-     */
-    private function shortcuts(Crawler $zone): array
-    {
-        return $zone->filter('a[data-test^="home-"]')->each(static fn (Crawler $link): string => (string) $link->attr('data-test'));
     }
 }

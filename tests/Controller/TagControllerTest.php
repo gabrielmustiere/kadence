@@ -87,7 +87,7 @@ final class TagControllerTest extends WebTestCase
         $this->submitTag($client, '/tags/' . $tag->getId() . '/renommer', ['label' => $label]);
         self::assertResponseRedirects('/tags');
 
-        $crawler = $client->request('GET', '/equipe');
+        $crawler = $client->request('GET', '/personnes');
         self::assertStringContainsString($label, $crawler->filter(\sprintf('[data-email="%s"] [data-test="member-tags"]', $holder->getEmail()))->text());
     }
 

@@ -1,8 +1,9 @@
 {#
     The tooltips of the signals of a row, shown by roadmap-tooltip when their badge is hovered or focused: what the
-    signal means, and why it shows. Expects `row`; `prefix` as given to roadmap/_signal.html.twig.
+    signal means, and why it shows. Expects `row`; `prefix` as given to roadmap/_signal.html.twig; `signals` in place of
+    those of the row, when the badges show others.
 #}
-{% for signal in row.signals %}
+{% for signal in signals ?? row.signals %}
     <div id="{{ prefix ?? 'roadmap-signal' }}-{{ row.lot ? 'lot-' ~ row.lot.id : 'project-' ~ row.project.id }}-{{ signal.value }}" role="tooltip" hidden class="pointer-events-none z-30 w-80 rounded-xl border border-default bg-surface p-3.5 text-xs text-body shadow-lg" data-test="signal-tooltip-{{ signal.value }}">
         <p class="text-[13px] font-semibold text-heading">{{ signal.label|capitalize }}</p>
         <p class="mt-1.5" data-test="signal-meaning">{{ signal.meaning }}</p>

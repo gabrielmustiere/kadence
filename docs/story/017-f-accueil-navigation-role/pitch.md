@@ -100,9 +100,9 @@ Le menu hérite de la story 005 deux zones : le quotidien en haut, une section �
 15. **Sections**, dans cet ordre, chacune affichée seulement si elle n'est pas vide, chaque élément menant directement à l'écran où agir :
     1. **Ma saisie** : les journées incomplètes de la semaine en cours (jours passés) et de la précédente, selon la règle de Ma semaine : un jour férié, un jour de congé ou une semaine qui a atteint son maximum ne sont pas incomplets. Chaque journée mène à sa semaine.
     2. **À valider** (manager et direction) : les demandes de congé que la personne peut décider, avec le demandeur, le type et les dates, les plus proches d'abord. Elles mènent à la page À valider.
-    3. **Mes lots** : les lots dont la personne est responsable et qui sont à estimer, en dépassement ou dont l'avancement est à actualiser, avec leurs pastilles et le même sens que sur la roadmap. Chacun mène à la page de son projet.
-    4. **Projets à surveiller** (leads et direction) : les projets dont la fin calculée est inconnue, ou dont au moins un lot est en dépassement, à replanifier, avec une équipe à revoir, en démarrage en retard ou avec un avancement à actualiser. Chaque projet porte les pastilles de ce qui le signale, sans nom de personne, et mène à sa page.
-    5. **Mes congés** : les demandes de la personne en attente de décision, et celles validées, refusées ou annulées par quelqu'un d'autre depuis moins de 7 jours.
+    3. **Mes lots** : les lots dont la personne est responsable et qui sont à estimer, en dépassement ou dont l'avancement est à actualiser, avec leurs pastilles et le même sens que sur la roadmap. Un lot déclaré terminé n'y figure pas, même au-delà de son estimation : il n'y a plus rien à faire. Chacun mène à la page de son projet.
+    4. **Projets à surveiller** (leads et direction) : les projets dont la fin calculée est inconnue, ou dont au moins un lot est en dépassement, à replanifier, avec une équipe à revoir, en démarrage en retard ou avec un avancement à actualiser. Un lot déclaré terminé ne signale plus son projet. Chaque projet porte les pastilles de ce qui le signale, sans nom de personne, avec sa fin calculée ou « Fin inconnue », et mène à sa page.
+    5. **Mes congés** : les demandes de la personne en attente de décision, et celles validées, refusées ou annulées par quelqu'un d'autre depuis moins de 7 jours. Une demande validée d'office, faute de quelqu'un pour en décider, n'y figure pas : la personne l'a vue validée en la posant.
 16. **Rien à faire** : quand aucune section n'a d'élément, l'accueil le dit explicitement et propose d'ouvrir Ma semaine.
 17. **Strictement personnel** : en dehors des demandes à décider et des projets à surveiller, l'accueil ne montre que ce qui concerne la personne connectée. Il ne montre jamais un taux de saisie, les journées d'une autre personne, ni un indicateur par personne.
 18. **À jour à l'ouverture** : l'accueil reflète l'état au moment où il s'affiche ; il n'envoie aucune notification.
@@ -110,25 +110,25 @@ Le menu hérite de la story 005 deux zones : le quotidien en haut, une section �
 
 ## Critères d'acceptation
 
-- [ ] Pour toute personne, le haut du menu présente Accueil, Ma semaine et Congés, puis une zone « Pilotage » avec Roadmap, Projets et Personnes.
-- [ ] Pour la direction seule, le menu présente une zone « Administration » avec Tags, Jours fériés et Droits à congés ; un lead ou un membre de prod n'en voit aucune.
-- [ ] Sur un écran d'ordinateur assez haut, « Administration » est collée en bas du menu ; sur un écran peu haut, elle suit « Pilotage » sans la recouvrir ; sur téléphone, le menu déroulant présente le même découpage.
-- [ ] La fiche d'une personne, l'inscription et la modification d'une personne mettent « Personnes » en évidence ; la page des droits à congés met « Droits à congés » en évidence ; Mon compte n'en met aucune.
-- [ ] Après une déconnexion puis une reconnexion, on arrive sur Ma semaine.
-- [ ] Une personne déconnectée qui ouvre le lien « Décider de la demande » d'un e-mail arrive sur la page À valider après connexion.
-- [ ] Un membre de prod ouvre la page Personnes et y voit les personnes actives par nom, chacune menant à sa fiche, sans rôle, tag, e-mail, charge ni temps saisi.
-- [ ] Un lead y voit en plus le rôle, le pôle, les compétences et expériences, et filtre la liste par ces tags ; il n'y voit ni e-mail, ni manager, ni personne désactivée, ni action de gestion.
-- [ ] La direction y inscrit, modifie, désactive et réactive une personne, génère un mot de passe provisoire et filtre par manager, comme depuis l'ancienne page Équipe.
-- [ ] L'ancienne adresse de la page Équipe et celles de ses sous-pages mènent aux pages correspondantes de Personnes.
-- [ ] La page Congés ne présente plus d'onglet « Compteurs » ; la direction règle les droits depuis « Droits à congés », avec le même contenu qu'avant.
-- [ ] L'accueil s'intitule « Accueil » et ne reprend plus les liens du menu.
-- [ ] Une personne dont une journée passée de la semaine est incomplète la voit dans « Ma saisie », et le lien ouvre la semaine concernée ; un jour férié ou un jour de congé n'y figure pas.
-- [ ] Un manager voit dans « À valider » les demandes de ses collaborateurs ; la direction y voit toutes les demandes qu'elle peut décider ; une personne qui ne décide d'aucune demande ne voit pas la section.
-- [ ] Le responsable d'un lot en dépassement le voit dans « Mes lots », avec sa pastille, et le lien ouvre la page du projet.
-- [ ] Un lead voit dans « Projets à surveiller » un projet dont la fin calculée est inconnue ; un membre de prod ne voit pas cette section.
-- [ ] Une personne voit dans « Mes congés » sa demande en attente, et sa demande refusée il y a moins de 7 jours ; une demande décidée il y a plus de 7 jours n'y figure plus.
-- [ ] Une personne à qui rien n'est demandé voit un accueil qui l'indique explicitement, avec un lien vers Ma semaine.
-- [ ] Aucune section de l'accueil ne montre la saisie, les journées incomplètes ou les congés d'une autre personne, hors des demandes qu'elle a à décider.
+- [x] Pour toute personne, le haut du menu présente Accueil, Ma semaine et Congés, puis une zone « Pilotage » avec Roadmap, Projets et Personnes.
+- [x] Pour la direction seule, le menu présente une zone « Administration » avec Tags, Jours fériés et Droits à congés ; un lead ou un membre de prod n'en voit aucune.
+- [x] Sur un écran d'ordinateur assez haut, « Administration » est collée en bas du menu ; sur un écran peu haut, elle suit « Pilotage » sans la recouvrir ; sur téléphone, le menu déroulant présente le même découpage.
+- [x] La fiche d'une personne, l'inscription et la modification d'une personne mettent « Personnes » en évidence ; la page des droits à congés met « Droits à congés » en évidence ; Mon compte n'en met aucune.
+- [x] Après une déconnexion puis une reconnexion, on arrive sur Ma semaine.
+- [x] Une personne déconnectée qui ouvre le lien « Décider de la demande » d'un e-mail arrive sur la page À valider après connexion.
+- [x] Un membre de prod ouvre la page Personnes et y voit les personnes actives par nom, chacune menant à sa fiche, sans rôle, tag, e-mail, charge ni temps saisi.
+- [x] Un lead y voit en plus le rôle, le pôle, les compétences et expériences, et filtre la liste par ces tags ; il n'y voit ni e-mail, ni manager, ni personne désactivée, ni action de gestion.
+- [x] La direction y inscrit, modifie, désactive et réactive une personne, génère un mot de passe provisoire et filtre par manager, comme depuis l'ancienne page Équipe.
+- [x] L'ancienne adresse de la page Équipe et celles de ses sous-pages mènent aux pages correspondantes de Personnes.
+- [x] La page Congés ne présente plus d'onglet « Compteurs » ; la direction règle les droits depuis « Droits à congés », avec le même contenu qu'avant.
+- [x] L'accueil s'intitule « Accueil » et ne reprend plus les liens du menu.
+- [x] Une personne dont une journée passée de la semaine est incomplète la voit dans « Ma saisie », et le lien ouvre la semaine concernée ; un jour férié ou un jour de congé n'y figure pas.
+- [x] Un manager voit dans « À valider » les demandes de ses collaborateurs ; la direction y voit toutes les demandes qu'elle peut décider ; une personne qui ne décide d'aucune demande ne voit pas la section.
+- [x] Le responsable d'un lot en dépassement le voit dans « Mes lots », avec sa pastille, et le lien ouvre la page du projet.
+- [x] Un lead voit dans « Projets à surveiller » un projet dont la fin calculée est inconnue ; un membre de prod ne voit pas cette section.
+- [x] Une personne voit dans « Mes congés » sa demande en attente, et sa demande refusée il y a moins de 7 jours ; une demande décidée il y a plus de 7 jours n'y figure plus.
+- [x] Une personne à qui rien n'est demandé voit un accueil qui l'indique explicitement, avec un lien vers Ma semaine.
+- [x] Aucune section de l'accueil ne montre la saisie, les journées incomplètes ou les congés d'une autre personne, hors des demandes qu'elle a à décider.
 
 ## Hors scope
 
@@ -156,8 +156,8 @@ Le menu hérite de la story 005 deux zones : le quotidien en haut, une section �
 
 ## Questions ouvertes
 
-- **Arrivée après connexion** : faut-il arriver sur l'accueil plutôt que sur Ma semaine, puisque l'accueil rappelle désormais les journées incomplètes ? Options : (a) Ma semaine, toujours (proposé : principe 1, la saisie est le geste quotidien) ; (b) l'accueil, qui renvoie à Ma semaine en un clic.
-- **Taille de la story** : elle livre un menu, une page Personnes, un déplacement d'écran et un nouvel accueil. Options : (a) une story livrée en tranches indépendantes, dans l'ordre menu, Personnes, droits à congés, accueil, arrivée (choix du cadrage) ; (b) deux stories, la navigation d'abord, l'accueil ensuite. Recommandation : (a), à basculer sur (b) si la revue de la première tranche montre un diff trop lourd.
+- **Arrivée après connexion** : faut-il arriver sur l'accueil plutôt que sur Ma semaine, puisque l'accueil rappelle désormais les journées incomplètes ? Options : (a) Ma semaine, toujours (proposé : principe 1, la saisie est le geste quotidien) ; (b) l'accueil, qui renvoie à Ma semaine en un clic. **Tranché : (a).**
+- **Taille de la story** : elle livre un menu, une page Personnes, un déplacement d'écran et un nouvel accueil. Options : (a) une story livrée en tranches indépendantes, dans l'ordre menu, Personnes, droits à congés, accueil, arrivée (choix du cadrage) ; (b) deux stories, la navigation d'abord, l'accueil ensuite. Recommandation : (a), à basculer sur (b) si la revue de la première tranche montre un diff trop lourd. **Tranché : (a)**, livrée d'un bloc en cinq tranches.
 
 ---
 

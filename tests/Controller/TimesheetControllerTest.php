@@ -73,15 +73,6 @@ final class TimesheetControllerTest extends WebTestCase
         self::assertResponseRedirects('/login');
     }
 
-    public function testTheDashboardOffersTheTimesheet(): void
-    {
-        $client = $this->signedInClient();
-
-        $client->request('GET', '/');
-
-        self::assertSelectorExists('[data-test="home-timesheet"]');
-    }
-
     public function testQueryCountDoesNotGrowWithTheRowsOrTheFavorites(): void
     {
         $client = self::createClient();

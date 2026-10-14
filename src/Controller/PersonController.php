@@ -13,6 +13,12 @@ use Symfony\Component\Routing\Attribute\Route;
 
 final class PersonController extends AbstractController
 {
+    #[Route('/personnes', name: 'app_person_index', methods: ['GET'])]
+    public function index(): Response
+    {
+        return $this->render('person/index.html.twig');
+    }
+
     #[Route('/personnes/{id}', name: 'app_person', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function show(User $person, PersonRoadmapBuilder $personRoadmapBuilder): Response
     {

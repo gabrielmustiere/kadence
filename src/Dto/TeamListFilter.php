@@ -17,6 +17,8 @@ final class TeamListFilter
 
     public ?User $manager = null;
 
+    public bool $activeOnly = false;
+
     /**
      * @return list<Tag> the tags a person must all carry
      */

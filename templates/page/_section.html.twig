@@ -1,0 +1,18 @@
+{#
+    A section of the home page, shown only when it has something. Expects `key`, `title`, `count`, and the block `items`
+    filled with its <li>; `description` under the title.
+#}
+<section class="rounded-card border border-default bg-surface shadow-card" aria-labelledby="home-section-{{ key }}-title" data-test="home-section-{{ key }}">
+    <header class="flex items-baseline justify-between gap-4 border-b border-default-subtle px-5 py-4">
+        <div class="min-w-0">
+            <h2 id="home-section-{{ key }}-title" class="text-base font-semibold tracking-tight text-heading">{{ title }}</h2>
+            {% if description is defined %}
+                <p class="mt-0.5 text-[13px] text-body">{{ description }}</p>
+            {% endif %}
+        </div>
+        <twig:Badge variant="gray" shape="pill" class="tabular-nums" data-test="home-section-count">{{ count }}</twig:Badge>
+    </header>
+    <ul class="divide-y divide-default-subtle text-sm">
+        {% block items %}{% endblock %}
+    </ul>
+</section>

@@ -18,7 +18,7 @@ test('la direction inscrit une personne qui choisit son mot de passe à la premi
   const newPassword = 'Une phrase de passe assez longue 2026';
 
   await login(page, 'admin@example.com', 'password');
-  await page.click('[data-test="nav-team"]');
+  await page.click('[data-test="nav-people"]');
   await page.click('[data-test="team-new"]');
 
   await page.fill('[data-test="member-first-name"]', 'Emma');
@@ -44,22 +44,26 @@ test('la direction inscrit une personne qui choisit son mot de passe à la premi
   await page.click('[data-test="change-password-submit"]');
 
   await expect(page.locator('h1')).toContainText('Ma semaine');
-  await expect(page.locator('[data-test="nav-team"]')).toHaveCount(0);
+  await expect(page.locator('[data-test="nav-admin"]')).toHaveCount(0);
 });
 
-test('un membre de prod ne voit pas la gestion d\'équipe', async ({ page }) => {
+test('un membre de prod lit la liste des personnes sans pouvoir la gérer', async ({ page }) => {
   await login(page, 'prod@example.com', 'password');
   await expect(page.locator('h1')).toContainText('Ma semaine');
-  await expect(page.locator('[data-test="nav-team"]')).toHaveCount(0);
+  await page.click('[data-test="nav-people"]');
 
-  const response = await page.goto('/equipe');
+  await expect(page).toHaveURL(/\/personnes$/);
+  await expect(page.locator('[data-test="team-member-row"]').first()).toBeVisible();
+  await expect(page.locator('[data-test="team-new"], [data-test="team-filter"], [data-test="member-edit"], [data-test="member-deactivate"], [data-test="member-status"]')).toHaveCount(0);
+
+  const response = await page.goto('/personnes/nouveau');
   expect(response?.status()).toBe(403);
 });
 
 test('la direction filtre l\'équipe dès qu\'elle choisit un tag, et désactive puis réactive sans perdre ses filtres', async ({ page }) => {
   await login(page, 'admin@example.com', 'password');
   await expect(page).not.toHaveURL(/\/login/);
-  await page.goto('/equipe');
+  await page.goto('/personnes');
   const rows = page.locator('[data-test="team-member-row"]');
   const all = await rows.count();
 

@@ -16,7 +16,7 @@ test('modal opens and closes without JS errors', async ({ page }) => {
   await page.click('button[type="submit"]');
   await expect(page).not.toHaveURL(/\/login/);
 
-  await page.goto('/equipe');
+  await page.goto('/personnes');
   const row = page.locator('[data-email="lead@example.com"]');
   const dialog = row.locator('dialog', { has: page.locator('[data-test="member-deactivate-cancel"]') });
   await row.locator('[data-test="member-deactivate"]').click();

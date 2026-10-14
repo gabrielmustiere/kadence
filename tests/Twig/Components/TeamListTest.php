@@ -11,6 +11,7 @@ use App\Repository\UserRepository;
 use App\Tests\Support\CreatesTags;
 use App\Tests\Support\CreatesUsers;
 use App\Tests\Support\ReadsInPlaceFlashes;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -122,11 +123,62 @@ final class TeamListTest extends KernelTestCase
         self::assertNull($this->reloadUser($former)->getManager());
     }
 
-    public function testOnlyTheDirectionManagesTheTeam(): void
+    #[DataProvider('nonDirectorProvider')]
+    public function testEveryoneReadsTheListButOnlyTheDirectionSeesTheDeactivatedPeople(Role $role): void
     {
-        $this->expectException(AccessDeniedException::class);
+        $active = $this->createUser();
+        $deactivated = $this->createUser()->setActive(false);
+        $this->entityManager()->flush();
 
-        $this->createLiveComponent('TeamList')->actingAs($this->createUser(Role::Lead))->render();
+        $component = $this->createLiveComponent('TeamList')->actingAs($this->createUser($role));
+
+        self::assertSame([$active], $this->listedAmong($component, [$active, $deactivated]));
+        self::assertSame([$active, $deactivated], $this->listedAmong($this->component(), [$active, $deactivated]));
+    }
+
+    #[DataProvider('nonDirectorProvider')]
+    public function testOnlyTheDirectionDeactivatesOrReactivates(Role $role): void
+    {
+        $member = $this->createUser();
+        $component = $this->createLiveComponent('TeamList')->actingAs($this->createUser($role));
+
+        foreach (['deactivate', 'reactivate'] as $action) {
+            try {
+                $component->call($action, ['member' => $member->getId()]);
+                self::fail(\sprintf('%s is refused.', $action));
+            } catch (AccessDeniedException) {
+            }
+        }
+
+        self::assertTrue($this->reloadUser($member)->isActive());
+    }
+
+    /**
+     * @return \Generator<string, array{Role}>
+     */
+    public static function nonDirectorProvider(): \Generator
+    {
+        yield 'lead' => [Role::Lead];
+        yield 'prod' => [Role::Prod];
+    }
+
+    public function testAFilterTheRoleDoesNotSeeFiltersNothingEvenForgedInTheUrl(): void
+    {
+        $skill = $this->createTag(TagCategory::TechnicalSkill);
+        $manager = $this->createUser();
+        $tagged = $this->giveTags($this->createUser()->setManager($manager), $skill);
+        $other = $this->createUser();
+        $among = [$tagged, $other];
+
+        $prod = $this->createLiveComponent('TeamList', ['competence' => $skill->getId()])->actingAs($this->createUser(Role::Prod));
+        self::assertSame($among, $this->listedAmong($prod, $among));
+        self::assertCount(0, $prod->render()->crawler()->filter('[data-test="team-filter"]'));
+
+        $lead = $this->createLiveComponent('TeamList', ['manager' => $manager->getId()])->actingAs($this->createUser(Role::Lead));
+        self::assertSame($among, $this->listedAmong($lead, $among));
+        self::assertCount(0, $lead->render()->crawler()->filter('[data-test="team-filter-manager"]'));
+        self::assertCount(0, $lead->render()->crawler()->filter('[data-test="team-filter-reset"]'), 'Nothing is filtered, nothing to clear.');
+        self::assertSame([$tagged], $this->listedAmong($lead->set('competence', $skill->getId()), $among));
     }
 
     private function component(?User $director = null): TestLiveComponent
@@ -141,14 +193,14 @@ final class TeamListTest extends KernelTestCase
      */
     private function listedAmong(TestLiveComponent $component, array $among): array
     {
-        $listed = $component->render()->crawler()->filter('[data-test="team-member-row"]')->each(static fn (Crawler $row): string => (string) $row->attr('data-email'));
+        $listed = $component->render()->crawler()->filter('[data-test="team-member-row"]')->each(static fn (Crawler $row): string => (string) $row->attr('data-member'));
 
-        return array_values(array_filter($among, static fn (User $user): bool => \in_array($user->getEmail(), $listed, true)));
+        return array_values(array_filter($among, static fn (User $user): bool => \in_array((string) $user->getId(), $listed, true)));
     }
 
     private function row(Crawler $crawler, User $member): Crawler
     {
-        return $crawler->filter(\sprintf('[data-test="team-member-row"][data-email="%s"]', $member->getEmail()));
+        return $crawler->filter(\sprintf('[data-test="team-member-row"][data-member="%d"]', $member->getId()));
     }
 
     /**

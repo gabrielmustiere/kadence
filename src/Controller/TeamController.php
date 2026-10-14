@@ -22,7 +22,7 @@ use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-#[Route('/equipe')]
+#[Route('/personnes')]
 #[IsGranted('ROLE_DIRECTION')]
 final class TeamController extends AbstractController
 {
@@ -33,12 +33,6 @@ final class TeamController extends AbstractController
         private readonly WeeklyMaxManager $weeklyMaxManager,
         private readonly ClockInterface $clock,
     ) {
-    }
-
-    #[Route('', name: 'app_team_index', methods: ['GET'])]
-    public function index(): Response
-    {
-        return $this->render('team/index.html.twig');
     }
 
     #[Route('/nouveau', name: 'app_team_new', methods: ['GET', 'POST'])]
@@ -73,7 +67,7 @@ final class TeamController extends AbstractController
                 $this->addFlash('error', $exception->getMessage());
             }
 
-            return $this->redirectToRoute('app_team_index');
+            return $this->redirectToRoute('app_person_index');
         }
 
         return $this->render('team/edit.html.twig', [
@@ -114,7 +108,7 @@ final class TeamController extends AbstractController
         if (null === $temporaryPassword) {
             $this->addFlash('info', 'Ce mot de passe provisoire a déjà été affiché. Générez-en un nouveau si besoin.');
 
-            return $this->redirectToRoute('app_team_index');
+            return $this->redirectToRoute('app_person_index');
         }
 
         $response = $this->render('team/temporary_password.html.twig', [

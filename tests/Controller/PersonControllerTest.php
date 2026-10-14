@@ -29,6 +29,8 @@ final class PersonControllerTest extends WebTestCase
 
     private const array RESERVED = ['person-role', 'person-tags-competence', 'person-load', 'person-free-from', 'person-load-row', 'person-manager'];
 
+    private const array LIST_RESERVED = ['team-new', 'team-filter', 'team-filter-manager', 'member-role', 'member-team-type', 'member-tags', 'member-email', 'member-manager', 'member-status', 'member-edit', 'member-deactivate'];
+
     protected function setUp(): void
     {
         self::mockTime('2026-10-02 10:00');
@@ -64,6 +66,39 @@ final class PersonControllerTest extends WebTestCase
         yield 'prod' => ['prod@example.com', []];
     }
 
+    /**
+     * @param list<string> $shown
+     */
+    #[DataProvider('listViewerProvider')]
+    public function testWhatEachRoleReadsInTheListOfPeople(string $email, array $shown): void
+    {
+        $client = $this->clientAs($email);
+        $alice = $this->createExample();
+
+        $crawler = $client->request('GET', '/personnes');
+
+        self::assertResponseIsSuccessful();
+        self::assertSame($shown, array_values(array_filter(self::LIST_RESERVED, static fn (string $test): bool => $crawler->filter(\sprintf('[data-test="%s"]', $test))->count() > 0)));
+        $row = $crawler->filter(\sprintf('[data-member="%d"]', $alice->getId()));
+        self::assertSame('Alice Martin', $row->filter('[data-test="member-person"]')->text());
+        self::assertSame($this->url($alice), $row->filter('[data-test="member-person"]')->attr('href'));
+        self::assertSame(\in_array('member-email', $shown, true), str_contains((string) $client->getResponse()->getContent(), (string) $alice->getEmail()), 'The e-mail only shows to the direction.');
+        self::assertStringNotContainsString('%', $row->text(), 'No load in the list.');
+        self::assertDoesNotMatchRegularExpression('/\d+ ?h\b/', $row->text(), 'No time entered in the list.');
+    }
+
+    /**
+     * @return \Generator<string, array{string, list<string>}>
+     */
+    public static function listViewerProvider(): \Generator
+    {
+        $lead = ['team-filter', 'member-role', 'member-team-type', 'member-tags'];
+
+        yield 'direction' => ['admin@example.com', self::LIST_RESERVED];
+        yield 'lead' => ['lead@example.com', $lead];
+        yield 'prod' => ['prod@example.com', []];
+    }
+
     public function testThePersonSeesEverythingOnTheirOwnPage(): void
     {
         $alice = $this->createExample();
@@ -82,7 +117,7 @@ final class PersonControllerTest extends WebTestCase
         $crawler = $client->request('GET', $this->url($alice));
 
         self::assertSelectorTextSame('[data-test="person-heading"]', 'Alice Martin');
-        self::assertSame([], $crawler->filter('#app-sidebar [aria-current="page"]')->each(static fn (Crawler $link): string => (string) $link->attr('data-test')));
+        self::assertSame(['nav-people'], $crawler->filter('#app-sidebar [aria-current="page"]')->each(static fn (Crawler $link): string => (string) $link->attr('data-test')));
         self::assertCount(0, $crawler->filter('main a[href*="/modifier"], main form'));
         self::assertSame(
             [['Refonte', '10 j'], ['Support', '3 j']],

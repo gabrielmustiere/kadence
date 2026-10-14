@@ -42,7 +42,7 @@ final class TimeOffControllerTest extends WebTestCase
 
         self::assertSame(['mine', 'absences'], $this->tabsOf($prod));
         self::assertSame(['mine', 'inbox', 'absences'], $this->tabsOf($manager));
-        self::assertSame(['mine', 'inbox', 'absences', 'entitlements'], $this->tabsOf($this->fixtureUser('admin@example.com')));
+        self::assertSame(['mine', 'inbox', 'absences'], $this->tabsOf($this->fixtureUser('admin@example.com')));
     }
 
     public function testMyTimeOffListsMyBalancesAndMyRequests(): void
@@ -177,6 +177,9 @@ final class TimeOffControllerTest extends WebTestCase
         $crawler = $this->client->request('GET', '/conges/compteurs/rtt/2026');
 
         self::assertResponseIsSuccessful();
+        self::assertSelectorTextSame('h1', 'Droits à congés');
+        self::assertPageTitleSame('Droits à congés · Kadence');
+        self::assertSelectorNotExists('[data-test="time-off-tabs"]');
         self::assertSame('RTT 2026', $crawler->filter('[data-test="entitlements-period"]')->text());
         self::assertCount(1, $crawler->filter(\sprintf('[data-test="entitlements-form"] [name="time_off_entitlements[days][%d]"]', $person->getId())));
         self::assertSame('/conges/compteurs/cp/2026', $crawler->filter('[data-test="entitlements-type-cp"]')->attr('href'));

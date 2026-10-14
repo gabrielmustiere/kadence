@@ -1,8 +1,11 @@
 <div {{ attributes.defaults({'data-test': 'team-list'}) }}>
     {% set categories = enum('App\\Enum\\Type\\TagCategory') %}
-    {% set tags = this.tags %}
+    {% set lead = is_granted('ROLE_LEAD') %}
+    {% set direction = is_granted('ROLE_DIRECTION') %}
     {% set members = this.members %}
     {% set selected = {competence: this.competence, experience: this.experience, equipe: this.equipe, manager: this.manager} %}
+    {% if lead %}
+    {% set tags = this.tags %}
     <div class="mb-5 flex flex-wrap items-end gap-x-3 gap-y-3 rounded-card border border-default bg-surface p-4 shadow-card" data-test="team-filter">
         {% for category in categories.cases() %}
             <div class="w-full sm:w-48">
@@ -15,6 +18,7 @@
                 </twig:Select>
             </div>
         {% endfor %}
+        {% if direction %}
         <div class="w-full sm:w-48">
             <twig:Label for="team-filter-manager" class="mb-1.5">Manager</twig:Label>
             {% set managers = this.managers %}
@@ -25,6 +29,7 @@
                 {% endfor %}
             </twig:Select>
         </div>
+        {% endif %}
         {% if this.filtered %}
             <twig:Button variant="ghost" data-action="live#action" data-live-action-param="clear" data-test="team-filter-reset">
                 <twig:ux:icon name="tabler:x" class="size-4"/>
@@ -32,38 +37,46 @@
             </twig:Button>
         {% endif %}
     </div>
+    {% endif %}
 
     <twig:TableCard>
         <twig:Table data-test="team-table">
             <twig:Table:Header>
                 <twig:Table:Row>
                     <twig:Table:Head>Personne</twig:Table:Head>
-                    <twig:Table:Head>Rôle</twig:Table:Head>
-                    <twig:Table:Head>Pôle</twig:Table:Head>
-                    <twig:Table:Head class="whitespace-nowrap">Compétences et expériences</twig:Table:Head>
-                    <twig:Table:Head>Manager</twig:Table:Head>
-                    <twig:Table:Head><span class="sr-only">Actions</span></twig:Table:Head>
+                    {% if lead %}
+                        <twig:Table:Head>Rôle</twig:Table:Head>
+                        <twig:Table:Head>Pôle</twig:Table:Head>
+                        <twig:Table:Head class="whitespace-nowrap">Compétences et expériences</twig:Table:Head>
+                    {% endif %}
+                    {% if direction %}
+                        <twig:Table:Head>Manager</twig:Table:Head>
+                        <twig:Table:Head><span class="sr-only">Actions</span></twig:Table:Head>
+                    {% endif %}
                 </twig:Table:Row>
             </twig:Table:Header>
             <twig:Table:Body>
                 {% for member in members %}
                     {% set skills = member.tagsOf(categories.TechnicalSkill) %}
                     {% set experiences = member.tagsOf(categories.FunctionalExperience) %}
-                    <twig:Table:Row data-test="team-member-row" data-email="{{ member.email }}">
+                    <twig:Table:Row data-test="team-member-row" data-member="{{ member.id }}" {{ ...(direction ? {'data-email': member.email} : {}) }}>
                         <twig:Table:Cell>
                             <div class="flex items-center gap-3">
                                 <twig:Avatar :user="member" class="{{ member.active ? '' : 'opacity-40' }}"/>
                                 <div class="min-w-0">
                                     <div class="flex items-center gap-2">
-                                        <a href="{{ path('app_team_edit', {id: member.id}) }}" class="whitespace-nowrap font-medium decoration-default-strong underline-offset-4 hover:underline {{ member.active ? 'text-heading' : 'text-body' }}">{{ member.firstName }} {{ member.lastName }}</a>
+                                        <a href="{{ path('app_person', {id: member.id}) }}" class="whitespace-nowrap font-medium decoration-default-strong underline-offset-4 hover:underline {{ member.active ? 'text-heading' : 'text-body' }}" data-test="member-person">{{ member.firstName }} {{ member.lastName }}</a>
                                         {% if not member.active %}
                                             <twig:Badge variant="alternative" border="bordered" data-test="member-status">Désactivée</twig:Badge>
                                         {% endif %}
                                     </div>
-                                    <span class="block text-xs text-body-subtle">{{ member.email }}</span>
+                                    {% if direction %}
+                                        <span class="block text-xs text-body-subtle" data-test="member-email">{{ member.email }}</span>
+                                    {% endif %}
                                 </div>
                             </div>
                         </twig:Table:Cell>
+                        {% if lead %}
                         <twig:Table:Cell class="text-heading" data-test="member-role">{{ member.role.label }}</twig:Table:Cell>
                         <twig:Table:Cell data-test="member-team-type">
                             {% if member.teamType %}
@@ -97,14 +110,13 @@
                                 {% endif %}
                             </div>
                         </twig:Table:Cell>
+                        {% endif %}
+                        {% if direction %}
                         <twig:Table:Cell class="whitespace-nowrap" data-test="member-manager">
                             {% if member.manager %}{{ member.manager.firstName }} {{ member.manager.lastName }}{% else %}<span class="text-body" aria-label="Aucun">—</span>{% endif %}
                         </twig:Table:Cell>
                         <twig:Table:Cell>
                             <div class="flex justify-end gap-0.5">
-                                <twig:Button as="a" size="icon-xs" variant="ghost" class="text-body-subtle" href="{{ path('app_person', {id: member.id}) }}" data-tooltip="Fiche" aria-label="Fiche de {{ member.firstName }} {{ member.lastName }}" data-test="member-person">
-                                    <twig:ux:icon name="tabler:file-description" class="size-4"/>
-                                </twig:Button>
                                 <twig:Button as="a" size="icon-xs" variant="ghost" class="text-body-subtle" href="{{ path('app_team_edit', {id: member.id}) }}" data-tooltip="Modifier" aria-label="Modifier {{ member.firstName }} {{ member.lastName }}" data-test="member-edit">
                                     <twig:ux:icon name="tabler:pencil" class="size-4"/>
                                 </twig:Button>
@@ -163,10 +175,11 @@
                                 {% endif %}
                             </div>
                         </twig:Table:Cell>
+                        {% endif %}
                     </twig:Table:Row>
                 {% else %}
                     <twig:Table:Row>
-                        <twig:Table:Cell colspan="6" class="py-12 text-center text-body" data-test="team-empty">Personne ne correspond à ces filtres.</twig:Table:Cell>
+                        <twig:Table:Cell colspan="{{ 1 + (lead ? 3 : 0) + (direction ? 2 : 0) }}" class="py-12 text-center text-body" data-test="team-empty">Personne ne correspond à ces filtres.</twig:Table:Cell>
                     </twig:Table:Row>
                 {% endfor %}
             </twig:Table:Body>

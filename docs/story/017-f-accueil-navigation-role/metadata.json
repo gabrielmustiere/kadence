@@ -2,7 +2,7 @@
   "version": 2,
   "title": "Voir à l'accueil ce qui attend chacun, et trouver dans le menu le quotidien, le pilotage et l'administration",
   "created": "2026-10-12",
-  "updated": "2026-10-12",
+  "updated": "2026-10-14",
   "tags": [
     "navigation",
     "accueil",
@@ -18,6 +18,26 @@
       "date": "2026-10-12",
       "type": "Planification",
       "description": "Plan technique proposé, à valider avec le pitch avant implémentation : nav_section() enrichie (home, people, entitlements avant time_off), TeamList ouverte à tous avec colonnes, filtres et actions par rôle, TeamController sous /personnes avec trois redirections permanentes depuis /equipe, HomeAgendaBuilder qui réutilise RoadmapBuilder::build() et une règle des jours extraite de TimesheetBuilder, logout.target vers /login ; livraison en cinq tranches commitables."
+    },
+    {
+      "date": "2026-10-14",
+      "type": "Implémentation",
+      "description": "Cinq tranches livrées : menu en trois zones (Accueil, Ma semaine, Congés ; Pilotage ; Administration pour la direction seule), page Personnes ouverte à tous (TeamList par rôle, gestion sous /personnes, trois redirections 301 depuis /equipe, règle ^/equipe retirée), droits à congés dans Administration sans onglet Compteurs, accueil « À faire » (HomeAgendaBuilder sur RoadmapBuilder::build() et TimesheetBuilder::daysOf()), logout.target vers /login. QA : make lint propre, 711 tests PHPUnit et 55 E2E verts. Écarts : (1) nouveau modèle WatchedProject (ligne projet + pastilles retenues), car les pastilles d'un projet à surveiller sont celles de ses lots, que RoadmapRow ne porte pas ; _signal_tooltips accepte une variable signals ; (2) pastilles d'un projet = signaux de surveillance de ses lots plus ceux qui retiennent la fin d'un lot à fin inconnue, avec la fin calculée ou « Fin inconnue » en regard ; (3) libellé « Accueil » et nav-home posés dès la tranche 1, ancien accueil repointé sur app_person_index en tranche 2 pour rester rendu jusqu'à sa réécriture ; (4) le nom d'une personne mène à sa fiche et remplace le bouton « Fiche » ; data-email rendu pour la direction seule, data-member sert de repère pour tous ; (5) libellés « Équipe » réalignés hors plan (tags, message UniqueTeamEmail, retour du mot de passe provisoire) ; (6) tests hors plan touchés : VocabularyTest (/personnes ouvert à la prod), login.spec.ts et logout-prefetch.spec.ts (lisaient « Tableau de bord »), PersonControllerTest::testPageOfThePitch (la fiche allume Personnes) ; testTheDashboardOffersTheTimesheet supprimé, vide sans son assertion ; (7) home.spec.ts crée en SQL une personne sans temps, les fixtures tirant au hasard les journées oubliées."
+    },
+    {
+      "date": "2026-10-14",
+      "type": "Review",
+      "description": "Review ouverte : CORRECTIONS REQUISES ; 0 bloquant, 1 important, 3 mineurs : [BUG] lot terminé à 100 % en dépassement qui ne quitte jamais l'accueil, [BUG] demande validée d'office remontée comme décidée, [ROBUSTESSE] « Tout afficher » sans filtre effectif, [TEST] assertion redondante sur les désactivées."
+    },
+    {
+      "date": "2026-10-14",
+      "type": "Review",
+      "description": "Prêt à commiter ; 1 important et 3 mineurs corrigés : [BUG] lot terminé à 100 % en dépassement écarté de Mes lots et des projets à surveiller, [BUG] demande validée d'office écartée de Mes congés, [ROBUSTESSE] « Tout afficher » décidé sur le filtre effectif, [TEST] assertion redondante sur les désactivées retirée."
+    },
+    {
+      "date": "2026-10-14",
+      "type": "Sync",
+      "description": "11 écarts réalignés dans le plan et le pitch, 19/19 critères d'acceptation et 8/8 critères de sortie cochés, stack.md et product-backlog.md édités, aucune dette."
     }
   ]
 }

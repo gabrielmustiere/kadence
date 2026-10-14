@@ -7,7 +7,6 @@
     {route: 'app_time_off_index', label: 'Mes congés', icon: 'tabler:beach', test: 'mine'},
     inbox_count is not null ? {route: 'app_time_off_inbox', label: 'À valider', icon: 'tabler:checklist', test: 'inbox', count: inbox_count} : null,
     {route: 'app_time_off_absences', label: 'Absences', icon: 'tabler:calendar-user', test: 'absences'},
-    is_granted('ROLE_DIRECTION') ? {route: 'app_time_off_entitlements', label: 'Compteurs', icon: 'tabler:abacus', test: 'entitlements'} : null,
 ]|filter(tab => tab is not null) %}
 <nav class="mb-8 flex flex-wrap gap-1 border-b border-default" aria-label="Congés" data-test="time-off-tabs">
     {% for tab in tabs %}

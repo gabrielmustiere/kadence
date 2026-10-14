@@ -18,13 +18,12 @@ use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
 use Symfony\UX\LiveComponent\Attribute\LiveArg;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
-use Symfony\UX\LiveComponent\Attribute\PostHydrate;
 use Symfony\UX\LiveComponent\DefaultActionTrait;
-use Symfony\UX\TwigComponent\Attribute\PostMount;
 
 /**
- * The team, filtered as soon as a filter changes: the filters live in the URL (?competence=…&manager=…) so that it can be
- * shared, and stay as they are when a member is deactivated or reactivated in place.
+ * The people, filtered as soon as a filter changes: the filters live in the URL (?competence=…&manager=…) so that it can
+ * be shared, and stay as they are when a member is deactivated or reactivated in place. Each role reads what the page of
+ * a person shows it: the leads the tags, the direction the manager, the deactivated people and the management actions.
  */
 #[AsLiveComponent]
 final class TeamList extends AbstractController
@@ -57,13 +56,6 @@ final class TeamList extends AbstractController
     ) {
     }
 
-    #[PostMount(priority: 10)]
-    #[PostHydrate]
-    public function denyToAllButTheDirection(): void
-    {
-        $this->denyAccessUnlessGranted('ROLE_DIRECTION');
-    }
-
     /**
      * @return array<string, list<Tag>> the tags to filter on, by category value
      */
@@ -84,6 +76,10 @@ final class TeamList extends AbstractController
      */
     public function getManagers(): array
     {
+        if (!$this->isGranted('ROLE_DIRECTION')) {
+            return [];
+        }
+
         return $this->managers ??= $this->userRepository->findManagers();
     }
 
@@ -97,7 +93,9 @@ final class TeamList extends AbstractController
 
     public function isFiltered(): bool
     {
-        return null !== $this->competence || null !== $this->experience || null !== $this->equipe || null !== $this->manager;
+        $filter = $this->filter();
+
+        return [] !== $filter->tags() || null !== $filter->manager;
     }
 
     #[LiveAction]
@@ -109,6 +107,7 @@ final class TeamList extends AbstractController
     #[LiveAction]
     public function deactivate(#[LiveArg] int $member): void
     {
+        $this->denyAccessUnlessGranted('ROLE_DIRECTION');
         $user = $this->member($member);
         try {
             $this->teamManager->deactivate($user);
@@ -121,21 +120,26 @@ final class TeamList extends AbstractController
     #[LiveAction]
     public function reactivate(#[LiveArg] int $member): void
     {
+        $this->denyAccessUnlessGranted('ROLE_DIRECTION');
         $user = $this->member($member);
         $this->teamManager->reactivate($user);
         $this->notify('success', \sprintf('Le compte de %s %s est réactivé.', $user->getFirstName(), $user->getLastName()));
     }
 
     /**
-     * The filter the props ask for: an id that names no tag of its category, or no manager, filters nothing.
+     * The filter the props ask for, within what the viewer may read: an id that names no tag of its category, or no
+     * manager, filters nothing, and neither does a filter the viewer's role does not show, even forged in the URL.
      */
     private function filter(): TeamListFilter
     {
         $filter = new TeamListFilter();
-        $filter->technicalSkill = $this->tagOf(TagCategory::TechnicalSkill, $this->competence);
-        $filter->functionalExperience = $this->tagOf(TagCategory::FunctionalExperience, $this->experience);
-        $filter->teamType = $this->tagOf(TagCategory::TeamType, $this->equipe);
+        if ($this->isGranted('ROLE_LEAD')) {
+            $filter->technicalSkill = $this->tagOf(TagCategory::TechnicalSkill, $this->competence);
+            $filter->functionalExperience = $this->tagOf(TagCategory::FunctionalExperience, $this->experience);
+            $filter->teamType = $this->tagOf(TagCategory::TeamType, $this->equipe);
+        }
         $filter->manager = array_find($this->getManagers(), fn (User $manager): bool => $manager->getId() === $this->manager);
+        $filter->activeOnly = !$this->isGranted('ROLE_DIRECTION');
 
         return $filter;
     }

@@ -65,13 +65,13 @@ final class TimeOffController extends AbstractController
 
     #[Route('/compteurs', name: 'app_time_off_entitlements', methods: ['GET'])]
     #[Route('/compteurs/{type}/{year}', name: 'app_time_off_entitlements_period', requirements: ['type' => 'cp|rtt', 'year' => '[1-9]\d{3}'], methods: ['GET'])]
-    public function entitlements(#[CurrentUser] User $user, string $type = 'cp', ?int $year = null): Response
+    public function entitlements(string $type = 'cp', ?int $year = null): Response
     {
         $this->denyAccessUnlessGranted('ROLE_DIRECTION');
         $timeOffType = TimeOffType::from($type);
         $period = null === $year ? TimeOffPeriod::containing($timeOffType, $this->clock->now()) : TimeOffPeriod::of($timeOffType, $year);
 
-        return $this->page($user, 'time_off/entitlements.html.twig', [
+        return $this->render('time_off/entitlements.html.twig', [
             'period' => $period,
         ]);
     }

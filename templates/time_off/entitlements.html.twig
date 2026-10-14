@@ -1,10 +1,9 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Compteurs de congés · Kadence{% endblock %}
+{% block title %}Droits à congés · Kadence{% endblock %}
 
 {% block body %}
-    <twig:PageHeader title="Congés" description="Les droits de chacun, déclarés par période : du 1er mai au 30 avril pour les CP, sur l'année civile pour les RTT. Le reliquat ne passe pas tout seul d'une période à l'autre."/>
-    {{ include('time_off/_tabs.html.twig') }}
+    <twig:PageHeader title="Droits à congés" description="Les droits de chacun, déclarés par période : du 1er mai au 30 avril pour les CP, sur l'année civile pour les RTT. Le reliquat ne passe pas tout seul d'une période à l'autre."/>
 
     <twig:TimeOffEntitlementsForm :type="period.type.value" :year="period.year"/>
 {% endblock %}

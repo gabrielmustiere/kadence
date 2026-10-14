@@ -3,7 +3,7 @@
 {% block title %}Modifier {{ member.firstName }} {{ member.lastName }} · Kadence{% endblock %}
 
 {% block body %}
-    <twig:PageHeader title="Modifier {{ member.firstName }} {{ member.lastName }}" :back="path('app_team_index')" backLabel="Équipe">
+    <twig:PageHeader title="Modifier {{ member.firstName }} {{ member.lastName }}" :back="path('app_person_index')" backLabel="Personnes">
         <twig:Button as="a" variant="outline" href="{{ path('app_person', {id: member.id}) }}">
             <twig:ux:icon name="tabler:id-badge-2" class="size-4"/>
             Voir la fiche

@@ -60,9 +60,9 @@ final class VocabularyTest extends WebTestCase
      */
     public static function roleProvider(): \Generator
     {
-        $pages = ['/', '/saisie', '/roadmap', '/projets', '/projets/{atlas}', '/personnes/{person}', '/mon-compte/mot-de-passe'];
+        $pages = ['/', '/saisie', '/roadmap', '/projets', '/projets/{atlas}', '/personnes', '/personnes/{person}', '/mon-compte/mot-de-passe'];
 
-        yield 'direction' => ['admin@example.com', [...$pages, '/tags', '/lots/{lot}/modifier', '/conges/a-valider', '/equipe', '/equipe/{person}/modifier']];
+        yield 'direction' => ['admin@example.com', [...$pages, '/tags', '/lots/{lot}/modifier', '/conges/a-valider', '/personnes/{person}/modifier']];
         yield 'prod' => ['prod@example.com', $pages];
     }
 }

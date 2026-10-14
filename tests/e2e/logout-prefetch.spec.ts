@@ -14,5 +14,5 @@ test('hovering the logout link keeps the user logged in', async ({ page }) => {
 
   await page.reload();
   await expect(page).not.toHaveURL(/\/login/);
-  await expect(page.locator('body')).toContainText('Tableau de bord');
+  await expect(page.locator('h1')).toContainText('Ma semaine');
 });

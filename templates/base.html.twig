@@ -108,7 +108,7 @@
     <div class="flex h-full flex-col overflow-y-auto overscroll-contain px-3 py-5">
         <ul class="shrink-0 space-y-0.5">
             <li>
-                <twig:NavLink href="{{ path('app_page') }}" icon="tabler:layout-grid" :active="nav == 'dashboard'" data-test="nav-dashboard">Tableau de bord</twig:NavLink>
+                <twig:NavLink href="{{ path('app_page') }}" icon="tabler:layout-grid" :active="nav == 'home'" data-test="nav-home">Accueil</twig:NavLink>
             </li>
             <li>
                 <twig:NavLink href="{{ path('app_timesheet') }}" icon="tabler:calendar-week" :active="nav == 'timesheet'" data-test="nav-timesheet">Ma semaine</twig:NavLink>
@@ -116,29 +116,37 @@
             <li>
                 <twig:NavLink href="{{ path('app_time_off_index') }}" icon="tabler:beach" :active="nav == 'time_off'" :count="time_off_inbox_count()" countLabel="à valider" data-test="nav-time-off">Congés</twig:NavLink>
             </li>
-            <li>
-                <twig:NavLink href="{{ path('app_roadmap') }}" icon="tabler:timeline-event" :active="nav == 'roadmap'" data-test="nav-roadmap">Roadmap</twig:NavLink>
-            </li>
         </ul>
-        <div class="mt-auto shrink-0 pt-6" data-test="nav-admin">
-            <p id="nav-admin-title" class="eyebrow mb-2 px-3 text-body-subtle">Administration</p>
-            <ul class="space-y-0.5" aria-labelledby="nav-admin-title">
+        <div class="shrink-0 pt-6" data-test="nav-steering">
+            <p id="nav-steering-title" class="eyebrow mb-2 px-3 text-body-subtle">Pilotage</p>
+            <ul class="space-y-0.5" aria-labelledby="nav-steering-title">
+                <li>
+                    <twig:NavLink href="{{ path('app_roadmap') }}" icon="tabler:timeline-event" :active="nav == 'roadmap'" data-test="nav-roadmap">Roadmap</twig:NavLink>
+                </li>
                 <li>
                     <twig:NavLink href="{{ path('app_project_index') }}" icon="tabler:folders" :active="nav == 'projects'" data-test="nav-projects">Projets</twig:NavLink>
                 </li>
-                {% if is_granted('ROLE_DIRECTION') %}
                 <li>
-                    <twig:NavLink href="{{ path('app_team_index') }}" icon="tabler:users" :active="nav == 'team'" data-test="nav-team">Équipe</twig:NavLink>
+                    <twig:NavLink href="{{ path('app_person_index') }}" icon="tabler:users" :active="nav == 'people'" data-test="nav-people">Personnes</twig:NavLink>
                 </li>
+            </ul>
+        </div>
+        {% if is_granted('ROLE_DIRECTION') %}
+        <div class="mt-auto shrink-0 pt-6" data-test="nav-admin">
+            <p id="nav-admin-title" class="eyebrow mb-2 px-3 text-body-subtle">Administration</p>
+            <ul class="space-y-0.5" aria-labelledby="nav-admin-title">
                 <li>
                     <twig:NavLink href="{{ path('app_tag_index') }}" icon="tabler:tags" :active="nav == 'tags'" data-test="nav-tags">Tags</twig:NavLink>
                 </li>
                 <li>
                     <twig:NavLink href="{{ path('app_holiday_index') }}" icon="tabler:calendar-off" :active="nav == 'holidays'" data-test="nav-holidays">Jours fériés</twig:NavLink>
                 </li>
-                {% endif %}
+                <li>
+                    <twig:NavLink href="{{ path('app_time_off_entitlements') }}" icon="tabler:abacus" :active="nav == 'entitlements'" data-test="nav-entitlements">Droits à congés</twig:NavLink>
+                </li>
             </ul>
         </div>
+        {% endif %}
     </div>
 </aside>
 

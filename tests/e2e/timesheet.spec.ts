@@ -241,7 +241,7 @@ test('un lot qui porte des temps ne peut plus être supprimé', async ({ page })
 
 test('la direction fixe un maximum hebdomadaire à partir d\'une semaine, puis le supprime', async ({ page }) => {
   await login(page, 'admin@example.com');
-  await page.goto('/equipe');
+  await page.goto('/personnes');
   await page.click('[data-email="ancien@example.com"] [data-test="member-edit"]');
 
   await page.fill('[data-test="member-weekly-max"]', '4.5');

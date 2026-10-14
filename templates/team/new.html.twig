@@ -3,7 +3,7 @@
 {% block title %}Inscrire une personne · Kadence{% endblock %}
 
 {% block body %}
-    <twig:PageHeader title="Inscrire une personne" :back="path('app_team_index')" backLabel="Équipe"
+    <twig:PageHeader title="Inscrire une personne" :back="path('app_person_index')" backLabel="Personnes"
                      description="Un mot de passe provisoire sera généré et affiché une seule fois, pour que vous le transmettiez à la personne."/>
     <twig:Card>
         {{ include('team/_form.html.twig', {submit_label: 'Inscrire'}) }}

@@ -1,60 +1,113 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Tableau de bord · Kadence{% endblock %}
+{% block title %}Accueil · Kadence{% endblock %}
 
 {% block body %}
-    <twig:PageHeader title="Tableau de bord">
+    {% set tooltip_actions = 'pointerover->roadmap-tooltip#show pointerout->roadmap-tooltip#leave focusin->roadmap-tooltip#show focusout->roadmap-tooltip#leave scroll@window->roadmap-tooltip#hide keydown.esc@window->roadmap-tooltip#hide turbo:before-cache@document->roadmap-tooltip#hide' %}
+    {% set status_variants = {pending: 'warning', approved: 'success', refused: 'danger', cancelled: 'gray'} %}
+    {% set link_class = 'font-medium text-heading decoration-default-strong underline-offset-4 hover:underline' %}
+
+    <twig:PageHeader title="Accueil">
         <twig:block name="description">
             <p class="mt-2.5 max-w-3xl text-[15px] leading-relaxed text-body" data-test="home-greeting">
-                Bonjour {{ app.user.firstName }}. Suivez la charge, l'avancement et la fin calculée de chaque projet.
+                Bonjour {{ app.user.firstName }}. {{ agenda.empty ? 'Rien ne vous attend pour l\'instant.' : 'Voici ce qui vous attend.' }}
             </p>
         </twig:block>
     </twig:PageHeader>
 
-    <a href="{{ path('app_timesheet') }}" data-test="home-timesheet"
-       class="group mb-12 flex flex-col gap-6 rounded-card bg-primary px-6 py-7 text-on-primary transition-colors hover:bg-primary-strong sm:flex-row sm:items-center sm:justify-between sm:px-8">
-        <div class="flex items-center gap-5">
-            <twig:Logo class="size-12 shrink-0 rounded-[9px] ring-1 ring-on-primary/15"/>
-            <div>
-                <p class="font-display text-[1.75rem] leading-tight">Ma semaine</p>
-                <p class="mt-1 text-sm text-on-primary/75">
-                    Semaine {{ 'now'|date('W') }}, du {{ 'monday this week'|date('d/m') }} au {{ 'friday this week'|date('d/m') }} : saisissez vos temps au quart de journée.
-                </p>
-            </div>
+    {% if agenda.empty %}
+        <twig:EmptyState icon="tabler:circle-check" class="max-w-4xl" data-test="home-empty">
+            <p>Vos journées sont saisies, aucune demande n'attend de décision et vos lots suivent leur cours.</p>
+            <twig:Button as="a" variant="outline" size="sm" href="{{ path('app_timesheet') }}" class="mt-4" data-test="home-empty-timesheet">
+                <twig:ux:icon name="tabler:calendar-week" class="size-4"/>
+                Ouvrir Ma semaine
+            </twig:Button>
+        </twig:EmptyState>
+    {% else %}
+        <div class="max-w-4xl space-y-6">
+            {% if agenda.forgottenDays is not empty %}
+                {% embed 'page/_section.html.twig' with {key: 'timesheet', title: 'Ma saisie', description: 'Journées incomplètes de cette semaine et de la précédente.', count: agenda.forgottenDays|length} %}
+                    {% block items %}
+                        {% for day in agenda.forgottenDays %}
+                            <li class="flex items-center justify-between gap-4 px-5 py-3" data-test="home-forgotten-day" data-day="{{ day.date|date('Y-m-d') }}">
+                                <a href="{{ path('app_timesheet_week', {week: day.date|date('o-\\WW')}) }}" class="{{ link_class }}">{{ day.date|weekday }} {{ day.date|date('d/m/Y') }}</a>
+                                <span class="tabular-nums text-body">{{ day.quarters|days }} saisi sur {{ day.capQuarters|days }}</span>
+                            </li>
+                        {% endfor %}
+                    {% endblock %}
+                {% endembed %}
+            {% endif %}
+
+            {% if agenda.toDecide is not empty %}
+                {% embed 'page/_section.html.twig' with {key: 'to-decide', title: 'À valider', description: 'Demandes de congé qui attendent votre décision.', count: agenda.toDecide|length} %}
+                    {% block items %}
+                        {% for request in agenda.toDecide %}
+                            <li class="flex flex-col gap-1 px-5 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4" data-test="home-to-decide" data-id="{{ request.id }}">
+                                <a href="{{ path('app_time_off_inbox') }}" class="{{ link_class }}">{{ request.user.firstName }} {{ request.user.lastName }}</a>
+                                <span class="tabular-nums text-body">{{ request.type.label }} · {{ include('time_off/_period.html.twig') }}</span>
+                            </li>
+                        {% endfor %}
+                    {% endblock %}
+                {% endembed %}
+            {% endif %}
+
+            {% if agenda.myLeaves is not empty %}
+                {% embed 'page/_section.html.twig' with {key: 'my-lots', title: 'Mes lots', description: 'Les lots dont vous êtes responsable et qui demandent une action.', count: agenda.myLeaves|length} %}
+                    {% block items %}
+                        {% for row in agenda.myLeaves %}
+                            <li class="px-5 py-3" data-test="home-my-lot" data-lot="{{ row.lot.id }}" data-controller="roadmap-tooltip" data-action="{{ tooltip_actions }}">
+                                <a href="{{ path('app_project_show', {id: row.project.id}) }}" class="text-[13px] text-body underline decoration-default-medium underline-offset-4 hover:text-heading hover:decoration-default-strong" data-test="home-my-lot-link">{{ row.project.title }}</a>
+                                <p class="mt-0.5 font-semibold text-heading">{{ row.leafPath }}</p>
+                                <div class="mt-2 flex flex-wrap gap-1.5">
+                                    {% for signal in row.signals %}
+                                        {{ include('roadmap/_signal.html.twig', {prefix: 'home-lot-signal'}) }}
+                                    {% endfor %}
+                                </div>
+                                {{ include('roadmap/_signal_tooltips.html.twig', {prefix: 'home-lot-signal'}) }}
+                            </li>
+                        {% endfor %}
+                    {% endblock %}
+                {% endembed %}
+            {% endif %}
+
+            {% if agenda.watchedProjects is not empty %}
+                {% embed 'page/_section.html.twig' with {key: 'watched-projects', title: 'Projets à surveiller', description: 'Fin inconnue, ou un lot qui demande qu\'on s\'en occupe.', count: agenda.watchedProjects|length} %}
+                    {% block items %}
+                        {% for watched in agenda.watchedProjects %}
+                            {% set row = watched.row %}
+                            <li class="flex flex-col gap-2 px-5 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4" data-test="home-watched-project" data-project="{{ row.project.id }}" data-controller="roadmap-tooltip" data-action="{{ tooltip_actions }}">
+                                <div class="min-w-0">
+                                    <a href="{{ path('app_project_show', {id: row.project.id}) }}" class="{{ link_class }}" data-test="home-watched-project-link">{{ row.project.title }}</a>
+                                    {% if watched.signals is not empty %}
+                                        <div class="mt-2 flex flex-wrap gap-1.5">
+                                            {% for signal in watched.signals %}
+                                                {{ include('roadmap/_signal.html.twig', {prefix: 'home-project-signal'}) }}
+                                            {% endfor %}
+                                        </div>
+                                        {{ include('roadmap/_signal_tooltips.html.twig', {prefix: 'home-project-signal', signals: watched.signals}) }}
+                                    {% endif %}
+                                </div>
+                                <span class="shrink-0 tabular-nums text-body" data-test="home-watched-project-end">
+                                    {%- if row.endUnknown %}Fin inconnue{% elseif row.end %}Fin le {{ row.end|date('d/m/Y') }}{% endif -%}
+                                </span>
+                            </li>
+                        {% endfor %}
+                    {% endblock %}
+                {% endembed %}
+            {% endif %}
+
+            {% if agenda.myRequests is not empty %}
+                {% embed 'page/_section.html.twig' with {key: 'my-time-off', title: 'Mes congés', description: 'Vos demandes en attente, et celles décidées ces sept derniers jours.', count: agenda.myRequests|length} %}
+                    {% block items %}
+                        {% for request in agenda.myRequests %}
+                            <li class="flex flex-col gap-1 px-5 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4" data-test="home-my-request" data-id="{{ request.id }}" data-status="{{ request.status.value }}">
+                                <a href="{{ path('app_time_off_index') }}" class="{{ link_class }} tabular-nums">{{ request.type.label }} · {{ include('time_off/_period.html.twig') }}</a>
+                                <twig:Badge variant="{{ status_variants[request.status.value] }}" class="self-start sm:self-auto">{{ request.status.label }}</twig:Badge>
+                            </li>
+                        {% endfor %}
+                    {% endblock %}
+                {% endembed %}
+            {% endif %}
         </div>
-        <span class="inline-flex h-10 shrink-0 items-center self-start rounded-base bg-on-primary px-4 text-sm font-semibold text-primary sm:self-auto">Saisir mes temps</span>
-    </a>
-
-    <div class="grid grid-cols-1 gap-x-10 gap-y-12 lg:grid-cols-2">
-        <section>
-            <h2 class="mb-3 text-lg font-semibold tracking-tight text-heading">Suivre</h2>
-            <ul class="divide-y divide-default-subtle border-y border-default-subtle">
-                <li>{{ _self.shortcut(path('app_roadmap'), 'tabler:timeline-event', 'Roadmap', 'La chronologie de chaque projet et sa fin calculée.', 'home-roadmap') }}</li>
-                <li>{{ _self.shortcut(path('app_account_password'), 'tabler:user-circle', 'Mon compte', 'Voir votre profil et changer votre mot de passe.', 'home-account') }}</li>
-            </ul>
-        </section>
-
-        <section data-test="home-admin">
-            <h2 class="mb-3 text-lg font-semibold tracking-tight text-heading">Administration</h2>
-            <ul class="divide-y divide-default-subtle border-y border-default-subtle">
-                <li>{{ _self.shortcut(path('app_project_index'), 'tabler:folders', 'Projets', 'Découper les projets en lots et sous-lots, estimer et confier chaque lot.', 'home-projects') }}</li>
-                {% if is_granted('ROLE_DIRECTION') %}
-                    <li>{{ _self.shortcut(path('app_team_index'), 'tabler:users', 'Équipe', 'Inscrire les personnes, gérer leurs rôles et leurs accès.', 'home-team') }}</li>
-                    <li>{{ _self.shortcut(path('app_tag_index'), 'tabler:tags', 'Tags', 'Tenir le vocabulaire des compétences, des expériences et des pôles.', 'home-tags') }}</li>
-                    <li>{{ _self.shortcut(path('app_holiday_index'), 'tabler:calendar-off', 'Jours fériés', 'Consulter les jours fériés de chaque calendrier et les ajuster.', 'home-holidays') }}</li>
-                {% endif %}
-            </ul>
-        </section>
-    </div>
+    {% endif %}
 {% endblock %}
-
-{% macro shortcut(href, icon, title, description, test_id) %}
-    <a href="{{ href }}" data-test="{{ test_id }}"
-       class="group -mx-3 flex items-start gap-4 rounded-base px-3 py-4 transition-colors hover:bg-neutral-secondary-medium">
-        <twig:ux:icon name="{{ icon }}" class="mt-0.5 size-5 shrink-0 text-fg-brand" aria-hidden="true"/>
-        <span class="min-w-0">
-            <span class="block text-[15px] font-semibold text-heading group-hover:underline group-hover:decoration-default-strong group-hover:underline-offset-4">{{ title }}</span>
-            <span class="mt-0.5 block text-sm leading-relaxed text-body">{{ description }}</span>
-        </span>
-    </a>
-{% endmacro %}

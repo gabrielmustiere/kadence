@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Controller;
 
-use App\Repository\UserRepository;
 use Psr\Cache\CacheItemPoolInterface;
+use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 final class SecurityControllerTest extends WebTestCase
@@ -124,19 +124,43 @@ final class SecurityControllerTest extends WebTestCase
         self::assertSelectorTextContains('[role="alert"]', 'Plusieurs tentatives de connexion ont échoué');
     }
 
-    public function testLogout(): void
+    public function testLogoutLeadsToTheLoginAndTheNextLoginToMyWeek(): void
     {
         $client = self::createClient();
-        $userRepository = self::getContainer()->get(UserRepository::class);
-        self::assertInstanceOf(UserRepository::class, $userRepository);
-        $user = $userRepository->findOneBy(['email' => 'admin@example.com']);
-        self::assertNotNull($user);
-        $client->loginUser($user);
-
-        $client->request('GET', '/logout');
+        $this->resetLoginThrottling();
+        $this->logIn($client);
         $client->request('GET', '/');
 
+        $client->request('GET', '/logout');
         self::assertResponseRedirects('/login');
+        $client->followRedirect();
+        self::assertResponseIsSuccessful();
+
+        $this->logIn($client);
+        self::assertResponseRedirects('/saisie');
+    }
+
+    public function testALinkFollowedWhileLoggedOutOpensAfterLogin(): void
+    {
+        $client = self::createClient();
+        $this->resetLoginThrottling();
+
+        $client->request('GET', '/conges/a-valider');
+        self::assertResponseRedirects('/login');
+
+        $this->logIn($client);
+        self::assertResponseRedirects('/conges/a-valider');
+        $client->followRedirect();
+        self::assertResponseIsSuccessful();
+    }
+
+    private function logIn(KernelBrowser $client): void
+    {
+        $client->request('GET', '/login');
+        $client->submitForm('Se connecter', [
+            '_username' => 'admin@example.com',
+            '_password' => 'password',
+        ]);
     }
 
     private function resetLoginThrottling(): void

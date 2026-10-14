@@ -64,22 +64,38 @@ final readonly class TimesheetBuilder
         $favoriteLots = array_values($favorites);
         usort($favoriteLots, LeafOrder::compare(...));
 
+        [$days, $maxQuarters] = $this->days($user, $week, $quarters);
+
+        return $this->compose($week, [...$favoriteLots, ...$others], array_keys($favorites), $quarters, $days, $maxQuarters);
+    }
+
+    /**
+     * The days of the week as Ma semaine shows them, without its rows: what each takes, what was entered, which are
+     * forgotten.
+     *
+     * @return list<TimesheetDay>
+     */
+    public function daysOf(User $user, Week $week): array
+    {
+        $quarters = [];
+        foreach ($this->timeEntryRepository->findForUserBetween($user, $week->monday, $week->friday()) as $entry) {
+            $quarters[self::id($entry->getLot())][$entry->getDay()->format('Y-m-d')] = $entry->getQuarters();
+        }
+
+        return $this->days($user, $week, $quarters)[0];
+    }
+
+    /**
+     * @param array<int, array<string, int<1, 4>>> $quarters quarters by lot id, then by day
+     *
+     * @return array{list<TimesheetDay>, int} the days, and the quarters the week takes at most
+     */
+    private function days(User $user, Week $week, array $quarters): array
+    {
         $holidays = $this->holidayManager->holidaysOf($user, $week);
         $timeOff = $this->timeOffBook->daysOf($user, $week->monday, $week->friday(), $holidays);
         $maxQuarters = $this->weeklyMaxManager->capFor($user, $week, \count($holidays), TimeOffDay::halfDayCountOf($timeOff));
 
-        return $this->compose($week, [...$favoriteLots, ...$others], array_keys($favorites), $quarters, $holidays, $timeOff, $maxQuarters);
-    }
-
-    /**
-     * @param list<Lot>                            $lots
-     * @param list<int>                            $favoriteIds
-     * @param array<int, array<string, int<1, 4>>> $quarters    quarters by lot id, then by day
-     * @param array<string, non-empty-string>      $holidays    holiday labels by day
-     * @param array<string, TimeOffDay>            $timeOff     pending and approved time off by day
-     */
-    private function compose(Week $week, array $lots, array $favoriteIds, array $quarters, array $holidays, array $timeOff, int $maxQuarters): WeekGrid
-    {
         $today = $this->clock->now()->format('Y-m-d');
         $dayQuarters = [];
         $dayCaps = [];
@@ -89,22 +105,6 @@ final readonly class TimesheetBuilder
             $dayCaps[$date] = isset($holidays[$date]) ? 0 : ($timeOff[$date] ?? null)?->capQuarters() ?? Quarters::PER_DAY;
         }
         $weekQuarters = array_sum($dayQuarters);
-
-        $rows = array_map(
-            fn (Lot $lot): TimesheetRow => new TimesheetRow($lot, array_map(
-                fn (\DateTimeImmutable $day): TimesheetCell => $this->cell(
-                    $day,
-                    $quarters[self::id($lot)][$day->format('Y-m-d')] ?? 0,
-                    $dayQuarters[$day->format('Y-m-d')],
-                    $dayCaps[$day->format('Y-m-d')],
-                    $weekQuarters,
-                    $maxQuarters,
-                    $day->format('Y-m-d') > $today || 0 === $dayCaps[$day->format('Y-m-d')],
-                ),
-                $week->days(),
-            ), \in_array(self::id($lot), $favoriteIds, true)),
-            $lots,
-        );
 
         $days = array_map(
             static fn (\DateTimeImmutable $day): TimesheetDay => new TimesheetDay(
@@ -117,6 +117,36 @@ final readonly class TimesheetBuilder
                 $timeOff[$day->format('Y-m-d')] ?? null,
             ),
             $week->days(),
+        );
+
+        return [$days, $maxQuarters];
+    }
+
+    /**
+     * @param list<Lot>                            $lots
+     * @param list<int>                            $favoriteIds
+     * @param array<int, array<string, int<1, 4>>> $quarters    quarters by lot id, then by day
+     * @param list<TimesheetDay>                   $days
+     */
+    private function compose(Week $week, array $lots, array $favoriteIds, array $quarters, array $days, int $maxQuarters): WeekGrid
+    {
+        $today = $this->clock->now()->format('Y-m-d');
+        $weekQuarters = array_sum(array_map(static fn (TimesheetDay $day): int => $day->quarters, $days));
+
+        $rows = array_map(
+            fn (Lot $lot): TimesheetRow => new TimesheetRow($lot, array_map(
+                fn (TimesheetDay $day): TimesheetCell => $this->cell(
+                    $day->date,
+                    $quarters[self::id($lot)][$day->date->format('Y-m-d')] ?? 0,
+                    $day->quarters,
+                    $day->capQuarters,
+                    $weekQuarters,
+                    $maxQuarters,
+                    $day->date->format('Y-m-d') > $today || 0 === $day->capQuarters,
+                ),
+                $days,
+            ), \in_array(self::id($lot), $favoriteIds, true)),
+            $lots,
         );
 
         return new WeekGrid($week, $days, $rows, $weekQuarters, $maxQuarters);

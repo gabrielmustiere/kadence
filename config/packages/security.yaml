@@ -32,8 +32,8 @@ security:
                 default_target_path: app_timesheet
             logout:
                 path: app_logout
-                # where to redirect after logout
-                # target: app_any_route
+                # Straight to the login: through « / », the next login would come back there instead of Ma semaine.
+                target: app_login
 
             # Activate different ways to authenticate:
             # https://symfony.com/doc/current/security.html#the-firewall
@@ -44,7 +44,6 @@ security:
     # Note: Only the *first* matching rule is applied
     access_control:
         - { path: ^/login, roles: PUBLIC_ACCESS }
-        - { path: ^/equipe, roles: ROLE_DIRECTION }
         - { path: ^/jours-feries, roles: ROLE_DIRECTION }
         - { path: ^/conges/compteurs, roles: ROLE_DIRECTION }
         - { path: ^/, roles: ROLE_USER }

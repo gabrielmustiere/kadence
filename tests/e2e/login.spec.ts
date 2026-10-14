@@ -10,5 +10,5 @@ test('login flow', async ({ page }) => {
   await page.click('button[type="submit"]');
 
   await expect(page).not.toHaveURL(/\/login/);
-  await expect(page.locator('body')).toContainText('Tableau de bord');
+  await expect(page.locator('h1')).toContainText('Ma semaine');
 });

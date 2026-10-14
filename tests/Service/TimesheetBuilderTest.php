@@ -237,6 +237,26 @@ final class TimesheetBuilderTest extends KernelTestCase
         self::assertFalse($tuesday->forgotten);
     }
 
+    public function testTheDaysAloneAreTheDaysOfTheGrid(): void
+    {
+        $lot = $this->createLot($this->createProject());
+        $user = $this->createUser();
+        $this->createTimeEntry($user, $lot, '2026-07-13', 4);
+        $this->createTimeOff($user, '2026-09-28', '2026-09-28');
+        $this->createTimeOff($user, '2026-09-29', '2026-09-29', TimeOffStatus::Approved, TimeOffType::Rtt, HalfDay::Morning, HalfDay::Morning);
+        $this->createTimeEntry($user, $lot, '2026-09-29', 1);
+        $capped = $this->createUser();
+        $this->createWeeklyMax($capped, '2026-09-21', 4);
+        $this->createTimeEntry($capped, $lot, '2026-09-21', 4);
+
+        $builder = self::getContainer()->get(TimesheetBuilder::class);
+        \assert($builder instanceof TimesheetBuilder);
+        foreach ([[$user, '2026-W29'], [$user, '2026-W40'], [$capped, '2026-W39'], [$capped, '2026-W40']] as [$person, $week]) {
+            self::assertEquals($this->build($person, [], $week)->days, $builder->daysOf($person, Week::fromIso($week)), $week);
+        }
+        self::assertSame([false, true, false, false, false], array_map(static fn (TimesheetDay $day): bool => $day->forgotten, $builder->daysOf($user, Week::fromIso('2026-W40'))), 'A day off is not forgotten, a future day neither.');
+    }
+
     /**
      * @param list<int> $addedLotIds
      */

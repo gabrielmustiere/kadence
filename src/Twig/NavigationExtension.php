@@ -10,12 +10,13 @@ final class NavigationExtension
 {
     /** Route name prefixes lighting each menu entry: a new route lights its entry when it follows the prefix. */
     private const array SECTIONS = [
-        'dashboard' => ['app_page'],
+        'home' => ['app_page'],
         'timesheet' => ['app_timesheet'],
+        'entitlements' => ['app_time_off_entitlements'],
         'time_off' => ['app_time_off_'],
         'roadmap' => ['app_roadmap'],
         'projects' => ['app_project_', 'app_lot_'],
-        'team' => ['app_team_'],
+        'people' => ['app_person', 'app_team_'],
         'holidays' => ['app_holiday_'],
         'tags' => ['app_tag_'],
     ];

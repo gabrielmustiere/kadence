@@ -1,0 +1,23 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Personnes · Kadence{% endblock %}
+
+{% block body %}
+    {% if is_granted('ROLE_DIRECTION') %}
+        {% set description = 'Qui a accès à Kadence, avec quel rôle, et la fiche de chacun.' %}
+    {% elseif is_granted('ROLE_LEAD') %}
+        {% set description = 'Les personnes de l\'équipe, leur rôle et leurs compétences, et la fiche de chacune.' %}
+    {% else %}
+        {% set description = 'Les personnes de l\'équipe, et la fiche de chacune.' %}
+    {% endif %}
+    <twig:PageHeader title="Personnes" :description="description">
+        {% if is_granted('ROLE_DIRECTION') %}
+            <twig:Button as="a" href="{{ path('app_team_new') }}" data-test="team-new">
+                <twig:ux:icon name="tabler:user-plus" class="size-4"/>
+                Inscrire une personne
+            </twig:Button>
+        {% endif %}
+    </twig:PageHeader>
+
+    <twig:TeamList/>
+{% endblock %}

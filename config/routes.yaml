@@ -9,3 +9,31 @@
 
 controllers:
     resource: routing.controllers
+
+# The team pages became the people pages (story 017): the former addresses, bookmarked or shared, lead to their new place.
+app_legacy_team:
+    path: /equipe
+    methods: [GET]
+    controller: Symfony\Bundle\FrameworkBundle\Controller\RedirectController::redirectAction
+    defaults:
+        route: app_person_index
+        permanent: true
+        keepQueryParams: true
+
+app_legacy_team_new:
+    path: /equipe/nouveau
+    methods: [GET]
+    controller: Symfony\Bundle\FrameworkBundle\Controller\RedirectController::redirectAction
+    defaults:
+        route: app_team_new
+        permanent: true
+
+app_legacy_team_edit:
+    path: /equipe/{id}/modifier
+    methods: [GET]
+    requirements:
+        id: '\d+'
+    controller: Symfony\Bundle\FrameworkBundle\Controller\RedirectController::redirectAction
+    defaults:
+        route: app_team_edit
+        permanent: true

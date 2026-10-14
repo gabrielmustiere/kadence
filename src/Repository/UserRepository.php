@@ -78,8 +78,8 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     }
 
     /**
-     * The team list with each person's tags and manager, restricted to the people carrying every tag of the filter and
-     * reporting directly to its manager.
+     * The team list with each person's tags and manager, restricted to the people carrying every tag of the filter,
+     * reporting directly to its manager and, if it asks so, active.
      *
      * @return list<User>
      */
@@ -99,6 +99,9 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         }
         if (null !== $filter->manager) {
             $queryBuilder->andWhere('u.manager = :manager')->setParameter('manager', $filter->manager);
+        }
+        if ($filter->activeOnly) {
+            $queryBuilder->andWhere('u.active = true');
         }
 
         /** @var list<User> $users */

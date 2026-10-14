@@ -54,7 +54,6 @@ final class ProjectControllerTest extends WebTestCase
         $client->request('GET', '/');
 
         self::assertSelectorExists('[data-test="nav-projects"]');
-        self::assertSelectorExists('[data-test="home-projects"]');
     }
 
     public function testLeadCreatesAProject(): void
