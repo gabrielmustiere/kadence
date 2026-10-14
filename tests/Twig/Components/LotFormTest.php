@@ -45,6 +45,10 @@ final class LotFormTest extends KernelTestCase
 
         self::assertCount(1, $rows);
         self::assertSame('100', $rows->filter('[data-test="lot-member-share"] option[selected]')->attr('value'));
+        self::assertSame(
+            ['10 %', '20 %', '30 %', '40 %', '50 %', '60 %', '70 %', '80 %', '90 %', '100 %'],
+            $rows->filter('[data-test="lot-member-share"] option')->each(static fn (Crawler $option): string => $option->text()),
+        );
         self::assertCount(1, $rows->filter(\sprintf('[data-test="lot-member-user"] option[value="%d"]', $active->getId())));
         self::assertCount(0, $rows->filter(\sprintf('[data-test="lot-member-user"] option[value="%d"]', $former->getId())));
 

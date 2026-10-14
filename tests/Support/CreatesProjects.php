@@ -50,7 +50,7 @@ trait CreatesProjects
     /**
      * Replaces the start date and the team of the leaf.
      *
-     * @param list<array{User, int<25, 100>}> $members person and share
+     * @param list<array{User, int<10, 100>}> $members person and share
      */
     private function planLot(Lot $lot, ?\DateTimeImmutable $startDate, array $members): Lot
     {

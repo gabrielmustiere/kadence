@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Controller;
 
+use App\Dto\LotMemberInput;
 use App\Entity\Lot;
 use App\Entity\LotMember;
 use App\Entity\Project;
@@ -460,7 +461,7 @@ final class LotControllerTest extends WebTestCase
         $prod = (string) $this->createUser()->getId();
         $lot = $this->createLot($this->createProject(), 5);
 
-        $this->postLotForm($client, '/lots/' . $lot->getId() . '/modifier', ['members' => [['user' => $prod, 'share' => '50'], ['user' => $prod, 'share' => '25']]]);
+        $this->postLotForm($client, '/lots/' . $lot->getId() . '/modifier', ['members' => [['user' => $prod, 'share' => '50'], ['user' => $prod, 'share' => '20']]]);
 
         self::assertResponseStatusCodeSame(422);
         self::assertSelectorTextContains('[data-test="lot-planning"]', 'Une personne ne figure qu');
@@ -492,7 +493,7 @@ final class LotControllerTest extends WebTestCase
         $client = $this->clientAs('lead@example.com');
         $lead = $this->createUser();
         $lot = $this->createLot($this->createProject(), 8, $lead);
-        $this->planLot($lot, new \DateTimeImmutable('2026-10-05'), [[$lead, 75]]);
+        $this->planLot($lot, new \DateTimeImmutable('2026-10-05'), [[$lead, 70]]);
 
         $crawler = $client->request('GET', '/lots/' . $lot->getId() . '/sous-lots/nouveau');
         self::assertSame('2026-10-05', $crawler->filter('[data-test="lot-start-date"]')->attr('value'));
@@ -507,7 +508,7 @@ final class LotControllerTest extends WebTestCase
         $subLot = $lot->getChildren()->first();
         self::assertInstanceOf(Lot::class, $subLot);
         self::assertSame('2026-10-05', $subLot->getStartDate()?->format('Y-m-d'));
-        self::assertSame([[$lead->getId(), 75]], $this->team($subLot));
+        self::assertSame([[$lead->getId(), 70]], $this->team($subLot));
     }
 
     public function testAddingAMemberWhoWouldBeOverloadedIsRefused(): void
@@ -524,12 +525,42 @@ final class LotControllerTest extends WebTestCase
         self::assertSame([], $this->team($this->reloadLot($lot)));
     }
 
+    public function testSharesInTensFillAPersonUpToAFullLoadButNotBeyond(): void
+    {
+        $client = $this->plannerClient();
+        $alice = $this->createUser();
+        $this->planLot($this->createLot($this->createProject(), 10), new \DateTimeImmutable('2026-10-05'), [[$alice, 30]]);
+        $this->planLot($this->createLot($this->createProject(), 10), new \DateTimeImmutable('2026-10-05'), [[$alice, 30]]);
+        $lot = $this->createLot($this->createProject(), 10);
+
+        $this->postLotForm($client, '/lots/' . $lot->getId() . '/modifier', ['startDate' => '2026-10-05', 'members' => [['user' => (string) $alice->getId(), 'share' => '40']]]);
+        self::assertResponseRedirects();
+        self::assertSame([[$alice->getId(), 40]], $this->team($this->reloadLot($lot)));
+
+        $this->postLotForm($client, '/lots/' . $lot->getId() . '/modifier', ['members' => [['user' => (string) $alice->getId(), 'share' => '50']]]);
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('[data-test="lot-planning"]', 'atteindrait 110 % le 05/10/2026');
+        self::assertSame([[$alice->getId(), 40]], $this->team($this->reloadLot($lot)));
+    }
+
+    public function testAShareOutsideTheTensIsRefused(): void
+    {
+        $client = $this->clientAs('lead@example.com');
+        $lot = $this->createLot($this->createProject(), 5);
+
+        $this->postLotForm($client, '/lots/' . $lot->getId() . '/modifier', ['members' => [['user' => (string) $this->createUser()->getId(), 'share' => '25']]]);
+
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('[data-test="lot-planning"]', LotMemberInput::INVALID_SHARE);
+        self::assertSame([], $this->team($this->reloadLot($lot)));
+    }
+
     public function testMovingTheStartDateOrDesignatingAnOwnerIntoAnOverloadIsRefused(): void
     {
         $client = $this->plannerClient();
         $alice = $this->createUser();
         $this->busyLeaf($alice, '2026-10-05');
-        $planned = $this->planLot($this->createLot($this->createProject(), 10), new \DateTimeImmutable('2026-10-19'), [[$alice, 25]]);
+        $planned = $this->planLot($this->createLot($this->createProject(), 10), new \DateTimeImmutable('2026-10-19'), [[$alice, 20]]);
         $unplanned = $this->planLot($this->createLot($this->createProject(), 10), new \DateTimeImmutable('2026-10-12'), []);
 
         $this->postLotForm($client, '/lots/' . $planned->getId() . '/modifier', ['startDate' => '2026-10-12']);
@@ -558,7 +589,7 @@ final class LotControllerTest extends WebTestCase
         $client = $this->plannerClient();
         $alice = $this->createUser();
         $this->busyLeaf($alice, '2026-10-05');
-        $overloaded = $this->planLot($this->createLot($this->createProject(), 10), new \DateTimeImmutable('2026-10-12'), [[$alice, 75]]);
+        $overloaded = $this->planLot($this->createLot($this->createProject(), 10), new \DateTimeImmutable('2026-10-12'), [[$alice, 70]]);
 
         $this->postLotForm($client, '/lots/' . $overloaded->getId() . '/modifier', ['members' => [['user' => (string) $alice->getId(), 'share' => '50']]]);
 

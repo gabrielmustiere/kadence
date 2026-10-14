@@ -1,0 +1,42 @@
+{
+  "version": 2,
+  "title": "Affecter un collaborateur à une feuille par tranches de 10 % de sa capacité",
+  "created": "2026-10-14",
+  "updated": "2026-10-14",
+  "tags": [
+    "roadmap",
+    "capacite"
+  ],
+  "changelog": [
+    {
+      "date": "2026-10-14",
+      "type": "Création",
+      "description": "Pitch initial : part d'un membre de 10 à 100 % par pas de 10 au lieu de 25/50/75/100, liste déroulante, saisie en quarts et horizon de calcul inchangés, sans reprise de données."
+    },
+    {
+      "date": "2026-10-14",
+      "type": "Planification",
+      "description": "Plan validé : constante LotMember::SHARES en dizaines, message Choice et invalid_message du champ, int<10, 100>, Lucas à 30/70 en démo, sans migration ; tests unit, fonctionnels et E2E à 30 %."
+    },
+    {
+      "date": "2026-10-14",
+      "type": "Implémentation",
+      "description": "5/5 étapes livrées, PHPUnit 729 verts, Playwright 56 verts, lint propre. Écarts : message partagé par la constante LotMemberInput::INVALID_SHARE (évite le doublon DTO/formulaire) ; 6 tests existants qui posaient des parts de 25 ou 75 % directement, oubliés au recensement du plan, passés à 20/70, et la part invalide de LotInputTest est passée de 30 à 25."
+    },
+    {
+      "date": "2026-10-14",
+      "type": "Review",
+      "description": "Verdict initial : prêt à commiter ; 0 bloquant, 0 important, 1 mineur ouvert : [STYLE] union de tableaux dans un test de LotControllerTest."
+    },
+    {
+      "date": "2026-10-14",
+      "type": "Review",
+      "description": "Prêt à commiter ; 1 mineur corrigé : [STYLE] union de tableaux remplacée par la ligne en clair dans testSharesInTensFillAPersonUpToAFullLoadButNotBeyond."
+    },
+    {
+      "date": "2026-10-14",
+      "type": "Sync",
+      "description": "2 écarts réalignés dans le plan, 6/6 critères d'acceptation et 6/6 critères de sortie cochés, C4.4 du backlog éditée, aucune dette."
+    }
+  ]
+}

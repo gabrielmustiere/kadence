@@ -69,7 +69,7 @@ final readonly class PersonRoadmapBuilder
     }
 
     /**
-     * @return array<int, int<25, 100>> the share of the person in the team of each leaf, by lot id
+     * @return array<int, int<10, 100>> the share of the person in the team of each leaf, by lot id
      */
     private static function sharesOf(ScheduleData $data, int $userId): array
     {
@@ -132,7 +132,7 @@ final readonly class PersonRoadmapBuilder
     }
 
     /**
-     * @param array<int, int<25, 100>>                              $shares     by lot id
+     * @param array<int, int<10, 100>>                              $shares     by lot id
      * @param array<int, array{list<RoadmapRun>, list<RoadmapRun>}> $runs       by lot id
      * @param array<int, true>                                      $overloaded
      */

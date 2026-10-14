@@ -121,7 +121,7 @@ final class DailyCapacity
     }
 
     /**
-     * @param int<25, 100> $share
+     * @param int<10, 100> $share
      */
     public function units(int $userId, int $share, \DateTimeImmutable $day): int
     {

@@ -97,7 +97,7 @@ test('un lead planifie une feuille et la voit sur la roadmap', async ({ page }) 
   await rendered(page, () => page.click('[data-test="lot-member-add"]'));
   const row = page.locator('[data-test="lot-member-row"]').last();
   await rendered(page, () => row.locator('[data-test="lot-member-user"]').selectOption({ label: 'Paula Durand' }));
-  await rendered(page, () => row.locator('[data-test="lot-member-share"]').selectOption({ label: '50 %' }));
+  await rendered(page, () => row.locator('[data-test="lot-member-share"]').selectOption({ label: '30 %' }));
   await rendered(page, () => page.click('[data-test="lot-member-add"]'));
   await rendered(page, () => page.locator('[data-test="lot-member-remove"]').last().click());
   await expect(page.locator('[data-test="lot-member-row"]')).toHaveCount(1);
@@ -117,7 +117,7 @@ test('un lead planifie une feuille et la voit sur la roadmap', async ({ page }) 
   await bringIntoView(leaf);
   await leaf.locator('[data-test="roadmap-bar-future"]').hover();
   await expect(tooltip).toBeVisible();
-  await expect(tooltip.locator('[data-test="roadmap-team"]')).toHaveText('Paula Durand 50 %');
+  await expect(tooltip.locator('[data-test="roadmap-team"]')).toHaveText('Paula Durand 30 %');
   await expect(tooltip.locator('[data-test="roadmap-remaining"]')).toHaveText('10 j');
   await expect(projectRow(page).locator('summary [data-test="roadmap-bar-span"]')).toBeVisible();
 });

@@ -217,7 +217,7 @@ final readonly class ProjectManager
      * Updates the members in place rather than replacing them: a person removed and added back within one flush
      * would be inserted before being deleted, and break the uniqueness of a person in a team.
      *
-     * @param list<array{User, int<25, 100>}> $members person and share
+     * @param list<array{User, int<10, 100>}> $members person and share
      */
     private static function applyMembers(Lot $lot, array $members): void
     {

@@ -69,7 +69,7 @@ final readonly class ScheduleLoader
     }
 
     /**
-     * @param iterable<array{User, int<25, 100>}> $members person and share
+     * @param iterable<array{User, int<10, 100>}> $members person and share
      *
      * @return list<PlannedMember>
      */

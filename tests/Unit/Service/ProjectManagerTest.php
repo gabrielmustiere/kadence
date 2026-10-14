@@ -301,11 +301,11 @@ final class ProjectManagerTest extends TestCase
         $ownerMember = new LotMember($lot, $owner, 100);
         new LotMember($lot, $leaving, 50);
         $input = LotInput::fromLot($lot);
-        $input->members = [LotMemberInput::of($owner, 75)];
+        $input->members = [LotMemberInput::of($owner, 70)];
 
         $this->manager()->updateLot($lot, $input);
 
-        self::assertSame([[$owner, 75]], $this->team($lot));
+        self::assertSame([[$owner, 70]], $this->team($lot));
         self::assertSame($ownerMember, $lot->getMembers()->first(), 'The remaining member is updated, not replaced.');
     }
 
@@ -315,12 +315,12 @@ final class ProjectManagerTest extends TestCase
         $member = $this->user();
         $lot = $this->lot($this->project(), 8, $owner)->setStartDate(new \DateTimeImmutable('2026-10-05'));
         new LotMember($lot, $owner, 100);
-        new LotMember($lot, $member, 25);
+        new LotMember($lot, $member, 20);
 
         $subLot = $this->manager()->addSubLot($lot, $this->prefilledSubLotInput($lot, 'Modèle'));
 
         self::assertSame('2026-10-05', $subLot->getStartDate()?->format('Y-m-d'));
-        self::assertSame([[$owner, 100], [$member, 25]], $this->team($subLot));
+        self::assertSame([[$owner, 100], [$member, 20]], $this->team($subLot));
         self::assertNull($lot->getStartDate());
         self::assertCount(0, $lot->getMembers());
     }

@@ -7,7 +7,7 @@ namespace App\Model\Schedule;
 final readonly class PlannedMember
 {
     /**
-     * @param int<25, 100> $share
+     * @param int<10, 100> $share
      */
     public function __construct(
         public int $userId,

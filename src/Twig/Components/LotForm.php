@@ -108,7 +108,7 @@ final class LotForm extends AbstractController
     /**
      * The team as it will be saved: the rows with a person, plus the owner.
      *
-     * @return list<array{person: User, share: int<25, 100>, owner: bool}>
+     * @return list<array{person: User, share: int<10, 100>, owner: bool}>
      */
     public function getTeam(): array
     {

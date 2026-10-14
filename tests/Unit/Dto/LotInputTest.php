@@ -30,9 +30,9 @@ final class LotInputTest extends TestCase
         $owner = $this->user();
         $input = new LotInput();
         $input->owner = $owner;
-        $input->members = [LotMemberInput::of($owner, 25)];
+        $input->members = [LotMemberInput::of($owner, 20)];
 
-        self::assertSame([[$owner, 25]], $input->effectiveMembers());
+        self::assertSame([[$owner, 20]], $input->effectiveMembers());
     }
 
     public function testOwnerWhoseRowIsRemovedComesBackWithTheShareTheyHad(): void
@@ -60,7 +60,7 @@ final class LotInputTest extends TestCase
         $reshared = LotInput::fromLot($lot);
         $reshared->members[0]->share = 50;
         $joined = LotInput::fromLot($lot);
-        $joined->members[] = LotMemberInput::of($this->user(), 25);
+        $joined->members[] = LotMemberInput::of($this->user(), 20);
 
         self::assertFalse($unchanged->planningChanged());
         self::assertTrue($moved->planningChanged());
@@ -72,26 +72,26 @@ final class LotInputTest extends TestCase
     public function testRowsWithoutAPersonOrWithAnInvalidShareAreLeftOut(): void
     {
         $member = $this->user();
-        $invalid = LotMemberInput::of($this->user(), 25);
-        $invalid->share = 30;
+        $invalid = LotMemberInput::of($this->user(), 20);
+        $invalid->share = 25;
         $input = new LotInput();
-        $input->members = [new LotMemberInput(), $invalid, LotMemberInput::of($member, 75)];
+        $input->members = [new LotMemberInput(), $invalid, LotMemberInput::of($member, 70)];
 
-        self::assertSame([[$member, 75]], $input->effectiveMembers());
+        self::assertSame([[$member, 70]], $input->effectiveMembers());
     }
 
     public function testEditingALeafStartsFromItsStartDateAndTeam(): void
     {
         $member = $this->user();
         $lot = $this->lot()->setStartDate(new \DateTimeImmutable('2026-10-05'));
-        new LotMember($lot, $member, 75);
+        new LotMember($lot, $member, 70);
 
         $input = LotInput::fromLot($lot);
 
         self::assertSame('2026-10-05', $input->startDate?->format('Y-m-d'));
         self::assertCount(1, $input->members);
         self::assertSame($member, $input->members[0]->user);
-        self::assertSame(75, $input->members[0]->share);
+        self::assertSame(70, $input->members[0]->share);
     }
 
     public function testFirstSubLotTakesOverThePlanningOfItsLotButNextOnesDoNot(): void

@@ -35,6 +35,7 @@ final class LotMemberType extends AbstractType
             ->add('share', ChoiceType::class, [
                 'label' => 'Part',
                 'choices' => array_combine(array_map(static fn (int $share): string => $share . ' %', LotMember::SHARES), LotMember::SHARES),
+                'invalid_message' => LotMemberInput::INVALID_SHARE,
                 'attr' => ['data-test' => 'lot-member-share'],
             ]);
     }

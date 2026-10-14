@@ -102,8 +102,8 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
         'Bulletins' => [['camille', 100], ['lea', 50]],
         'Recette' => [['julien', 50], ['lea', 50], ['thomas', 50]],
         'Publication sur les stores' => [['sophie', 50], ['chloe', 50], ['emma', 100]],
-        'Webhooks' => [['nathan', 100], ['karim', 50], ['lucas', 50]],
-        'Documentation' => [['ines', 100], ['lucas', 50]],
+        'Webhooks' => [['nathan', 100], ['karim', 50], ['lucas', 30]],
+        'Documentation' => [['ines', 100], ['lucas', 70]],
         'Tableau de bord partenaire' => [['maxime', 100]],
     ];
 
@@ -690,7 +690,7 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
     }
 
     /**
-     * @param list<array{string, int<25, 100>}> $team person key and share, owner first
+     * @param list<array{string, int<10, 100>}> $team person key and share, owner first
      */
     private function staff(Lot $leaf, array $team): void
     {

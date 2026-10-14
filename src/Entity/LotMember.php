@@ -12,7 +12,7 @@ use Doctrine\ORM\Mapping as ORM;
 class LotMember
 {
     /** The parts of their capacity a person can give to a leaf, in percent. */
-    public const array SHARES = [25, 50, 75, 100];
+    public const array SHARES = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
 
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -28,11 +28,11 @@ class LotMember
     #[ORM\JoinColumn(name: 'user_id', nullable: false)]
     private User $user;
 
-    /** @var int<25, 100> */
+    /** @var int<10, 100> */
     #[ORM\Column(name: 'share', type: Types::SMALLINT)]
     private int $share;
 
-    /** @param int<25, 100> $share */
+    /** @param int<10, 100> $share */
     public function __construct(Lot $lot, User $user, int $share)
     {
         $this->lot = $lot;
@@ -57,13 +57,13 @@ class LotMember
         return $this->user;
     }
 
-    /** @return int<25, 100> */
+    /** @return int<10, 100> */
     public function getShare(): int
     {
         return $this->share;
     }
 
-    /** @param int<25, 100> $share */
+    /** @param int<10, 100> $share */
     public function setShare(int $share): static
     {
         $this->share = $share;

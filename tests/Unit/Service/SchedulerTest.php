@@ -43,6 +43,12 @@ final class SchedulerTest extends TestCase
         $this->assertFuture('2026-10-05', '2026-10-30', $this->scheduleOf($this->plan(10, [self::ALICE => 50])));
     }
 
+    public function testTenthShareTakesFiveTimesAsLongAsAHalfShare(): void
+    {
+        $this->assertFuture('2026-10-05', '2026-10-08', $this->scheduleOf($this->plan(2, [self::ALICE => 50])));
+        $this->assertFuture('2026-10-05', '2026-10-30', $this->scheduleOf($this->plan(2, [self::ALICE => 10])));
+    }
+
     public function testHolidayOfAMemberPushesTheEnd(): void
     {
         $schedule = $this->scheduleOf($this->plan(10, [self::ALICE => 100]), $this->capacity(holidays: ['fr' => ['2026-10-07' => true]]));
@@ -199,7 +205,7 @@ final class SchedulerTest extends TestCase
 
     public function testRemainingTimeNotCoveredWithinTheHorizonHasNoEnd(): void
     {
-        $schedule = $this->scheduleOf($this->plan(2000, [self::ALICE => 25]), $this->capacity(weeklyMaxes: [self::ALICE => [['2026-01-05', 1]]]));
+        $schedule = $this->scheduleOf($this->plan(2000, [self::ALICE => 20]), $this->capacity(weeklyMaxes: [self::ALICE => [['2026-01-05', 1]]]));
 
         self::assertNull($schedule->end());
         self::assertTrue($schedule->teamToReview);
@@ -247,7 +253,7 @@ final class SchedulerTest extends TestCase
     }
 
     /**
-     * @param array<int, int<25, 100>> $members share by user id
+     * @param array<int, int<10, 100>> $members share by user id
      */
     private function plan(?int $estimateDays, array $members, int $consumedQuarters = 0, ?string $firstEntry = null, ?string $lastEntry = null, ?string $start = self::MONDAY, int $lotId = 1, ?LeafProgress $progress = null): LeafPlan
     {

@@ -48,7 +48,7 @@ final class LotInput
     /** The start date carried before this change, like the estimate. */
     public ?\DateTimeImmutable $currentStartDate = null;
 
-    /** @var array<int, int<25, 100>> the shares carried before this change, by person (object id) */
+    /** @var array<int, int<10, 100>> the shares carried before this change, by person (object id) */
     private array $currentShares = [];
 
     public static function forLotOf(Project $project): self
@@ -98,7 +98,7 @@ final class LotInput
      * The team rows with a person and a valid share, plus the owner when missing: the owner is always a member, with
      * the share they had, or 100 % when they join the team.
      *
-     * @return list<array{User, int<25, 100>}>
+     * @return list<array{User, int<10, 100>}>
      */
     public function effectiveMembers(): array
     {

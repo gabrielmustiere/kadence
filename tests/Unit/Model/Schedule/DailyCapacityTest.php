@@ -114,6 +114,15 @@ final class DailyCapacityTest extends TestCase
         self::assertSame(1, $capacity->timeOffHalves(self::ALICE, $this->day('2026-10-07')));
     }
 
+    public function testATenthShareGivesAWholeNumberOfUnitsEvenOnAHalfDayOff(): void
+    {
+        $capacity = $this->capacity(timeOff: [self::ALICE => ['2026-10-07' => 1]]);
+
+        self::assertSame(4800, $capacity->units(self::ALICE, 10, $this->day('2026-10-06')), '0,4 quarter.');
+        self::assertSame(2400, $capacity->units(self::ALICE, 10, $this->day('2026-10-07')), '0,2 quarter.');
+        self::assertSame(4 * DailyCapacity::UNITS_PER_QUARTER, 10 * $capacity->units(self::ALICE, 10, $this->day('2026-10-06')));
+    }
+
     public function testADayOffDoesNotCountAsAWorkingDayBetweenTwoDays(): void
     {
         $capacity = $this->capacity(timeOff: [self::ALICE => ['2026-10-07' => 2]]);

@@ -377,7 +377,7 @@ final class RoadmapBuilderTest extends KernelTestCase
             'Belgian national day, French member' => [[$french, 50], [$belgian, 50]],
             'Belgian national day, Belgian team' => [[$belgian, 50]],
             'Bastille Day, French team' => [[$french, 50]],
-            'Belgian national day, former French member' => [[$former, 100], [$belgian, 25]],
+            'Belgian national day, former French member' => [[$former, 100], [$belgian, 20]],
         ];
         $days = [
             'everyone off on Ascension' => ['2026-05-13', '2026-05-15'],

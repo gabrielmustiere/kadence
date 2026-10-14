@@ -10,15 +10,17 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 final class LotMemberInput
 {
+    public const string INVALID_SHARE = 'Choisissez une part de 10 à 100 %, par pas de 10.';
+
     #[Assert\NotNull(message: 'Choisissez une personne.')]
     public ?User $user = null;
 
     #[Assert\NotNull(message: 'Choisissez une part.')]
-    #[Assert\Choice(choices: LotMember::SHARES, message: 'Choisissez une part de 25, 50, 75 ou 100 %.')]
+    #[Assert\Choice(choices: LotMember::SHARES, message: self::INVALID_SHARE)]
     public ?int $share = 100;
 
     /**
-     * @param int<25, 100> $share
+     * @param int<10, 100> $share
      */
     public static function of(User $user, int $share): self
     {
