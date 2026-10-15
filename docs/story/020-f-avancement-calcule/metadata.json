@@ -32,6 +32,15 @@
       "date": "2026-10-15",
       "type": "Sync",
       "description": "5 écarts réalignés dans le plan, pitchs 012 et 018 et backlog (C5.5, estimation déclarative) révisés, aucune dette, 2 leçons."
+    },
+    {
+      "date": "2026-10-15",
+      "type": "Livraison",
+      "description": "Commit f34eec1 sur main."
     }
-  ]
+  ],
+  "delivery": {
+    "release": null,
+    "commit": "f34eec1"
+  }
 }
