@@ -20,14 +20,14 @@ async function adminSectionGap(page: Page): Promise<number> {
 
 test('sur un écran haut, la section Administration est collée en bas du menu', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
-  await login(page, 'admin@example.com');
+  await login(page, 'thomas.cerqueus@anyti.me');
 
   expect(Math.abs(await adminSectionGap(page))).toBeLessThanOrEqual(1);
 });
 
 test('sur un écran bas, la section Administration suit Pilotage sans la recouvrir', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 360 });
-  await login(page, 'admin@example.com');
+  await login(page, 'thomas.cerqueus@anyti.me');
 
   const timesheet = await page.locator('[data-test="nav-timesheet"]').boundingBox();
   const steering = await page.locator('[data-test="nav-steering"]').boundingBox();
@@ -44,7 +44,7 @@ test('sur un écran bas, la section Administration suit Pilotage sans la recouvr
 
 test('sur téléphone, le menu déroulant présente le même découpage, sans Administration pour la prod', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await login(page, 'prod@example.com');
+  await login(page, 'antoine.leroy@anyti.me');
 
   await expect(page.locator('[data-test="nav-timesheet"]')).not.toBeInViewport();
   await page.click('[data-test="sidebar-toggle"]');
@@ -57,7 +57,7 @@ test('sur téléphone, le menu déroulant présente le même découpage, sans Ad
 });
 
 test('l\'entrée de la page affichée est mise en évidence au fil de la navigation', async ({ page }) => {
-  await login(page, 'admin@example.com');
+  await login(page, 'thomas.cerqueus@anyti.me');
 
   await page.click('[data-test="nav-projects"]');
   await expect(page.locator('[data-test="nav-projects"]')).toHaveAttribute('aria-current', 'page');

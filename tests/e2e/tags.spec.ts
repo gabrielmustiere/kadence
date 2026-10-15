@@ -23,7 +23,7 @@ test('la direction ajoute, renomme puis supprime un tag', async ({ page }) => {
   const label = `E2E ${Date.now().toString(36)}`;
   const renamed = `${label} renommé`;
 
-  await login(page, 'admin@example.com');
+  await login(page, 'thomas.cerqueus@anyti.me');
   await page.click('[data-test="nav-tags"]');
   await page.check('[data-test="tag-category-experience"]');
   await page.fill('[data-test="tag-label"]', label);
@@ -50,7 +50,7 @@ test('la direction ajoute, renomme puis supprime un tag', async ({ page }) => {
 });
 
 test('un lead n\'a pas accès aux tags', async ({ page }) => {
-  await login(page, 'lead@example.com');
+  await login(page, 'olivier.thomas@anyti.me');
   await expect(page.locator('[data-test="nav-tags"]')).toHaveCount(0);
 
   const response = await page.goto('/tags');

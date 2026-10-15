@@ -28,7 +28,7 @@ final class LotProgressControllerTest extends WebTestCase
 
     public function testLeadDeclaresTheProgressOfALeafFromThePageOfItsProject(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
         self::mockTime('2026-10-02 10:00');
         $project = $this->createProject();
         $lot = $this->leafWithTime($project, 'Synchronisation', 20, 10);
@@ -43,12 +43,12 @@ final class LotProgressControllerTest extends WebTestCase
         self::assertSelectorTextContains('[data-test="lot-row"][data-title="Synchronisation"] [data-test="progress-declared-on"]', 'déclaré le 02/10');
         $declaration = $this->onlyDeclarationOf($lot);
         self::assertSame([40, 40, 60], [$declaration->getPercent(), $declaration->getEnteredQuarters(), $declaration->getRemainingQuarters()]);
-        self::assertSame('lead@example.com', $declaration->getAuthor()->getEmail());
+        self::assertSame('olivier.thomas@anyti.me', $declaration->getAuthor()->getEmail());
     }
 
     public function testADeclarationMadeOnAPageOpenedFromTheRoadmapComesBackToItWithTheWeek(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
         $project = $this->createProject();
         $this->createLot($project, 10, title: 'Écrans');
         $url = '/projets/' . $project->getId() . '?roadmap=2026-W50';
@@ -61,9 +61,9 @@ final class LotProgressControllerTest extends WebTestCase
 
     public function testDirectionDeclaresTheProgressOfAnyEstimatedLeaf(): void
     {
-        $client = $this->clientAs('admin@example.com');
+        $client = $this->clientAs('thomas.cerqueus@anyti.me');
         $project = $this->createProject();
-        $lot = $this->createLot($project, 10, $this->fixtureUser('lead@example.com'), title: 'Écrans');
+        $lot = $this->createLot($project, 10, $this->fixtureUser('olivier.thomas@anyti.me'), title: 'Écrans');
 
         $this->postProgress($client, $project, 'Écrans', '30');
 
@@ -73,11 +73,11 @@ final class LotProgressControllerTest extends WebTestCase
 
     public function testOwnerDeclaresTheProgressOfTheirLeafButReadsTheOthers(): void
     {
-        $client = $this->clientAs('prod@example.com');
+        $client = $this->clientAs('antoine.leroy@anyti.me');
         $project = $this->createProject();
-        $this->createLot($project, 10, $this->fixtureUser('prod@example.com'), title: 'Mien');
-        $other = $this->createLot($project, 10, $this->fixtureUser('lead@example.com'), title: 'Autre');
-        $this->createProgress($other, $this->fixtureUser('lead@example.com'), '2026-09-28', 40, 0);
+        $this->createLot($project, 10, $this->fixtureUser('antoine.leroy@anyti.me'), title: 'Mien');
+        $other = $this->createLot($project, 10, $this->fixtureUser('olivier.thomas@anyti.me'), title: 'Autre');
+        $this->createProgress($other, $this->fixtureUser('olivier.thomas@anyti.me'), '2026-09-28', 40, 0);
 
         $client->request('GET', '/projets/' . $project->getId());
 
@@ -95,7 +95,7 @@ final class LotProgressControllerTest extends WebTestCase
 
     public function testNoProgressOnASplitLotNorOnALeafToEstimate(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
         $project = $this->createProject();
         $split = $this->createLot($project, title: 'Découpé');
         $this->createLot($project, 3, parent: $split);
@@ -113,7 +113,7 @@ final class LotProgressControllerTest extends WebTestCase
 
     public function testAnInvalidTokenIsRefused(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
         $lot = $this->createLot($this->createProject(), 10);
 
         $client->request('POST', '/lots/' . $lot->getId() . '/avancement', ['percent' => '50', '_token' => 'invalide']);
@@ -124,7 +124,7 @@ final class LotProgressControllerTest extends WebTestCase
 
     public function testAPercentOffTheStepsIsRefusedWithAMessage(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
         $project = $this->createProject();
         $lot = $this->createLot($project, 10, title: 'Synchronisation');
 
@@ -138,7 +138,7 @@ final class LotProgressControllerTest extends WebTestCase
 
     public function testALeafWithoutTimeCannotBeDeclaredCompleteAtAHundredPercent(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
         $project = $this->createProject();
         $lot = $this->createLot($project, 10, title: 'Synchronisation');
 

@@ -36,7 +36,7 @@ test.beforeAll(() => {
   purge();
   sql(`INSERT INTO project (title) VALUES ('${project}')`);
   sql(`INSERT INTO lot (title, estimate_days, start_date, project_id) SELECT 'Synchronisation', 20, '${nextMonday()}', id FROM project WHERE title = '${project}'`);
-  sql(`INSERT INTO lot_member (share, lot_id, user_id) SELECT 100, l.id, u.id FROM lot l JOIN project p ON p.id = l.project_id JOIN "user" u ON u.email = 'admin@example.com' WHERE p.title = '${project}'`);
+  sql(`INSERT INTO lot_member (share, lot_id, user_id) SELECT 100, l.id, u.id FROM lot l JOIN project p ON p.id = l.project_id JOIN "user" u ON u.email = 'thomas.cerqueus@anyti.me' WHERE p.title = '${project}'`);
 });
 test.afterAll(purge);
 
@@ -49,7 +49,7 @@ async function login(page: Page, email: string) {
 }
 
 test('un lead déclare l\'avancement d\'une feuille et en lit l\'effet sans changer de page', async ({ page }) => {
-  await login(page, 'lead@example.com');
+  await login(page, 'olivier.thomas@anyti.me');
   await page.click('[data-test="nav-projects"]');
   await page.click(`[data-title="${project}"] [data-test="project-link"]`);
   await expect(page.locator('[data-test="project-page-heading"]')).toHaveText(project);

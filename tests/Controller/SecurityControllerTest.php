@@ -46,7 +46,7 @@ final class SecurityControllerTest extends WebTestCase
         $client->request('GET', '/login');
 
         $client->submitForm('Se connecter', [
-            '_username' => 'admin@example.com',
+            '_username' => 'thomas.cerqueus@anyti.me',
             '_password' => 'password',
         ]);
 
@@ -62,7 +62,7 @@ final class SecurityControllerTest extends WebTestCase
         $client->request('GET', '/login');
 
         $client->submitForm('Se connecter', [
-            '_username' => 'admin@example.com',
+            '_username' => 'thomas.cerqueus@anyti.me',
             '_password' => 'wrong-password',
         ]);
 
@@ -77,7 +77,7 @@ final class SecurityControllerTest extends WebTestCase
         $client->request('GET', '/login');
 
         $client->submitForm('Se connecter', [
-            '_username' => 'Admin@Example.COM',
+            '_username' => 'Thomas.Cerqueus@Anyti.ME',
             '_password' => 'password',
         ]);
 
@@ -90,7 +90,7 @@ final class SecurityControllerTest extends WebTestCase
         $this->resetLoginThrottling();
         $client->request('GET', '/login');
         $client->submitForm('Se connecter', [
-            '_username' => 'admin@example.com',
+            '_username' => 'thomas.cerqueus@anyti.me',
             '_password' => 'wrong-password',
         ]);
         $client->followRedirect();
@@ -98,7 +98,7 @@ final class SecurityControllerTest extends WebTestCase
 
         $client->request('GET', '/login');
         $client->submitForm('Se connecter', [
-            '_username' => 'ancien@example.com',
+            '_username' => 'arthur.petit@anyti.me',
             '_password' => 'password',
         ]);
 
@@ -115,7 +115,7 @@ final class SecurityControllerTest extends WebTestCase
         for ($attempt = 1; $attempt <= 6; ++$attempt) {
             $client->request('GET', '/login');
             $client->submitForm('Se connecter', [
-                '_username' => 'prod@example.com',
+                '_username' => 'antoine.leroy@anyti.me',
                 '_password' => 'wrong-password',
             ]);
         }
@@ -158,7 +158,7 @@ final class SecurityControllerTest extends WebTestCase
     {
         $client->request('GET', '/login');
         $client->submitForm('Se connecter', [
-            '_username' => 'admin@example.com',
+            '_username' => 'thomas.cerqueus@anyti.me',
             '_password' => 'password',
         ]);
     }

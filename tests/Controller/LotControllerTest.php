@@ -33,7 +33,7 @@ final class LotControllerTest extends WebTestCase
 
     public function testLeadChainsLotsWithAddAnother(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
         $project = $this->createProject();
         $url = '/projets/' . $project->getId() . '/lots/nouveau';
 
@@ -53,7 +53,7 @@ final class LotControllerTest extends WebTestCase
     #[DataProvider('invalidEstimateProvider')]
     public function testEstimateMustBeAPositiveWholeNumberOfDays(string $estimate): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
         $project = $this->createProject();
 
         $this->submitLotForm($client, '/projets/' . $project->getId() . '/lots/nouveau', ['title' => 'Socle', 'estimateDays' => $estimate]);
@@ -76,8 +76,8 @@ final class LotControllerTest extends WebTestCase
 
     public function testFirstSubLotTakesOverItsLotEstimateAndOwner(): void
     {
-        $client = $this->clientAs('lead@example.com');
-        $lead = $this->fixtureUser('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
+        $lead = $this->fixtureUser('olivier.thomas@anyti.me');
         $lot = $this->createLot($this->createProject(), 8, $lead);
 
         $crawler = $client->request('GET', '/lots/' . $lot->getId() . '/sous-lots/nouveau');
@@ -102,7 +102,7 @@ final class LotControllerTest extends WebTestCase
 
     public function testSplitLotOffersNeitherEstimateNorOwner(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
         $split = $this->createLot($this->createProject());
         $this->createLot($split->getProject(), 2, null, $split);
 
@@ -116,7 +116,7 @@ final class LotControllerTest extends WebTestCase
 
     public function testRenamingALotToASiblingTitleIsRefused(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
         $project = $this->createProject();
         $this->createLot($project, null, null, null, 'Front');
         $back = $this->createLot($project, null, null, null, 'Back');
@@ -130,7 +130,7 @@ final class LotControllerTest extends WebTestCase
 
     public function testSubLotCannotBeSplit(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
         $lot = $this->createLot($this->createProject());
         $subLot = $this->createLot($lot->getProject(), 2, null, $lot);
 
@@ -141,8 +141,8 @@ final class LotControllerTest extends WebTestCase
 
     public function testOwnerEditsTheirLeafWithoutChoosingTheOwner(): void
     {
-        $client = $this->clientAs('prod@example.com');
-        $prod = $this->fixtureUser('prod@example.com');
+        $client = $this->clientAs('antoine.leroy@anyti.me');
+        $prod = $this->fixtureUser('antoine.leroy@anyti.me');
         $leaf = $this->createLot($this->createProject(), 4, $prod);
 
         $crawler = $client->request('GET', '/lots/' . $leaf->getId() . '/modifier');
@@ -160,11 +160,11 @@ final class LotControllerTest extends WebTestCase
 
     public function testProdCannotEditOtherLotsNorManageTheStructure(): void
     {
-        $client = $this->clientAs('prod@example.com');
+        $client = $this->clientAs('antoine.leroy@anyti.me');
         $project = $this->createProject();
-        $othersLeaf = $this->createLot($project, 4, $this->fixtureUser('lead@example.com'));
+        $othersLeaf = $this->createLot($project, 4, $this->fixtureUser('olivier.thomas@anyti.me'));
         $split = $this->createLot($project);
-        $this->createLot($project, 2, $this->fixtureUser('prod@example.com'), $split);
+        $this->createLot($project, 2, $this->fixtureUser('antoine.leroy@anyti.me'), $split);
 
         foreach (['/lots/' . $othersLeaf->getId() . '/modifier', '/lots/' . $split->getId() . '/modifier', '/projets/' . $project->getId() . '/lots/nouveau', '/lots/' . $split->getId() . '/sous-lots/nouveau'] as $url) {
             $client->request('GET', $url);
@@ -177,11 +177,11 @@ final class LotControllerTest extends WebTestCase
 
     public function testOwnerChoicesListActivePeopleAndKeepADeactivatedCurrentOwner(): void
     {
-        $client = $this->clientAs('lead@example.com');
-        $former = $this->fixtureUser('ancien@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
+        $former = $this->fixtureUser('arthur.petit@anyti.me');
         $project = $this->createProject();
         $orphan = $this->createLot($project, 3, $former);
-        $assigned = $this->createLot($project, 3, $this->fixtureUser('lead@example.com'));
+        $assigned = $this->createLot($project, 3, $this->fixtureUser('olivier.thomas@anyti.me'));
 
         $crawler = $client->request('GET', '/lots/' . $assigned->getId() . '/modifier');
         self::assertStringNotContainsString('Arthur Petit', $crawler->filter('[data-test="lot-owner"]')->text());
@@ -196,7 +196,7 @@ final class LotControllerTest extends WebTestCase
 
     public function testTitlesAreUniqueAmongSiblingsOnly(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
         $project = $this->createProject();
         $front = $this->createLot($project, null, null, null, 'Front');
         $back = $this->createLot($project, null, null, null, 'Back');
@@ -216,8 +216,8 @@ final class LotControllerTest extends WebTestCase
 
     public function testDeletingTheLastSubLotMovesItsEstimateAndOwnerBackToItsLot(): void
     {
-        $client = $this->clientAs('lead@example.com');
-        $lead = $this->fixtureUser('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
+        $lead = $this->fixtureUser('olivier.thomas@anyti.me');
         $lot = $this->createLot($this->createProject(), null, null, null, 'Lot découpé');
         $this->createLot($lot->getProject(), 3, $lead, $lot, 'Dernier sous-lot');
 
@@ -235,7 +235,7 @@ final class LotControllerTest extends WebTestCase
 
     public function testDeletingALotFromAPageOpenedFromTheRoadmapComesBackToItWithTheWeek(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
         $project = $this->createProject();
         $this->createLot($project, 3, null, null, 'Éphémère');
         $url = '/projets/' . $project->getId() . '?roadmap=2026-W50';
@@ -251,7 +251,7 @@ final class LotControllerTest extends WebTestCase
 
     public function testEstimateCannotGoBelowTheConsumedTimeRoundedUp(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
         $lot = $this->createLotWithTime(5, [4, 4, 4, 1]);
         $url = '/lots/' . $lot->getId() . '/modifier';
 
@@ -274,7 +274,7 @@ final class LotControllerTest extends WebTestCase
 
     public function testALeafOverrunningItsEstimateStaysEditableWithoutRevisingIt(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
         $lot = $this->createLotWithTime(2, [4, 4, 4]);
         $url = '/lots/' . $lot->getId() . '/modifier';
 
@@ -292,7 +292,7 @@ final class LotControllerTest extends WebTestCase
 
     public function testFirstEstimateOfALeafCarryingTimeBecomesItsInitialEstimate(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
         $lot = $this->createLotWithTime(null, [2]);
 
         $this->submitLotForm($client, '/lots/' . $lot->getId() . '/modifier', ['estimateDays' => '6']);
@@ -304,7 +304,7 @@ final class LotControllerTest extends WebTestCase
 
     public function testFirstSubLotTakesOverTheTimeOfItsLot(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
         $lot = $this->createLotWithTime(8, [4, 1]);
 
         $this->submitLotForm($client, '/lots/' . $lot->getId() . '/sous-lots/nouveau', ['title' => 'Modèle']);
@@ -322,7 +322,7 @@ final class LotControllerTest extends WebTestCase
 
     public function testFirstSubLotCannotTakeOverAnEstimateBelowTheConsumedTime(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
         $lot = $this->createLotWithTime(8, [4, 4, 4]);
 
         $this->submitLotForm($client, '/lots/' . $lot->getId() . '/sous-lots/nouveau', ['title' => 'Modèle', 'estimateDays' => '2']);
@@ -333,7 +333,7 @@ final class LotControllerTest extends WebTestCase
 
     public function testALotCarryingTimeCannotBeDeleted(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
         $lot = $this->createLot($this->createProject(), 3);
         $crawler = $client->request('GET', '/projets/' . $lot->getProject()->getId());
         $deleteForm = $crawler->filter('[data-test="lot-delete-confirm"]')->form();
@@ -350,7 +350,7 @@ final class LotControllerTest extends WebTestCase
 
     public function testLeadPlansALeafWithAStartDateAndATeam(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
         $lead = $this->createUser();
         $prod = $this->createUser();
         $project = $this->createProject();
@@ -375,7 +375,7 @@ final class LotControllerTest extends WebTestCase
 
     public function testRemovingARowRemovesTheMemberButNeverTheOwner(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
         $lead = $this->createUser();
         $lot = $this->createLot($this->createProject(), 5, $lead);
         $this->planLot($lot, new \DateTimeImmutable('2026-10-05'), [[$lead, 50], [$this->createUser(), 50]]);
@@ -388,7 +388,7 @@ final class LotControllerTest extends WebTestCase
 
     public function testTheLeadSeesTheTagsOfEachPersonOfferedForTheTeamAndTheFilterOnThem(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
         $skill = $this->createTag(TagCategory::TechnicalSkill);
         $experience = $this->createTag(TagCategory::FunctionalExperience);
         $teamType = $this->createTag(TagCategory::TeamType);
@@ -409,7 +409,7 @@ final class LotControllerTest extends WebTestCase
 
     public function testTheTeamChoicesQueryCountDoesNotGrowWithTheTaggedPeopleOffered(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
         $lot = $this->planLot($this->createLot($this->createProject(), 5), new \DateTimeImmutable('2026-10-05'), [[$this->createUser(), 100]]);
         $url = '/lots/' . $lot->getId() . '/modifier';
         // The first request shares the entity manager that created the lot, and skews the count: measure from the second.
@@ -425,8 +425,8 @@ final class LotControllerTest extends WebTestCase
 
     public function testAnOwnerWhoIsNotALeadSeesNoTeamNorTags(): void
     {
-        $client = $this->clientAs('prod@example.com');
-        $leaf = $this->createLot($this->createProject(), 4, $this->fixtureUser('prod@example.com'));
+        $client = $this->clientAs('antoine.leroy@anyti.me');
+        $leaf = $this->createLot($this->createProject(), 4, $this->fixtureUser('antoine.leroy@anyti.me'));
         $this->giveTags($this->createUser(), $this->createTag());
 
         $client->request('GET', '/lots/' . $leaf->getId() . '/modifier');
@@ -438,7 +438,7 @@ final class LotControllerTest extends WebTestCase
 
     public function testOnlyActivePeopleAreOfferedAsMembersBesidesADeactivatedMemberAlreadyInTheTeam(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
         $former = $this->createUser();
         $member = $this->createUser();
         $lot = $this->planLot($this->createLot($this->createProject(), 5), new \DateTimeImmutable('2026-10-05'), [[$member, 100]]);
@@ -457,7 +457,7 @@ final class LotControllerTest extends WebTestCase
 
     public function testAPersonAppearsOnlyOnceInATeam(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
         $prod = (string) $this->createUser()->getId();
         $lot = $this->createLot($this->createProject(), 5);
 
@@ -470,8 +470,8 @@ final class LotControllerTest extends WebTestCase
 
     public function testPlanningIsReservedToLeadsOnLeaves(): void
     {
-        $client = $this->clientAs('prod@example.com');
-        $leaf = $this->createLot($this->createProject(), 4, $this->fixtureUser('prod@example.com'));
+        $client = $this->clientAs('antoine.leroy@anyti.me');
+        $leaf = $this->createLot($this->createProject(), 4, $this->fixtureUser('antoine.leroy@anyti.me'));
         $split = $this->createLot($leaf->getProject());
         $this->createLot($split->getProject(), 2, null, $split);
 
@@ -481,7 +481,7 @@ final class LotControllerTest extends WebTestCase
         self::assertResponseStatusCodeSame(422);
         self::assertNull($this->reloadLot($leaf)->getStartDate());
 
-        $client->loginUser($this->fixtureUser('lead@example.com'));
+        $client->loginUser($this->fixtureUser('olivier.thomas@anyti.me'));
         $client->request('GET', '/lots/' . $split->getId() . '/modifier');
         self::assertSelectorNotExists('[data-test="lot-planning"]');
         $client->request('GET', '/lots/' . $leaf->getId() . '/modifier');
@@ -490,7 +490,7 @@ final class LotControllerTest extends WebTestCase
 
     public function testFirstSubLotTakesOverTheStartDateAndTheTeamOfItsLot(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
         $lead = $this->createUser();
         $lot = $this->createLot($this->createProject(), 8, $lead);
         $this->planLot($lot, new \DateTimeImmutable('2026-10-05'), [[$lead, 70]]);
@@ -545,7 +545,7 @@ final class LotControllerTest extends WebTestCase
 
     public function testAShareOutsideTheTensIsRefused(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
         $lot = $this->createLot($this->createProject(), 5);
 
         $this->postLotForm($client, '/lots/' . $lot->getId() . '/modifier', ['members' => [['user' => (string) $this->createUser()->getId(), 'share' => '25']]]);
@@ -691,7 +691,7 @@ final class LotControllerTest extends WebTestCase
     {
         self::mockTime('2026-10-02 10:00');
 
-        return $this->clientAs('lead@example.com');
+        return $this->clientAs('olivier.thomas@anyti.me');
     }
 
     /**

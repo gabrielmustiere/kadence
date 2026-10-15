@@ -50,8 +50,8 @@ final class TeamControllerTest extends WebTestCase
      */
     public static function nonDirectorProvider(): \Generator
     {
-        yield 'lead' => ['lead@example.com'];
-        yield 'prod' => ['prod@example.com'];
+        yield 'lead' => ['olivier.thomas@anyti.me'];
+        yield 'prod' => ['antoine.leroy@anyti.me'];
     }
 
     public function testTheFormerTeamAddressesLeadPermanentlyToThePeoplePages(): void
@@ -77,7 +77,7 @@ final class TeamControllerTest extends WebTestCase
         $client->request('GET', '/personnes');
         self::assertSelectorExists('[data-test="team-new"]');
 
-        $client->loginUser($this->fixtureUser('lead@example.com'));
+        $client->loginUser($this->fixtureUser('olivier.thomas@anyti.me'));
         $client->request('GET', '/personnes');
         self::assertResponseIsSuccessful();
         self::assertSelectorNotExists('[data-test="team-new"]');
@@ -90,9 +90,9 @@ final class TeamControllerTest extends WebTestCase
         $client->request('GET', '/personnes');
 
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('[data-email="lead@example.com"] [data-test="member-role"]', 'Lead');
-        self::assertSelectorTextContains('[data-email="ancien@example.com"] [data-test="member-status"]', 'Désactivée');
-        self::assertSelectorNotExists('[data-email="prod@example.com"] [data-test="member-status"]');
+        self::assertSelectorTextContains('[data-email="olivier.thomas@anyti.me"] [data-test="member-role"]', 'Lead');
+        self::assertSelectorTextContains('[data-email="arthur.petit@anyti.me"] [data-test="member-status"]', 'Désactivée');
+        self::assertSelectorNotExists('[data-email="antoine.leroy@anyti.me"] [data-test="member-status"]');
     }
 
     public function testEachMemberLeadsToTheirPage(): void
@@ -134,7 +134,7 @@ final class TeamControllerTest extends WebTestCase
     {
         $client = $this->directorClient();
 
-        $this->submitMemberForm($client, '/personnes/nouveau', ['firstName' => 'Louis', 'lastName' => 'Bis', 'email' => 'LEAD@example.com', 'role' => 'prod']);
+        $this->submitMemberForm($client, '/personnes/nouveau', ['firstName' => 'Louis', 'lastName' => 'Bis', 'email' => 'OLIVIER.THOMAS@anyti.me', 'role' => 'prod']);
 
         self::assertResponseStatusCodeSame(422);
         self::assertSelectorTextContains('[data-test="team-member-form"]', 'déjà utilisé');
@@ -144,7 +144,7 @@ final class TeamControllerTest extends WebTestCase
     {
         $client = $this->directorClient();
 
-        $this->submitMemberForm($client, '/personnes/nouveau', ['firstName' => 'Arthur', 'lastName' => 'Petit', 'email' => 'ancien@example.com', 'role' => 'prod']);
+        $this->submitMemberForm($client, '/personnes/nouveau', ['firstName' => 'Arthur', 'lastName' => 'Petit', 'email' => 'arthur.petit@anyti.me', 'role' => 'prod']);
 
         self::assertResponseStatusCodeSame(422);
         self::assertSelectorTextContains('[data-test="team-member-form"]', 'réactivez-la');
@@ -258,7 +258,7 @@ final class TeamControllerTest extends WebTestCase
     public function testLastActiveDirectorCannotDemoteThemself(): void
     {
         $client = $this->directorClient();
-        $director = $this->fixtureUser('admin@example.com');
+        $director = $this->fixtureUser('thomas.cerqueus@anyti.me');
         $otherDirectors = array_values(array_filter(
             $this->userRepository()->findBy(['role' => Role::Direction, 'active' => true]),
             static fn (User $user): bool => $user !== $director,
@@ -441,7 +441,7 @@ final class TeamControllerTest extends WebTestCase
     private function directorClient(): KernelBrowser
     {
         $client = self::createClient();
-        $client->loginUser($this->fixtureUser('admin@example.com'));
+        $client->loginUser($this->fixtureUser('thomas.cerqueus@anyti.me'));
 
         return $client;
     }

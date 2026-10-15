@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 // Turbo 8 précharge les liens au survol : survoler « Déconnexion » ne doit pas déconnecter.
 test('hovering the logout link keeps the user logged in', async ({ page }) => {
   await page.goto('/login');
-  await page.fill('input[name="_username"]', 'admin@example.com');
+  await page.fill('input[name="_username"]', 'thomas.cerqueus@anyti.me');
   await page.fill('input[name="_password"]', 'password');
   await page.click('button[type="submit"]');
   await expect(page).not.toHaveURL(/\/login/);

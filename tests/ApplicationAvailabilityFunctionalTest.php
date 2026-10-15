@@ -16,7 +16,7 @@ final class ApplicationAvailabilityFunctionalTest extends WebTestCase
         $client = self::createClient();
         $userRepository = self::getContainer()->get(UserRepository::class);
         self::assertInstanceOf(UserRepository::class, $userRepository);
-        $user = $userRepository->findOneBy(['email' => 'admin@example.com']);
+        $user = $userRepository->findOneBy(['email' => 'thomas.cerqueus@anyti.me']);
         self::assertNotNull($user);
         $client->loginUser($user);
 

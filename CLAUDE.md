@@ -92,10 +92,10 @@ make quality                              # CS-Fixer (corrige) + PHPStan + build
 
 Tous avec le mot de passe `password` :
 
-- `admin@example.com` — direction (ROLE_DIRECTION)
-- `lead@example.com` — lead (ROLE_LEAD)
-- `prod@example.com` — prod (ROLE_PROD)
-- `ancien@example.com` — prod désactivé (connexion refusée)
+- `thomas.cerqueus@anyti.me` — direction (ROLE_DIRECTION)
+- `olivier.thomas@anyti.me` — lead (ROLE_LEAD)
+- `antoine.leroy@anyti.me` — prod (ROLE_PROD)
+- `arthur.petit@anyti.me` — prod désactivé (connexion refusée)
 
 Premier compte direction hors fixtures : `symfony console app:create-director`.
 

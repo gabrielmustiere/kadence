@@ -34,7 +34,7 @@ function header(page: Page, day: string): Locator {
 }
 
 test('la direction ajoute un jour férié à un seul calendrier', async ({ page }) => {
-  await login(page, 'admin@example.com');
+  await login(page, 'thomas.cerqueus@anyti.me');
   await page.click('[data-test="nav-holidays"]');
   await expect(page).toHaveURL(/\/jours-feries$/);
   await page.goto('/jours-feries/2030');
@@ -50,7 +50,7 @@ test('la direction ajoute un jour férié à un seul calendrier', async ({ page 
 });
 
 test('le jour ajouté est verrouillé et nommé dans la grille, sans barre de saisie', async ({ page }) => {
-  await login(page, 'prod@example.com');
+  await login(page, 'antoine.leroy@anyti.me');
   await page.goto('/saisie/2030-W24');
 
   await expect(header(page, '2030-06-12').locator('[data-test="day-holiday"]')).toHaveText('Férié · Remplacement E2E');
@@ -58,7 +58,7 @@ test('le jour ajouté est verrouillé et nommé dans la grille, sans barre de sa
   await expect(page.locator('[data-test="week-total"]')).toHaveText('0 j / 3 j');
 
   await page.click('[data-test="add-line-open"]');
-  await page.fill('[data-test="add-line-input"]', 'roadmap');
+  await page.fill('[data-test="add-line-input"]', 'relances');
   const result = page.locator('[data-test="add-line-result"]').first();
   const lotId = await result.getAttribute('data-lot');
   await result.click();
@@ -71,7 +71,7 @@ test('le jour ajouté est verrouillé et nommé dans la grille, sans barre de sa
 
 test('sur téléphone, un jour férié est signalé à la place de la saisie', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await login(page, 'prod@example.com');
+  await login(page, 'antoine.leroy@anyti.me');
   await page.goto('/saisie/2030-W24');
 
   await expect(page.locator('[data-test="holiday-notice"]')).toContainText('Jour férié · Lundi de Pentecôte');
@@ -84,19 +84,19 @@ test('sur téléphone, un jour férié est signalé à la place de la saisie', a
 });
 
 test('la direction annule l\'ajout, et la colonne redevient ordinaire', async ({ page }) => {
-  await login(page, 'admin@example.com');
+  await login(page, 'thomas.cerqueus@anyti.me');
   await page.goto('/jours-feries/2030');
   await line(page, 'fr', '2030-06-12').locator('[data-test="holiday-cancel"]').click();
   await expect(line(page, 'fr', '2030-06-12')).toHaveCount(0);
 
-  await login(page, 'prod@example.com');
+  await login(page, 'antoine.leroy@anyti.me');
   await page.goto('/saisie/2030-W24');
   await expect(header(page, '2030-06-12')).toHaveAttribute('data-holiday', 'false');
   await expect(page.locator('[data-test="week-total"]')).toHaveText('0 j / 4 j');
 });
 
 test('la direction retire un jour férié légal puis annule le retrait', async ({ page }) => {
-  await login(page, 'admin@example.com');
+  await login(page, 'thomas.cerqueus@anyti.me');
   await page.goto('/jours-feries/2030');
 
   await line(page, 'fr', '2030-11-11').locator('[data-test="holiday-remove"]').click();
@@ -108,7 +108,7 @@ test('la direction retire un jour férié légal puis annule le retrait', async 
 });
 
 test('un lead n\'accède pas aux jours fériés', async ({ page }) => {
-  await login(page, 'lead@example.com');
+  await login(page, 'olivier.thomas@anyti.me');
   await expect(page.locator('[data-test="nav-holidays"]')).toHaveCount(0);
 
   const response = await page.goto('/jours-feries');

@@ -61,9 +61,9 @@ final class PersonControllerTest extends WebTestCase
      */
     public static function viewerProvider(): \Generator
     {
-        yield 'direction' => ['admin@example.com', self::RESERVED];
-        yield 'lead' => ['lead@example.com', ['person-role', 'person-tags-competence', 'person-load', 'person-free-from', 'person-load-row']];
-        yield 'prod' => ['prod@example.com', []];
+        yield 'direction' => ['thomas.cerqueus@anyti.me', self::RESERVED];
+        yield 'lead' => ['olivier.thomas@anyti.me', ['person-role', 'person-tags-competence', 'person-load', 'person-free-from', 'person-load-row']];
+        yield 'prod' => ['antoine.leroy@anyti.me', []];
     }
 
     /**
@@ -94,9 +94,9 @@ final class PersonControllerTest extends WebTestCase
     {
         $lead = ['team-filter', 'member-role', 'member-team-type', 'member-tags'];
 
-        yield 'direction' => ['admin@example.com', self::LIST_RESERVED];
-        yield 'lead' => ['lead@example.com', $lead];
-        yield 'prod' => ['prod@example.com', []];
+        yield 'direction' => ['thomas.cerqueus@anyti.me', self::LIST_RESERVED];
+        yield 'lead' => ['olivier.thomas@anyti.me', $lead];
+        yield 'prod' => ['antoine.leroy@anyti.me', []];
     }
 
     public function testThePersonSeesEverythingOnTheirOwnPage(): void
@@ -111,7 +111,7 @@ final class PersonControllerTest extends WebTestCase
 
     public function testPageOfThePitch(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
         $alice = $this->createExample();
 
         $crawler = $client->request('GET', $this->url($alice));
@@ -161,12 +161,12 @@ final class PersonControllerTest extends WebTestCase
             $this->planLot($this->createLot($project, 5, $alice, title: $title), new \DateTimeImmutable('2026-10-05'), [[$alice, 100]]);
         }
 
-        $crawler = $this->clientAs('lead@example.com')->request('GET', $this->url($alice));
+        $crawler = $this->clientAs('olivier.thomas@anyti.me')->request('GET', $this->url($alice));
         self::assertCount(2, $crawler->filter('[data-test="person-leaf"] [data-test="signal-to_replan"]'));
         self::assertSame(['200'], $crawler->filter('[data-test="person-load-span"]')->each(static fn (Crawler $span): string => (string) $span->attr('data-percent')));
         self::assertStringContainsString('bg-danger-soft', (string) $crawler->filter('[data-test="person-load-span"]')->attr('class'), 'The days beyond a full load stand out.');
 
-        $crawler = $this->clientAs('prod@example.com')->request('GET', $this->url($alice));
+        $crawler = $this->clientAs('antoine.leroy@anyti.me')->request('GET', $this->url($alice));
         self::assertCount(0, $crawler->filter('[data-test="signal-to_replan"]'));
         self::assertCount(0, $crawler->filter('[data-test="person-load-span"]'));
     }
@@ -179,7 +179,7 @@ final class PersonControllerTest extends WebTestCase
             $this->planLot($this->createLot($project, 5, $alice, title: $title), new \DateTimeImmutable('2026-10-05'), [[$alice, 100]]);
         }
 
-        $crawler = $this->clientAs('lead@example.com')->request('GET', $this->url($alice));
+        $crawler = $this->clientAs('olivier.thomas@anyti.me')->request('GET', $this->url($alice));
 
         $friezeSignal = $crawler->filter('[data-test="person-leaf"][data-title="Première"] [data-test="signal-to_replan"]');
         $upcomingSignal = $crawler->filter('[data-test="person-upcoming"][data-controller="roadmap-tooltip"] [data-leaf="Première"] [data-test="signal-to_replan"]');
@@ -198,7 +198,7 @@ final class PersonControllerTest extends WebTestCase
         $this->createTimeEntry($alice, $leaf, '2026-09-28', 4);
         $this->createTimeEntry($alice, $leaf, '2026-09-29', 4);
 
-        $crawler = $this->clientAs('lead@example.com')->request('GET', $this->url($alice));
+        $crawler = $this->clientAs('olivier.thomas@anyti.me')->request('GET', $this->url($alice));
 
         $signals = $crawler->filter('[data-test="signal-overrun"]');
         self::assertGreaterThan(0, $signals->count());
@@ -207,7 +207,7 @@ final class PersonControllerTest extends WebTestCase
 
     public function testFreeDayIsUnknownWhileALeafOfTheirTeamsHasNoEnd(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
         $alice = $this->createExample();
         $this->createLot($this->createProject('Zèbre'), 5, $alice, title: 'Sans début');
 
@@ -221,7 +221,7 @@ final class PersonControllerTest extends WebTestCase
 
     public function testDeactivatedPersonKeepsTheirPageWithoutLoad(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
         $alice = $this->createExample();
         $alice->setActive(false);
         $this->entityManager()->flush();
@@ -238,7 +238,7 @@ final class PersonControllerTest extends WebTestCase
 
     public function testPersonWithNothingSaysSo(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
         $nobody = $this->createUser();
 
         $client->request('GET', $this->url($nobody));
@@ -255,14 +255,14 @@ final class PersonControllerTest extends WebTestCase
 
     public function testUnknownPersonIsNotFound(): void
     {
-        $this->clientAs('prod@example.com')->request('GET', '/personnes/999999');
+        $this->clientAs('antoine.leroy@anyti.me')->request('GET', '/personnes/999999');
 
         self::assertResponseStatusCodeSame(404);
     }
 
     public function testQueryCountDoesNotGrowWithTheNumberOfLeaves(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
         $few = $this->createUser();
         $many = $this->createUser();
         $leaf = $this->planLot($this->createLot($this->createProject(), 10, $few), new \DateTimeImmutable('2026-09-28'), [[$few, 100]]);
@@ -287,12 +287,12 @@ final class PersonControllerTest extends WebTestCase
         $person = $this->createUser();
         $this->createTimeOff($person, '2026-11-16', '2026-11-20');
 
-        $client->loginUser($this->fixtureUserByEmail('prod@example.com'));
+        $client->loginUser($this->fixtureUserByEmail('antoine.leroy@anyti.me'));
         $client->request('GET', $this->url($person));
         self::assertSelectorExists('[data-test="person-absences-upcoming"] [data-test="person-absence"]');
         self::assertSelectorNotExists('[data-test="person-absence-type"]');
 
-        foreach ([$person, $this->fixtureUserByEmail('admin@example.com')] as $viewer) {
+        foreach ([$person, $this->fixtureUserByEmail('thomas.cerqueus@anyti.me')] as $viewer) {
             $client->loginUser($viewer);
             $client->request('GET', $this->url($person));
             self::assertSelectorTextContains('[data-test="person-absence-type"]', 'CP');

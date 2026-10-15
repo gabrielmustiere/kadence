@@ -48,13 +48,13 @@ function purge() {
   sql(`DELETE FROM favorite_lot WHERE lot_id IN (${lots})`);
   sql(`DELETE FROM lot WHERE project_id IN (SELECT id FROM project WHERE title LIKE 'Saisie E2E %')`);
   sql(`DELETE FROM project WHERE title LIKE 'Saisie E2E %'`);
-  sql(`DELETE FROM weekly_max WHERE user_id = (SELECT id FROM "user" WHERE email = 'ancien@example.com')`);
+  sql(`DELETE FROM weekly_max WHERE user_id = (SELECT id FROM "user" WHERE email = 'arthur.petit@anyti.me')`);
 }
 
 test.beforeAll(() => {
   purge();
   neutralizeHolidays();
-  sql(`DELETE FROM time_entry WHERE user_id = (SELECT id FROM "user" WHERE email = 'prod@example.com') AND day >= '${iso(monday)}'`);
+  sql(`DELETE FROM time_entry WHERE user_id = (SELECT id FROM "user" WHERE email = 'antoine.leroy@anyti.me') AND day >= '${iso(monday)}'`);
   sql(`INSERT INTO project (title) VALUES ('${project}')`);
   for (const [title, days] of [['Alpha', 5], ['Bêta', 3], ['Gamma', 2]] as const) {
     sql(`INSERT INTO lot (title, estimate_days, project_id) SELECT '${title}', ${days}, id FROM project WHERE title = '${project}'`);
@@ -62,7 +62,7 @@ test.beforeAll(() => {
   for (const title of ['Alpha', 'Bêta']) {
     sql(`INSERT INTO time_entry (day, quarters, user_id, lot_id)
          SELECT '${iso(previousMonday)}', 1, u.id, l.id FROM "user" u, lot l JOIN project p ON p.id = l.project_id
-         WHERE u.email = 'prod@example.com' AND p.title = '${project}' AND l.title = '${title}'`);
+         WHERE u.email = 'antoine.leroy@anyti.me' AND p.title = '${project}' AND l.title = '${title}'`);
   }
 });
 
@@ -89,7 +89,7 @@ async function backgroundColors(bar: Locator): Promise<string[]> {
 }
 
 test('la connexion mène à la semaine, qui propose les lignes saisies la semaine précédente', async ({ page }) => {
-  await login(page, 'prod@example.com');
+  await login(page, 'antoine.leroy@anyti.me');
 
   await expect(page).toHaveURL(/\/saisie$/);
   await expect(page.locator('h1')).toHaveText('Ma semaine');
@@ -99,7 +99,7 @@ test('la connexion mène à la semaine, qui propose les lignes saisies la semain
 });
 
 test('une journée répartie sur deux lignes proposées se saisit en deux clics et la colonne passe au vert', async ({ page }) => {
-  await login(page, 'prod@example.com');
+  await login(page, 'antoine.leroy@anyti.me');
   const start = Date.now();
 
   await mondayBar(page, 'Alpha').locator('[data-value="2"]').click();
@@ -117,7 +117,7 @@ test('une journée répartie sur deux lignes proposées se saisit en deux clics 
 });
 
 test('le survol remplit les crans jusqu\'au cran pointé, le re-clic sur le cran actif vide la case', async ({ page }) => {
-  await login(page, 'prod@example.com');
+  await login(page, 'antoine.leroy@anyti.me');
   await mondayBar(page, 'Bêta').locator('[data-value="2"]').click();
   await expect(mondayBar(page, 'Bêta')).toHaveAttribute('data-quarters', '0');
   const bar = mondayBar(page, 'Alpha');
@@ -139,7 +139,7 @@ test('le survol remplit les crans jusqu\'au cran pointé, le re-clic sur le cran
 });
 
 test('les crans qui dépasseraient une journée sont verrouillés', async ({ page }) => {
-  await login(page, 'prod@example.com');
+  await login(page, 'antoine.leroy@anyti.me');
   await mondayBar(page, 'Alpha').locator('[data-value="3"]').click();
   await expect(mondayBar(page, 'Alpha')).toHaveAttribute('data-quarters', '3');
 
@@ -151,7 +151,7 @@ test('les crans qui dépasseraient une journée sont verrouillés', async ({ pag
 });
 
 test('une ligne ajoutée par la recherche disparaît au rechargement si elle ne reçoit aucun temps', async ({ page }) => {
-  await login(page, 'prod@example.com');
+  await login(page, 'antoine.leroy@anyti.me');
 
   await page.click('[data-test="add-line-open"]');
   await page.fill('[data-test="add-line-input"]', `${project} gamma`);
@@ -165,7 +165,7 @@ test('une ligne ajoutée par la recherche disparaît au rechargement si elle ne 
 });
 
 test('une feuille mise en favori depuis la recherche passe en tête de la grille, sur toutes les semaines', async ({ page }) => {
-  await login(page, 'prod@example.com');
+  await login(page, 'antoine.leroy@anyti.me');
 
   await page.click('[data-test="add-line-open"]');
   await page.fill('[data-test="add-line-input"]', `${project} gamma`);
@@ -197,7 +197,7 @@ test('une feuille mise en favori depuis la recherche passe en tête de la grille
 });
 
 test('on navigue de semaine en semaine', async ({ page }) => {
-  await login(page, 'prod@example.com');
+  await login(page, 'antoine.leroy@anyti.me');
   const label = page.locator('[data-test="week-label"]');
   const currentWeek = await label.getAttribute('data-week');
 
@@ -217,7 +217,7 @@ test('on navigue de semaine en semaine', async ({ page }) => {
 
 test('sur téléphone, la grille présente un jour à la fois', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await login(page, 'prod@example.com');
+  await login(page, 'antoine.leroy@anyti.me');
 
   await expect(page.locator('[data-test="day-header"]:visible')).toHaveCount(1);
   await page.locator(`[data-test="day-tab"][data-day="${iso(monday)}"]`).click();
@@ -228,7 +228,7 @@ test('sur téléphone, la grille présente un jour à la fois', async ({ page })
 });
 
 test('un lot qui porte des temps ne peut plus être supprimé', async ({ page }) => {
-  await login(page, 'lead@example.com');
+  await login(page, 'olivier.thomas@anyti.me');
   await page.click('[data-test="nav-projects"]');
   await page.click(`[data-title="${project}"] [data-test="project-link"]`);
 
@@ -240,14 +240,14 @@ test('un lot qui porte des temps ne peut plus être supprimé', async ({ page })
 });
 
 test('la direction fixe un maximum hebdomadaire à partir d\'une semaine, puis le supprime', async ({ page }) => {
-  await login(page, 'admin@example.com');
+  await login(page, 'thomas.cerqueus@anyti.me');
   await page.goto('/personnes');
-  await page.click('[data-email="ancien@example.com"] [data-test="member-edit"]');
+  await page.click('[data-email="arthur.petit@anyti.me"] [data-test="member-edit"]');
 
   await page.fill('[data-test="member-weekly-max"]', '4.5');
   await page.fill('[data-test="member-weekly-max-from"]', iso(shiftDays(monday, 9)));
   await page.click('[data-test="team-member-submit"]');
-  await page.click('[data-email="ancien@example.com"] [data-test="member-edit"]');
+  await page.click('[data-email="arthur.petit@anyti.me"] [data-test="member-edit"]');
 
   const entry = page.locator(`[data-test="weekly-max-entry"][data-from="${iso(shiftDays(monday, 7))}"]`);
   await expect(entry).toContainText('4,5 j');

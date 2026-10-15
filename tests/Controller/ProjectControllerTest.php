@@ -24,7 +24,7 @@ final class ProjectControllerTest extends WebTestCase
 
     public function testProdBrowsesProjectsButCannotManageThem(): void
     {
-        $client = $this->clientAs('prod@example.com');
+        $client = $this->clientAs('antoine.leroy@anyti.me');
         $project = $this->createProject();
 
         $client->request('GET', '/projets');
@@ -49,7 +49,7 @@ final class ProjectControllerTest extends WebTestCase
 
     public function testProjectsEntryIsShownToEveryone(): void
     {
-        $client = $this->clientAs('prod@example.com');
+        $client = $this->clientAs('antoine.leroy@anyti.me');
 
         $client->request('GET', '/');
 
@@ -58,7 +58,7 @@ final class ProjectControllerTest extends WebTestCase
 
     public function testLeadCreatesAProject(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
         $title = uniqid('Nouveau projet ', true);
 
         $this->submitProjectForm($client, '/projets/nouveau', ['title' => $title, 'description' => 'Refonte du portail client.']);
@@ -72,9 +72,10 @@ final class ProjectControllerTest extends WebTestCase
 
     public function testProjectTitleMustBeUniqueIgnoringCase(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
+        $accented = (string) $this->createProject(uniqid('Évolution ', true))->getTitle();
 
-        foreach (['KADENCE', 'évolution du portail'] as $title) {
+        foreach (['sca', mb_strtolower($accented)] as $title) {
             $this->submitProjectForm($client, '/projets/nouveau', ['title' => $title]);
             self::assertResponseStatusCodeSame(422, $title);
             self::assertSelectorTextContains('[data-test="project-form"]', 'Un projet porte déjà ce titre.');
@@ -83,7 +84,7 @@ final class ProjectControllerTest extends WebTestCase
 
     public function testLeadRenamesAProject(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
         $project = $this->createProject();
         $title = uniqid('Renommé ', true);
 
@@ -96,10 +97,10 @@ final class ProjectControllerTest extends WebTestCase
 
     public function testRenamingAProjectToAnExistingTitleIsRefused(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
         $project = $this->createProject();
 
-        $this->submitProjectForm($client, '/projets/' . $project->getId() . '/modifier', ['title' => 'kadence']);
+        $this->submitProjectForm($client, '/projets/' . $project->getId() . '/modifier', ['title' => 'sca']);
 
         self::assertResponseStatusCodeSame(422);
         self::assertSelectorTextContains('[data-test="project-form"]', 'Un projet porte déjà ce titre.');
@@ -107,53 +108,60 @@ final class ProjectControllerTest extends WebTestCase
 
     public function testListIsSortedAlphabeticallyWithAccentsFolded(): void
     {
-        $client = $this->clientAs('prod@example.com');
+        $client = $this->clientAs('antoine.leroy@anyti.me');
+
+        $accented = $this->createProject(uniqid('Évolution ', true));
 
         $crawler = $client->request('GET', '/projets');
 
         $titles = $crawler->filter('[data-test="project-row"]')->each(static fn ($row): string => (string) $row->attr('data-title'));
-        $portal = array_search('Évolution du portail', $titles, true);
-        $kadence = array_search('Kadence', $titles, true);
+        $evolution = array_search($accented->getTitle(), $titles, true);
+        $modernisation = array_search('Modernisation technique', $titles, true);
         $support = array_search('Support et maintenance', $titles, true);
-        self::assertIsInt($portal);
-        self::assertIsInt($kadence);
+        self::assertIsInt($evolution);
+        self::assertIsInt($modernisation);
         self::assertIsInt($support);
-        self::assertLessThan($kadence, $portal);
-        self::assertLessThan($support, $kadence);
+        self::assertLessThan($modernisation, $evolution);
+        self::assertLessThan($support, $modernisation);
     }
 
     public function testListShowsTotalsAndWhatIsLeftToComplete(): void
     {
-        $client = $this->clientAs('prod@example.com');
+        $client = $this->clientAs('antoine.leroy@anyti.me');
+        $project = $this->createProjectWithEverySignal();
+        $unsplit = $this->createProject();
 
         $client->request('GET', '/projets');
 
-        $kadence = '[data-title="Kadence"]';
-        self::assertSelectorTextContains($kadence . ' [data-test="estimate"]', '38 j');
-        self::assertSelectorExists($kadence . ' [data-test="estimate-partial"]');
-        self::assertSelectorTextContains($kadence . ' [data-test="signal-to-estimate"]', '1 à estimer');
-        self::assertSelectorTextContains($kadence . ' [data-test="signal-to-assign"]', '1 responsable à désigner');
-        self::assertSelectorTextContains($kadence . ' [data-test="signal-to-reassign"]', '1 responsable à remplacer');
-        self::assertSelectorExists('[data-title="Évolution du portail"] [data-test="signal-unsplit"]');
+        $row = \sprintf('[data-title="%s"]', $project->getTitle());
+        self::assertSelectorTextContains($row . ' [data-test="estimate"]', '38 j');
+        self::assertSelectorExists($row . ' [data-test="estimate-partial"]');
+        self::assertSelectorTextContains($row . ' [data-test="signal-to-estimate"]', '1 à estimer');
+        self::assertSelectorTextContains($row . ' [data-test="signal-to-assign"]', '1 responsable à désigner');
+        self::assertSelectorTextContains($row . ' [data-test="signal-to-reassign"]', '1 responsable à remplacer');
+        self::assertSelectorExists(\sprintf('[data-title="%s"] [data-test="signal-unsplit"]', $unsplit->getTitle()));
     }
 
     public function testMineFilterKeepsProjectsWhereIOwnALeaf(): void
     {
-        $client = $this->clientAs('prod@example.com');
+        $client = $this->clientAs('antoine.leroy@anyti.me');
+        $mine = $this->createProjectWithEverySignal();
+        $unsplit = $this->createProject();
 
         $client->request('GET', '/projets?mes-responsabilites=1');
 
-        self::assertSelectorExists('[data-title="Kadence"]');
+        self::assertSelectorExists(\sprintf('[data-title="%s"]', $mine->getTitle()));
         self::assertSelectorNotExists('[data-title="Support et maintenance"]');
-        self::assertSelectorNotExists('[data-title="Évolution du portail"]');
+        self::assertSelectorNotExists(\sprintf('[data-title="%s"]', $unsplit->getTitle()));
     }
 
     public function testProjectPageShowsTheTreeAndHighlightsMyLeaves(): void
     {
-        $client = $this->clientAs('prod@example.com');
+        $client = $this->clientAs('antoine.leroy@anyti.me');
+        $project = $this->createProjectWithEverySignal();
         $crawler = $client->request('GET', '/projets');
 
-        $client->click($crawler->filter('[data-title="Kadence"] [data-test="project-link"]')->link());
+        $client->click($crawler->filter(\sprintf('[data-title="%s"] [data-test="project-link"]', $project->getTitle()))->link());
 
         self::assertSelectorExists('[data-test="lot-row"][data-title="Modèle et règles"][data-mine="true"]');
         self::assertSelectorExists('[data-test="lot-row"][data-title="Écrans"][data-mine="false"]');
@@ -165,8 +173,8 @@ final class ProjectControllerTest extends WebTestCase
 
     public function testProjectPageWritesTheOverrunInDaysThenShareOfTheEstimate(): void
     {
-        $client = $this->clientAs('prod@example.com');
-        $owner = $this->fixtureUser('lead@example.com');
+        $client = $this->clientAs('antoine.leroy@anyti.me');
+        $owner = $this->fixtureUser('olivier.thomas@anyti.me');
         $project = $this->createProject();
         $lot = $this->createLot($project, 2, $owner, title: 'Dépassé');
         foreach (['2026-09-28' => 4, '2026-09-29' => 4, '2026-09-30' => 2] as $day => $quarters) {
@@ -182,8 +190,8 @@ final class ProjectControllerTest extends WebTestCase
 
     public function testProjectPageQueryCountDoesNotGrowWithItsLots(): void
     {
-        $client = $this->clientAs('prod@example.com');
-        $owner = $this->fixtureUser('lead@example.com');
+        $client = $this->clientAs('antoine.leroy@anyti.me');
+        $owner = $this->fixtureUser('olivier.thomas@anyti.me');
         $small = $this->createProject();
         $this->createLot($small, 3, $owner);
         $large = $this->createProject();
@@ -201,7 +209,7 @@ final class ProjectControllerTest extends WebTestCase
 
     public function testDeletingAProjectRemovesItsLotsAndSubLots(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
         $project = $this->createProject();
         $lot = $this->createLot($project);
         $subLot = $this->createLot($project, 2, null, $lot);
@@ -223,7 +231,7 @@ final class ProjectControllerTest extends WebTestCase
 
     public function testAProjectCarryingTimeCannotBeDeleted(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
         $project = $this->createProject();
         $split = $this->createLot($project);
         $subLot = $this->createLot($project, 2, null, $split);
@@ -244,12 +252,30 @@ final class ProjectControllerTest extends WebTestCase
 
     public function testDeletingWithAnInvalidCsrfTokenIsRefused(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
         $project = $this->createProject();
 
         $client->request('POST', '/projets/' . $project->getId() . '/supprimer', ['_token' => 'invalid']);
 
         self::assertResponseStatusCodeSame(403);
+    }
+
+    /**
+     * Antoine owns « Modèle et règles » and « Saisie des temps », the latter to estimate; « Roadmap » has no owner and
+     * « Rappels de saisie » belongs to a former member.
+     */
+    private function createProjectWithEverySignal(): Project
+    {
+        $project = $this->createProject();
+        $split = $this->createLot($project, title: 'Projets et lots');
+        $this->createLot($project, 10, $this->fixtureUser('olivier.thomas@anyti.me'), title: 'Socle et accès');
+        $this->createLot($project, 5, $this->fixtureUser('antoine.leroy@anyti.me'), $split, 'Modèle et règles');
+        $this->createLot($project, 8, $this->fixtureUser('olivier.thomas@anyti.me'), $split, 'Écrans');
+        $this->createLot($project, null, $this->fixtureUser('antoine.leroy@anyti.me'), title: 'Saisie des temps');
+        $this->createLot($project, 12, title: 'Roadmap');
+        $this->createLot($project, 3, $this->fixtureUser('arthur.petit@anyti.me'), title: 'Rappels de saisie');
+
+        return $project;
     }
 
     private function queryCount(KernelBrowser $client, Project $project): int

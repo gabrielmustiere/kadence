@@ -1,6 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 
-// S'appuie sur les tags de la démo : Symfony (Julien, Camille, Chloé, Karim, Lucas), Paie et Back pour Julien et Camille.
+// S'appuie sur les tags de la démo : Symfony (Gabriel, Maxime, Romain, Damien), SCA et Back pour Gabriel, Maxime et Romain.
 
 async function login(page: Page, email: string) {
   await page.goto('/login');
@@ -22,24 +22,24 @@ function people(select: ReturnType<Page['locator']>) {
 }
 
 test('un lead restreint les personnes proposées pour l\'équipe aux tags choisis', async ({ page }) => {
-  await login(page, 'lead@example.com');
-  await openLeaf(page, 'Atlas — Plateforme de paie', 'Régularisations');
+  await login(page, 'olivier.thomas@anyti.me');
+  await openLeaf(page, 'SCA', 'Recette');
 
   const rows = page.locator('[data-test="lot-member-row"] [data-test="lot-member-user"]');
-  const thomasRow = rows.first();
-  await expect(thomasRow.locator('option:checked')).toContainText('Thomas Girard — Front · React, TypeScript · Paie');
-  const everyone = await people(thomasRow).count();
+  const hobiRow = rows.first();
+  await expect(hobiRow.locator('option:checked')).toContainText('Hobi Lambert — QA · API REST, Playwright · Onboarding, SCA');
+  const everyone = await people(hobiRow).count();
 
   await page.selectOption('[data-test="lot-tag-filter-competence"]', { label: 'Symfony' });
-  await expect(people(thomasRow)).toHaveCount(6);
-  await expect(thomasRow.locator('option:checked')).toContainText('Thomas Girard');
-  await expect(people(thomasRow).filter({ hasText: 'Emma Rousseau' })).toHaveCount(0);
+  await expect(people(hobiRow)).toHaveCount(5);
+  await expect(hobiRow.locator('option:checked')).toContainText('Hobi Lambert');
+  await expect(people(hobiRow).filter({ hasText: 'Antoine Leroy' })).toHaveCount(0);
 
-  await page.selectOption('[data-test="lot-tag-filter-experience"]', { label: 'Paie' });
+  await page.selectOption('[data-test="lot-tag-filter-experience"]', { label: 'SCA' });
   await page.selectOption('[data-test="lot-tag-filter-equipe"]', { label: 'Back' });
   await page.click('[data-test="lot-member-add"]');
   const added = rows.last();
-  await expect(people(added)).toHaveText([/^Julien Moreau/, /^Camille Roux/]);
+  await expect(people(added)).toHaveText([/^Romain Garnier/, /^Gabriel Mustiere/, /^Maxime Roux/]);
 
   await page.selectOption('[data-test="lot-tag-filter-competence"]', '');
   await page.selectOption('[data-test="lot-tag-filter-experience"]', '');
@@ -48,8 +48,8 @@ test('un lead restreint les personnes proposées pour l\'équipe aux tags choisi
 });
 
 test('revenir sur une feuille filtrée par le bouton retour propose de nouveau tout le monde', async ({ page }) => {
-  await login(page, 'lead@example.com');
-  await openLeaf(page, 'Atlas — Plateforme de paie', 'Régularisations');
+  await login(page, 'olivier.thomas@anyti.me');
+  await openLeaf(page, 'SCA', 'Recette');
   const firstRow = page.locator('[data-test="lot-member-row"] [data-test="lot-member-user"]').first();
   const everyone = await people(firstRow).count();
 
@@ -64,8 +64,8 @@ test('revenir sur une feuille filtrée par le bouton retour propose de nouveau t
 });
 
 test('le formulaire d\'une feuille signale aussitôt une personne choisie deux fois, sans rien enregistrer', async ({ page }) => {
-  await login(page, 'lead@example.com');
-  await openLeaf(page, 'Atlas — Plateforme de paie', 'Régularisations');
+  await login(page, 'olivier.thomas@anyti.me');
+  await openLeaf(page, 'SCA', 'Recette');
   const rows = page.locator('[data-test="lot-member-row"]');
   const count = await rows.count();
   const first = await rows.first().locator('[data-test="lot-member-user"]').inputValue();

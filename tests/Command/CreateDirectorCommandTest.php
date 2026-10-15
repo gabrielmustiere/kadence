@@ -41,7 +41,7 @@ final class CreateDirectorCommandTest extends KernelTestCase
     public function testRefusesAlreadyUsedEmail(): void
     {
         $commandTester = $this->commandTester();
-        $commandTester->execute(['email' => 'ADMIN@example.com', 'first-name' => 'Alice', 'last-name' => 'Martin']);
+        $commandTester->execute(['email' => 'THOMAS.CERQUEUS@anyti.me', 'first-name' => 'Alice', 'last-name' => 'Martin']);
 
         self::assertSame(Command::FAILURE, $commandTester->getStatusCode());
         self::assertStringContainsString('déjà utilisé', $commandTester->getDisplay());

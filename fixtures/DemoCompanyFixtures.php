@@ -36,7 +36,7 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use function Symfony\Component\String\u;
 
 /**
- * A fake software company: four projects split into lots and sub-lots, a team with part-time
+ * A fake software company: three projects split into lots and sub-lots, a team with part-time
  * people and two people on the Belgian holiday calendar, and six months of time entries up to yesterday, none on a
  * holiday nor on a day off. Each week a team swarms on one leaf of its project, and its people lend a hand to another
  * project some days; two weeks of each person are approved paid leave. Test accounts get no entry in the current week
@@ -48,63 +48,60 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
     private const int WEEKS = 26;
     private const int SEED = 2026;
 
+    /** Test account key => its fixture reference and team. */
+    private const array TEST_ACCOUNTS = [
+        'thomas' => [AppFixtures::DIRECTOR, ''],
+        'olivier' => [AppFixtures::LEAD, 'onboarding'],
+        'antoine' => [AppFixtures::PROD, 'onboarding'],
+    ];
+
     /** People on the Belgian holiday calendar. */
-    private const array BELGIANS = ['hugo', 'ines'];
+    private const array BELGIANS = ['damien', 'lena'];
 
     /** Team => the team whose project it lends a hand to. */
-    private const array HELPS = ['atlas' => 'nova', 'nova' => 'orion', 'orion' => 'vega', 'vega' => 'atlas'];
+    private const array HELPS = ['sca' => 'modernisation', 'modernisation' => 'sca', 'onboarding' => 'sca'];
 
     /** Leaves left « à estimer » although time is entered on them. */
-    private const array TO_ESTIMATE = ['Notifications'];
+    private const array TO_ESTIMATE = ['Tests de charge'];
 
     /** A running leaf behind its estimate: its progress declarations, days before today then percent, the latest last. */
-    private const array PROGRESS_HISTORY = ['Bulletins' => [[21, 30], [7, 40], [0, 45]]];
+    private const array PROGRESS_HISTORY = ['Relances' => [[21, 30], [7, 40], [0, 45]]];
 
     /** A running leaf whose progress, declared two weeks ago when a quarter of its time was entered, is used up since. */
     private const string PROGRESS_TO_REFRESH = 'Documentation';
 
-    /**
-     * Person key => team type, technical skills, functional experiences. The test accounts carry no tag, so that the
-     * end-to-end scenarios start from a known profile.
-     */
+    /** Person key => team type, technical skills, functional experiences. */
     private const array PROFILES = [
-        'helene' => ['Produit', [], ['Paie', 'Ressources humaines']],
-        'julien' => ['Back', ['Symfony', 'PHP', 'PostgreSQL'], ['Paie']],
-        'camille' => ['Back', ['Symfony', 'PHP', 'Docker'], ['Paie', 'Ressources humaines']],
-        'thomas' => ['Front', ['React', 'TypeScript'], ['Paie']],
-        'lea' => ['QA', ['Playwright'], ['Paie', 'Facturation']],
-        'sophie' => ['Mobile', ['React Native', 'TypeScript'], ['Mobilité']],
-        'hugo' => ['Mobile', ['React Native'], ['Mobilité']],
-        'emma' => ['Front', ['React', 'TypeScript', 'Figma'], ['Mobilité']],
-        'chloe' => ['Back', ['Symfony', 'API REST'], ['Mobilité', 'Intégrations partenaires']],
-        'karim' => ['Back', ['Symfony', 'API REST', 'PostgreSQL'], ['Facturation', 'Intégrations partenaires']],
-        'nathan' => ['Back', ['PHP', 'API REST', 'Docker'], ['Facturation']],
-        'lucas' => ['Back', ['Symfony', 'PostgreSQL'], ['Facturation']],
-        'ines' => ['QA', ['Playwright', 'API REST'], ['Intégrations partenaires']],
-        'maxime' => ['Front', ['React', 'TypeScript'], ['Gestion documentaire']],
+        'thomas' => ['Direction', [], ['SCA', 'Socle technique']],
+        'thibaut' => ['Produit', [], ['SCA', 'Onboarding']],
+        'gabriel' => ['Back', ['Symfony', 'PHP', 'PostgreSQL', 'Docker'], ['SCA', 'Socle technique']],
+        'olivier' => ['Front', ['React', 'TypeScript', 'Stimulus'], ['Onboarding', 'SCA']],
+        'maxime' => ['Back', ['Symfony', 'PHP', 'PostgreSQL'], ['SCA']],
+        'romain' => ['Back', ['Symfony', 'PHP', 'API REST'], ['SCA', 'Onboarding']],
+        'damien' => ['Back', ['Symfony', 'Docker', 'CI'], ['Socle technique']],
+        'antoine' => ['Front', ['React', 'TypeScript'], ['Onboarding']],
+        'hobi' => ['QA', ['Playwright', 'API REST'], ['SCA', 'Onboarding']],
+        'lena' => ['Design', ['Figma'], ['Onboarding']],
     ];
 
-    /** Person key => their manager: Hélène heads the leads, each lead their team. */
+    /** Person key => their manager: Thomas heads Gabriel, Thibaut heads Olivier, each lead their team. */
     private const array MANAGERS = [
-        'julien' => 'helene', 'sophie' => 'helene', 'karim' => 'helene', 'louis' => 'helene',
-        'camille' => 'julien', 'thomas' => 'julien', 'lea' => 'julien',
-        'hugo' => 'sophie', 'emma' => 'sophie', 'chloe' => 'sophie',
-        'nathan' => 'karim', 'lucas' => 'karim', 'ines' => 'karim',
-        'maxime' => 'louis', 'paula' => 'louis',
+        'gabriel' => 'thomas', 'olivier' => 'thibaut',
+        'maxime' => 'gabriel', 'romain' => 'gabriel', 'damien' => 'gabriel', 'hobi' => 'gabriel',
+        'antoine' => 'olivier', 'lena' => 'olivier',
     ];
 
     /**
-     * The team of the running leaves, owner first: they start on the week of their first entry. Thomas is loaded at
-     * 150 % by Régularisations and Recette, as when a planning is overtaken by the time entered.
+     * The team of the running leaves, owner first: they start on the week of their first entry. Maxime is loaded at
+     * 150 % by Relances and Recette, as when a planning is overtaken by the time entered.
      */
     private const array TEAMS = [
-        'Régularisations' => [['thomas', 100], ['julien', 50]],
-        'Bulletins' => [['camille', 100], ['lea', 50]],
-        'Recette' => [['julien', 50], ['lea', 50], ['thomas', 50]],
-        'Publication sur les stores' => [['sophie', 50], ['chloe', 50], ['emma', 100]],
-        'Webhooks' => [['nathan', 100], ['karim', 50], ['lucas', 30]],
-        'Documentation' => [['ines', 100], ['lucas', 70]],
-        'Tableau de bord partenaire' => [['maxime', 100]],
+        'Relances' => [['maxime', 100], ['hobi', 50]],
+        'Recette' => [['hobi', 50], ['maxime', 50]],
+        'Tableaux de bord' => [['romain', 100]],
+        'Alerting' => [['damien', 80], ['gabriel', 50]],
+        'Documentation' => [['gabriel', 50], ['damien', 20]],
+        'Tableau de bord d\'accueil' => [['lena', 100]],
     ];
 
     /**
@@ -112,20 +109,20 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
      * and last ISO day of that week with their half-day, type and status.
      */
     private const array TIME_OFF = [
-        ['hugo', 1, 3, HalfDay::Afternoon, 3, HalfDay::Afternoon, TimeOffType::Rtt, TimeOffStatus::Approved],
-        ['emma', 3, 1, HalfDay::Morning, 5, HalfDay::Afternoon, TimeOffType::PaidLeave, TimeOffStatus::Approved],
-        ['chloe', 2, 5, HalfDay::Morning, 5, HalfDay::Afternoon, TimeOffType::Rtt, TimeOffStatus::Pending],
-        ['maxime', 2, 1, HalfDay::Morning, 1, HalfDay::Afternoon, TimeOffType::Rtt, TimeOffStatus::Pending],
-        ['nathan', 5, 1, HalfDay::Morning, 3, HalfDay::Afternoon, TimeOffType::PaidLeave, TimeOffStatus::Refused],
-        ['ines', 4, 1, HalfDay::Morning, 5, HalfDay::Afternoon, TimeOffType::PaidLeave, TimeOffStatus::Cancelled],
-        ['lucas', 6, 1, HalfDay::Morning, 5, HalfDay::Afternoon, TimeOffType::FamilyEvent, TimeOffStatus::Pending],
+        ['romain', 1, 3, HalfDay::Afternoon, 3, HalfDay::Afternoon, TimeOffType::Rtt, TimeOffStatus::Approved],
+        ['hobi', 3, 1, HalfDay::Morning, 5, HalfDay::Afternoon, TimeOffType::PaidLeave, TimeOffStatus::Approved],
+        ['damien', 2, 4, HalfDay::Morning, 4, HalfDay::Afternoon, TimeOffType::Rtt, TimeOffStatus::Pending],
+        ['lena', 2, 1, HalfDay::Morning, 1, HalfDay::Afternoon, TimeOffType::Rtt, TimeOffStatus::Pending],
+        ['maxime', 5, 1, HalfDay::Morning, 3, HalfDay::Afternoon, TimeOffType::PaidLeave, TimeOffStatus::Refused],
+        ['gabriel', 4, 1, HalfDay::Morning, 5, HalfDay::Afternoon, TimeOffType::PaidLeave, TimeOffStatus::Cancelled],
+        ['thibaut', 6, 1, HalfDay::Morning, 5, HalfDay::Afternoon, TimeOffType::FamilyEvent, TimeOffStatus::Pending],
     ];
 
     /** The entitlements declared to everyone, in half-days, for the current and the previous period. */
     private const array ENTITLEMENTS = ['cp' => 50, 'rtt' => 20];
 
     /** A leaf planned two weeks ago on which nobody has entered time yet: title, estimate in days, team (owner first). */
-    private const array LATE_START = ['Migration des clients', 15, [['karim', 50]]];
+    private const array LATE_START = ['Migration des clients', 15, [['romain', 50]]];
 
     /**
      * Person key => first name, last name, role, team, weekly quarters, day off (ISO day) or null, first week, weekly
@@ -136,20 +133,13 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
     private static function people(): array
     {
         return [
-            'helene' => ['Hélène', 'Garnier', Role::Direction, '', 20, null, 0, null],
-            'julien' => ['Julien', 'Moreau', Role::Lead, 'atlas', 20, null, 0, null],
-            'camille' => ['Camille', 'Roux', Role::Prod, 'atlas', 20, null, 0, null],
-            'thomas' => ['Thomas', 'Girard', Role::Prod, 'atlas', 20, null, 0, null],
-            'lea' => ['Léa', 'Fontaine', Role::Prod, 'atlas', 16, 3, 0, null],
-            'sophie' => ['Sophie', 'Lefèvre', Role::Lead, 'nova', 20, null, 0, null],
-            'hugo' => ['Hugo', 'Chevalier', Role::Prod, 'nova', 20, null, 0, null],
-            'emma' => ['Emma', 'Rousseau', Role::Prod, 'nova', 18, null, 0, null],
-            'chloe' => ['Chloé', 'Mercier', Role::Prod, 'nova', 20, null, 0, null],
-            'karim' => ['Karim', 'Benali', Role::Lead, 'orion', 20, null, 0, null],
-            'nathan' => ['Nathan', 'Blanc', Role::Prod, 'orion', 20, null, 0, null],
-            'lucas' => ['Lucas', 'Faure', Role::Prod, 'orion', 20, null, 0, [16, 13]],
-            'ines' => ['Inès', 'Lambert', Role::Prod, 'orion', 20, null, 0, null],
-            'maxime' => ['Maxime', 'Dupuis', Role::Prod, 'vega', 20, null, 18, null],
+            'thibaut' => ['Thibaut', 'Fleuriot', Role::Direction, '', 20, null, 0, null],
+            'gabriel' => ['Gabriel', 'Mustiere', Role::Lead, 'modernisation', 20, null, 0, null],
+            'maxime' => ['Maxime', 'Roux', Role::Prod, 'sca', 20, null, 0, null],
+            'romain' => ['Romain', 'Garnier', Role::Prod, 'sca', 18, null, 0, null],
+            'hobi' => ['Hobi', 'Lambert', Role::Prod, 'sca', 20, null, 10, null],
+            'damien' => ['Damien', 'Faure', Role::Prod, 'modernisation', 20, null, 0, [16, 13]],
+            'lena' => ['Lena', 'Fontaine', Role::Prod, 'onboarding', 16, 3, 0, null],
         ];
     }
 
@@ -163,31 +153,26 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
     private static function projects(): array
     {
         return [
-            'atlas' => ['Atlas — Plateforme de paie', 'Nouveau moteur de paie et écrans de gestion des variables.', [
+            'sca' => ['SCA', 'Évolutions du produit SCA : facturation, exports et reprise des clients existants.', [
                 'Cadrage' => [0, 2],
-                'Moteur de calcul' => ['subLots' => ['Cotisations' => [2, 14], 'Absences' => [6, 16], 'Régularisations' => [14, 26]]],
-                'Écrans' => ['subLots' => ['Saisie des variables' => [10, 20], 'Bulletins' => [16, 26]]],
+                'Module de facturation' => ['subLots' => ['Modèle de données' => [2, 10], 'Calcul des échéances' => [6, 16], 'Relances' => [14, 26]]],
+                'Exports' => ['subLots' => ['Exports comptables' => [10, 20], 'Tableaux de bord' => [16, 26]]],
                 'Recette' => [21, 26],
-            ]],
-            'nova' => ['Nova — Application mobile', 'Application mobile des salariés, utilisable hors ligne.', [
-                'Maquettes' => [0, 4],
-                'Authentification' => [3, 7],
-                'Synchronisation hors ligne' => ['subLots' => ['File d\'attente' => [6, 15], 'Résolution des conflits' => [12, 22]]],
-                'Notifications' => [18, 26],
-                'Publication sur les stores' => [23, 26],
-            ]],
-            'orion' => ['Orion — Refonte de l\'API', 'API publique versionnée pour les intégrateurs.', [
-                'Audit de l\'existant' => [0, 3],
-                'Versionnage' => [3, 9],
-                'Endpoints' => ['subLots' => ['Clients' => [8, 15], 'Factures' => [13, 21], 'Webhooks' => [18, 26]]],
-                'Documentation' => [20, 26],
                 'Migration des clients' => null,
             ]],
-            'vega' => ['Vega — Portail partenaires', 'Portail documentaire et tableau de bord pour les partenaires.', [
-                'Découverte' => [0, 3],
-                'Espace documentaire' => ['subLots' => ['Arborescence' => [3, 12], 'Recherche' => [10, 20]]],
-                'Tableau de bord partenaire' => [17, 26],
-                'Accès et droits' => [8, 14],
+            'modernisation' => ['Modernisation technique', 'Montées de version, intégration continue et observabilité de la plateforme.', [
+                'Audit de l\'existant' => [0, 3],
+                'Montée de version' => ['subLots' => ['PHP 8.5' => [3, 9], 'Symfony 8' => [8, 16]]],
+                'Intégration continue' => [6, 14],
+                'Observabilité' => ['subLots' => ['Logs centralisés' => [14, 22], 'Alerting' => [18, 26]]],
+                'Documentation' => [20, 26],
+                'Tests de charge' => [22, 26],
+            ]],
+            'onboarding' => ['Onboarding', 'Parcours d\'arrivée des nouveaux clients, de l\'inscription au premier usage.', [
+                'Maquettes' => [0, 4],
+                'Inscription' => [3, 9],
+                'Parcours guidé' => ['subLots' => ['Assistant de configuration' => [8, 16], 'Import des données' => [12, 22]]],
+                'Tableau de bord d\'accueil' => [17, 26],
             ]],
         ];
     }
@@ -256,7 +241,7 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
     private function loadPeople(ObjectManager $manager, Week $firstWeek): void
     {
         foreach (self::people() as $key => [$firstName, $lastName, $role, , $quarters, , , $change]) {
-            $email = \sprintf('%s.%s@example.com', $key, u($lastName)->ascii()->lower()->toString());
+            $email = \sprintf('%s.%s@anyti.me', $key, u($lastName)->ascii()->lower()->toString());
             /** @var non-empty-string $email */
             $user = new User()->setEmail($email)->setFirstName($firstName)->setLastName($lastName)->setRole($role)
                 ->setHolidayCalendar(\in_array($key, self::BELGIANS, true) ? HolidayCalendar::Belgium : HolidayCalendar::France);
@@ -272,8 +257,9 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
             }
         }
 
-        $this->people['louis'] = $this->getReference(AppFixtures::LEAD, User::class);
-        $this->people['paula'] = $this->getReference(AppFixtures::PROD, User::class);
+        foreach (self::TEST_ACCOUNTS as $key => [$reference]) {
+            $this->people[$key] = $this->getReference($reference, User::class);
+        }
     }
 
     private function loadProfiles(ObjectManager $manager): void
@@ -374,7 +360,7 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
     {
         $members = [];
         foreach ($this->people as $key => $person) {
-            if ($team === (self::people()[$key][3] ?? 'vega')) {
+            if ($team === (self::people()[$key][3] ?? self::TEST_ACCOUNTS[$key][1] ?? '')) {
                 $members[] = $person;
             }
         }
@@ -383,13 +369,13 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
     }
 
     /**
-     * The test accounts pin their current leaf and the support; Paula also pins a leaf she owns but has not worked on.
+     * The test accounts pin their current leaf and the support.
      */
     private function loadFavorites(ObjectManager $manager, Lot $support): void
     {
         $favorites = [
-            'paula' => [$this->leaves['Tableau de bord partenaire'], $support, $this->getReference(ProjectFixtures::TIMESHEET, Lot::class)],
-            'louis' => [$this->leaves['Tableau de bord partenaire'], $support],
+            'antoine' => [$this->leaves['Tableau de bord d\'accueil'], $support],
+            'olivier' => [$this->leaves['Tableau de bord d\'accueil'], $support],
         ];
         foreach ($favorites as $key => $leaves) {
             foreach ($leaves as $leaf) {
@@ -400,12 +386,12 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
 
     private function loadTimeEntries(ObjectManager $manager, string $key, User $person, Week $firstWeek, \DateTimeImmutable $today, Lot $support): void
     {
-        [, , $role, $team, $quarters, $dayOff, $firstActiveWeek, $change] = self::people()[$key] ?? ['', '', Role::Prod, 'vega', 20, null, 0, null];
-        if (Role::Direction === $role) {
+        [, , , $team, $quarters, $dayOff, $firstActiveWeek, $change] = self::people()[$key] ?? ['', '', Role::Prod, self::TEST_ACCOUNTS[$key][1] ?? '', 20, null, 0, null];
+        if (Role::Direction === $person->getRole()) {
             return;
         }
 
-        $isTestAccount = \in_array($key, ['louis', 'paula'], true);
+        $isTestAccount = isset(self::TEST_ACCOUNTS[$key]);
         $currentMonday = Week::containing($today)->monday;
         $holidays = [mt_rand(4, 10), mt_rand(15, 22)];
 
@@ -622,7 +608,7 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
             $percent = max(1, min(100, $percent));
             $entered = max(0, $entered);
             $remaining = LeafProgress::anchoredRemaining($percent, $entered, ($leaf->getEstimateDays() ?? 0) * 4);
-            $author = $leaf->getOwner() ?? $this->people['helene'];
+            $author = $leaf->getOwner() ?? $this->people['thomas'];
             $manager->persist(new LotProgress($leaf, $author, $today->modify(\sprintf('-%d days', $daysAgo)), $percent, $entered, $remaining));
         };
         $consumed = fn (Lot $leaf): int => $this->consumed[(int) $leaf->getId()] ?? 0;
@@ -678,7 +664,7 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
     {
         $requestedAt = $start->modify('-3 weeks')->setTime(9, 0);
         $request = new TimeOffRequest($person, $type, $start, $startHalf, $end, $endHalf, null, $requestedAt);
-        $manager = $person->getManager() ?? $this->people['helene'];
+        $manager = $person->getManager() ?? $this->people['thomas'];
         match ($status) {
             TimeOffStatus::Pending => null,
             TimeOffStatus::Approved => $request->approve($manager, $requestedAt->modify('+1 day')),

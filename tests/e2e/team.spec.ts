@@ -17,7 +17,7 @@ test('la direction inscrit une personne qui choisit son mot de passe à la premi
   const email = `e2e-${Date.now().toString(36)}@example.com`;
   const newPassword = 'Une phrase de passe assez longue 2026';
 
-  await login(page, 'admin@example.com', 'password');
+  await login(page, 'thomas.cerqueus@anyti.me', 'password');
   await page.click('[data-test="nav-people"]');
   await page.click('[data-test="team-new"]');
 
@@ -48,7 +48,7 @@ test('la direction inscrit une personne qui choisit son mot de passe à la premi
 });
 
 test('un membre de prod lit la liste des personnes sans pouvoir la gérer', async ({ page }) => {
-  await login(page, 'prod@example.com', 'password');
+  await login(page, 'antoine.leroy@anyti.me', 'password');
   await expect(page.locator('h1')).toContainText('Ma semaine');
   await page.click('[data-test="nav-people"]');
 
@@ -61,7 +61,7 @@ test('un membre de prod lit la liste des personnes sans pouvoir la gérer', asyn
 });
 
 test('la direction filtre l\'équipe dès qu\'elle choisit un tag, et désactive puis réactive sans perdre ses filtres', async ({ page }) => {
-  await login(page, 'admin@example.com', 'password');
+  await login(page, 'thomas.cerqueus@anyti.me', 'password');
   await expect(page).not.toHaveURL(/\/login/);
   await page.goto('/personnes');
   const rows = page.locator('[data-test="team-member-row"]');
@@ -69,19 +69,19 @@ test('la direction filtre l\'équipe dès qu\'elle choisit un tag, et désactive
 
   await page.selectOption('[data-test="team-filter-competence"]', { label: 'Symfony' });
   await expect(page).toHaveURL(/[?&]competence=\d+/);
-  await expect(rows).toHaveCount(5);
-  expect(all).toBeGreaterThan(5);
+  await expect(rows).toHaveCount(4);
+  expect(all).toBeGreaterThan(4);
 
-  const camille = page.locator('[data-email="camille.roux@example.com"]');
-  await camille.locator('[data-test="member-deactivate"]').click();
-  await camille.locator('[data-test="member-deactivate-confirm"]').click();
+  const maxime = page.locator('[data-email="maxime.roux@anyti.me"]');
+  await maxime.locator('[data-test="member-deactivate"]').click();
+  await maxime.locator('[data-test="member-deactivate-confirm"]').click();
   await expect(page.locator('[role="alert"]')).toContainText('est désactivé');
-  await expect(camille.locator('[data-test="member-status"]')).toHaveText('Désactivée');
+  await expect(maxime.locator('[data-test="member-status"]')).toHaveText('Désactivée');
   await expect(page).toHaveURL(/[?&]competence=\d+/);
-  await expect(rows).toHaveCount(5);
+  await expect(rows).toHaveCount(4);
 
-  await camille.locator('[data-test="member-reactivate"]').click();
-  await expect(camille.locator('[data-test="member-status"]')).toHaveCount(0);
+  await maxime.locator('[data-test="member-reactivate"]').click();
+  await expect(maxime.locator('[data-test="member-status"]')).toHaveCount(0);
 
   await page.click('[data-test="team-filter-reset"]');
   await expect(rows).toHaveCount(all);

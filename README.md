@@ -70,7 +70,7 @@ Toutes les opérations courantes passent par `make`. Lancez `make help` pour la 
 
 ## Identifiants de test
 
-- `admin@example.com` / `password` (ROLE_USER)
+- `thomas.cerqueus@anyti.me` / `password` (direction) ; `olivier.thomas@anyti.me` (lead) ; `antoine.leroy@anyti.me` (prod)
 
 ## Déploiement
 

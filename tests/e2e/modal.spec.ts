@@ -11,13 +11,13 @@ test('modal opens and closes without JS errors', async ({ page }) => {
   });
 
   await page.goto('/login');
-  await page.fill('input[name="_username"]', 'admin@example.com');
+  await page.fill('input[name="_username"]', 'thomas.cerqueus@anyti.me');
   await page.fill('input[name="_password"]', 'password');
   await page.click('button[type="submit"]');
   await expect(page).not.toHaveURL(/\/login/);
 
   await page.goto('/personnes');
-  const row = page.locator('[data-email="lead@example.com"]');
+  const row = page.locator('[data-email="olivier.thomas@anyti.me"]');
   const dialog = row.locator('dialog', { has: page.locator('[data-test="member-deactivate-cancel"]') });
   await row.locator('[data-test="member-deactivate"]').click();
   await expect(dialog).toBeVisible();

@@ -54,14 +54,14 @@ final class RoadmapControllerTest extends WebTestCase
      */
     public static function roleProvider(): \Generator
     {
-        yield 'direction' => ['admin@example.com'];
-        yield 'lead' => ['lead@example.com'];
-        yield 'prod' => ['prod@example.com'];
+        yield 'direction' => ['thomas.cerqueus@anyti.me'];
+        yield 'lead' => ['olivier.thomas@anyti.me'];
+        yield 'prod' => ['antoine.leroy@anyti.me'];
     }
 
     public function testPlannedLeafShowsItsBarsWithTheirDetailsInTooltips(): void
     {
-        $client = $this->clientAs('prod@example.com');
+        $client = $this->clientAs('antoine.leroy@anyti.me');
         $alice = $this->createUser();
         $project = $this->createProject();
         $leaf = $this->planLot($this->createLot($project, 10, $alice, title: 'Socle'), new \DateTimeImmutable('2026-10-05'), [[$alice, 100]]);
@@ -95,7 +95,7 @@ final class RoadmapControllerTest extends WebTestCase
 
     public function testInterruptedLeafHasATooltipPerSegmentAndARecapOfTheWholeLeaf(): void
     {
-        $client = $this->clientAs('prod@example.com');
+        $client = $this->clientAs('antoine.leroy@anyti.me');
         $alice = $this->createUser();
         $project = $this->createProject();
         $leaf = $this->planLot($this->createLot($project, 10, $alice, title: 'Interrompue'), new \DateTimeImmutable('2026-09-07'), [[$alice, 100]]);
@@ -125,7 +125,7 @@ final class RoadmapControllerTest extends WebTestCase
 
     public function testOverrunLeafShowsByHowMuchAndThatItsEndIsUnknown(): void
     {
-        $client = $this->clientAs('prod@example.com');
+        $client = $this->clientAs('antoine.leroy@anyti.me');
         $alice = $this->createUser();
         $project = $this->createProject();
         $leaf = $this->planLot($this->createLot($project, 2, $alice, title: 'Dépassée'), new \DateTimeImmutable('2026-10-01'), [[$alice, 100]]);
@@ -155,7 +155,7 @@ final class RoadmapControllerTest extends WebTestCase
 
     public function testProgressShowsInTheTooltipAndRecapOfALeafAndItsSignalsToEveryone(): void
     {
-        $client = $this->clientAs('prod@example.com');
+        $client = $this->clientAs('antoine.leroy@anyti.me');
         $alice = $this->createUser();
         $project = $this->createProject();
         $declared = $this->planLot($this->createLot($project, 10, $alice, title: 'Avancée'), new \DateTimeImmutable('2026-10-05'), [[$alice, 100]]);
@@ -189,7 +189,7 @@ final class RoadmapControllerTest extends WebTestCase
 
     public function testTooltipOfASegmentSaysWhatEachPersonEnteredOnIt(): void
     {
-        $client = $this->clientAs('prod@example.com');
+        $client = $this->clientAs('antoine.leroy@anyti.me');
         $alice = $this->createUser();
         $outsider = $this->createUser();
         $project = $this->createProject();
@@ -208,11 +208,12 @@ final class RoadmapControllerTest extends WebTestCase
 
     public function testLeavesWithoutABarSayWhatTheyMissAndTheirProjectIsPartial(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
         $project = $this->createProject();
         $this->createLot($project, null, title: 'À estimer');
         $this->createLot($project, 5, $this->createUser(), title: 'Sans début');
         $this->planLot($this->createLot($project, 5, title: 'Sans équipe'), new \DateTimeImmutable('2026-10-12'), []);
+        $unsplit = $this->createProject();
 
         $crawler = $client->request('GET', '/roadmap');
 
@@ -228,12 +229,12 @@ final class RoadmapControllerTest extends WebTestCase
         self::assertSame('non calculée', $recap('Sans début', 'roadmap-recap-end'));
         self::assertSame('aucune saisie', $recap('Sans début', 'roadmap-recap-period'));
         self::assertSame('sans équipe', $recap('Sans équipe', 'roadmap-recap-team'));
-        self::assertCount(1, $crawler->filter('[data-test="roadmap-project"][data-title="Évolution du portail"] [data-test="signal-unsplit"]'));
+        self::assertCount(1, $crawler->filter(\sprintf('[data-test="roadmap-project"][data-title="%s"] [data-test="signal-unsplit"]', $unsplit->getTitle())));
     }
 
     public function testPlannedProjectWritesTheEndOfItsLatestLeafNextToItsTitle(): void
     {
-        $client = $this->clientAs('prod@example.com');
+        $client = $this->clientAs('antoine.leroy@anyti.me');
         $alice = $this->createUser();
         $project = $this->createProject();
         $bob = $this->createUser();
@@ -293,7 +294,7 @@ final class RoadmapControllerTest extends WebTestCase
 
     public function testPartialProjectLeavesOutItsUnplannedLeavesAndSaysWhatTheyMiss(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
         $alice = $this->createUser();
         $project = $this->createProject();
         $this->planLot($this->createLot($project, 10, $alice, title: 'Socle'), new \DateTimeImmutable('2026-10-12'), [[$alice, 100]]);
@@ -314,11 +315,12 @@ final class RoadmapControllerTest extends WebTestCase
 
     public function testProjectWithNothingPlannedOrNoLotSaysSo(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
         $project = $this->createProject();
         $this->createLot($project, null, title: 'À estimer');
         $this->createLot($project, 5, $this->createUser(), title: 'Sans début');
         $this->planLot($this->createLot($project, 5, title: 'Sans équipe'), new \DateTimeImmutable('2026-10-12'), []);
+        $unsplit = $this->createProject();
 
         $crawler = $client->request('GET', '/roadmap');
 
@@ -326,9 +328,9 @@ final class RoadmapControllerTest extends WebTestCase
         self::assertSame('Non planifié : 3 lots', $end->text());
         self::assertSame('unplanned', $end->attr('data-state'));
         self::assertCount(3, $crawler->filter(\sprintf('[data-test="roadmap-project"][data-title="%s"] summary [data-test="unknown-end"]', $project->getTitle())));
-        $unsplit = $crawler->filter('[data-test="roadmap-project"][data-title="Évolution du portail"] summary [data-test="roadmap-end"]');
-        self::assertSame('Pas encore découpé en lots', $unsplit->text());
-        self::assertSame('unsplit', $unsplit->attr('data-state'));
+        $unsplitEnd = $crawler->filter(\sprintf('[data-test="roadmap-project"][data-title="%s"] summary [data-test="roadmap-end"]', $unsplit->getTitle()));
+        self::assertSame('Pas encore découpé en lots', $unsplitEnd->text());
+        self::assertSame('unsplit', $unsplitEnd->attr('data-state'));
     }
 
     public function testNoEndExplanationEverSaysToReplan(): void
@@ -339,7 +341,7 @@ final class RoadmapControllerTest extends WebTestCase
         $this->planLot($this->createLot($project, 10, $alice, title: 'Seconde'), new \DateTimeImmutable('2026-10-19'), [[$alice, 50]]);
         $this->createLot($project, null, title: 'À estimer');
 
-        $crawler = $this->clientAs('lead@example.com')->request('GET', '/roadmap');
+        $crawler = $this->clientAs('olivier.thomas@anyti.me')->request('GET', '/roadmap');
 
         $projectRow = $crawler->filter(\sprintf('[data-test="roadmap-project"][data-title="%s"]', $project->getTitle()));
         self::assertCount(2, $projectRow->filter('[data-test="signal-to_replan"]'));
@@ -350,12 +352,13 @@ final class RoadmapControllerTest extends WebTestCase
 
     public function testEndOutsideTheWindowIsStillWrittenAndMarkedAtTheEdgeOfTheFrieze(): void
     {
-        $client = $this->clientAs('prod@example.com');
+        $client = $this->clientAs('antoine.leroy@anyti.me');
         $alice = $this->createUser();
         $past = $this->createProject();
         $this->planLot($this->createLot($past, 10, $alice, title: 'Socle'), new \DateTimeImmutable('2026-10-12'), [[$alice, 100]]);
         $future = $this->createProject();
         $this->planLot($this->createLot($future, 5, $alice, title: 'Suite'), new \DateTimeImmutable('2027-09-06'), [[$alice, 100]]);
+        $unsplit = $this->createProject();
         $row = static fn (Crawler $crawler, string $title): Crawler => $crawler->filter(\sprintf('[data-test="roadmap-project"][data-title="%s"]', $title));
 
         $crawler = $client->request('GET', '/roadmap/2027-W30');
@@ -369,12 +372,13 @@ final class RoadmapControllerTest extends WebTestCase
         $crawler = $client->request('GET', '/roadmap');
         self::assertSame('after', $row($crawler, (string) $future->getTitle())->filter('summary [data-test="roadmap-outside"]')->attr('data-side'));
         self::assertCount(0, $row($crawler, (string) $past->getTitle())->filter('[data-test="roadmap-outside"]'));
-        self::assertCount(0, $crawler->filter('[data-test="roadmap-project"][data-title="Évolution du portail"] [data-test="roadmap-outside"]'), 'A project without dates has no mark.');
+        self::assertCount(1, $row($crawler, (string) $unsplit->getTitle()));
+        self::assertCount(0, $row($crawler, (string) $unsplit->getTitle())->filter('[data-test="roadmap-outside"]'), 'A project without dates has no mark.');
     }
 
     public function testEachSignalSaysInATooltipWhatItMeansAndWhyItShows(): void
     {
-        $client = $this->clientAs('prod@example.com');
+        $client = $this->clientAs('antoine.leroy@anyti.me');
         $project = $this->createProject();
         $this->createLot($project, 5, $this->createUser(), title: 'Sans début');
 
@@ -405,17 +409,17 @@ final class RoadmapControllerTest extends WebTestCase
         $this->planLot($this->createLot($project, 10, $alice, title: 'Seconde'), new \DateTimeImmutable('2026-10-19'), [[$alice, 50]]);
         $selector = \sprintf('[data-test="roadmap-project"][data-title="%s"] [data-test="signal-to_replan"]', $project->getTitle());
 
-        $crawler = $this->clientAs('lead@example.com')->request('GET', '/roadmap');
+        $crawler = $this->clientAs('olivier.thomas@anyti.me')->request('GET', '/roadmap');
         self::assertCount(2, $crawler->filter($selector));
 
-        $crawler = $this->clientAs('prod@example.com')->request('GET', '/roadmap');
+        $crawler = $this->clientAs('antoine.leroy@anyti.me')->request('GET', '/roadmap');
         self::assertCount(0, $crawler->filter($selector));
         self::assertStringNotContainsString('à replanifier', (string) $crawler->filter('[data-test="roadmap"]')->html());
     }
 
     public function testLeadOpensALeafFromTheRoadmapAndComesBackToTheSameWindow(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
         $project = $this->createProject();
         $leaf = $this->createLot($project, 5, title: 'Socle');
 
@@ -434,7 +438,7 @@ final class RoadmapControllerTest extends WebTestCase
 
     public function testNavigatesByFourWeeksAndRefusesAWeekThatDoesNotExist(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
 
         $crawler = $client->request('GET', '/roadmap/2026-W50');
         self::assertResponseIsSuccessful();
@@ -449,7 +453,7 @@ final class RoadmapControllerTest extends WebTestCase
 
     public function testQueryCountDoesNotGrowWithTheNumberOfLeaves(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
         $small = $this->queryCount($client);
 
         $alice = $this->createUser();

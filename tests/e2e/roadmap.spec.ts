@@ -1,7 +1,7 @@
 import { test, expect, Page, Locator } from '@playwright/test';
 import { execFileSync } from 'node:child_process';
 
-// Le projet est créé en SQL puis planifié par le formulaire ; Paula Durand n'a aucune feuille planifiée dans les
+// Le projet est créé en SQL puis planifié par le formulaire ; Antoine Leroy n'a aucune feuille planifiée dans les
 // fixtures, elle peut donc rejoindre l'équipe sans surcharge. La feuille interrompue est saisie en SQL par l'ancien
 // collaborateur, que les autres specs n'utilisent pas.
 test.describe.configure({ mode: 'serial' });
@@ -49,7 +49,7 @@ test.beforeAll(() => {
   sql(`INSERT INTO lot (title, estimate_days, project_id) SELECT 'Socle', 10, id FROM project WHERE title = '${project}'`);
 
   const days = [...weekDays(-3), weekDays(-2)[2], ...weekDays(-1)];
-  const leafAndFormer = `lot l JOIN project p ON p.id = l.project_id JOIN "user" u ON u.email = 'ancien@example.com'`;
+  const leafAndFormer = `lot l JOIN project p ON p.id = l.project_id JOIN "user" u ON u.email = 'arthur.petit@anyti.me'`;
   const interrupted = `p.title = '${project}' AND l.title = 'Interrompue'`;
   sql(`INSERT INTO lot (title, estimate_days, start_date, project_id) SELECT 'Interrompue', 12, '${days[0]}', id FROM project WHERE title = '${project}'`);
   sql(`INSERT INTO lot_member (share, lot_id, user_id) SELECT 100, l.id, u.id FROM ${leafAndFormer} WHERE ${interrupted}`);
@@ -87,7 +87,7 @@ function projectRow(page: Page): Locator {
 }
 
 test('un lead planifie une feuille et la voit sur la roadmap', async ({ page }) => {
-  await login(page, 'lead@example.com');
+  await login(page, 'olivier.thomas@anyti.me');
   await page.click('[data-test="nav-projects"]');
   await page.click(`[data-title="${project}"] [data-test="project-link"]`);
   await page.click('[data-test="lot-row"][data-title="Socle"] [data-test="lot-edit"]');
@@ -96,13 +96,13 @@ test('un lead planifie une feuille et la voit sur la roadmap', async ({ page }) 
   await expect(page.locator('[data-test="lot-member-row"]')).toHaveCount(0);
   await rendered(page, () => page.click('[data-test="lot-member-add"]'));
   const row = page.locator('[data-test="lot-member-row"]').last();
-  await rendered(page, () => row.locator('[data-test="lot-member-user"]').selectOption({ label: 'Paula Durand' }));
+  await rendered(page, () => row.locator('[data-test="lot-member-user"]').selectOption({ label: 'Antoine Leroy — Front · React, TypeScript · Onboarding' }));
   await rendered(page, () => row.locator('[data-test="lot-member-share"]').selectOption({ label: '30 %' }));
   await rendered(page, () => page.click('[data-test="lot-member-add"]'));
   await rendered(page, () => page.locator('[data-test="lot-member-remove"]').last().click());
   await expect(page.locator('[data-test="lot-member-row"]')).toHaveCount(1);
   await expect(page.locator('[name="lot[members][1][user]"]')).toHaveCount(0);
-  await expect(page.locator('[data-test="lot-member-user"] option:checked')).toHaveText('Paula Durand');
+  await expect(page.locator('[data-test="lot-member-user"] option:checked')).toHaveText('Antoine Leroy — Front · React, TypeScript · Onboarding');
   await page.click('[data-test="lot-submit"]');
   await expect(page.locator('[data-test="lot-row"][data-title="Socle"]')).toBeVisible();
 
@@ -117,13 +117,13 @@ test('un lead planifie une feuille et la voit sur la roadmap', async ({ page }) 
   await bringIntoView(leaf);
   await leaf.locator('[data-test="roadmap-bar-future"]').hover();
   await expect(tooltip).toBeVisible();
-  await expect(tooltip.locator('[data-test="roadmap-team"]')).toHaveText('Paula Durand 30 %');
+  await expect(tooltip.locator('[data-test="roadmap-team"]')).toHaveText('Antoine Leroy 30 %');
   await expect(tooltip.locator('[data-test="roadmap-remaining"]')).toHaveText('10 j');
   await expect(projectRow(page).locator('summary [data-test="roadmap-bar-span"]')).toBeVisible();
 });
 
 test('chaque tronçon a son infobulle, une seule à la fois, et le titre donne le récap de la feuille', async ({ page }) => {
-  await login(page, 'prod@example.com');
+  await login(page, 'antoine.leroy@anyti.me');
   await page.goto('/roadmap');
   await projectRow(page).locator('summary').click();
   const leaf = projectRow(page).locator('[data-test="roadmap-leaf"][data-title="Interrompue"]');
@@ -154,7 +154,7 @@ test('chaque tronçon a son infobulle, une seule à la fois, et le titre donne l
 });
 
 test('le récap d\'une feuille s\'ouvre au clavier', async ({ page }) => {
-  await login(page, 'prod@example.com');
+  await login(page, 'antoine.leroy@anyti.me');
   await page.goto('/roadmap');
   await projectRow(page).locator('summary').click();
   const leaf = projectRow(page).locator('[data-test="roadmap-leaf"][data-title="Interrompue"]');
@@ -167,7 +167,7 @@ test('le récap d\'une feuille s\'ouvre au clavier', async ({ page }) => {
 });
 
 test('une pastille explique au survol et au clavier ce qu\'elle signifie et pourquoi elle s\'affiche', async ({ page }) => {
-  await login(page, 'prod@example.com');
+  await login(page, 'antoine.leroy@anyti.me');
   await page.goto('/roadmap');
   await projectRow(page).locator('summary').click();
   const leaf = projectRow(page).locator('[data-test="roadmap-leaf"][data-title="Interrompue"]');
@@ -190,7 +190,7 @@ test('une pastille explique au survol et au clavier ce qu\'elle signifie et pour
 });
 
 test('une infobulle ouverte se ferme avant que Turbo ne mette la page en cache', async ({ page }) => {
-  await login(page, 'prod@example.com');
+  await login(page, 'antoine.leroy@anyti.me');
   await page.goto('/roadmap');
   await projectRow(page).locator('summary').click();
   await page.mouse.move(0, 0);
@@ -204,7 +204,7 @@ test('une infobulle ouverte se ferme avant que Turbo ne mette la page en cache',
 });
 
 test('la frise se zoome de ×1 à ×8, garde son palier en naviguant et rouvre sur aujourd\'hui', async ({ page }) => {
-  await login(page, 'prod@example.com');
+  await login(page, 'antoine.leroy@anyti.me');
   await page.goto('/roadmap');
   await projectRow(page).locator('summary').click();
   const level = page.locator('[data-test="roadmap-zoom-level"]');
@@ -236,7 +236,7 @@ test('la frise se zoome de ×1 à ×8, garde son palier en naviguant et rouvre s
 });
 
 test('la frise avance de quatre semaines et revient à aujourd\'hui', async ({ page }) => {
-  await login(page, 'prod@example.com');
+  await login(page, 'antoine.leroy@anyti.me');
   await page.goto('/roadmap');
   const period = await page.locator('[data-test="roadmap-period"]').textContent();
 
@@ -252,7 +252,7 @@ test('la frise avance de quatre semaines et revient à aujourd\'hui', async ({ p
 });
 
 test('un projet déplié le reste quand on navigue dans la frise', async ({ page }) => {
-  await login(page, 'prod@example.com');
+  await login(page, 'antoine.leroy@anyti.me');
   await page.goto('/roadmap');
   const leaf = projectRow(page).locator('[data-test="roadmap-leaf"][data-title="Socle"]');
   await projectRow(page).locator('summary').click();
@@ -269,7 +269,7 @@ test('un projet déplié le reste quand on navigue dans la frise', async ({ page
 });
 
 test('un lead ouvre une feuille depuis la roadmap et y revient à la même fenêtre', async ({ page }) => {
-  await login(page, 'lead@example.com');
+  await login(page, 'olivier.thomas@anyti.me');
   await page.goto('/roadmap');
   await page.click('[data-test="roadmap-next"]');
   await expect(page).toHaveURL(/\/roadmap\/\d{4}-W\d{2}$/);
@@ -286,7 +286,7 @@ test('un lead ouvre une feuille depuis la roadmap et y revient à la même fenê
 });
 
 test('l\'icône d\'un projet ouvre sa page sans le déplier, et la page ramène à la même fenêtre', async ({ page }) => {
-  await login(page, 'prod@example.com');
+  await login(page, 'antoine.leroy@anyti.me');
   await page.goto('/roadmap');
   await page.click('[data-test="roadmap-next"]');
   await expect(page).toHaveURL(/\/roadmap\/\d{4}-W\d{2}$/);
@@ -306,7 +306,7 @@ test('l\'icône d\'un projet ouvre sa page sans le déplier, et la page ramène 
 });
 
 test('la fiche s\'ouvre à ×1 sans toucher au zoom de la roadmap, et détaille chaque tronçon', async ({ page }) => {
-  await login(page, 'prod@example.com');
+  await login(page, 'antoine.leroy@anyti.me');
   await page.goto('/roadmap');
   const level = page.locator('[data-test="roadmap-zoom-level"]');
   await page.click('[data-test="roadmap-zoom-in"]');
@@ -341,7 +341,7 @@ test('la fiche s\'ouvre à ×1 sans toucher au zoom de la roadmap, et détaille 
 
 test('sur un téléphone, la fin d\'un projet se lit sans faire défiler la frise, à tout zoom', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await login(page, 'prod@example.com');
+  await login(page, 'antoine.leroy@anyti.me');
   await page.goto('/roadmap');
   const end = projectRow(page).locator('summary [data-test="roadmap-end"]');
   const level = page.locator('[data-test="roadmap-zoom-level"]');

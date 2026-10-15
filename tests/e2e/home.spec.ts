@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { execFileSync } from 'node:child_process';
 
 // Le serveur tourne à la date réelle et les fixtures tirent au hasard les journées oubliées : la personne de ce
-// scénario, copiée de prod@example.com en SQL, n'a saisi aucun temps. Ses jours ouvrés passés sont donc incomplets.
+// scénario, copiée de antoine.leroy@anyti.me en SQL, n'a saisi aucun temps. Ses jours ouvrés passés sont donc incomplets.
 const email = `e2e-home-${Date.now().toString(36)}@example.com`;
 
 function sql(query: string) {
@@ -11,7 +11,7 @@ function sql(query: string) {
 
 test.beforeAll(() => {
   sql(`INSERT INTO "user" (email, password, first_name, last_name, role, active, must_change_password, holiday_calendar)
-       SELECT '${email}', password, 'Hugo', 'Accueil', role, 1, 0, holiday_calendar FROM "user" WHERE email = 'prod@example.com'`);
+       SELECT '${email}', password, 'Hugo', 'Accueil', role, 1, 0, holiday_calendar FROM "user" WHERE email = 'antoine.leroy@anyti.me'`);
 });
 
 test.afterAll(() => {

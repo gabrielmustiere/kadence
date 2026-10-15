@@ -49,8 +49,8 @@ final class HolidayControllerTest extends WebTestCase
      */
     public static function nonDirectorProvider(): \Generator
     {
-        yield 'lead' => ['lead@example.com'];
-        yield 'prod' => ['prod@example.com'];
+        yield 'lead' => ['olivier.thomas@anyti.me'];
+        yield 'prod' => ['antoine.leroy@anyti.me'];
     }
 
     public function testTheCurrentYearListsTheLegalHolidaysOfBothCalendarsWeekendsIncluded(): void
@@ -174,7 +174,7 @@ final class HolidayControllerTest extends WebTestCase
     private function directorClient(): KernelBrowser
     {
         $client = self::createClient();
-        $client->loginUser($this->fixtureUser('admin@example.com'));
+        $client->loginUser($this->fixtureUser('thomas.cerqueus@anyti.me'));
 
         return $client;
     }

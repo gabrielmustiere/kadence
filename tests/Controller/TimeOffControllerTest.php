@@ -42,7 +42,7 @@ final class TimeOffControllerTest extends WebTestCase
 
         self::assertSame(['mine', 'absences'], $this->tabsOf($prod));
         self::assertSame(['mine', 'inbox', 'absences'], $this->tabsOf($manager));
-        self::assertSame(['mine', 'inbox', 'absences'], $this->tabsOf($this->fixtureUser('admin@example.com')));
+        self::assertSame(['mine', 'inbox', 'absences'], $this->tabsOf($this->fixtureUser('thomas.cerqueus@anyti.me')));
     }
 
     public function testMyTimeOffListsMyBalancesAndMyRequests(): void
@@ -110,7 +110,7 @@ final class TimeOffControllerTest extends WebTestCase
     {
         $requester = $this->createUser();
         $request = $this->createTimeOff($requester, '2026-11-16', '2026-11-16', TimeOffStatus::Pending);
-        $this->client->loginUser($this->fixtureUser('admin@example.com'));
+        $this->client->loginUser($this->fixtureUser('thomas.cerqueus@anyti.me'));
 
         $crawler = $this->client->request('GET', '/conges/a-valider');
 
@@ -162,7 +162,7 @@ final class TimeOffControllerTest extends WebTestCase
 
     public function testTheEntitlementsAreForTheDirectionOnly(): void
     {
-        foreach (['lead@example.com', 'prod@example.com'] as $email) {
+        foreach (['olivier.thomas@anyti.me', 'antoine.leroy@anyti.me'] as $email) {
             $this->client->loginUser($this->fixtureUser($email));
             $this->client->request('GET', '/conges/compteurs');
             self::assertResponseStatusCodeSame(403, $email);
@@ -172,7 +172,7 @@ final class TimeOffControllerTest extends WebTestCase
     public function testTheDirectionOpensTheEntitlementsOfAPeriod(): void
     {
         $person = $this->createUser();
-        $this->client->loginUser($this->fixtureUser('admin@example.com'));
+        $this->client->loginUser($this->fixtureUser('thomas.cerqueus@anyti.me'));
 
         $crawler = $this->client->request('GET', '/conges/compteurs/rtt/2026');
 

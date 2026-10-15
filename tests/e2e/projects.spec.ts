@@ -27,7 +27,7 @@ async function fillLot(page: Page, lotTitle: string, days: string, owner: string
 }
 
 test('un lead crée un projet et enchaîne trois lots estimés et confiés', async ({ page }) => {
-  await login(page, 'lead@example.com');
+  await login(page, 'olivier.thomas@anyti.me');
   await page.click('[data-test="nav-projects"]');
   await page.click('[data-test="project-new"]');
   await page.fill('[data-test="project-title"]', title);
@@ -36,13 +36,13 @@ test('un lead crée un projet et enchaîne trois lots estimés et confiés', asy
   await expect(page.locator('[data-test="project-page-unsplit"]')).toBeVisible();
 
   await page.click('[data-test="lot-new"]');
-  await fillLot(page, 'Socle', '5', 'Paula Durand');
+  await fillLot(page, 'Socle', '5', 'Antoine Leroy');
   await page.click('[data-test="lot-submit-add-another"]');
   await expect(page.locator('[data-test="lot-title"]')).toHaveValue('');
-  await fillLot(page, 'Écrans', '8', 'Louis Bernard');
+  await fillLot(page, 'Écrans', '8', 'Olivier Thomas');
   await page.click('[data-test="lot-submit-add-another"]');
   await expect(page.locator('[data-test="lot-title"]')).toHaveValue('');
-  await fillLot(page, 'Recette', '3', 'Louis Bernard');
+  await fillLot(page, 'Recette', '3', 'Olivier Thomas');
   await page.click('[data-test="lot-submit"]');
 
   await expect(page.locator('[data-test="lot-row"]')).toHaveCount(3);
@@ -50,7 +50,7 @@ test('un lead crée un projet et enchaîne trois lots estimés et confiés', asy
 });
 
 test('le responsable modifie l\'estimation de sa feuille, et seulement de la sienne', async ({ page }) => {
-  await login(page, 'prod@example.com');
+  await login(page, 'antoine.leroy@anyti.me');
   await page.click('[data-test="nav-projects"]');
   await page.click('[data-test="filter-mine"]');
   await page.click(`[data-title="${title}"] [data-test="project-link"]`);

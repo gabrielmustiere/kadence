@@ -41,13 +41,13 @@ final class TagControllerTest extends WebTestCase
      */
     public static function nonDirectorProvider(): \Generator
     {
-        yield 'lead' => ['lead@example.com'];
-        yield 'prod' => ['prod@example.com'];
+        yield 'lead' => ['olivier.thomas@anyti.me'];
+        yield 'prod' => ['antoine.leroy@anyti.me'];
     }
 
     public function testTheDirectionAddsATagToEachCategory(): void
     {
-        $client = $this->clientAs('admin@example.com');
+        $client = $this->clientAs('thomas.cerqueus@anyti.me');
 
         foreach (TagCategory::cases() as $category) {
             $label = uniqid('Tag ', true);
@@ -61,7 +61,7 @@ final class TagControllerTest extends WebTestCase
 
     public function testALabelAlreadyTakenInItsCategoryIsRefusedIgnoringCaseButAllowedInAnother(): void
     {
-        $client = $this->clientAs('admin@example.com');
+        $client = $this->clientAs('thomas.cerqueus@anyti.me');
         $tag = $this->createTag(TagCategory::TechnicalSkill, uniqid('Rust ', true));
         $variant = '  ' . mb_strtoupper($tag->getLabel()) . ' ';
 
@@ -75,7 +75,7 @@ final class TagControllerTest extends WebTestCase
 
     public function testRenamingATagChangesItOnEveryPersonCarryingIt(): void
     {
-        $client = $this->clientAs('admin@example.com');
+        $client = $this->clientAs('thomas.cerqueus@anyti.me');
         $tag = $this->createTag(TagCategory::FunctionalExperience);
         $other = $this->createTag(TagCategory::FunctionalExperience);
         $holder = $this->giveTags($this->createUser(), $tag);
@@ -93,7 +93,7 @@ final class TagControllerTest extends WebTestCase
 
     public function testDeletingATagAnnouncesHowManyPeopleCarryItThenRemovesItFromTheirProfile(): void
     {
-        $client = $this->clientAs('admin@example.com');
+        $client = $this->clientAs('thomas.cerqueus@anyti.me');
         $tag = $this->createTag(TagCategory::TeamType);
         $first = $this->giveTags($this->createUser(), $tag);
         $second = $this->giveTags($this->createUser()->setActive(false), $tag);
@@ -113,7 +113,7 @@ final class TagControllerTest extends WebTestCase
 
     public function testDeletingWithAnInvalidCsrfTokenIsRefused(): void
     {
-        $client = $this->clientAs('admin@example.com');
+        $client = $this->clientAs('thomas.cerqueus@anyti.me');
         $tag = $this->createTag();
 
         $client->request('POST', '/tags/' . $tag->getId() . '/supprimer', ['_token' => 'invalid']);

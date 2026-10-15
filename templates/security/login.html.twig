@@ -23,7 +23,7 @@
                 </p>
 
                 {% set dev_login = dev_users is not empty %}
-                {% set dev_default_email = last_username ?: 'admin@example.com' %}
+                {% set dev_default_email = last_username ?: 'thomas.cerqueus@anyti.me' %}
                 <form method="post" class="mt-8 space-y-5"
                       {% if dev_login %}data-controller="dev-login" data-dev-login-password-value="password"{% endif %}>
                     {% if error %}

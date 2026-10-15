@@ -25,10 +25,10 @@ class AppFixtures extends Fixture
     public function load(ObjectManager $manager): void
     {
         $users = [
-            self::DIRECTOR => $this->createUser('admin@example.com', 'Alice', 'Martin', Role::Direction),
-            self::LEAD => $this->createUser('lead@example.com', 'Louis', 'Bernard', Role::Lead),
-            self::PROD => $this->createUser('prod@example.com', 'Paula', 'Durand', Role::Prod),
-            self::FORMER => $this->createUser('ancien@example.com', 'Arthur', 'Petit', Role::Prod)->setActive(false),
+            self::DIRECTOR => $this->createUser('thomas.cerqueus@anyti.me', 'Thomas', 'Cerqueus', Role::Direction),
+            self::LEAD => $this->createUser('olivier.thomas@anyti.me', 'Olivier', 'Thomas', Role::Lead),
+            self::PROD => $this->createUser('antoine.leroy@anyti.me', 'Antoine', 'Leroy', Role::Prod),
+            self::FORMER => $this->createUser('arthur.petit@anyti.me', 'Arthur', 'Petit', Role::Prod)->setActive(false),
         ];
 
         foreach ($users as $reference => $user) {

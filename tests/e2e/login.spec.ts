@@ -5,7 +5,7 @@ test('login flow', async ({ page }) => {
 
   await expect(page.locator('h1')).toContainText('Se connecter');
 
-  await page.fill('input[name="_username"]', 'admin@example.com');
+  await page.fill('input[name="_username"]', 'thomas.cerqueus@anyti.me');
   await page.fill('input[name="_password"]', 'password');
   await page.click('button[type="submit"]');
 

@@ -37,11 +37,11 @@ final class VocabularyTest extends WebTestCase
         $client->loginUser($user);
         $entityManager = self::getContainer()->get(EntityManagerInterface::class);
         \assert($entityManager instanceof EntityManagerInterface);
-        $atlas = $entityManager->getRepository(Project::class)->findOneBy(['title' => 'Atlas — Plateforme de paie']);
-        self::assertInstanceOf(Project::class, $atlas);
-        $lot = $entityManager->getRepository(Lot::class)->findOneBy(['project' => $atlas, 'title' => 'Cadrage']);
+        $sca = $entityManager->getRepository(Project::class)->findOneBy(['title' => 'SCA']);
+        self::assertInstanceOf(Project::class, $sca);
+        $lot = $entityManager->getRepository(Lot::class)->findOneBy(['project' => $sca, 'title' => 'Cadrage']);
         self::assertInstanceOf(Lot::class, $lot);
-        $ids = ['{atlas}' => (string) $atlas->getId(), '{lot}' => (string) $lot->getId(), '{person}' => (string) $user->getId()];
+        $ids = ['{sca}' => (string) $sca->getId(), '{lot}' => (string) $lot->getId(), '{person}' => (string) $user->getId()];
 
         foreach ($pages as $page) {
             $url = strtr($page, $ids);
@@ -60,9 +60,9 @@ final class VocabularyTest extends WebTestCase
      */
     public static function roleProvider(): \Generator
     {
-        $pages = ['/', '/saisie', '/roadmap', '/projets', '/projets/{atlas}', '/personnes', '/personnes/{person}', '/mon-compte/mot-de-passe'];
+        $pages = ['/', '/saisie', '/roadmap', '/projets', '/projets/{sca}', '/personnes', '/personnes/{person}', '/mon-compte/mot-de-passe'];
 
-        yield 'direction' => ['admin@example.com', [...$pages, '/tags', '/lots/{lot}/modifier', '/conges/a-valider', '/personnes/{person}/modifier']];
-        yield 'prod' => ['prod@example.com', $pages];
+        yield 'direction' => ['thomas.cerqueus@anyti.me', [...$pages, '/tags', '/lots/{lot}/modifier', '/conges/a-valider', '/personnes/{person}/modifier']];
+        yield 'prod' => ['antoine.leroy@anyti.me', $pages];
     }
 }

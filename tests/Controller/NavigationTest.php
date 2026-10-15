@@ -24,7 +24,7 @@ final class NavigationTest extends WebTestCase
 
     public function testTheDirectionSeesTheDailyEntriesThenSteeringThenAdministration(): void
     {
-        $crawler = $this->clientFor('admin@example.com')->request('GET', '/');
+        $crawler = $this->clientFor('thomas.cerqueus@anyti.me')->request('GET', '/');
 
         self::assertSame(['nav-home', 'nav-timesheet', 'nav-time-off', 'nav-roadmap', 'nav-projects', 'nav-people', 'nav-tags', 'nav-holidays', 'nav-entitlements'], $this->entries($crawler->filter('#app-sidebar')));
         self::assertSame(['nav-roadmap', 'nav-projects', 'nav-people'], $this->entries($crawler->filter('[data-test="nav-steering"]')));
@@ -48,13 +48,13 @@ final class NavigationTest extends WebTestCase
      */
     public static function nonDirectorProvider(): \Generator
     {
-        yield 'lead' => ['lead@example.com'];
-        yield 'prod' => ['prod@example.com'];
+        yield 'lead' => ['olivier.thomas@anyti.me'];
+        yield 'prod' => ['antoine.leroy@anyti.me'];
     }
 
     public function testTheEntryOfThePageShownIsCurrentIncludingOnSubPages(): void
     {
-        $client = $this->clientFor('admin@example.com');
+        $client = $this->clientFor('thomas.cerqueus@anyti.me');
         $project = $this->createProject();
         $lot = $this->createLot($project);
         $member = $this->createUser();
@@ -110,7 +110,7 @@ final class NavigationTest extends WebTestCase
 
     public function testTheAccountMenuLeadsToMyPage(): void
     {
-        $client = $this->clientFor('prod@example.com');
+        $client = $this->clientFor('antoine.leroy@anyti.me');
         $crawler = $client->request('GET', '/');
 
         $crawler = $client->click($crawler->filter('[data-test="nav-person"]')->link());

@@ -40,7 +40,7 @@ test.beforeAll(() => {
   sql(`INSERT INTO project (title) VALUES ('${project}')`);
 
   const days = [...weekDays(-3), ...weekDays(-1)];
-  const leafAndFormer = `lot l JOIN project p ON p.id = l.project_id JOIN "user" u ON u.email = 'ancien@example.com'`;
+  const leafAndFormer = `lot l JOIN project p ON p.id = l.project_id JOIN "user" u ON u.email = 'arthur.petit@anyti.me'`;
   const leaf = `p.title = '${project}' AND l.title = 'Reprise'`;
   sql(`INSERT INTO lot (title, estimate_days, start_date, project_id) SELECT 'Reprise', 20, '${days[0]}', id FROM project WHERE title = '${project}'`);
   sql(`INSERT INTO lot_member (share, lot_id, user_id) SELECT 100, l.id, u.id FROM ${leafAndFormer} WHERE ${leaf}`);
@@ -58,7 +58,7 @@ async function login(page: Page, email: string) {
 }
 
 test('un nom de la timeline d\'une fiche projet ouvre la fiche de la personne, qui détaille ses tronçons', async ({ page }) => {
-  await login(page, 'prod@example.com');
+  await login(page, 'antoine.leroy@anyti.me');
   await page.goto('/roadmap');
   await page.locator(`[data-test="roadmap-project"][data-title="${project}"] [data-test="roadmap-project-open"]`).click();
   await expect(page.locator('[data-test="project-page-heading"]')).toHaveText(project);
@@ -82,7 +82,7 @@ test('un nom de la timeline d\'une fiche projet ouvre la fiche de la personne, q
 });
 
 test('« Ma fiche » ouvre la fiche de la personne connectée depuis le menu du compte', async ({ page }) => {
-  await login(page, 'prod@example.com');
+  await login(page, 'antoine.leroy@anyti.me');
   const name = await page.locator('[data-test="user-menu-name"]').textContent();
 
   await page.click('[data-test="user-menu-toggle"]');

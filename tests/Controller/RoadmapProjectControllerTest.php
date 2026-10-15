@@ -57,14 +57,14 @@ final class RoadmapProjectControllerTest extends WebTestCase
      */
     public static function roleProvider(): \Generator
     {
-        yield 'direction' => ['admin@example.com'];
-        yield 'lead' => ['lead@example.com'];
+        yield 'direction' => ['thomas.cerqueus@anyti.me'];
+        yield 'lead' => ['olivier.thomas@anyti.me'];
     }
 
     public function testProdReadsThePageWithoutAnyActionButOnTheLeafTheyHold(): void
     {
         $project = $this->createExample();
-        $client = $this->clientAs('prod@example.com');
+        $client = $this->clientAs('antoine.leroy@anyti.me');
 
         $crawler = $client->request('GET', $this->url($project));
 
@@ -88,7 +88,7 @@ final class RoadmapProjectControllerTest extends WebTestCase
 
     public function testSummaryAndConsumptionTellWhereTheProjectStands(): void
     {
-        $client = $this->clientAs('prod@example.com');
+        $client = $this->clientAs('antoine.leroy@anyti.me');
         $project = $this->createExample();
 
         $crawler = $client->request('GET', $this->url($project));
@@ -112,7 +112,7 @@ final class RoadmapProjectControllerTest extends WebTestCase
 
     public function testCumulKeepsWhatRemainsApartFromWhatGoesBeyond(): void
     {
-        $client = $this->clientAs('prod@example.com');
+        $client = $this->clientAs('antoine.leroy@anyti.me');
         $alice = $this->createUser();
         $project = $this->createProject();
         $split = $this->createLot($project, title: 'Back-office');
@@ -136,7 +136,7 @@ final class RoadmapProjectControllerTest extends WebTestCase
 
     public function testProgressRulesWhatIsLeftAndShowsTheProjectedCostAndTheDeclarationsOfEachLeaf(): void
     {
-        $client = $this->clientAs('prod@example.com');
+        $client = $this->clientAs('antoine.leroy@anyti.me');
         $project = $this->createExample();
 
         $client->request('GET', $this->url($project));
@@ -167,7 +167,7 @@ final class RoadmapProjectControllerTest extends WebTestCase
 
     public function testLeafToEstimateIsPartOfTheTableAndOfTheTimelineWithoutABarOnTheFrieze(): void
     {
-        $client = $this->clientAs('prod@example.com');
+        $client = $this->clientAs('antoine.leroy@anyti.me');
         $alice = $this->createUser();
         $project = $this->createProject();
         $leaf = $this->createLot($project, null, $alice, title: 'Cadrage');
@@ -187,7 +187,7 @@ final class RoadmapProjectControllerTest extends WebTestCase
 
     public function testSignalsOfTheHeaderAndOfTheFriezeEachHaveTheirTooltip(): void
     {
-        $client = $this->clientAs('prod@example.com');
+        $client = $this->clientAs('antoine.leroy@anyti.me');
         $alice = $this->createUser();
         $project = $this->createProject();
         $this->createTimeEntry($alice, $this->createLot($project, 5, $alice, title: 'Sans début'), '2026-09-30', 4);
@@ -207,7 +207,7 @@ final class RoadmapProjectControllerTest extends WebTestCase
 
     public function testFriezeSpansTheProjectAndOpensUnzoomedWithoutRememberingItsZoom(): void
     {
-        $client = $this->clientAs('prod@example.com');
+        $client = $this->clientAs('antoine.leroy@anyti.me');
         $project = $this->createExample();
 
         $client->request('GET', $this->url($project));
@@ -222,7 +222,7 @@ final class RoadmapProjectControllerTest extends WebTestCase
 
     public function testFriezeOfAProjectLongerThanTheRoadmapWidensToLabelEveryMonth(): void
     {
-        $client = $this->clientAs('prod@example.com');
+        $client = $this->clientAs('antoine.leroy@anyti.me');
         $alice = $this->createUser();
         $project = $this->createProject();
         $leaf = $this->createLot($project, 300, $alice, title: 'Socle');
@@ -238,7 +238,7 @@ final class RoadmapProjectControllerTest extends WebTestCase
 
     public function testTimelineListsEveryRunFromTheLatestToTheEarliest(): void
     {
-        $client = $this->clientAs('prod@example.com');
+        $client = $this->clientAs('antoine.leroy@anyti.me');
         $project = $this->createExample();
 
         $crawler = $client->request('GET', $this->url($project));
@@ -255,7 +255,7 @@ final class RoadmapProjectControllerTest extends WebTestCase
 
     public function testTimelineFoldsTheMonthsBeyondTheThreeLatest(): void
     {
-        $client = $this->clientAs('prod@example.com');
+        $client = $this->clientAs('antoine.leroy@anyti.me');
         $alice = $this->createUser();
         $project = $this->createProject();
         $leaf = $this->createLot($project, 300, $alice, title: 'Socle');
@@ -278,7 +278,7 @@ final class RoadmapProjectControllerTest extends WebTestCase
 
     public function testTimelineOfThreeMonthsHasNothingToFold(): void
     {
-        $client = $this->clientAs('prod@example.com');
+        $client = $this->clientAs('antoine.leroy@anyti.me');
         $project = $this->createExample();
 
         $client->request('GET', $this->url($project));
@@ -289,7 +289,7 @@ final class RoadmapProjectControllerTest extends WebTestCase
 
     public function testRunBeyondTheEstimateIsMarkedOnTheTimeline(): void
     {
-        $client = $this->clientAs('prod@example.com');
+        $client = $this->clientAs('antoine.leroy@anyti.me');
         $alice = $this->createUser();
         $project = $this->createProject();
         $leaf = $this->planLot($this->createLot($project, 1, $alice, title: 'Socle'), new \DateTimeImmutable('2026-09-28'), [[$alice, 100]]);
@@ -306,7 +306,7 @@ final class RoadmapProjectControllerTest extends WebTestCase
 
     public function testNamesOfTheTimelineLeadToThePageOfEachPersonButNotThoseOfTheTooltips(): void
     {
-        $client = $this->clientAs('prod@example.com');
+        $client = $this->clientAs('antoine.leroy@anyti.me');
         $project = $this->createExample();
         $carol = $this->createUser();
         $api = $project->getLots()->first();
@@ -323,7 +323,7 @@ final class RoadmapProjectControllerTest extends WebTestCase
 
     public function testComesBackToTheWeekOfTheRoadmapItWasOpenedFrom(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
         $project = $this->createProject();
         $this->createLot($project, 5, title: 'Socle');
 
@@ -344,7 +344,7 @@ final class RoadmapProjectControllerTest extends WebTestCase
 
     public function testComesBackToTheListOfProjectsItWasOpenedFrom(): void
     {
-        $client = $this->clientAs('prod@example.com');
+        $client = $this->clientAs('antoine.leroy@anyti.me');
         $project = $this->createExample();
 
         $crawler = $client->request('GET', $this->url($project));
@@ -356,7 +356,7 @@ final class RoadmapProjectControllerTest extends WebTestCase
 
     public function testTheFormerAddressOfThePageRedirectsToItKeepingTheWeekOfTheRoadmap(): void
     {
-        $client = $this->clientAs('prod@example.com');
+        $client = $this->clientAs('antoine.leroy@anyti.me');
         $project = $this->createProject();
 
         $client->request('GET', '/roadmap/projets/' . $project->getId() . '?roadmap=2026-W50');
@@ -371,7 +371,7 @@ final class RoadmapProjectControllerTest extends WebTestCase
 
     public function testProjectWithoutDateHasNoFriezeNorTimeline(): void
     {
-        $client = $this->clientAs('prod@example.com');
+        $client = $this->clientAs('antoine.leroy@anyti.me');
         $project = $this->createProject();
         $this->createLot($project, 5, $this->createUser(), title: 'Socle');
 
@@ -386,7 +386,7 @@ final class RoadmapProjectControllerTest extends WebTestCase
 
     public function testUnsplitProjectSaysSoOnly(): void
     {
-        $client = $this->clientAs('prod@example.com');
+        $client = $this->clientAs('antoine.leroy@anyti.me');
         $project = $this->createProject();
 
         $client->request('GET', $this->url($project));
@@ -399,13 +399,13 @@ final class RoadmapProjectControllerTest extends WebTestCase
         self::assertSelectorNotExists('[data-test="timeline-empty"]');
         self::assertSelectorNotExists('[data-test="lot-new"]');
 
-        $this->clientAs('lead@example.com')->request('GET', $this->url($project));
+        $this->clientAs('olivier.thomas@anyti.me')->request('GET', $this->url($project));
         self::assertSelectorExists('[data-test="lot-new"]');
     }
 
     public function testAnUnknownEndNamesTheLeavesWithoutOneAndWhy(): void
     {
-        $client = $this->clientAs('prod@example.com');
+        $client = $this->clientAs('antoine.leroy@anyti.me');
         $project = $this->createExample();
         $client->request('GET', $this->url($project));
         self::assertSelectorNotExists('[data-test="unknown-ends"]');
@@ -426,7 +426,7 @@ final class RoadmapProjectControllerTest extends WebTestCase
 
     public function testEachLotOfTheFriezeWritesItsEndButNotTheLineOfTheProject(): void
     {
-        $client = $this->clientAs('prod@example.com');
+        $client = $this->clientAs('antoine.leroy@anyti.me');
         $project = $this->createExample();
 
         $crawler = $client->request('GET', $this->url($project));
@@ -443,7 +443,7 @@ final class RoadmapProjectControllerTest extends WebTestCase
 
     public function testTheProjectedCostIsAMinimumWhileALeafOverrunsWithoutProgress(): void
     {
-        $client = $this->clientAs('prod@example.com');
+        $client = $this->clientAs('antoine.leroy@anyti.me');
         $project = $this->createExample();
         $login = $this->lot($project, 'Login');
         $bob = $login->getOwner();
@@ -470,7 +470,7 @@ final class RoadmapProjectControllerTest extends WebTestCase
 
     public function testUnknownProjectIsNotFound(): void
     {
-        $client = $this->clientAs('prod@example.com');
+        $client = $this->clientAs('antoine.leroy@anyti.me');
 
         foreach (['/projets/999999', '/roadmap/projets/999999'] as $url) {
             $client->request('GET', $url);
@@ -480,7 +480,7 @@ final class RoadmapProjectControllerTest extends WebTestCase
 
     public function testQueryCountDoesNotGrowWithTheNumberOfLeaves(): void
     {
-        $client = $this->clientAs('lead@example.com');
+        $client = $this->clientAs('olivier.thomas@anyti.me');
         $alice = $this->createUser();
         $small = $this->createProject();
         $leaf = $this->planLot($this->createLot($small, 10, $alice), new \DateTimeImmutable('2026-09-28'), [[$alice, 100]]);
