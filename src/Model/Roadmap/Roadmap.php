@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Model\Roadmap;
 
+use App\Enum\Type\RoadmapSignal;
+
 final readonly class Roadmap
 {
     private const array MONTHS = [1 => 'janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
@@ -28,6 +30,14 @@ final readonly class Roadmap
         public \DateTimeImmutable $today,
         public array $projects,
     ) {
+    }
+
+    /**
+     * The same roadmap restricted to the leaves awaiting the signal, under their project and split lot.
+     */
+    public function only(RoadmapSignal $signal): self
+    {
+        return new self($this->window, $this->today, array_values(array_filter(array_map(static fn (RoadmapRow $project): ?RoadmapRow => $project->only($signal), $this->projects))));
     }
 
     public function todayPosition(): ?float

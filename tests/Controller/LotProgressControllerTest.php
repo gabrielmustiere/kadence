@@ -59,6 +59,19 @@ final class LotProgressControllerTest extends WebTestCase
         self::assertResponseRedirects($url);
     }
 
+    public function testADeclarationMadeOnAPageOpenedFromAFilteredRoadmapKeepsTheFilter(): void
+    {
+        $client = $this->clientAs('olivier.thomas@anyti.me');
+        $project = $this->createProject();
+        $this->createLot($project, 10, title: 'Écrans');
+        $url = '/projets/' . $project->getId() . '?roadmap=2026-W50&signal=progress_to_refresh';
+
+        $crawler = $client->request('GET', $url);
+        $client->submit($crawler->filter('[data-test="lot-row"][data-title="Écrans"] [data-test="progress-form"]')->form(['percent' => '30']));
+
+        self::assertResponseRedirects($url);
+    }
+
     public function testDirectionDeclaresTheProgressOfAnyEstimatedLeaf(): void
     {
         $client = $this->clientAs('thomas.cerqueus@anyti.me');

@@ -109,7 +109,8 @@
                             {% if not summary.hasTime %}
                                 <form method="post" action="{{ path('app_lot_delete', {id: lot.id}) }}">
                                     <input type="hidden" name="_token" value="{{ csrf_token('lot-' ~ lot.id) }}">
-                                    {% if back %}<input type="hidden" name="roadmap" value="{{ back.iso }}">{% endif %}
+                                    {% if back %}<input type="hidden" name="roadmap" value="{{ back.week.iso }}">{% endif %}
+                                    {% if back.signal ?? null %}<input type="hidden" name="signal" value="{{ back.signal.value }}">{% endif %}
                                     <twig:Button type="submit" variant="danger" data-test="lot-delete-confirm">Supprimer</twig:Button>
                                 </form>
                             {% endif %}

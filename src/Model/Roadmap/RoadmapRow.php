@@ -150,4 +150,41 @@ final readonly class RoadmapRow
     {
         return \in_array($signal, $this->signals, true);
     }
+
+    /**
+     * A leaf completed at 100 %, or whose time entered reached its estimate without a progress: nothing is left to act on.
+     */
+    public function isFinished(): bool
+    {
+        return $this->hasSignal(RoadmapSignal::Completed) || $this->hasSignal(RoadmapSignal::EstimateReached);
+    }
+
+    /**
+     * The leaves under the row, or the row itself when it is one, that raise the signal and are not finished.
+     *
+     * @return list<RoadmapRow>
+     */
+    public function leavesAwaiting(RoadmapSignal $signal): array
+    {
+        if ($this->isLeaf()) {
+            return $this->hasSignal($signal) && !$this->isFinished() ? [$this] : [];
+        }
+
+        return array_merge(...array_map(static fn (RoadmapRow $child): array => $child->leavesAwaiting($signal), $this->children));
+    }
+
+    /**
+     * The row restricted to the leaves awaiting the signal, null when none is left; a lot or a project keeps the span,
+     * end and signals of all its leaves.
+     */
+    public function only(RoadmapSignal $signal): ?self
+    {
+        if ($this->isLeaf()) {
+            return [] === $this->leavesAwaiting($signal) ? null : $this;
+        }
+
+        $children = array_values(array_filter(array_map(static fn (RoadmapRow $child): ?RoadmapRow => $child->only($signal), $this->children)));
+
+        return [] === $children ? null : clone ($this, ['children' => $children]);
+    }
 }

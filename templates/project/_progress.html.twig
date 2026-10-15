@@ -1,13 +1,14 @@
 {#
     The progress of a leaf on the page of its project: the form to declare it for whoever may, the progress in force
-    otherwise. Expects `summary`, the summary of the leaf, and `back`, the week of the roadmap the page was opened from.
+    otherwise. Expects `summary`, the summary of the leaf, and `back`, the view of the roadmap the page was opened from.
 #}
 {% set lot = summary.lot %}
 {% set declaration = summary.progress %}
 {% if is_granted('LOT_PROGRESS', lot) %}
     <form method="post" action="{{ path('app_lot_progress', {id: lot.id}) }}" class="flex items-center gap-1.5" data-test="progress-form">
         <input type="hidden" name="_token" value="{{ csrf_token('lot-progress-' ~ lot.id) }}">
-        {% if back %}<input type="hidden" name="roadmap" value="{{ back.iso }}">{% endif %}
+        {% if back %}<input type="hidden" name="roadmap" value="{{ back.week.iso }}">{% endif %}
+        {% if back.signal ?? null %}<input type="hidden" name="signal" value="{{ back.signal.value }}">{% endif %}
         <label for="progress-{{ lot.id }}" class="sr-only">Avancement de « {{ lot.title }} »</label>
         <twig:Select id="progress-{{ lot.id }}" name="percent" required autocomplete="off" class="h-8 w-[7.5rem] ps-2.5 text-[13px] tabular-nums" data-test="progress-select">
             {% if declaration is null %}

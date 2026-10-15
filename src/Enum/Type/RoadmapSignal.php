@@ -109,6 +109,24 @@ enum RoadmapSignal: string
     }
 
     /**
+     * What a lead or the direction does about a leaf raising the signal; null when nothing is to be done.
+     */
+    public function action(): ?string
+    {
+        return match ($this) {
+            self::Overrun => 'Réviser l\'estimation ou déclarer l\'avancement',
+            self::ToReplan => 'Réaffecter l\'équipe ou décaler le début',
+            self::TeamToReview => 'Recomposer l\'équipe',
+            self::ToEstimate => 'Poser une estimation',
+            self::WithoutStart => 'Poser une date de début',
+            self::WithoutTeam => 'Composer l\'équipe',
+            self::LateStart => 'Décaler la date de début',
+            self::ProgressToRefresh => 'Déclarer l\'avancement',
+            self::EstimateReached, self::Completed, self::PartialPlanning, self::Unsplit => null,
+        };
+    }
+
+    /**
      * The badge variant of the design system.
      */
     public function variant(): string

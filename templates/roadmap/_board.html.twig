@@ -1,0 +1,42 @@
+{#
+    The board of a lead or the direction above the frieze: by family, how many leaves await the action of each signal.
+    A counter restricts the frieze to its leaves, and the active one gives the whole frieze back. Expects `board`, `view`,
+    then `route` and `params`, those of the roadmap shown without its filter.
+#}
+<section class="mb-5 rounded-card border border-default bg-surface p-4" aria-label="À traiter" data-test="roadmap-board">
+    {% if board.isEmpty %}
+        <p class="flex items-center gap-2 text-sm text-body" data-test="roadmap-board-empty">
+            <twig:ux:icon name="tabler:circle-check" class="size-4 text-fg-success-strong"/>
+            Rien à traiter
+        </p>
+    {% else %}
+        <div class="flex flex-wrap gap-x-8 gap-y-4">
+            {% for family, counters in board.families %}
+                <div class="min-w-0" data-test="roadmap-board-family" data-family="{{ family }}">
+                    <h2 class="eyebrow text-body-subtle">{{ family }}</h2>
+                    <ul class="mt-2 flex flex-wrap gap-2">
+                        {% for counter in counters %}
+                            {% set active = view.signal is same as(counter.signal) %}
+                            <li class="flex w-52">
+                                <a href="{{ path(route, active ? params : params|merge({signal: counter.signal.value})) }}"
+                                   class="flex w-full flex-col gap-1 rounded-lg border px-3 py-2.5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-medium {{ active ? 'border-brand bg-brand-softer' : 'border-default hover:bg-neutral-secondary-soft' }}"
+                                   {% if active %}aria-current="true"{% endif %}
+                                   data-test="roadmap-board-counter" data-signal="{{ counter.signal.value }}">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xl font-semibold tabular-nums text-heading" data-test="roadmap-board-count">{{ counter.leafCount }}</span>
+                                        <twig:Badge variant="{{ counter.signal.variant }}">{{ counter.signal.label }}</twig:Badge>
+                                    </div>
+                                    <span class="text-xs tabular-nums text-body-subtle" data-test="roadmap-board-projects">{{ counter.leafCount > 1 ? 'lots' : 'lot' }} sur {{ counter.projectCount }} projet{{ counter.projectCount > 1 ? 's' }}</span>
+                                    <span class="text-xs text-body" data-test="roadmap-board-action">{{ counter.signal.action }}</span>
+                                </a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endfor %}
+        </div>
+        {% if view.signal %}
+            <a href="{{ path(route, params) }}" class="mt-3 inline-flex text-sm font-medium text-fg-brand underline-offset-4 hover:underline" data-test="roadmap-board-reset">Tout afficher</a>
+        {% endif %}
+    {% endif %}
+</section>

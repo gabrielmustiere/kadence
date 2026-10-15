@@ -1,0 +1,42 @@
+{
+  "version": 2,
+  "title": "Lire en tête de la roadmap combien de lots demandent une action, et n'afficher qu'eux d'un clic",
+  "created": "2026-10-15",
+  "updated": "2026-10-15",
+  "tags": [
+    "roadmap",
+    "pilotage"
+  ],
+  "changelog": [
+    {
+      "date": "2026-10-15",
+      "type": "Création",
+      "description": "Pitch rédigé hors backlog : bandeau de compteurs par pastille de lot pour leads et direction, lots terminés exclus, clic qui filtre la frise par lien partageable."
+    },
+    {
+      "date": "2026-10-15",
+      "type": "Planification",
+      "description": "Plan validé : RoadmapBoard et élagage pur après le builder (inchangé), RoadmapView semaine + signal pour la navigation et les retours ; complète le pitch : le retour de l'édition d'un lot et de la page projet garde le filtre."
+    },
+    {
+      "date": "2026-10-15",
+      "type": "Implémentation",
+      "description": "6/6 étapes livrées ; PHPUnit 752 verts, Playwright 59 verts (dont roadmap-board.spec.ts), lint propre. Écarts : RoadmapRow::leavesAwaiting() porte le prédicat partagé par le bandeau et l'élagage (mitigation du plan) ; sur la semaine courante, tuiles et « Tout afficher » mènent à /roadmap?signal= plutôt qu'à la semaine, pour qu'un lien partagé reste sur aujourd'hui ; LotController::backWeek() devient backParams() (semaine + signal) ; le lien périmé se teste à une date (2000) où aucun « démarrage en retard » n'existe, la base partagée finissant par porter les huit signaux ; libellés d'action vérifiés dans RoadmapBoardTest plutôt que RoadmapSignalTest."
+    },
+    {
+      "date": "2026-10-15",
+      "type": "Review",
+      "description": "Ouverture : prêt à commiter ; 0 bloquant, 0 important, 3 mineurs ([A11Y] badge div dans un span, [ARCHI] lien « Tout afficher » calculé deux fois, [TEST] compteurs indépendants de la période non verrouillés)."
+    },
+    {
+      "date": "2026-10-15",
+      "type": "Review",
+      "description": "Prêt à commiter ; 3 mineurs corrigés : [A11Y] conteneur du badge d'une tuile en div, [ARCHI] chemin « Tout afficher » posé une fois dans index, [TEST] compteurs identiques sur deux périodes."
+    },
+    {
+      "date": "2026-10-15",
+      "type": "Sync",
+      "description": "7 écarts réalignés dans le plan et le pitch, 11/11 critères d'acceptation et 7/7 critères de sortie cochés, C5.3 éditée dans le backlog, 1 dette (bandeau haut sur téléphone), 2 leçons."
+    }
+  ]
+}

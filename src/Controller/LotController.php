@@ -12,7 +12,7 @@ use App\Exception\LotHasTimeEntriesException;
 use App\Exception\LotProgressRefusedException;
 use App\Form\LotFormFactory;
 use App\Model\Quarters;
-use App\Model\Week;
+use App\Model\Roadmap\RoadmapView;
 use App\Repository\TimeEntryRepository;
 use App\Security\Voter\LotVoter;
 use App\Service\LotProgressManager;
@@ -85,13 +85,13 @@ final class LotController extends AbstractController
     }
 
     #[Route('/lots/{id}/modifier', name: 'app_lot_edit', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
-    public function edit(Request $request, Lot $lot, TimeEntryRepository $timeEntryRepository, #[MapQueryParameter] ?string $roadmap = null): Response
+    public function edit(Request $request, Lot $lot, TimeEntryRepository $timeEntryRepository, #[MapQueryParameter] ?string $roadmap = null, #[MapQueryParameter] ?string $signal = null): Response
     {
         $this->denyAccessUnlessGranted(LotVoter::EDIT, $lot);
-        $back = null === $roadmap ? null : Week::tryFromIso($roadmap);
+        $back = RoadmapView::tryFrom($roadmap, $signal, $this->isGranted('ROLE_LEAD'));
         $backPath = null === $back
             ? $this->generateUrl('app_project_show', ['id' => $lot->getProject()->getId()])
-            : $this->generateUrl('app_roadmap_week', ['week' => $back->iso()]);
+            : $this->generateUrl('app_roadmap_week', $back->routeParams());
 
         $form = $this->lotFormFactory->forLot($lot);
         $form->handleRequest($request);
@@ -131,7 +131,7 @@ final class LotController extends AbstractController
             $this->addFlash('error', $exception->getMessage());
         }
 
-        return $this->redirectToRoute('app_project_show', ['id' => $projectId, 'roadmap' => self::backWeek($request)]);
+        return $this->redirectToRoute('app_project_show', ['id' => $projectId, ...$this->backParams($request)]);
     }
 
     #[Route('/lots/{id}/avancement', name: 'app_lot_progress', requirements: ['id' => '\d+'], methods: ['POST'])]
@@ -150,15 +150,20 @@ final class LotController extends AbstractController
             $this->addFlash('error', $exception->getMessage());
         }
 
-        return $this->redirectToRoute('app_project_show', ['id' => $lot->getProject()->getId(), 'roadmap' => self::backWeek($request)]);
+        return $this->redirectToRoute('app_project_show', ['id' => $lot->getProject()->getId(), ...$this->backParams($request)]);
     }
 
     /**
-     * The week of the roadmap the page of the project was opened from, which an action made on it keeps.
+     * The view of the roadmap the page of the project was opened from, which an action made on it keeps.
+     *
+     * @return array{roadmap?: string, signal?: string}
      */
-    private static function backWeek(Request $request): ?string
+    private function backParams(Request $request): array
     {
-        return Week::tryFromIso($request->getPayload()->getString('roadmap'))?->iso();
+        $payload = $request->getPayload();
+        $back = RoadmapView::tryFrom($payload->getString('roadmap'), $payload->getString('signal'), $this->isGranted('ROLE_LEAD'));
+
+        return null === $back ? [] : ['roadmap' => $back->week->iso(), ...$back->signalParams()];
     }
 
     private static function inputOf(FormInterface $form): LotInput

@@ -9,7 +9,7 @@
 {% block body %}
     <twig:PageHeader
         :title="project.title"
-        :back="back ? path('app_roadmap_week', {week: back.iso}) : path('app_project_index')"
+        :back="back ? path('app_roadmap_week', back.routeParams) : path('app_project_index')"
         :backLabel="back ? 'Roadmap' : 'Projets'"
         backTest="project-page-back"
         :headingAttrs="{'data-test': 'project-page-heading'}"

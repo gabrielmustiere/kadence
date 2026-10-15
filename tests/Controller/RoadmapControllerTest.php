@@ -451,6 +451,103 @@ final class RoadmapControllerTest extends WebTestCase
         self::assertResponseStatusCodeSame(404);
     }
 
+    public function testTheBoardCountsTheLeavesAwaitingAnActionForPlannersOnly(): void
+    {
+        $project = $this->createProject();
+        $this->createLot($project, title: 'Sans estimation');
+
+        $crawler = $this->clientAs('olivier.thomas@anyti.me')->request('GET', '/roadmap');
+        $counter = $crawler->filter('[data-test="roadmap-board-counter"][data-signal="to_estimate"]');
+        self::assertCount(1, $counter);
+        self::assertGreaterThanOrEqual(1, (int) $counter->filter('[data-test="roadmap-board-count"]')->text());
+        self::assertSame('Poser une estimation', $counter->filter('[data-test="roadmap-board-action"]')->text());
+        self::assertSame('/roadmap?signal=to_estimate', $counter->attr('href'));
+        self::assertSelectorNotExists('[data-test="roadmap-board-counter"][aria-current]');
+        self::assertSelectorNotExists('[data-test="roadmap-board-reset"]');
+
+        $crawler = $this->clientAs('antoine.leroy@anyti.me')->request('GET', '/roadmap');
+        self::assertCount(0, $crawler->filter('[data-test="roadmap-board"]'));
+    }
+
+    public function testTheBoardCountsTheSameWhateverTheWindowShown(): void
+    {
+        $client = $this->clientAs('thomas.cerqueus@anyti.me');
+        $counters = static fn (Crawler $page): array => $page->filter('[data-test="roadmap-board-counter"]')->each(static fn (Crawler $counter): string => $counter->attr('data-signal') . ':' . $counter->filter('[data-test="roadmap-board-count"]')->text() . ':' . $counter->filter('[data-test="roadmap-board-projects"]')->text());
+
+        $now = $counters($client->request('GET', '/roadmap'));
+
+        self::assertNotSame([], $now);
+        self::assertSame($now, $counters($client->request('GET', '/roadmap/2027-W30')));
+    }
+
+    public function testACounterLeavesOnlyItsLeavesOnTheFriezeOpenUnderTheirProject(): void
+    {
+        $client = $this->clientAs('olivier.thomas@anyti.me');
+        $alice = $this->createUser();
+        $awaiting = $this->createProject();
+        $leaf = $this->createLot($awaiting, title: 'Sans estimation');
+        $this->planLot($this->createLot($awaiting, 5, title: 'Socle'), new \DateTimeImmutable('2026-10-12'), [[$alice, 50]]);
+        $other = $this->createProject();
+        $this->planLot($this->createLot($other, 5, title: 'Recette'), new \DateTimeImmutable('2026-10-12'), [[$alice, 50]]);
+
+        $crawler = $client->request('GET', '/roadmap?signal=to_estimate');
+
+        self::assertResponseIsSuccessful();
+        $project = $crawler->filter(\sprintf('[data-test="roadmap-project"][data-title="%s"]', $awaiting->getTitle()));
+        self::assertCount(1, $project->filter('details[open]:not([data-roadmap-target])'));
+        self::assertSame(['Sans estimation'], $project->filter('[data-test="roadmap-leaf"]')->each(static fn (Crawler $row): string => (string) $row->attr('data-title')));
+        self::assertCount(0, $crawler->filter(\sprintf('[data-test="roadmap-project"][data-title="%s"]', $other->getTitle())));
+        self::assertSelectorExists('[data-test="roadmap-board-counter"][data-signal="to_estimate"][aria-current="true"]');
+        self::assertSame('/roadmap', $crawler->filter('[data-test="roadmap-board-counter"][data-signal="to_estimate"]')->attr('href'));
+        self::assertSame('/roadmap', $crawler->filter('[data-test="roadmap-board-reset"]')->attr('href'));
+        self::assertSame('/roadmap/2026-W37?signal=to_estimate', $crawler->filter('[data-test="roadmap-previous"]')->attr('href'));
+        self::assertSame('/roadmap/2026-W45?signal=to_estimate', $crawler->filter('[data-test="roadmap-next"]')->attr('href'));
+        self::assertSame('/roadmap?signal=to_estimate', $crawler->filter('[data-test="roadmap-today"]')->attr('href'));
+        self::assertSame(\sprintf('/lots/%d/modifier?roadmap=2026-W41&signal=to_estimate', $leaf->getId()), $project->filter('[data-test="roadmap-leaf-link"]')->attr('href'));
+        self::assertSame(\sprintf('/projets/%d?roadmap=2026-W41&signal=to_estimate', $awaiting->getId()), $project->filter('[data-test="roadmap-project-open"]')->attr('href'));
+
+        $crawler = $client->request('GET', '/roadmap/2026-W50?signal=to_estimate');
+        self::assertSame('/roadmap/2026-W50', $crawler->filter('[data-test="roadmap-board-reset"]')->attr('href'));
+        self::assertSame('/roadmap/2026-W50', $crawler->filter('[data-test="roadmap-board-counter"][data-signal="to_estimate"]')->attr('href'));
+    }
+
+    #[DataProvider('ignoredFilterProvider')]
+    public function testAFilterThatDoesNotApplyLeavesTheWholeRoadmap(string $email, string $signal): void
+    {
+        $project = $this->createProject();
+        $this->createLot($project, title: 'Sans estimation');
+        $whole = $this->createProject();
+
+        $crawler = $this->clientAs($email)->request('GET', '/roadmap?signal=' . $signal);
+
+        self::assertResponseIsSuccessful();
+        self::assertCount(1, $crawler->filter(\sprintf('[data-test="roadmap-project"][data-title="%s"]', $whole->getTitle())));
+        self::assertSame('/roadmap/2026-W37', $crawler->filter('[data-test="roadmap-previous"]')->attr('href'));
+        self::assertCount(0, $crawler->filter('[data-test="roadmap-board-counter"][aria-current]'));
+    }
+
+    /**
+     * @return \Generator<string, array{string, string}>
+     */
+    public static function ignoredFilterProvider(): \Generator
+    {
+        yield 'prod' => ['antoine.leroy@anyti.me', 'to_estimate'];
+        yield 'signal without counter' => ['olivier.thomas@anyti.me', 'completed'];
+        yield 'unknown signal' => ['olivier.thomas@anyti.me', 'nope'];
+    }
+
+    public function testAFilterWithNothingLeftSaysSoAndGivesTheWholeRoadmapBack(): void
+    {
+        self::mockTime('2000-01-03 10:00');
+
+        $crawler = $this->clientAs('thomas.cerqueus@anyti.me')->request('GET', '/roadmap?signal=late_start');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('[data-test="roadmap-filter-empty"]', 'Rien à traiter pour « démarrage en retard ».', 'No start date has passed yet in 2000.');
+        self::assertSame('/roadmap', $crawler->filter('[data-test="roadmap-filter-reset"]')->attr('href'));
+        self::assertCount(0, $crawler->filter('[data-test="roadmap-project"]'));
+    }
+
     public function testQueryCountDoesNotGrowWithTheNumberOfLeaves(): void
     {
         $client = $this->clientAs('olivier.thomas@anyti.me');
@@ -463,12 +560,13 @@ final class RoadmapControllerTest extends WebTestCase
         }
 
         self::assertSame($small, $this->queryCount($client));
+        self::assertSame($small, $this->queryCount($client, '/roadmap?signal=to_replan'), 'The board and the filter read the roadmap already built.');
     }
 
-    private function queryCount(KernelBrowser $client): int
+    private function queryCount(KernelBrowser $client, string $url = '/roadmap'): int
     {
         $client->enableProfiler();
-        $client->request('GET', '/roadmap');
+        $client->request('GET', $url);
         self::assertResponseIsSuccessful();
 
         $profile = $client->getProfile();

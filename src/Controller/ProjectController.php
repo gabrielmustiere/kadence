@@ -9,7 +9,7 @@ use App\Entity\Project;
 use App\Entity\User;
 use App\Exception\LotHasTimeEntriesException;
 use App\Form\ProjectType;
-use App\Model\Week;
+use App\Model\Roadmap\RoadmapView;
 use App\Repository\ProjectRepository;
 use App\Service\ProjectManager;
 use App\Service\ProjectRollup;
@@ -67,11 +67,14 @@ final class ProjectController extends AbstractController
         #[MapEntity(expr: 'repository.findOneForDetail(id)')] Project $project,
         RoadmapBuilder $roadmapBuilder,
         #[MapQueryParameter] ?string $roadmap = null,
+        #[MapQueryParameter] ?string $signal = null,
     ): Response {
+        $planner = $this->isGranted('ROLE_LEAD');
+
         return $this->render('project/show.html.twig', [
             'summary' => $this->projectRollup->summarize($project),
-            'page' => $roadmapBuilder->buildProject($project, $this->isGranted('ROLE_LEAD')),
-            'back' => null === $roadmap ? null : Week::tryFromIso($roadmap),
+            'page' => $roadmapBuilder->buildProject($project, $planner),
+            'back' => RoadmapView::tryFrom($roadmap, $signal, $planner),
         ]);
     }
 

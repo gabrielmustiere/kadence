@@ -7,16 +7,19 @@
 {% block body %}
     <div data-controller="roadmap" data-roadmap-center-value="{{ (roadmap.todayPosition ?? window.position(window.anchor.monday))|number_format(4, '.', '') }}">
     {% set current = window.anchor.equals(current_week) %}
+    {% set filtered = view.signal is not null %}
+    {% set route = current ? 'app_roadmap' : 'app_roadmap_week' %}
+    {% set params = current ? {} : {week: window.anchor.iso} %}
     <twig:PageHeader title="Roadmap" compact description="La chronologie de chaque projet : ce qui a été saisi, puis ce qui reste, réparti sur la capacité de son équipe.">
         <nav class="inline-flex items-center gap-0.5 rounded-xl border border-default bg-surface p-1 shadow-xs" aria-label="Période affichée">
-            <a href="{{ path('app_roadmap_week', {week: window.previous.iso}) }}" data-test="roadmap-previous"
+            <a href="{{ path('app_roadmap_week', {week: window.previous.iso}|merge(view.signalParams)) }}" data-test="roadmap-previous"
                class="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-sm font-medium text-body transition-colors hover:bg-neutral-tertiary hover:text-heading">
                 <twig:ux:icon name="tabler:chevron-left" class="size-4"/>
                 4 semaines
             </a>
-            <a href="{{ path('app_roadmap') }}" data-test="roadmap-today" {% if current %}aria-current="page"{% endif %}
+            <a href="{{ path('app_roadmap', view.signalParams) }}" data-test="roadmap-today" {% if current %}aria-current="page"{% endif %}
                class="inline-flex h-8 items-center rounded-lg px-3 text-sm font-medium transition-colors {{ current ? 'bg-primary text-on-primary shadow-xs' : 'text-body hover:bg-neutral-tertiary hover:text-heading' }}">Aujourd'hui</a>
-            <a href="{{ path('app_roadmap_week', {week: window.next.iso}) }}" data-test="roadmap-next"
+            <a href="{{ path('app_roadmap_week', {week: window.next.iso}|merge(view.signalParams)) }}" data-test="roadmap-next"
                class="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-sm font-medium text-body transition-colors hover:bg-neutral-tertiary hover:text-heading">
                 4 semaines
                 <twig:ux:icon name="tabler:chevron-right" class="size-4"/>
@@ -25,9 +28,18 @@
         {{ include('roadmap/_zoom.html.twig') }}
     </twig:PageHeader>
 
+    {% if board %}
+        {{ include('roadmap/_board.html.twig') }}
+    {% endif %}
+
     {{ include('roadmap/_legend.html.twig') }}
 
-    {% if roadmap.projects is empty %}
+    {% if roadmap.projects is empty and filtered %}
+        <twig:EmptyState icon="tabler:circle-check" data-test="roadmap-filter-empty">
+            Rien à traiter pour « {{ view.signal.label }} ».
+            <a href="{{ path(route, params) }}" class="mt-3 block font-medium text-fg-brand underline-offset-4 hover:underline" data-test="roadmap-filter-reset">Tout afficher</a>
+        </twig:EmptyState>
+    {% elseif roadmap.projects is empty %}
         <twig:EmptyState icon="tabler:timeline-event" data-test="roadmap-empty">
             Aucun projet pour l'instant.
         </twig:EmptyState>
@@ -36,7 +48,8 @@
             {% block rows %}
                 {% for project in roadmap.projects %}
                     <div class="relative border-t border-default first:border-t-0" data-test="roadmap-project" data-title="{{ project.title }}">
-                        <details class="group" data-roadmap-target="project" data-project-id="{{ project.project.id }}" data-action="toggle->roadmap#remember">
+                        {# Filtered, every project is open without touching the projects remembered open on the whole roadmap. #}
+                        <details class="group" {% if filtered %}open{% else %}data-roadmap-target="project" data-project-id="{{ project.project.id }}" data-action="toggle->roadmap#remember"{% endif %}>
                             <summary class="grid cursor-pointer list-none grid-cols-[var(--roadmap-labels)_1fr] transition-colors hover:bg-neutral-secondary-soft [&::-webkit-details-marker]:hidden" {% if project.endCauses is not empty %}aria-describedby="{{ project.endTooltipId }}"{% endif %}>
                                 <div class="sticky left-0 z-10 border-e border-default-subtle bg-surface py-3 ps-4 pe-11 transition-colors group-hover:bg-neutral-secondary-soft">
                                     <div class="flex flex-wrap items-center gap-1.5">
@@ -65,7 +78,7 @@
                         {# Laid over the summary rather than inside it: browsers expose a summary as a button, which may not hold a link. #}
                         <div class="pointer-events-none absolute inset-x-0 top-0">
                             <div class="sticky left-0 z-20 w-(--roadmap-labels)">
-                                <a href="{{ path('app_project_show', {id: project.project.id, roadmap: roadmap.window.anchor.iso}) }}" class="pointer-events-auto absolute end-3 top-3 grid size-7 place-items-center rounded-lg text-body-subtle transition-colors hover:bg-neutral-tertiary hover:text-heading focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-medium" title="Ouvrir la fiche" aria-label="Ouvrir la fiche de {{ project.title }}" data-test="roadmap-project-open">
+                                <a href="{{ path('app_project_show', {id: project.project.id, roadmap: roadmap.window.anchor.iso}|merge(view.signalParams)) }}" class="pointer-events-auto absolute end-3 top-3 grid size-7 place-items-center rounded-lg text-body-subtle transition-colors hover:bg-neutral-tertiary hover:text-heading focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-medium" title="Ouvrir la fiche" aria-label="Ouvrir la fiche de {{ project.title }}" data-test="roadmap-project-open">
                                     <twig:ux:icon name="tabler:arrow-up-right" class="size-4"/>
                                 </a>
                             </div>

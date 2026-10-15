@@ -249,6 +249,42 @@ final class LotControllerTest extends WebTestCase
         self::assertSame('/roadmap/2026-W50', $client->getCrawler()->filter('[data-test="project-page-back"]')->attr('href'));
     }
 
+    public function testAPageOpenedFromAFilteredRoadmapKeepsItsFilterThroughItsActions(): void
+    {
+        $client = $this->clientAs('olivier.thomas@anyti.me');
+        $project = $this->createProject();
+        $this->createLot($project, 3, null, null, 'Éphémère');
+        $url = '/projets/' . $project->getId() . '?roadmap=2026-W50&signal=to_estimate';
+
+        $crawler = $client->request('GET', $url);
+        self::assertSame('/roadmap/2026-W50?signal=to_estimate', $crawler->filter('[data-test="project-page-back"]')->attr('href'));
+        $client->submit($crawler->filter('[data-test="lot-row"][data-title="Éphémère"] [data-test="lot-delete-confirm"]')->form());
+
+        self::assertResponseRedirects($url);
+    }
+
+    public function testEditingALeafFromAFilteredRoadmapComesBackToItFiltered(): void
+    {
+        $client = $this->clientAs('olivier.thomas@anyti.me');
+        $leaf = $this->createLot($this->createProject(), 5, null, null, 'Socle');
+
+        $crawler = $client->request('GET', '/lots/' . $leaf->getId() . '/modifier?roadmap=2026-W50&signal=to_estimate');
+        self::assertSame('/roadmap/2026-W50?signal=to_estimate', $crawler->filter('[data-test="lot-form"] a')->attr('href'));
+        $client->submit($crawler->filter('[data-test="lot-form"]')->form(['lot[estimateDays]' => '6']));
+
+        self::assertResponseRedirects('/roadmap/2026-W50?signal=to_estimate');
+    }
+
+    public function testAProdLeavesTheFilterOutOfThePageOfAProject(): void
+    {
+        $client = $this->clientAs('antoine.leroy@anyti.me');
+        $project = $this->createProject();
+
+        $crawler = $client->request('GET', '/projets/' . $project->getId() . '?roadmap=2026-W50&signal=to_estimate');
+
+        self::assertSame('/roadmap/2026-W50', $crawler->filter('[data-test="project-page-back"]')->attr('href'));
+    }
+
     public function testEstimateCannotGoBelowTheConsumedTimeRoundedUp(): void
     {
         $client = $this->clientAs('olivier.thomas@anyti.me');
