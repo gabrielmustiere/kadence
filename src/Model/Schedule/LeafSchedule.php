@@ -15,6 +15,7 @@ final readonly class LeafSchedule
      *                                                   minus the consumed time, never below 0; null while « à estimer »
      * @param bool                    $exhausted         nothing is left to do on a planned leaf
      * @param int                     $overrunQuarters   time entered beyond the estimate, 0 within it
+     * @param bool                    $progressToRefresh the progress in force is older than a week and time was entered since
      */
     public function __construct(
         public int $lotId,
@@ -31,6 +32,7 @@ final readonly class LeafSchedule
         public bool $teamToReview = false,
         public int $overrunQuarters = 0,
         public ?LeafProgress $progress = null,
+        public bool $progressToRefresh = false,
     ) {
     }
 
@@ -75,13 +77,9 @@ final readonly class LeafSchedule
         return $this->exhausted && true === $this->progress?->isComplete();
     }
 
-    /**
-     * The time entered since the progress was declared has used up what was left: nothing tells how long the work
-     * goes on until a new progress is declared.
-     */
     public function isProgressToRefresh(): bool
     {
-        return $this->exhausted && null !== $this->progress && !$this->progress->isComplete();
+        return $this->progressToRefresh;
     }
 
     /**

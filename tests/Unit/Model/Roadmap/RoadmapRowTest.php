@@ -19,7 +19,7 @@ final class RoadmapRowTest extends TestCase
         $project = new Project()->setTitle('Nova');
         $lot = new Lot($project)->setTitle('Sync')->setEstimateDays(20);
         $team = [new RoadmapTeamLine(new User(), 100, 40)];
-        $progress = new LeafProgress(40, new \DateTimeImmutable('2026-10-02'), 40, 60);
+        $progress = new LeafProgress(40, new \DateTimeImmutable('2026-10-02'));
 
         $row = new RoadmapRow($project, $lot, remainingQuarters: 60, team: $team, progress: $progress);
         self::assertSame(100, $row->projectedQuarters());

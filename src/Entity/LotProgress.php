@@ -36,27 +36,15 @@ class LotProgress
     #[ORM\Column(name: 'percent', type: Types::SMALLINT)]
     private int $percent;
 
-    /** @var int<0, max> time entered on the leaf when the progress was declared */
-    #[ORM\Column(name: 'entered_quarters')]
-    private int $enteredQuarters;
-
-    /** @var int<0, max>|null what was left to do when the progress was declared, null at 0 % */
-    #[ORM\Column(name: 'remaining_quarters', nullable: true)]
-    private ?int $remainingQuarters;
-
     /**
-     * @param int<0, 100>      $percent
-     * @param int<0, max>      $enteredQuarters
-     * @param int<0, max>|null $remainingQuarters
+     * @param int<0, 100> $percent
      */
-    public function __construct(Lot $lot, User $author, \DateTimeImmutable $declaredOn, int $percent, int $enteredQuarters, ?int $remainingQuarters)
+    public function __construct(Lot $lot, User $author, \DateTimeImmutable $declaredOn, int $percent)
     {
         $this->lot = $lot;
         $this->author = $author;
         $this->declaredOn = $declaredOn->setTime(0, 0);
         $this->percent = $percent;
-        $this->enteredQuarters = $enteredQuarters;
-        $this->remainingQuarters = $remainingQuarters;
     }
 
     public function getId(): ?int
@@ -85,31 +73,15 @@ class LotProgress
         return $this->percent;
     }
 
-    /** @return int<0, max> */
-    public function getEnteredQuarters(): int
-    {
-        return $this->enteredQuarters;
-    }
-
-    /** @return int<0, max>|null */
-    public function getRemainingQuarters(): ?int
-    {
-        return $this->remainingQuarters;
-    }
-
     /**
      * Replaces a declaration made earlier the same day.
      *
-     * @param int<0, 100>      $percent
-     * @param int<0, max>      $enteredQuarters
-     * @param int<0, max>|null $remainingQuarters
+     * @param int<0, 100> $percent
      */
-    public function redeclare(User $author, int $percent, int $enteredQuarters, ?int $remainingQuarters): static
+    public function redeclare(User $author, int $percent): static
     {
         $this->author = $author;
         $this->percent = $percent;
-        $this->enteredQuarters = $enteredQuarters;
-        $this->remainingQuarters = $remainingQuarters;
 
         return $this;
     }

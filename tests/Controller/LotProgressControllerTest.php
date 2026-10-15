@@ -42,7 +42,7 @@ final class LotProgressControllerTest extends WebTestCase
         self::assertSelectorExists('[data-test="lot-row"][data-title="Synchronisation"] [data-test="progress-select"] option[value="40"][selected]');
         self::assertSelectorTextContains('[data-test="lot-row"][data-title="Synchronisation"] [data-test="progress-declared-on"]', 'déclaré le 02/10');
         $declaration = $this->onlyDeclarationOf($lot);
-        self::assertSame([40, 40, 60], [$declaration->getPercent(), $declaration->getEnteredQuarters(), $declaration->getRemainingQuarters()]);
+        self::assertSame(40, $declaration->getPercent());
         self::assertSame('olivier.thomas@anyti.me', $declaration->getAuthor()->getEmail());
     }
 
@@ -68,7 +68,7 @@ final class LotProgressControllerTest extends WebTestCase
         $this->postProgress($client, $project, 'Écrans', '30');
 
         self::assertResponseRedirects('/projets/' . $project->getId());
-        self::assertSame(7 * 4, $this->onlyDeclarationOf($lot)->getRemainingQuarters());
+        self::assertSame(30, $this->onlyDeclarationOf($lot)->getPercent());
     }
 
     public function testOwnerDeclaresTheProgressOfTheirLeafButReadsTheOthers(): void
@@ -77,7 +77,7 @@ final class LotProgressControllerTest extends WebTestCase
         $project = $this->createProject();
         $this->createLot($project, 10, $this->fixtureUser('antoine.leroy@anyti.me'), title: 'Mien');
         $other = $this->createLot($project, 10, $this->fixtureUser('olivier.thomas@anyti.me'), title: 'Autre');
-        $this->createProgress($other, $this->fixtureUser('olivier.thomas@anyti.me'), '2026-09-28', 40, 0);
+        $this->createProgress($other, $this->fixtureUser('olivier.thomas@anyti.me'), '2026-09-28', 40);
 
         $client->request('GET', '/projets/' . $project->getId());
 

@@ -21,8 +21,8 @@
         {%- if span > 0 -%}
             <div class="ruler-track" aria-hidden="true">
                 {%- if done > 0 %}<span class="ruler-done" style="width: {{ (done * pct)|round(3) }}%"></span>{% endif -%}
-                {%- if remaining > 0 %}<span class="ruler-rest" style="left: {{ (done * pct)|round(3) }}%; width: {{ (remaining * pct)|round(3) }}%"></span>{% endif -%}
-                {%- if overrun > 0 %}<span class="ruler-over" style="left: {{ ((done + remaining) * pct)|round(3) }}%; width: {{ (overrun * pct)|round(3) }}%"></span>{% endif -%}
+                {%- if overrun > 0 %}<span class="ruler-over" style="left: {{ (done * pct)|round(3) }}%; width: {{ (overrun * pct)|round(3) }}%"></span>{% endif -%}
+                {%- if remaining > 0 %}<span class="ruler-rest" style="left: {{ ((done + overrun) * pct)|round(3) }}%; width: {{ (remaining * pct)|round(3) }}%"></span>{% endif -%}
                 {%- if overrun > 0 and estimate > 0 %}<span class="ruler-mark" style="left: {{ (estimate * pct)|round(3) }}%"></span>{% endif -%}
                 {%- if projected %}<span class="ruler-projected" style="left: {{ (projected * pct)|round(3) }}%"></span>{% endif -%}
             </div>

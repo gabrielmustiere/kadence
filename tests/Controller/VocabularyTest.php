@@ -39,7 +39,7 @@ final class VocabularyTest extends WebTestCase
         \assert($entityManager instanceof EntityManagerInterface);
         $sca = $entityManager->getRepository(Project::class)->findOneBy(['title' => 'SCA']);
         self::assertInstanceOf(Project::class, $sca);
-        $lot = $entityManager->getRepository(Lot::class)->findOneBy(['project' => $sca, 'title' => 'Cadrage']);
+        $lot = $entityManager->getRepository(Lot::class)->findOneBy(['project' => $sca, 'title' => 'Run et suivi du déploiement']);
         self::assertInstanceOf(Lot::class, $lot);
         $ids = ['{sca}' => (string) $sca->getId(), '{lot}' => (string) $lot->getId(), '{person}' => (string) $user->getId()];
 

@@ -85,7 +85,7 @@ final class HomeAgendaBuilderTest extends KernelTestCase
     {
         $owner = $this->createUser();
         $leaf = $this->overrunLeaf($owner);
-        $this->createProgress($leaf, $owner, '2026-10-07', 100, 8);
+        $this->createProgress($leaf, $owner, '2026-10-07', 100);
         $lead = $this->createUser(Role::Lead);
 
         $row = array_find($this->build($lead, withProjects: true)->watchedProjects, static fn (WatchedProject $project): bool => $project->row->project === $leaf->getProject());

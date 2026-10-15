@@ -8,8 +8,6 @@ use App\Entity\Lot;
 use App\Entity\LotProgress;
 use App\Entity\User;
 use App\Exception\LotProgressRefusedException;
-use App\Model\Quarters;
-use App\Model\Schedule\LeafProgress;
 use App\Repository\LotProgressRepository;
 use App\Repository\TimeEntryRepository;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
@@ -27,35 +25,31 @@ final readonly class LotProgressManager
     }
 
     /**
-     * Declares the progress of an estimated leaf today, anchoring what is left to do on the time entered so far; a
-     * declaration made earlier the same day is replaced.
+     * Declares the progress of an estimated leaf today; a declaration made earlier the same day is replaced.
      *
      * @throws LotProgressRefusedException when the percent is not a step of 5, a leaf without time is declared complete,
      *                                     or someone else declared the progress of the leaf meanwhile today
      */
     public function declare(Lot $leaf, int $percent, User $author): LotProgress
     {
-        $estimateDays = $leaf->getEstimateDays();
-        if (!$leaf->isLeaf() || null === $estimateDays) {
+        if (!$leaf->isLeaf() || null === $leaf->getEstimateDays()) {
             throw new \LogicException('Only an estimated leaf has a progress.');
         }
         if (!\in_array($percent, LotProgress::PERCENTS, true)) {
             throw LotProgressRefusedException::invalidPercent();
         }
 
-        $entered = max(0, $this->timeEntryRepository->sumQuartersForLotId((int) $leaf->getId()));
-        if (100 === $percent && 0 === $entered) {
+        if (100 === $percent && 0 >= $this->timeEntryRepository->sumQuartersForLotId((int) $leaf->getId())) {
             throw LotProgressRefusedException::completeWithoutTime($leaf->getTitle());
         }
 
-        $remaining = 0 === $percent ? null : LeafProgress::anchoredRemaining($percent, $entered, $estimateDays * Quarters::PER_DAY);
         $today = $this->clock->now()->setTime(0, 0);
         $declaration = $this->lotProgressRepository->findOneByLotAndDay($leaf, $today);
         if (null === $declaration) {
-            $declaration = new LotProgress($leaf, $author, $today, $percent, $entered, $remaining);
+            $declaration = new LotProgress($leaf, $author, $today, $percent);
             $this->entityManager->persist($declaration);
         } else {
-            $declaration->redeclare($author, $percent, $entered, $remaining);
+            $declaration->redeclare($author, $percent);
         }
 
         try {

@@ -23,7 +23,7 @@ function people(select: ReturnType<Page['locator']>) {
 
 test('un lead restreint les personnes proposées pour l\'équipe aux tags choisis', async ({ page }) => {
   await login(page, 'olivier.thomas@anyti.me');
-  await openLeaf(page, 'SCA', 'Recette');
+  await openLeaf(page, 'SCA', 'Run et suivi du déploiement');
 
   const rows = page.locator('[data-test="lot-member-row"] [data-test="lot-member-user"]');
   const hobiRow = rows.first();
@@ -49,7 +49,7 @@ test('un lead restreint les personnes proposées pour l\'équipe aux tags choisi
 
 test('revenir sur une feuille filtrée par le bouton retour propose de nouveau tout le monde', async ({ page }) => {
   await login(page, 'olivier.thomas@anyti.me');
-  await openLeaf(page, 'SCA', 'Recette');
+  await openLeaf(page, 'SCA', 'Run et suivi du déploiement');
   const firstRow = page.locator('[data-test="lot-member-row"] [data-test="lot-member-user"]').first();
   const everyone = await people(firstRow).count();
 
@@ -65,7 +65,7 @@ test('revenir sur une feuille filtrée par le bouton retour propose de nouveau t
 
 test('le formulaire d\'une feuille signale aussitôt une personne choisie deux fois, sans rien enregistrer', async ({ page }) => {
   await login(page, 'olivier.thomas@anyti.me');
-  await openLeaf(page, 'SCA', 'Recette');
+  await openLeaf(page, 'SCA', 'Run et suivi du déploiement');
   const rows = page.locator('[data-test="lot-member-row"]');
   const count = await rows.count();
   const first = await rows.first().locator('[data-test="lot-member-user"]').inputValue();

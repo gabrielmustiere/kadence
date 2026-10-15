@@ -41,7 +41,7 @@ Ce jour-là, le calcul ne sait plus rien dire. Une feuille en dépassement n'a p
 - En tant que **responsable d'une feuille**, je veux déclarer l'avancement de ma feuille afin que la roadmap reflète ce que je sais de son état réel.
 - En tant que **lead**, je veux voir le coût projeté à terme d'une feuille face à son estimation afin de repérer une dérive avant que le consommé dépasse l'estimation.
 - En tant que **lead**, je veux qu'une feuille en dépassement retrouve une fin calculée dès que j'en déclare l'avancement afin de ne plus laisser son projet en « fin inconnue ».
-- En tant que **lead ou direction**, je veux qu'une feuille dont l'avancement déclaré est dépassé par le temps saisi depuis soit signalée « avancement à actualiser » afin de ne pas piloter sur une déclaration périmée.
+- En tant que **lead ou direction**, je veux qu'une feuille dont l'avancement n'a pas été redéclaré depuis plus d'une semaine, alors que du temps y a été saisi, soit signalée « avancement à actualiser » afin de ne pas piloter sur une déclaration périmée.
 - En tant que **personne connectée**, je veux lire l'historique des avancements déclarés d'une feuille (date, pourcentage, auteur) sur la fiche projet afin de voir si elle progresse ou stagne.
 - En tant que **personne connectée**, je veux voir l'avancement d'une feuille dans son infobulle sur la roadmap afin de comprendre d'où vient sa fin calculée.
 - En tant que **responsable d'une feuille**, je ne veux PAS pouvoir déclarer l'avancement d'une feuille dont je ne suis pas responsable, car son pilotage relève de son responsable et des leads.
@@ -62,10 +62,10 @@ Ce jour-là, le calcul ne sait plus rien dire. Une feuille en dépassement n'a p
 **Restant d'une feuille**
 
 8. **Sans avancement, ou à 0 %** : le restant reste l'estimation moins le temps saisi, comme aujourd'hui. Déclarer 0 % revient à retirer l'avancement.
-9. **Extrapolation** : au moment de la déclaration, le restant est extrapolé du rythme observé, soit le temps saisi × (100 − avancement) / avancement. Avec 10 j saisis et un avancement de 40 %, la feuille coûtera 25 j au total et il reste 15 j.
-10. **Sans temps saisi** : si aucun temps n'est saisi sur la feuille au moment de la déclaration, le restant vaut l'estimation × (100 − avancement) %. Avec 10 j estimés et 30 % déclarés, il reste 7 j.
-11. **Ancrage** : le restant obtenu à la déclaration est figé. Tout temps saisi ensuite sur la feuille le diminue, quel que soit le jour concerné ou la personne qui le saisit, et une correction qui retire du temps l'augmente, sauf sur une feuille déclarée à 100 % (règle 16). Dans l'exemple de la règle 9, 3 j saisis après la déclaration laissent 12 j. _(Exception apportée à l'implémentation.)_
-12. **Estimation révisée** : réviser l'estimation d'une feuille qui a un avancement ne change pas son restant. L'avancement fait foi. L'estimation reste déclarative et sert de référence au coût projeté.
+9. **Extrapolation** : le restant est extrapolé du temps saisi à ce jour sur la feuille, soit le temps saisi × (100 − avancement) / avancement. Avec 10 j saisis et un avancement de 40 %, la feuille coûtera 25 j au total et il reste 15 j. _(Révisé par la story 020 : calculé sur le temps saisi aujourd'hui, plus rien n'est figé à la déclaration.)_
+10. **Sans temps saisi** : tant qu'aucun temps n'est saisi sur la feuille, le restant vaut l'estimation × (100 − avancement) %. Avec 10 j estimés et 30 % déclarés, il reste 7 j. _(Révisé par la story 020.)_
+11. **Saisie après la déclaration** : le temps saisi après la déclaration est extrapolé au même pourcentage, si bien que le restant et le coût projeté montent jusqu'à la déclaration suivante. Dans l'exemple de la règle 9, 3 j saisis ensuite donnent 13 j saisis et un restant de 19,5 j. _(Révisé par la story 020, qui remplace l'ancrage du restant à la déclaration.)_
+12. **Estimation révisée** : réviser l'estimation d'une feuille qui a un avancement et du temps saisi ne change pas son restant. L'avancement fait foi ; sans temps saisi, le restant suit l'estimation (règle 10, révisée par la story 020). L'estimation reste déclarative et sert de référence au coût projeté.
 13. **Arrondi** : le restant est arrondi au quart de journée supérieur.
 14. **Chronologie** : ce restant alimente la fin calculée telle que la story 006 la définit (capacité de l'équipe, parts, maximum hebdomadaire, jours fériés, date de début). Le reste du calcul est inchangé.
 
@@ -73,7 +73,7 @@ Ce jour-là, le calcul ne sait plus rien dire. Une feuille en dépassement n'a p
 
 15. **Dépassement** : une feuille dont le temps saisi dépasse l'estimation retrouve une fin calculée dès qu'elle a un avancement inférieur à 100 %. Elle reste signalée « en dépassement » avec son ampleur, et ses jours saisis au-delà de l'estimation restent en rouge.
 16. **Terminée à 100 %** : une feuille déclarée à 100 % n'a plus de restant ni de partie future. Elle se termine au dernier jour saisi et est signalée « terminée à 100 % », sans alarme. Ce n'est pas une clôture : la saisie y reste possible, et un temps saisi ensuite prolonge sa partie réalisée. Une correction qui retire du temps ne lui rend aucun restant. Déclarer 100 % est refusé tant qu'aucun temps n'est saisi sur la feuille. _(Précisions apportées au plan et à l'implémentation.)_
-17. **Avancement à actualiser** : quand le temps saisi depuis la déclaration épuise le restant ancré d'un avancement inférieur à 100 %, la feuille n'a plus de partie future. Sa fin est inconnue, et elle est signalée « avancement à actualiser » jusqu'à une nouvelle déclaration. Comme pour un dépassement, la fin de son lot et de son projet devient inconnue, ainsi que le « libre à partir du … » des membres de son équipe.
+17. **Avancement à actualiser** : quand la dernière déclaration, inférieure à 100 %, date de plus de 7 jours et que du temps a été saisi sur la feuille depuis, la feuille est signalée « avancement à actualiser » jusqu'à une nouvelle déclaration. C'est un rappel de la déclaration hebdomadaire : la feuille garde son restant et sa fin calculée, comme son lot et son projet. _(Révisé par la story 020.)_
 18. **Surcharge** : déclarer un avancement n'est pas un geste de planification. Il n'est jamais refusé. La surcharge qu'il provoque en repoussant une fin est une surcharge passive, signalée « à replanifier » (règle 20 de la story 006).
 19. **Découpage d'un lot** : quand un lot qui a un avancement reçoit son premier sous-lot, ce sous-lot reprend son avancement et son historique, comme il reprend déjà sa date de début et son équipe (règle 28 de la story 006). La chronologie reste inchangée. À la bascule inverse, l'avancement remonte sur le lot.
 
@@ -99,7 +99,7 @@ Ce jour-là, le calcul ne sait plus rien dire. Une feuille en dépassement n'a p
 - [ ] Une feuille déclarée à 100 % n'a plus de partie future, se termine au dernier jour saisi et est signalée « terminée à 100 % » ; la saisie y reste possible.
 - [ ] Déclarer 100 % sur une feuille sans aucun temps saisi est refusé avec un message.
 - [ ] Sur la fiche projet, une feuille déclarée à 40 % avec 10 j saisis pour 20 j estimés affiche 15 j de restant, et le restant de son lot et de son projet en tient compte.
-- [ ] Quand le temps saisi depuis la déclaration épuise le restant ancré, la feuille est signalée « avancement à actualiser » et sa fin, comme celle de son lot et de son projet, est inconnue ; une nouvelle déclaration lève le signal.
+- [ ] Quand la dernière déclaration date de plus de 7 jours et que du temps a été saisi depuis, la feuille est signalée « avancement à actualiser » et garde sa fin calculée ; une nouvelle déclaration lève le signal. _(Révisé par la story 020.)_
 - [ ] Une déclaration qui repousse une fin au point de surcharger une personne est acceptée, et les feuilles concernées sont signalées « à replanifier » pour les leads et la direction.
 - [ ] La fiche projet affiche, pour chaque feuille, son avancement en vigueur avec sa date, son coût projeté et l'historique de ses déclarations (date, pourcentage, auteur), de la plus récente à la plus ancienne ; deux déclarations le même jour n'y laissent que la dernière.
 - [ ] La fiche projet reste en lecture seule : elle n'offre aucun moyen de déclarer un avancement.
@@ -116,7 +116,7 @@ Ce jour-là, le calcul ne sait plus rien dire. Une feuille en dépassement n'a p
 - **Avancement déclaré sur un lot découpé ou un projet** : exclu par la règle 1. Leur avancement n'est qu'un cumul.
 - **Avancement saisi par l'équipe pendant la saisie quotidienne** : refusé au nom du principe 1.
 - **Rappel ou notification d'actualisation** : non. Le signal « avancement à actualiser » suffit à ce stade.
-- **Péremption d'un avancement après un délai** : non retenue. Seul l'épuisement du restant ancré rend une déclaration « à actualiser ».
+- **Péremption d'un avancement après un délai** : non retenue ici. La story 020 l'a introduite : une déclaration de plus de 7 jours suivie de temps saisi est « à actualiser » (règle 17).
 - **Avancement à une date passée** : non. Une déclaration vaut à l'instant où elle est faite.
 - **Coût projeté cumulé d'un lot découpé ou d'un projet** : non. Le coût projeté ne s'affiche que par feuille.
 - **Remplissage de la barre selon l'avancement sur la frise** : non. La barre change d'elle-même par la fin calculée.

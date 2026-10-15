@@ -126,14 +126,15 @@ final class RoadmapBuilderTest extends KernelTestCase
         $overrun = $this->planLot($this->createLot($project, 1, $user), new \DateTimeImmutable('2026-10-01'), [[$user, 100]]);
         $this->createTimeEntry($user, $overrun, '2026-10-01', 4);
         $this->createTimeEntry($user, $overrun, '2026-10-02', 2);
-        $this->createProgress($overrun, $user, '2026-10-02', 80, 6);
+        $this->createProgress($overrun, $user, '2026-10-02', 80);
         $complete = $this->planLot($this->createLot($project, 2, $user), new \DateTimeImmutable('2026-10-05'), [[$user, 100]]);
         $this->createTimeEntry($user, $complete, '2026-10-05', 4);
-        $this->createProgress($complete, $user, '2026-10-05', 100, 4);
-        $toRefresh = $this->planLot($this->createLot($project, 5, $user), new \DateTimeImmutable('2026-10-05'), [[$user, 100]]);
-        $this->createTimeEntry($user, $toRefresh, '2026-10-05', 4);
-        $this->createProgress($toRefresh, $user, '2026-10-05', 50, 4);
-        $this->createTimeEntry($user, $toRefresh, '2026-10-06', 4);
+        $this->createProgress($complete, $user, '2026-10-05', 100);
+        $other = $this->createUser();
+        $toRefresh = $this->planLot($this->createLot($project, 5, $other), new \DateTimeImmutable('2026-09-21'), [[$other, 100]]);
+        $this->createTimeEntry($other, $toRefresh, '2026-09-21', 4);
+        $this->createProgress($toRefresh, $other, '2026-09-22', 50);
+        $this->createTimeEntry($other, $toRefresh, '2026-10-06', 4);
 
         $row = $this->projectRow($this->build(), $project);
         [$overrunRow, $completeRow, $toRefreshRow] = $row->children;
@@ -150,8 +151,8 @@ final class RoadmapBuilderTest extends KernelTestCase
         self::assertNull($completeRow->future);
 
         self::assertSame([RoadmapSignal::ProgressToRefresh], $toRefreshRow->signals);
-        self::assertTrue($toRefreshRow->isEndUnknown());
-        self::assertNull($row->end, 'A progress to refresh leaves the end of its project unknown.');
+        self::assertSame('2026-10-09', $toRefreshRow->end?->format('Y-m-d'));
+        self::assertSame('2026-10-09', $row->end?->format('Y-m-d'), 'A progress to refresh keeps its end, and so does its project.');
     }
 
     public function testAProgressThatPushesAnEndIntoAnotherLeafOfThePersonIsToReplan(): void
@@ -164,7 +165,7 @@ final class RoadmapBuilderTest extends KernelTestCase
         $next = $this->planLot($this->createLot($project, 5, $user), new \DateTimeImmutable('2026-10-20'), [[$user, 100]]);
         self::assertSame([[], []], array_map(static fn (RoadmapRow $row): array => $row->signals, $this->projectRow($this->build(), $project)->children));
 
-        $this->createProgress($declared, $user, '2026-10-06', 10, 8);
+        $this->createProgress($declared, $user, '2026-10-06', 10);
 
         [$declaredRow, $nextRow] = $this->projectRow($this->build(), $project)->children;
         self::assertSame([RoadmapSignal::ToReplan], $declaredRow->signals);
@@ -176,13 +177,13 @@ final class RoadmapBuilderTest extends KernelTestCase
     {
         $user = $this->createUser();
         $project = $this->createProject();
-        $leaf = $this->planLot($this->createLot($project, 5, $user), new \DateTimeImmutable('2026-10-05'), [[$user, 100]]);
-        $this->createTimeEntry($user, $leaf, '2026-10-05', 4);
-        $this->createProgress($leaf, $user, '2026-10-05', 50, 4);
+        $leaf = $this->planLot($this->createLot($project, 5, $user), new \DateTimeImmutable('2026-09-21'), [[$user, 100]]);
+        $this->createTimeEntry($user, $leaf, '2026-09-21', 4);
+        $this->createProgress($leaf, $user, '2026-09-22', 50);
         $this->createTimeEntry($user, $leaf, '2026-10-06', 4);
         self::assertSame([RoadmapSignal::ProgressToRefresh], $this->projectRow($this->build(), $project)->children[0]->signals);
 
-        $this->createProgress($leaf, $user, '2026-10-07', 60, 8);
+        $this->createProgress($leaf, $user, '2026-10-07', 60);
 
         $row = $this->projectRow($this->build(), $project)->children[0];
         self::assertSame([], $row->signals);
@@ -196,7 +197,7 @@ final class RoadmapBuilderTest extends KernelTestCase
         $project = $this->createProject();
         $lot = $this->planLot($this->createLot($project, 10, $user), new \DateTimeImmutable('2026-10-05'), [[$user, 100]]);
         $this->createTimeEntry($user, $lot, '2026-10-05', 4);
-        $this->createProgress($lot, $user, '2026-10-05', 20, 4);
+        $this->createProgress($lot, $user, '2026-10-05', 20);
         $before = $this->projectRow($this->build(), $project)->children[0];
 
         $input = LotInput::forSubLotOf($lot);

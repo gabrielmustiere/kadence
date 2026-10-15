@@ -161,13 +161,13 @@ final class RoadmapControllerTest extends WebTestCase
         $declared = $this->planLot($this->createLot($project, 10, $alice, title: 'Avancée'), new \DateTimeImmutable('2026-10-05'), [[$alice, 100]]);
         $this->createTimeEntry($alice, $declared, '2026-10-05', 4);
         $this->createTimeEntry($alice, $declared, '2026-10-06', 4);
-        $this->createProgress($declared, $alice, '2026-10-06', 10, 8);
+        $this->createProgress($declared, $alice, '2026-10-06', 10);
         $complete = $this->planLot($this->createLot($project, 2, $alice, title: 'Terminée'), new \DateTimeImmutable('2026-09-28'), [[$alice, 100]]);
         $this->createTimeEntry($alice, $complete, '2026-09-28', 4);
-        $this->createProgress($complete, $alice, '2026-09-28', 100, 4);
+        $this->createProgress($complete, $alice, '2026-09-28', 100);
         $toRefresh = $this->planLot($this->createLot($project, 5, $alice, title: 'À actualiser'), new \DateTimeImmutable('2026-09-29'), [[$alice, 100]]);
         $this->createTimeEntry($alice, $toRefresh, '2026-09-29', 4);
-        $this->createProgress($toRefresh, $alice, '2026-09-29', 50, 4);
+        $this->createProgress($toRefresh, $alice, '2026-09-29', 50);
         $this->createTimeEntry($alice, $toRefresh, '2026-09-30', 4);
 
         $crawler = $client->request('GET', '/roadmap');
@@ -184,7 +184,7 @@ final class RoadmapControllerTest extends WebTestCase
         self::assertSame('terminé à 100 %', $leaf('Terminée')->filter('[data-test="signal-completed"]')->text());
         self::assertSame('Lun 28/09/2026', $leaf('Terminée')->filter('[data-test="roadmap-recap-end"]')->text());
         self::assertSame('avancement à actualiser', $leaf('À actualiser')->filter('[data-test="signal-progress_to_refresh"]')->text());
-        self::assertSame('inconnue, avancement à actualiser', $leaf('À actualiser')->filter('[data-test="roadmap-recap-end"]')->text());
+        self::assertSame('Ven 09/10/2026', $leaf('À actualiser')->filter('[data-test="roadmap-recap-end"]')->text(), 'A progress to refresh keeps its end.');
     }
 
     public function testTooltipOfASegmentSaysWhatEachPersonEnteredOnIt(): void

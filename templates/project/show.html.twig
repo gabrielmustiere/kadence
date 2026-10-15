@@ -95,14 +95,17 @@
                         </span>
                     </div>
                     {% if projectedGap != 0 %}
-                        <p class="mt-2 text-base font-semibold tabular-nums {{ projectedGap > 0 ? 'text-fg-danger-strong' : 'text-body' }}" data-test="project-page-gap">{{ projectedGap|gap(summary.estimateDays, signed: true) }}</p>
+                        <p class="mt-2 text-base tabular-nums text-body">Écart projeté <span class="font-semibold {{ projectedGap > 0 ? 'text-fg-danger-strong' : 'text-body' }}" data-test="project-page-gap">{{ projectedGap|gap(summary.estimateDays, signed: true) }}</span></p>
+                        {% if projectedGap > 0 and summary.overrunQuarters > 0 %}
+                            <p class="text-sm tabular-nums text-body" data-test="project-page-gap-overrun">dont {{ summary.overrunQuarters|days }} déjà saisi{{ summary.overrunQuarters >= 8 ? 's' }} au-delà des estimations</p>
+                        {% endif %}
                     {% endif %}
                     <div class="mt-3 max-w-2xl space-y-1 text-sm leading-relaxed text-body">
                         {% if summary.isPartial %}
                             <p data-test="project-page-projected-partial">Estimation partielle : {{ summary.toEstimate }} lot{{ summary.toEstimate > 1 ? 's' }} reste{{ summary.toEstimate > 1 ? 'nt' }} à estimer, et leur restant n'est pas compté dans le total projeté.</p>
                         {% endif %}
                         {% if summary.isProjectedAtLeast %}
-                            <p data-test="project-page-at-least-reason">C'est un minimum : le restant d'un lot qui dépasse son estimation sans avancement déclaré, ou qui a épuisé celui de son dernier avancement, est inconnu.</p>
+                            <p data-test="project-page-at-least-reason">C'est un minimum : le restant d'un lot qui dépasse son estimation sans avancement déclaré est inconnu.</p>
                         {% endif %}
                         <p data-test="project-page-no-offset">Le restant d'un lot ne compense jamais le dépassement d'un autre : ils s'additionnent séparément.</p>
                     </div>
@@ -134,8 +137,8 @@
             <twig:Ruler size="lg" class="mt-7" :entered="summary.enteredQuarters" :remaining="summary.remainingQuarters" :overrun="summary.overrunQuarters" :estimate="summary.estimateDays * 4">
                 <ul class="flex flex-wrap gap-x-7 gap-y-2 text-sm text-body">
                     <li class="inline-flex items-center gap-2"><span class="h-3 w-4 rounded-[2px] bg-brand" aria-hidden="true"></span>Saisi <strong class="font-semibold tabular-nums text-heading" data-test="project-page-entered">{{ summary.enteredQuarters|days }}</strong></li>
+                    <li class="inline-flex items-center gap-2"><span class="h-3 w-4 rounded-[2px] bg-danger" aria-hidden="true"></span>dont déjà dépassé <strong class="font-semibold tabular-nums {{ summary.overrunQuarters > 0 ? 'text-fg-danger-strong' : 'text-heading' }}" data-test="project-page-overrun">{{ summary.overrunQuarters > 0 ? summary.overrunQuarters|gap(summary.estimateDays) : summary.overrunQuarters|days }}</strong></li>
                     <li class="inline-flex items-center gap-2"><span class="hatch-brand h-3 w-4 rounded-[2px] bg-brand-softer" aria-hidden="true"></span>Restant <strong class="font-semibold tabular-nums text-heading" data-test="project-page-remaining">{{ summary.remainingQuarters|days }}</strong></li>
-                    <li class="inline-flex items-center gap-2"><span class="h-3 w-4 rounded-[2px] bg-danger" aria-hidden="true"></span>Dépassement <strong class="font-semibold tabular-nums {{ summary.overrunQuarters > 0 ? 'text-fg-danger-strong' : 'text-heading' }}" data-test="project-page-overrun">{{ summary.overrunQuarters > 0 ? summary.overrunQuarters|gap(summary.estimateDays) : summary.overrunQuarters|days }}</strong></li>
                 </ul>
             </twig:Ruler>
         </section>

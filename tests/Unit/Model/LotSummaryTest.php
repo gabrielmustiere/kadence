@@ -28,11 +28,6 @@ final class LotSummaryTest extends TestCase
         self::assertFalse(self::leaf(entered: 12 * 4, remaining: 3 * 4, overrun: 2 * 4, percent: 80)->isRemainingUnknown());
     }
 
-    public function testALeafPastWhatItsProgressAnnouncedHasAnUnknownRemaining(): void
-    {
-        self::assertTrue(self::leaf(entered: 9 * 4, percent: 60)->isRemainingUnknown());
-    }
-
     public function testALeafDeclaredCompleteHasNothingLeft(): void
     {
         self::assertFalse(self::leaf(entered: 9 * 4, percent: 100)->isRemainingUnknown());
@@ -54,7 +49,7 @@ final class LotSummaryTest extends TestCase
     public static function leaf(int $entered, int $remaining = 0, int $overrun = 0, ?int $percent = null): LotSummary
     {
         $lot = new Lot(new Project());
-        $progress = null === $percent ? null : new LotProgress($lot, new User(), new \DateTimeImmutable('2026-10-01'), $percent, $entered, $remaining);
+        $progress = null === $percent ? null : new LotProgress($lot, new User(), new \DateTimeImmutable('2026-10-01'), $percent);
 
         return new LotSummary(
             $lot,

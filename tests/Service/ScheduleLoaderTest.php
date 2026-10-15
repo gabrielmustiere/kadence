@@ -56,11 +56,11 @@ final class ScheduleLoaderTest extends KernelTestCase
         $project = $this->createProject();
         $declared = $this->createLot($project, 10, $alice);
         $this->createTimeEntry($alice, $declared, '2026-10-05', 4);
-        $this->createProgress($declared, $alice, '2026-10-05', 40, 4);
-        $this->createProgress($declared, $alice, '2026-10-06', 50, 4);
+        $this->createProgress($declared, $alice, '2026-10-05', 40);
+        $this->createProgress($declared, $alice, '2026-10-06', 50);
         $withdrawn = $this->createLot($project, 10, $alice);
-        $this->createProgress($withdrawn, $alice, '2026-10-05', 40, 0);
-        $this->createProgress($withdrawn, $alice, '2026-10-06', 0, 0);
+        $this->createProgress($withdrawn, $alice, '2026-10-05', 40);
+        $this->createProgress($withdrawn, $alice, '2026-10-06', 0);
 
         $plans = $this->loader()->load()->plans;
         $progress = $plans[(int) $declared->getId()]->progress;
@@ -68,7 +68,6 @@ final class ScheduleLoaderTest extends KernelTestCase
         self::assertNotNull($progress);
         self::assertSame(50, $progress->percent);
         self::assertSame('2026-10-06', $progress->declaredOn->format('Y-m-d'));
-        self::assertSame(4, $progress->remainingQuarters);
         self::assertNull($plans[(int) $withdrawn->getId()]->progress);
     }
 
@@ -76,7 +75,7 @@ final class ScheduleLoaderTest extends KernelTestCase
     {
         $alice = $this->createUser();
         $leaf = $this->createLot($this->createProject(), 10, $alice);
-        $this->createProgress($leaf, $alice, '2026-10-05', 30, 0);
+        $this->createProgress($leaf, $alice, '2026-10-05', 30);
         $leaf->setEstimateDays(null);
         $this->entityManager()->flush();
 

@@ -8,20 +8,19 @@ use App\Entity\LotProgress;
 use App\Model\Quarters;
 
 /**
- * The progress in force on a leaf: what was left to do when it was declared, which the time entered since uses up.
+ * The progress in force on a leaf: the share of its work declared done, from which what is left is extrapolated on
+ * the time entered so far.
  */
 final readonly class LeafProgress
 {
+    public const int REFRESH_DAYS = 7;
+
     /**
      * @param int<1, 100> $percent
-     * @param int<0, max> $enteredQuarters   time entered on the leaf when the progress was declared
-     * @param int<0, max> $remainingQuarters what was left to do when the progress was declared
      */
     public function __construct(
         public int $percent,
         public \DateTimeImmutable $declaredOn,
-        public int $enteredQuarters,
-        public int $remainingQuarters,
     ) {
     }
 
@@ -31,42 +30,37 @@ final readonly class LeafProgress
     public static function fromDeclaration(LotProgress $declaration): ?self
     {
         $percent = $declaration->getPercent();
-        $remaining = $declaration->getRemainingQuarters();
-        if (0 === $percent || null === $remaining) {
-            return null;
-        }
 
-        return new self($percent, $declaration->getDeclaredOn(), $declaration->getEnteredQuarters(), $remaining);
+        return 0 === $percent ? null : new self($percent, $declaration->getDeclaredOn());
     }
 
     /**
-     * What is left to do at the declaration, rounded up to the quarter: extrapolated from the pace observed, or taken
-     * from the estimate when no time is entered yet.
+     * What is left to do, rounded up to the quarter: extrapolated from the time entered so far, or taken from the
+     * estimate while none is entered.
      *
-     * @param int<1, 100> $percent
      * @param int<0, max> $enteredQuarters
      * @param int<0, max> $estimateQuarters
      *
      * @return int<0, max>
      */
-    public static function anchoredRemaining(int $percent, int $enteredQuarters, int $estimateQuarters): int
+    public function remaining(int $enteredQuarters, int $estimateQuarters): int
     {
         $remaining = 0 === $enteredQuarters
-            ? intdiv($estimateQuarters * (100 - $percent) + 99, 100)
-            : intdiv($enteredQuarters * (100 - $percent) + $percent - 1, $percent);
+            ? intdiv($estimateQuarters * (100 - $this->percent) + 99, 100)
+            : intdiv($enteredQuarters * (100 - $this->percent) + $this->percent - 1, $this->percent);
 
         return max(0, $remaining);
     }
 
     /**
-     * What is left to do once the time entered since the declaration is used up, below 0 when it is overtaken; time
-     * removed since gives some back, except to a leaf declared complete.
+     * Declaring the progress is a weekly duty: one older than a week is to refresh once time was entered after it, short
+     * of 100 %.
      */
-    public function remainingAfter(int $consumedQuarters): int
+    public function isToRefresh(?\DateTimeImmutable $lastEntryDay, \DateTimeImmutable $today): bool
     {
-        $remaining = $this->remainingQuarters - ($consumedQuarters - $this->enteredQuarters);
-
-        return $this->isComplete() ? min(0, $remaining) : $remaining;
+        return !$this->isComplete()
+            && $this->declaredOn < $today->setTime(0, 0)->modify(\sprintf('-%d days', self::REFRESH_DAYS))
+            && null !== $lastEntryDay && $lastEntryDay > $this->declaredOn;
     }
 
     public function isComplete(): bool

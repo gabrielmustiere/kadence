@@ -85,7 +85,7 @@ final readonly class ProjectRollup
         $estimate = $estimateDays * Quarters::PER_DAY;
         $declaration = $declarations[0] ?? null;
         $progress = null === $declaration ? null : LeafProgress::fromDeclaration($declaration);
-        $remaining = max(0, $progress?->remainingAfter($entered) ?? $estimate - $entered);
+        $remaining = $progress?->remaining(max(0, $entered), $estimate) ?? max(0, $estimate - $entered);
 
         return self::leafSummary($leaf, $entered, $declarations, $remaining, max(0, $entered - $estimate), LeafProgress::pointsOf($progress, $entered, $estimate), null === $progress ? null : $entered + $remaining);
     }

@@ -165,24 +165,24 @@ final class ProjectRollupTest extends TestCase
         $overrun = $this->lot($project, 10, $this->user(), id: 2);
 
         $summary = $this->rollup([1 => 52, 2 => 48], [
-            1 => [$this->declaration($slow, 40, 40, 60)],
-            2 => [$this->declaration($overrun, 80, 48, 12)],
+            1 => [$this->declaration($slow, 40)],
+            2 => [$this->declaration($overrun, 80)],
         ])->summarize($project);
 
         [$slowSummary, $overrunSummary] = $summary->lots;
-        self::assertSame([48, 0, 100], [$slowSummary->remainingQuarters, $slowSummary->overrunQuarters, $slowSummary->projectedQuarters]);
+        self::assertSame([78, 0, 130], [$slowSummary->remainingQuarters, $slowSummary->overrunQuarters, $slowSummary->projectedQuarters]);
         self::assertSame([12, 8, 60], [$overrunSummary->remainingQuarters, $overrunSummary->overrunQuarters, $overrunSummary->projectedQuarters]);
-        self::assertSame([60, 8], [$summary->remainingQuarters, $summary->overrunQuarters]);
+        self::assertSame([90, 8], [$summary->remainingQuarters, $summary->overrunQuarters]);
         self::assertSame(40, $slowSummary->progressPercent());
-        self::assertSame([20, 20], [$slowSummary->projectedGapQuarters(), $overrunSummary->projectedGapQuarters()]);
+        self::assertSame([50, 20], [$slowSummary->projectedGapQuarters(), $overrunSummary->projectedGapQuarters()]);
     }
 
     public function testAProgressWithdrawnAtZeroPercentLeavesTheEstimateInForce(): void
     {
         $project = new Project()->setTitle('Kadence');
         $lot = $this->lot($project, 20, $this->user(), id: 1);
-        $withdrawn = $this->declaration($lot, 0, 40, null);
-        $earlier = $this->declaration($lot, 40, 20, 30);
+        $withdrawn = $this->declaration($lot, 0);
+        $earlier = $this->declaration($lot, 40);
 
         $leaf = $this->rollup([1 => 40], [1 => [$withdrawn, $earlier]])->summarize($project)->lots[0];
 
@@ -198,7 +198,7 @@ final class ProjectRollupTest extends TestCase
         $project = new Project()->setTitle('Kadence');
         $lot = $this->lot($project, null, $this->user(), id: 1);
 
-        $declaration = $this->declaration($lot, 30, 0, 28);
+        $declaration = $this->declaration($lot, 30);
 
         $leaf = $this->rollup([], [1 => [$declaration]])->summarize($project)->lots[0];
 
@@ -217,7 +217,7 @@ final class ProjectRollupTest extends TestCase
         $this->lot($project, 20, $this->user(), $split, 3);
         $this->lot($project, null, $this->user(), id: 4);
 
-        $summary = $this->rollup([3 => 24, 4 => 8], [2 => [$this->declaration($declared, 50, 0, 40)]])->summarize($project);
+        $summary = $this->rollup([3 => 24, 4 => 8], [2 => [$this->declaration($declared, 50)]])->summarize($project);
 
         self::assertSame(40, $summary->lots[0]->progressPercent());
         self::assertSame(40, $summary->progressPercent());
@@ -250,13 +250,11 @@ final class ProjectRollupTest extends TestCase
     }
 
     /**
-     * @param int<0, 100>      $percent
-     * @param int<0, max>      $entered
-     * @param int<0, max>|null $remaining
+     * @param int<0, 100> $percent
      */
-    private function declaration(Lot $lot, int $percent, int $entered, ?int $remaining): LotProgress
+    private function declaration(Lot $lot, int $percent): LotProgress
     {
-        return new LotProgress($lot, $this->user(), new \DateTimeImmutable('2026-10-02'), $percent, $entered, $remaining);
+        return new LotProgress($lot, $this->user(), new \DateTimeImmutable('2026-10-02'), $percent);
     }
 
     /** @param positive-int|null $estimateDays */

@@ -22,7 +22,6 @@ use App\Enum\Type\Role;
 use App\Enum\Type\TagCategory;
 use App\Enum\Type\TimeOffStatus;
 use App\Enum\Type\TimeOffType;
-use App\Model\Schedule\LeafProgress;
 use App\Model\TimeOff\TimeOffPeriod;
 use App\Model\Week;
 use App\Service\HolidayManager;
@@ -61,13 +60,18 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
     /** Team => the team whose project it lends a hand to. */
     private const array HELPS = ['sca' => 'modernisation', 'modernisation' => 'sca', 'onboarding' => 'sca'];
 
-    /** Leaves left « à estimer » although time is entered on them. */
-    private const array TO_ESTIMATE = ['Tests de charge'];
+    /** Leaves not started yet, named by their path « lot / sous-lot »: path => estimate in days. */
+    private const array ESTIMATES_AHEAD = [
+        'V2 VCN / Ajout d\'un appareil de confiance' => 8,
+        'V3 Déclaratif admin / Source d\'authentification à la connexion' => 10,
+        'V3 Déclaratif admin / Source d\'authentification des actions admin' => 12,
+        'Données et offre / Impacts de l\'offre' => 6,
+    ];
 
-    /** A running leaf behind its estimate: its progress declarations, days before today then percent, the latest last. */
-    private const array PROGRESS_HISTORY = ['Relances' => [[21, 30], [7, 40], [0, 45]]];
+    /** A running leaf whose progress is declared behind its consumption: it will overrun its estimate. */
+    private const string BEHIND_ESTIMATE = 'V2 VCN / Paiement en ligne';
 
-    /** A running leaf whose progress, declared two weeks ago when a quarter of its time was entered, is used up since. */
+    /** A running leaf whose owner stopped declaring two weeks ago, although time is entered on it since. */
     private const string PROGRESS_TO_REFRESH = 'Documentation';
 
     /** Person key => team type, technical skills, functional experiences. */
@@ -93,15 +97,16 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
 
     /**
      * The team of the running leaves, owner first: they start on the week of their first entry. Maxime is loaded at
-     * 150 % by Relances and Recette, as when a planning is overtaken by the time entered.
+     * 150 % by the online payment and the SMS code masking of V2, as when a planning is overtaken by the time entered.
      */
     private const array TEAMS = [
-        'Relances' => [['maxime', 100], ['hobi', 50]],
-        'Recette' => [['hobi', 50], ['maxime', 50]],
-        'Tableaux de bord' => [['romain', 100]],
-        'Alerting' => [['damien', 80], ['gabriel', 50]],
+        'V2 VCN / Paiement en ligne' => [['maxime', 100], ['hobi', 50]],
+        'V2 VCN / Gestion des paramètres' => [['romain', 80]],
+        'V2 VCN / Masquage du code SMS' => [['romain', 20], ['maxime', 50]],
+        'Transverse / Run et suivi du déploiement' => [['hobi', 50]],
+        'Observabilité / Alerting' => [['damien', 80], ['gabriel', 50]],
         'Documentation' => [['gabriel', 50], ['damien', 20]],
-        'Tableau de bord d\'accueil' => [['lena', 100]],
+        'Tunnel / Vision cible' => [['lena', 100]],
     ];
 
     /**
@@ -121,8 +126,12 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
     /** The entitlements declared to everyone, in half-days, for the current and the previous period. */
     private const array ENTITLEMENTS = ['cp' => 50, 'rtt' => 20];
 
+    /** A running leaf on which someone entered two days or more in the last four weeks is one of their favorites. */
+    private const int FAVORITE_WEEKS = 4;
+    private const int FAVORITE_QUARTERS = 8;
+
     /** A leaf planned two weeks ago on which nobody has entered time yet: title, estimate in days, team (owner first). */
-    private const array LATE_START = ['Migration des clients', 15, [['romain', 50]]];
+    private const array LATE_START = ['V3 Déclaratif admin / Authentification des agents', 15, [['romain', 50]]];
 
     /**
      * Person key => first name, last name, role, team, weekly quarters, day off (ISO day) or null, first week, weekly
@@ -153,12 +162,37 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
     private static function projects(): array
     {
         return [
-            'sca' => ['SCA', 'Évolutions du produit SCA : facturation, exports et reprise des clients existants.', [
-                'Cadrage' => [0, 2],
-                'Module de facturation' => ['subLots' => ['Modèle de données' => [2, 10], 'Calcul des échéances' => [6, 16], 'Relances' => [14, 26]]],
-                'Exports' => ['subLots' => ['Exports comptables' => [10, 20], 'Tableaux de bord' => [16, 26]]],
-                'Recette' => [21, 26],
-                'Migration des clients' => null,
+            'sca' => ['SCA', 'Authentification forte des clients : appareils de confiance, paiement en ligne et déclaratif admin.', [
+                'V1 Secure' => ['subLots' => [
+                    'Déclenchement de la SCA' => [0, 3],
+                    'Enregistrement du premier appareil' => [2, 6],
+                    'Connexion depuis un appareil de confiance' => [4, 8],
+                    'SCA à l\'acte' => [6, 10],
+                    'Paiement en ligne' => [8, 12],
+                    'Gestion des paramètres' => [10, 13],
+                    'Masquage du code SMS' => [11, 13],
+                    'Ajout d\'un appareil de confiance' => [12, 15],
+                ]],
+                'V2 VCN' => ['subLots' => [
+                    'Déclenchement de la SCA' => [13, 16],
+                    'Enregistrement du premier appareil' => [14, 18],
+                    'Connexion depuis un appareil de confiance' => [16, 20],
+                    'SCA à l\'acte' => [18, 21],
+                    'Paiement en ligne' => [19, 26],
+                    'Gestion des paramètres' => [23, 26],
+                    'Masquage du code SMS' => [24, 26],
+                    'Ajout d\'un appareil de confiance' => null,
+                ]],
+                'V3 Déclaratif admin' => ['subLots' => [
+                    'Authentification des agents' => null,
+                    'Source d\'authentification à la connexion' => null,
+                    'Source d\'authentification des actions admin' => null,
+                ]],
+                'Transverse' => ['subLots' => [
+                    'Run et suivi du déploiement' => [16, 26],
+                    'E-mail d\'enrôlement' => [10, 14],
+                    'Gestion multicorp' => [15, 22],
+                ]],
             ]],
             'modernisation' => ['Modernisation technique', 'Montées de version, intégration continue et observabilité de la plateforme.', [
                 'Audit de l\'existant' => [0, 3],
@@ -168,11 +202,33 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
                 'Documentation' => [20, 26],
                 'Tests de charge' => [22, 26],
             ]],
-            'onboarding' => ['Onboarding', 'Parcours d\'arrivée des nouveaux clients, de l\'inscription au premier usage.', [
-                'Maquettes' => [0, 4],
-                'Inscription' => [3, 9],
-                'Parcours guidé' => ['subLots' => ['Assistant de configuration' => [8, 16], 'Import des données' => [12, 22]]],
-                'Tableau de bord d\'accueil' => [17, 26],
+            'onboarding' => ['Onboarding', 'Tunnel d\'ouverture de compte BAQ : contrôles, paiement Hipay, relations et documents.', [
+                'Tunnel' => ['subLots' => [
+                    'Sécurisation' => [0, 5],
+                    'Run et correctifs' => [12, 20],
+                    'Vision cible' => [17, 26],
+                ]],
+                'Contrôles' => ['subLots' => [
+                    'Champs utilisateur' => [2, 7],
+                    'RL et BE avant création du wallet' => [6, 11],
+                    'Relances Ubble KO' => [9, 13],
+                ]],
+                'Paiement Hipay V2' => ['subLots' => [
+                    'Paiements' => [4, 10],
+                    'Encaissements' => [10, 16],
+                ]],
+                'Relations' => ['subLots' => [
+                    'Évolution' => [8, 14],
+                    'Migration' => [14, 20],
+                ]],
+                'Documents' => ['subLots' => [
+                    'Attestation sur l\'honneur CTIN' => [13, 17],
+                    'Fiche de situation financière' => [16, 21],
+                ]],
+                'Données et offre' => ['subLots' => [
+                    'Nouveaux champs utilisateur' => [19, 22],
+                    'Impacts de l\'offre' => null,
+                ]],
             ]],
         ];
     }
@@ -192,10 +248,16 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
     /** @var array<int, int> quarters entered by lot id */
     private array $consumed = [];
 
-    /** @var array<string, Lot> every leaf by title */
+    /** @var array<string, array<int, array{Lot, int}>> the lots each person entered time on lately and the quarters, by person key then lot id */
+    private array $recentLots = [];
+
+    /** @var array<int, array<int, int>> quarters entered by lot id, then week index */
+    private array $enteredByWeek = [];
+
+    /** @var array<string, Lot> every leaf by path */
     private array $leaves = [];
 
-    /** @var array<int, TimeEntry> the last entry made on each lot, by lot id */
+    /** @var array<int, array{TimeEntry, int}> the last entry made on each lot and its week index, by lot id */
     private array $lastEntries = [];
 
     public function __construct(
@@ -227,7 +289,7 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
         }
         $this->estimate();
         $this->plan($firstWeek, $today);
-        $this->declareProgress($manager, $today);
+        $this->declareProgress($manager, $firstWeek, $today);
         $this->loadFavorites($manager, $support);
         $this->loadTimeOff($manager, $today);
         $manager->flush();
@@ -347,10 +409,17 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
      */
     private function addLeaf(string $team, Lot $leaf, ?array $weeks): void
     {
-        $this->leaves[(string) $leaf->getTitle()] = $leaf;
+        $this->leaves[self::path($leaf)] = $leaf;
         if (null !== $weeks) {
             $this->leavesByTeam[$team][] = [$leaf, $weeks[0], $weeks[1]];
         }
+    }
+
+    private static function path(Lot $leaf): string
+    {
+        $parent = $leaf->getParent();
+
+        return null === $parent ? (string) $leaf->getTitle() : \sprintf('%s / %s', $parent->getTitle(), $leaf->getTitle());
     }
 
     /**
@@ -369,17 +438,24 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
     }
 
     /**
-     * The test accounts pin their current leaf and the support.
+     * Everyone pins the running leaves they work on lately, and the support if they entered time on it.
      */
     private function loadFavorites(ObjectManager $manager, Lot $support): void
     {
-        $favorites = [
-            'antoine' => [$this->leaves['Tableau de bord d\'accueil'], $support],
-            'olivier' => [$this->leaves['Tableau de bord d\'accueil'], $support],
-        ];
-        foreach ($favorites as $key => $leaves) {
-            foreach ($leaves as $leaf) {
-                $manager->persist(new FavoriteLot($this->people[$key], $leaf));
+        $running = [spl_object_id($support) => true];
+        foreach ($this->leavesByTeam as $leaves) {
+            foreach ($leaves as [$leaf, , $lastWeek]) {
+                if ($lastWeek >= self::WEEKS) {
+                    $running[spl_object_id($leaf)] = true;
+                }
+            }
+        }
+
+        foreach ($this->recentLots as $key => $lots) {
+            foreach ($lots as [$lot, $quarters]) {
+                if (isset($running[spl_object_id($lot)]) && ($lot === $support || $quarters >= self::FAVORITE_QUARTERS)) {
+                    $manager->persist(new FavoriteLot($this->people[$key], $lot));
+                }
             }
         }
     }
@@ -421,8 +497,13 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
                 foreach ($this->split($capacity, $leaves, $focus, $helped, $support) as [$leaf, $dayQuarters]) {
                     $entry = new TimeEntry($person, $leaf, $day, $dayQuarters);
                     $manager->persist($entry);
-                    $this->lastEntries[(int) $leaf->getId()] = $entry;
-                    $this->consumed[(int) $leaf->getId()] = ($this->consumed[(int) $leaf->getId()] ?? 0) + $dayQuarters;
+                    $lotId = (int) $leaf->getId();
+                    $this->lastEntries[$lotId] = [$entry, $weekIndex];
+                    $this->consumed[$lotId] = ($this->consumed[$lotId] ?? 0) + $dayQuarters;
+                    $this->enteredByWeek[$lotId][$weekIndex] = ($this->enteredByWeek[$lotId][$weekIndex] ?? 0) + $dayQuarters;
+                    if ($weekIndex >= self::WEEKS - self::FAVORITE_WEEKS) {
+                        $this->recentLots[$key][$lotId] = [$leaf, ($this->recentLots[$key][$lotId][1] ?? 0) + $dayQuarters];
+                    }
                 }
             }
         }
@@ -533,12 +614,11 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
      */
     private function estimate(): void
     {
+        foreach (self::ESTIMATES_AHEAD as $path => $estimateDays) {
+            $this->leaves[$path]->setEstimateDays($estimateDays);
+        }
         foreach ($this->leavesByTeam as $leaves) {
             foreach ($leaves as [$leaf, , $lastWeek]) {
-                if (\in_array($leaf->getTitle(), self::TO_ESTIMATE, true)) {
-                    continue;
-                }
-
                 $consumed = $this->consumed[(int) $leaf->getId()] ?? 0;
                 $finished = $lastWeek < self::WEEKS;
                 $factor = $finished ? [0.8, 0.9, 1.0, 1.1, 1.2][mt_rand(0, 4)] : 1.3 + mt_rand(0, 7) / 10;
@@ -561,14 +641,17 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
      */
     private function trimToWholeDays(Lot $leaf, int $consumed): int
     {
+        $lotId = (int) $leaf->getId();
         $excess = $consumed % 4;
-        $last = $this->lastEntries[(int) $leaf->getId()] ?? null;
+        [$last, $weekIndex] = $this->lastEntries[$lotId] ?? [null, 0];
         $trimmed = null === $last ? 0 : $last->getQuarters() - $excess;
         if (0 === $excess || null === $last || $trimmed < 1 || $trimmed > 4) {
             return $consumed;
         }
 
         $last->setQuarters($trimmed);
+        $this->consumed[$lotId] = $consumed - $excess;
+        $this->enteredByWeek[$lotId][$weekIndex] -= $excess;
 
         return $consumed - $excess;
     }
@@ -581,7 +664,7 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
         foreach ($this->leavesByTeam as $leaves) {
             foreach ($leaves as [$leaf, $firstActiveWeek]) {
                 $leaf->setStartDate($this->week($firstWeek, $firstActiveWeek)->monday);
-                $team = self::TEAMS[(string) $leaf->getTitle()] ?? null;
+                $team = self::TEAMS[self::path($leaf)] ?? null;
                 $owner = $leaf->getOwner();
                 if (null !== $team) {
                     $this->staff($leaf, $team);
@@ -591,54 +674,55 @@ final class DemoCompanyFixtures extends Fixture implements DependentFixtureInter
             }
         }
 
-        [$title, $estimateDays, $team] = self::LATE_START;
-        $late = $this->leaves[$title]->setEstimateDays($estimateDays)->setStartDate(Week::containing($today)->monday->modify('-2 weeks'));
+        [$path, $estimateDays, $team] = self::LATE_START;
+        $late = $this->leaves[$path]->setEstimateDays($estimateDays)->setStartDate(Week::containing($today)->monday->modify('-2 weeks'));
         $this->staff($late, $team);
     }
 
     /**
-     * Besides the leaves of PROGRESS_HISTORY and PROGRESS_TO_REFRESH, the first finished leaf a day or more over its
-     * estimate gets an end again at 90 %, and the first one that consumed exactly its estimate is declared complete.
-     * The time entered is read before the last entries were trimmed to whole days: a leaf that consumed exactly its
-     * estimate is declared on its estimate.
+     * Declaring the progress is a weekly duty: the owner of each leaf declares it on the Friday of every past week since
+     * time was first entered on it, from what was consumed against the estimate, and a finished leaf is declared complete
+     * on the week of its last entry. Two exceptions: the leaf behind its estimate is declared at a slower pace than its
+     * consumption, and the owner of the leaf to refresh stopped declaring two weeks ago. The first finished leaf a day or
+     * more over its estimate is declared again at 90 % today, as when work on it resumes.
      */
-    private function declareProgress(ObjectManager $manager, \DateTimeImmutable $today): void
+    private function declareProgress(ObjectManager $manager, Week $firstWeek, \DateTimeImmutable $today): void
     {
-        $declare = function (Lot $leaf, int $daysAgo, int $percent, int $entered) use ($manager, $today): void {
-            $percent = max(1, min(100, $percent));
-            $entered = max(0, $entered);
-            $remaining = LeafProgress::anchoredRemaining($percent, $entered, ($leaf->getEstimateDays() ?? 0) * 4);
+        $declare = function (Lot $leaf, \DateTimeImmutable $day, int $percent) use ($manager): void {
             $author = $leaf->getOwner() ?? $this->people['thomas'];
-            $manager->persist(new LotProgress($leaf, $author, $today->modify(\sprintf('-%d days', $daysAgo)), $percent, $entered, $remaining));
+            $manager->persist(new LotProgress($leaf, $author, $day, max(1, min(100, $percent))));
         };
-        $consumed = fn (Lot $leaf): int => $this->consumed[(int) $leaf->getId()] ?? 0;
-
-        foreach (self::PROGRESS_HISTORY as $title => $declarations) {
-            $leaf = $this->leaves[$title];
-            foreach ($declarations as [$daysAgo, $percent]) {
-                $declare($leaf, $daysAgo, $percent, intdiv($consumed($leaf) * (100 - 2 * $daysAgo), 100));
-            }
-        }
-        $toRefresh = $this->leaves[self::PROGRESS_TO_REFRESH];
-        $declare($toRefresh, 14, 50, intdiv($consumed($toRefresh), 4));
 
         $overrun = null;
-        $complete = null;
         foreach ($this->leavesByTeam as $leaves) {
-            foreach ($leaves as [$leaf, , $lastWeek]) {
-                $estimate = $leaf->getEstimateDays();
-                if ($lastWeek >= self::WEEKS || null === $estimate || \in_array($leaf->getTitle(), self::TO_ESTIMATE, true)) {
-                    continue;
+            foreach ($leaves as [$leaf, $firstActiveWeek, $lastWeek]) {
+                $path = self::path($leaf);
+                $estimateQuarters = (int) $leaf->getEstimateDays() * 4;
+                $finished = $lastWeek < self::WEEKS;
+                $lastDeclaredWeek = self::PROGRESS_TO_REFRESH === $path ? self::WEEKS - 2 : min($lastWeek, self::WEEKS - 1);
+                $pace = self::BEHIND_ESTIMATE === $path ? 0.6 : 1.0;
+                $consumed = $this->consumed[(int) $leaf->getId()] ?? 0;
+                $entered = 0;
+                $percent = 0;
+                for ($weekIndex = $firstActiveWeek; $weekIndex <= $lastDeclaredWeek; ++$weekIndex) {
+                    $entered += $this->enteredByWeek[(int) $leaf->getId()][$weekIndex] ?? 0;
+                    if (0 === $entered) {
+                        continue;
+                    }
+                    $complete = $finished && $entered >= $consumed;
+                    $draw = $entered / $estimateQuarters * 100 * $pace * mt_rand(90, 110) / 100;
+                    $percent = $complete ? 100 : max($percent, min(95, max(5, 5 * (int) round($draw / 5))));
+                    $declare($leaf, $this->week($firstWeek, $weekIndex)->friday(), $percent);
+                    if ($complete) {
+                        break;
+                    }
                 }
-                $overrun ??= $consumed($leaf) >= ($estimate + 1) * 4 ? $leaf : null;
-                $complete ??= intdiv($consumed($leaf), 4) === $estimate ? $leaf : null;
+
+                $overrun ??= $finished && $consumed >= $estimateQuarters + 4 ? $leaf : null;
             }
         }
         if (null !== $overrun) {
-            $declare($overrun, 0, 90, $consumed($overrun));
-        }
-        if (null !== $complete) {
-            $declare($complete, 0, 100, (int) $complete->getEstimateDays() * 4);
+            $declare($overrun, $today, 90);
         }
     }
 

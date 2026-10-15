@@ -49,7 +49,7 @@ enum RoadmapSignal: string
             self::EstimateReached => 'Le lot se termine au dernier jour saisi. C\'est le cas normal d\'un lot terminé, sans alarme.',
             self::Overrun => 'Le travail peut continuer, mais rien ne dit combien de temps : sans avancement déclaré, la fin reste inconnue tant que l\'estimation n\'est pas révisée. Les jours saisis en dépassement apparaissent en rouge sur la barre.',
             self::Completed => 'Le lot se termine au dernier jour saisi.',
-            self::ProgressToRefresh => 'La fin du lot est inconnue, comme celle de son lot découpé et de son projet, jusqu\'à une nouvelle déclaration d\'avancement.',
+            self::ProgressToRefresh => 'Le restant et la fin du lot extrapolent le temps saisi depuis au pourcentage déclaré il y a plus d\'une semaine : ils ne reflètent pas l\'avancement réel, jusqu\'à une nouvelle déclaration.',
             self::TeamToReview => 'L\'équipe n\'apporte plus la capacité attendue : la fin calculée est repoussée, voire inconnue.',
             self::ToReplan => 'Une personne de l\'équipe est chargée au-delà de 100 % de sa capacité certains jours : la planification ne tient pas en l\'état.',
             self::PartialPlanning => 'La barre et la fin du projet ne couvrent que ses lots planifiés.',
@@ -67,7 +67,7 @@ enum RoadmapSignal: string
             self::EstimateReached => 'Le temps saisi égale exactement l\'estimation, sans avancement déclaré.',
             self::Overrun => 'Le temps saisi dépasse l\'estimation du lot.',
             self::Completed => 'Son avancement est déclaré à 100 %.',
-            self::ProgressToRefresh => 'Le temps saisi depuis la dernière déclaration d\'avancement a épuisé le restant qu\'elle annonçait.',
+            self::ProgressToRefresh => 'La dernière déclaration d\'avancement date de plus d\'une semaine, et du temps a été saisi sur le lot depuis.',
             self::TeamToReview => 'Un membre de l\'équipe est désactivé, ou l\'équipe ne couvre pas le restant dans les trois ans.',
             self::ToReplan => 'Un même jour, ce lot et d\'autres chargent une même personne à plus de 100 %, après une saisie plus lente que prévu, une estimation révisée, un avancement déclaré ou une capacité réduite.',
             self::PartialPlanning => 'Au moins un lot du projet n\'est pas planifié : il lui manque une estimation, une date de début ou une équipe.',
@@ -103,8 +103,8 @@ enum RoadmapSignal: string
     public function withholdsEnd(): bool
     {
         return match ($this) {
-            self::ToEstimate, self::WithoutStart, self::WithoutTeam, self::Overrun, self::ProgressToRefresh, self::TeamToReview => true,
-            self::LateStart, self::EstimateReached, self::Completed, self::ToReplan, self::PartialPlanning, self::Unsplit => false,
+            self::ToEstimate, self::WithoutStart, self::WithoutTeam, self::Overrun, self::TeamToReview => true,
+            self::LateStart, self::EstimateReached, self::Completed, self::ProgressToRefresh, self::ToReplan, self::PartialPlanning, self::Unsplit => false,
         };
     }
 

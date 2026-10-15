@@ -27,7 +27,7 @@ final class LotProgressManagerTest extends KernelTestCase
         self::mockTime('2026-10-02 10:00');
     }
 
-    public function testADeclarationAnchorsWhatIsLeftOnTheTimeEntered(): void
+    public function testADeclarationRecordsThePercentOfTheDayAndItsAuthor(): void
     {
         $author = $this->createUser();
         $lot = $this->leafWithTime(20, 10);
@@ -36,17 +36,14 @@ final class LotProgressManagerTest extends KernelTestCase
 
         self::assertSame('2026-10-02', $declaration->getDeclaredOn()->format('Y-m-d'));
         self::assertSame(40, $declaration->getPercent());
-        self::assertSame(10 * 4, $declaration->getEnteredQuarters());
-        self::assertSame(15 * 4, $declaration->getRemainingQuarters());
         self::assertSame($author, $declaration->getAuthor());
     }
 
-    public function testWithoutTimeWhatIsLeftComesFromTheEstimate(): void
+    public function testALeafWithoutTimeCanBeDeclaredShortOfAHundredPercent(): void
     {
         $declaration = $this->manager()->declare($this->createLot($this->createProject(), 10), 30, $this->createUser());
 
-        self::assertSame(0, $declaration->getEnteredQuarters());
-        self::assertSame(7 * 4, $declaration->getRemainingQuarters());
+        self::assertSame(30, $declaration->getPercent());
     }
 
     public function testASecondDeclarationTheSameDayReplacesTheFirst(): void
@@ -59,7 +56,6 @@ final class LotProgressManagerTest extends KernelTestCase
 
         self::assertSame($first->getId(), $second->getId());
         self::assertSame(50, $second->getPercent());
-        self::assertSame(10 * 4, $second->getRemainingQuarters());
         self::assertSame($author, $second->getAuthor());
         self::assertCount(1, $this->declarationsOf($lot));
     }
@@ -80,7 +76,6 @@ final class LotProgressManagerTest extends KernelTestCase
         $declaration = $this->manager()->declare($this->leafWithTime(20, 10), 0, $this->createUser());
 
         self::assertSame(0, $declaration->getPercent());
-        self::assertNull($declaration->getRemainingQuarters());
     }
 
     public function testALeafWithoutTimeCannotBeCompleteAtAHundredPercent(): void

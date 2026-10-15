@@ -145,8 +145,8 @@ final class RoadmapProjectControllerTest extends WebTestCase
         $login = $project->getLots()->filter(static fn ($lot): bool => 'Login' === $lot->getTitle())->first();
         self::assertNotFalse($login);
         $author = $this->createUser();
-        $this->createProgress($login, $author, '2026-10-01', 20, 12);
-        $this->createProgress($login, $author, '2026-10-05', 25, 12);
+        $this->createProgress($login, $author, '2026-10-01', 20);
+        $this->createProgress($login, $author, '2026-10-05', 25);
 
         $crawler = $client->request('GET', $this->url($project));
 
@@ -457,10 +457,11 @@ final class RoadmapProjectControllerTest extends WebTestCase
         self::assertSelectorTextSame('[data-test="project-page-at-least"]', 'au moins');
         self::assertSelectorTextSame('[data-test="project-page-projected"]', '19 j');
         self::assertSelectorTextSame('[data-test="project-page-gap"]', '+1 j (+6 %)');
+        self::assertSelectorTextSame('[data-test="project-page-gap-overrun"]', 'dont 1 j déjà saisi au-delà des estimations');
         self::assertSelectorExists('[data-test="project-page-at-least-reason"]');
         self::assertSame(['19 j', '0 j', '1 j (6 %)'], array_map(static fn (string $field): string => $crawler->filter(\sprintf('[data-test="project-page-%s"]', $field))->text(), ['entered', 'remaining', 'overrun']));
 
-        $this->createProgress($login, $bob, '2026-10-05', 90, 36);
+        $this->createProgress($login, $bob, '2026-10-05', 90);
         $client->request('GET', $this->url($project));
 
         self::assertSelectorNotExists('[data-test="project-page-at-least"]', 'Its progress tells what is left on the leaf.');

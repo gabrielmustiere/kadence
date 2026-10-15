@@ -41,7 +41,7 @@ C'est le symptôme « roadmap opaque » que la vision met au centre, et le signa
 
 - En tant que **direction**, je veux lire la fin calculée de chaque projet à côté de son titre, projets repliés, afin de répondre à « c'est pour quand ? » en parcourant une seule colonne.
 - En tant que **direction**, je veux qu'un projet dont la fin est inconnue le dise sur sa ligne, avec le nombre de lots en cause, afin de savoir que la date ne peut pas encore être donnée.
-- En tant que **lead**, je veux voir quels lots privent un projet d'une fin et pourquoi (en dépassement, avancement à actualiser, équipe à revoir), afin de savoir quoi corriger.
+- En tant que **lead**, je veux voir quels lots privent un projet d'une fin et pourquoi (en dépassement, équipe à revoir), afin de savoir quoi corriger.
 - En tant que **lead**, je veux qu'un projet partiellement planifié dise combien de lots sont laissés hors de sa fin, et lesquels, afin de ne pas prendre sa date pour celle du projet entier.
 - En tant que **personne connectée**, je veux qu'un projet sans barre dise pourquoi (pas encore découpé, rien de planifié, ou hors de la période affichée), afin de ne pas le croire oublié.
 - En tant que **personne connectée**, je veux lire la fin d'un projet qui tombe avant ou après la période affichée, afin de ne pas devoir naviguer de quatre semaines en quatre semaines pour la trouver.
@@ -55,7 +55,7 @@ C'est le symptôme « roadmap opaque » que la vision met au centre, et le signa
 
 1. **Ligne de date** : chaque ligne de projet, de lot découpé et de lot de la roadmap porte, sous son titre et ses pastilles, une ligne qui dit sa fin. Elle est visible que le projet soit replié ou déplié, et quel que soit le zoom.
 2. **Lot planifié dont la fin est connue** : « Fin calculée : » suivi du jour et de la date, par exemple « Fin calculée : Ven 20/11/2026 ». C'est la date que donne déjà son récapitulatif ; les règles de calcul de la story 006 sont inchangées.
-3. **Lot planifié dont la fin est inconnue** : « Fin inconnue : » suivi de ce qui la retient, avec les mots des pastilles : « en dépassement », « avancement à actualiser », « équipe à revoir ».
+3. **Lot planifié dont la fin est inconnue** : « Fin inconnue : » suivi de ce qui la retient, avec les mots des pastilles : « en dépassement », « équipe à revoir ». _(Révisé par la story 020 : une feuille « avancement à actualiser » garde sa fin calculée.)_
 4. **Lot non planifié** : « Non planifié : » suivi de ce qui lui manque : « à estimer », « sans début », « sans équipe ».
 5. **Projet ou lot découpé dont la fin est connue** : « Fin calculée : » suivi de la date de son lot le plus tardif, comme aujourd'hui pour sa barre.
 6. **Projet ou lot découpé partiellement planifié** : la date est suivie du nombre de lots non planifiés qu'elle laisse de côté, par exemple « Fin calculée : Ven 20/11/2026, hors 2 lots non planifiés ».

@@ -1,0 +1,37 @@
+{
+  "version": 2,
+  "title": "Calculer le restant d'une feuille à partir du temps saisi aujourd'hui, sans rien figer à la déclaration",
+  "created": "2026-10-15",
+  "updated": "2026-10-15",
+  "tags": [
+    "avancement",
+    "roadmap"
+  ],
+  "changelog": [
+    {
+      "date": "2026-10-15",
+      "type": "Planification",
+      "description": "Plan validé sans pitch : modèle « pourcentage appliqué au temps saisi actuel », suppression de entered_quarters et remaining_quarters sur lot_progress, signal « avancement à actualiser » redéfini (déclaration de plus de 7 jours avec du temps saisi depuis)."
+    },
+    {
+      "date": "2026-10-15",
+      "type": "Implémentation",
+      "description": "Livré : migration réversible, LeafProgress::remaining() et isToRefresh(), Scheduler et ProjectRollup sur le calcul à la volée ; PHPUnit 729 verts, Playwright 56 verts, lint propre."
+    },
+    {
+      "date": "2026-10-15",
+      "type": "Review",
+      "description": "Ouverture : corrections requises ; 2 importants ([BUG] avancement à actualiser encore cause d'une fin inconnue, [PLAN] fixtures, règle et écart projeté hors plan), 2 mineurs."
+    },
+    {
+      "date": "2026-10-15",
+      "type": "Review",
+      "description": "Prêt à commiter ; 1 important corrigé, 1 arbitré et 2 mineurs corrigés : [BUG] avancement à actualiser retiré des causes de fin inconnue (withholdsEnd), [PLAN] refonte des fixtures, ordre de la règle et écart projeté voulus dans la 020, [DOC] sens du signal à actualiser, [MIGRATION] perte des quarts commentée dans down()."
+    },
+    {
+      "date": "2026-10-15",
+      "type": "Sync",
+      "description": "5 écarts réalignés dans le plan, pitchs 012 et 018 et backlog (C5.5, estimation déclarative) révisés, aucune dette, 2 leçons."
+    }
+  ]
+}

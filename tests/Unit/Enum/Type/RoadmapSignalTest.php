@@ -19,6 +19,13 @@ final class RoadmapSignalTest extends TestCase
         }
     }
 
+    public function testAProgressToRefreshNoLongerWithholdsTheEnd(): void
+    {
+        $withholding = array_values(array_filter(RoadmapSignal::cases(), static fn (RoadmapSignal $signal): bool => $signal->withholdsEnd()));
+
+        self::assertSame([RoadmapSignal::ToEstimate, RoadmapSignal::WithoutStart, RoadmapSignal::WithoutTeam, RoadmapSignal::Overrun, RoadmapSignal::TeamToReview], $withholding);
+    }
+
     public function testPartialPlanningIsNotAPartialEstimate(): void
     {
         self::assertSame('planification partielle', RoadmapSignal::PartialPlanning->label());

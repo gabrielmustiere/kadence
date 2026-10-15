@@ -13,7 +13,7 @@
             {%- if row.end -%}
                 {{ row.end|weekday }} {{ row.end|date('d/m/Y') }}
             {%- elseif row.isEndUnknown -%}
-                inconnue{% if row.hasSignal(constant('App\\Enum\\Type\\RoadmapSignal::ProgressToRefresh')) %}, avancement à actualiser{% elseif row.overrunQuarters > 0 %}, estimation à réviser{% endif %}
+                inconnue{% if row.overrunQuarters > 0 %}, estimation à réviser{% endif %}
             {%- else -%}
                 non calculée
             {%- endif -%}

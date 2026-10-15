@@ -61,6 +61,7 @@ final readonly class Scheduler
             teamToReview: $teamToReview || $toReview,
             overrunQuarters: $overrun,
             progress: $plan->progress,
+            progressToRefresh: true === $plan->progress?->isToRefresh($plan->lastEntryDay, $today),
         );
 
         if (null === $remaining || null === $plan->startDate || [] === $plan->members) {
@@ -103,7 +104,10 @@ final readonly class Scheduler
             return null;
         }
 
-        return max(0, $plan->progress?->remainingAfter($plan->consumedQuarters) ?? $plan->estimateQuarters - $plan->consumedQuarters);
+        $consumed = max(0, $plan->consumedQuarters);
+        $estimate = max(0, $plan->estimateQuarters);
+
+        return $plan->progress?->remaining($consumed, $estimate) ?? max(0, $estimate - $consumed);
     }
 
     /**

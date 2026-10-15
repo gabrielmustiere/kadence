@@ -33,10 +33,10 @@ final class ProjectSummaryTest extends TestCase
         self::assertTrue($summary->isProjectedAtLeast());
     }
 
-    public function testTheProjectedCostIsAMinimumWithASubLotPastWhatItsProgressAnnounced(): void
+    public function testTheProjectedCostIsAMinimumWithASubLotOverrunWithoutProgress(): void
     {
-        $subLot = LotSummaryTest::leaf(entered: 9 * 4, percent: 60);
-        $lot = new LotSummary(new Lot(new Project()), [$subLot], 10, 0, 0, 0, true, 9 * 4);
+        $subLot = LotSummaryTest::leaf(entered: 12 * 4, overrun: 2 * 4);
+        $lot = new LotSummary(new Lot(new Project()), [$subLot], 10, 0, 0, 0, true, 12 * 4);
 
         self::assertTrue(self::project([$lot])->isProjectedAtLeast());
     }
