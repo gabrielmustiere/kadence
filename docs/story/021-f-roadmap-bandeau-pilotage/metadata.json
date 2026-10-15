@@ -37,6 +37,15 @@
       "date": "2026-10-15",
       "type": "Sync",
       "description": "7 écarts réalignés dans le plan et le pitch, 11/11 critères d'acceptation et 7/7 critères de sortie cochés, C5.3 éditée dans le backlog, 1 dette (bandeau haut sur téléphone), 2 leçons."
+    },
+    {
+      "date": "2026-10-15",
+      "type": "Livraison",
+      "description": "Commit eac1663 sur main."
     }
-  ]
+  ],
+  "delivery": {
+    "release": null,
+    "commit": "eac1663"
+  }
 }
