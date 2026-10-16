@@ -214,6 +214,6 @@
 
     <section>
         <h2 class="mb-4 text-lg font-semibold tracking-tight text-heading">Journal</h2>
-        {{ include('roadmap/_timeline.html.twig', {with_team: false, with_project: true, empty_message: "Aucun temps saisi."}) }}
+        {{ include('roadmap/_timeline.html.twig', {with_team: false, with_project: true, empty_message: "Aucun temps saisi.", recent_months: 3}) }}
     </section>
 {% endblock %}

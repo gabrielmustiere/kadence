@@ -28,12 +28,19 @@
             {% if agenda.forgottenDays is not empty %}
                 {% embed 'page/_section.html.twig' with {key: 'timesheet', title: 'Ma saisie', description: 'Journées incomplètes de cette semaine et de la précédente.', count: agenda.forgottenDays|length} %}
                     {% block items %}
+                        {% set shown_on_narrow = 3 %}
                         {% for day in agenda.forgottenDays %}
-                            <li class="flex items-center justify-between gap-4 px-5 py-3" data-test="home-forgotten-day" data-day="{{ day.date|date('Y-m-d') }}">
+                            <li class="flex items-center justify-between gap-4 px-5 py-3 {{ loop.index > shown_on_narrow ? 'max-md:hidden' }}" data-test="home-forgotten-day" data-day="{{ day.date|date('Y-m-d') }}">
                                 <a href="{{ path('app_timesheet_week', {week: day.date|date('o-\\WW')}) }}" class="{{ link_class }}">{{ day.date|weekday }} {{ day.date|date('d/m/Y') }}</a>
                                 <span class="tabular-nums text-body">{{ day.quarters|days }} saisi sur {{ day.capQuarters|days }}</span>
                             </li>
                         {% endfor %}
+                        {% set folded = agenda.forgottenDays|length - shown_on_narrow %}
+                        {% if folded > 0 %}
+                            <li class="px-5 py-3 md:hidden" data-test="home-forgotten-more">
+                                <a href="{{ path('app_timesheet_week', {week: agenda.forgottenDays[shown_on_narrow].date|date('o-\\WW')}) }}" class="{{ link_class }}">{{ folded > 1 ? 'Et ' ~ folded ~ ' autres journées' : 'Et une autre journée' }}</a>
+                            </li>
+                        {% endif %}
                     {% endblock %}
                 {% endembed %}
             {% endif %}

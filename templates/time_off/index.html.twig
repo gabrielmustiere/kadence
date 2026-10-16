@@ -41,7 +41,7 @@
         {% if requests is empty %}
             <twig:EmptyState icon="tabler:beach" data-test="time-off-requests-empty">Aucune demande pour l'instant.</twig:EmptyState>
         {% else %}
-            <div class="overflow-x-auto rounded-card border border-default bg-surface shadow-card">
+            <div class="relative overflow-x-auto rounded-card border border-default bg-surface shadow-card max-md:scroll-hint">
                 <table class="w-full text-sm" data-test="time-off-requests">
                     <thead class="border-b border-default bg-neutral-secondary-soft text-left">
                         <tr>

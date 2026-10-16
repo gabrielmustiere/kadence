@@ -12,17 +12,17 @@
     {% else %}
         <div class="flex flex-wrap gap-x-8 gap-y-4">
             {% for family, counters in board.families %}
-                <div class="min-w-0" data-test="roadmap-board-family" data-family="{{ family }}">
+                <div class="w-full min-w-0 sm:w-auto" data-test="roadmap-board-family" data-family="{{ family }}">
                     <h2 class="eyebrow text-body-subtle">{{ family }}</h2>
-                    <ul class="mt-2 flex flex-wrap gap-2">
+                    <ul class="mt-2 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
                         {% for counter in counters %}
                             {% set active = view.signal is same as(counter.signal) %}
-                            <li class="flex w-52">
+                            <li class="flex sm:w-52">
                                 <a href="{{ path(route, active ? params : params|merge({signal: counter.signal.value})) }}"
                                    class="flex w-full flex-col gap-1 rounded-lg border px-3 py-2.5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-medium {{ active ? 'border-brand bg-brand-softer' : 'border-default hover:bg-neutral-secondary-soft' }}"
                                    {% if active %}aria-current="true"{% endif %}
                                    data-test="roadmap-board-counter" data-signal="{{ counter.signal.value }}">
-                                    <div class="flex items-center gap-2">
+                                    <div class="flex flex-wrap items-center gap-2">
                                         <span class="text-xl font-semibold tabular-nums text-heading" data-test="roadmap-board-count">{{ counter.leafCount }}</span>
                                         <twig:Badge variant="{{ counter.signal.variant }}">{{ counter.signal.label }}</twig:Badge>
                                     </div>

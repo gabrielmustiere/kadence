@@ -31,7 +31,7 @@
 
     {{ form_start(form, {attr: {'data-action': 'live#action:prevent', 'data-live-action-param': 'save', 'data-model': 'debounce(250)|*', novalidate: 'novalidate', 'data-test': 'entitlements-form'}}) }}
         {{ form_errors(form) }}
-        <div class="overflow-x-auto rounded-card border border-default bg-surface shadow-card">
+        <div class="relative overflow-x-auto rounded-card border border-default bg-surface shadow-card max-md:scroll-hint">
             <table class="w-full text-sm">
                 <thead class="border-b border-default bg-neutral-secondary-soft text-left">
                     <tr>

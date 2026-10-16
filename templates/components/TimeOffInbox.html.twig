@@ -59,7 +59,7 @@
                                         <label for="refuse-reason-{{ request.id }}" class="mb-1.5 block text-[13px] font-medium text-heading">Motif du refus</label>
                                         <textarea id="refuse-reason-{{ request.id }}" rows="3" maxlength="500" data-model="norender|reasons.{{ request.id }}" data-test="time-off-refuse-reason"
                                                   {% if refusal_errors[request.id] is defined %}aria-invalid="true" aria-describedby="refuse-error-{{ request.id }}"{% endif %}
-                                                  class="block w-full rounded-base border border-default-medium bg-surface px-3 py-2 text-sm text-heading shadow-xs focus:border-brand focus:outline-hidden focus:ring-4 focus:ring-brand-medium/50">{{ reasons[request.id] ?? '' }}</textarea>
+                                                  class="block w-full rounded-base border border-default-medium bg-surface px-3 py-2 text-base text-heading shadow-xs focus:border-brand sm:text-sm focus:outline-hidden focus:ring-4 focus:ring-brand-medium/50">{{ reasons[request.id] ?? '' }}</textarea>
                                         {% if refusal_errors[request.id] is defined %}
                                             <p id="refuse-error-{{ request.id }}" class="mt-1.5 text-xs font-medium text-fg-danger-strong" data-test="time-off-refuse-error">{{ refusal_errors[request.id] }}</p>
                                         {% endif %}

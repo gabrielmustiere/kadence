@@ -11,7 +11,7 @@
     {% set route = current ? 'app_roadmap' : 'app_roadmap_week' %}
     {% set params = current ? {} : {week: window.anchor.iso} %}
     <twig:PageHeader title="Roadmap" compact description="La chronologie de chaque projet : ce qui a été saisi, puis ce qui reste, réparti sur la capacité de son équipe.">
-        <nav class="inline-flex items-center gap-0.5 rounded-xl border border-default bg-surface p-1 shadow-xs" aria-label="Période affichée">
+        <nav class="inline-flex items-center gap-0.5 rounded-xl border border-default bg-surface p-1 shadow-xs max-md:hidden" aria-label="Période affichée">
             <a href="{{ path('app_roadmap_week', {week: window.previous.iso}|merge(view.signalParams)) }}" data-test="roadmap-previous"
                class="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-sm font-medium text-body transition-colors hover:bg-neutral-tertiary hover:text-heading">
                 <twig:ux:icon name="tabler:chevron-left" class="size-4"/>
@@ -25,14 +25,14 @@
                 <twig:ux:icon name="tabler:chevron-right" class="size-4"/>
             </a>
         </nav>
-        {{ include('roadmap/_zoom.html.twig') }}
+        <div class="max-md:hidden">{{ include('roadmap/_zoom.html.twig') }}</div>
     </twig:PageHeader>
 
     {% if board %}
         {{ include('roadmap/_board.html.twig') }}
     {% endif %}
 
-    {{ include('roadmap/_legend.html.twig') }}
+    <div class="max-md:hidden">{{ include('roadmap/_legend.html.twig') }}</div>
 
     {% if roadmap.projects is empty and filtered %}
         <twig:EmptyState icon="tabler:circle-check" data-test="roadmap-filter-empty">
@@ -44,6 +44,8 @@
             Aucun projet pour l'instant.
         </twig:EmptyState>
     {% else %}
+        {{ include('roadmap/_list.html.twig') }}
+        <div class="max-md:hidden">
         {% embed 'roadmap/_frieze.html.twig' %}
             {% block rows %}
                 {% for project in roadmap.projects %}
@@ -87,6 +89,7 @@
                 {% endfor %}
             {% endblock %}
         {% endembed %}
+        </div>
     {% endif %}
     </div>
 {% endblock %}

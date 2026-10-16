@@ -11,7 +11,7 @@
             <p class="mt-1 max-w-md whitespace-pre-line break-words text-xs font-normal leading-relaxed text-body {{ nested ? 'ps-6' : '' }}">{{ lot.description }}</p>
         {% endif %}
     </twig:Table:Cell>
-    <twig:Table:Cell data-test="lot-owner-cell">
+    <twig:Table:Cell data-label="Responsable" data-test="lot-owner-cell">
         {% if not lot.leaf %}
             <span class="text-body-subtle">—</span>
         {% elseif owner is null %}
@@ -28,7 +28,7 @@
             </div>
         {% endif %}
     </twig:Table:Cell>
-    <twig:Table:Cell class="tabular-nums" data-test="consumption-estimate">
+    <twig:Table:Cell class="tabular-nums" data-label="Estimation" data-test="consumption-estimate">
         {% if not lot.leaf %}
             {{ include('project/_estimate.html.twig') }}
         {% elseif lot.estimateDays is null %}
@@ -40,14 +40,14 @@
             <span class="mt-0.5 block whitespace-nowrap text-xs text-body-subtle" data-test="initial-estimate">initiale {{ lot.initialEstimateDays }} j</span>
         {% endif %}
     </twig:Table:Cell>
-    <twig:Table:Cell>
+    <twig:Table:Cell data-label="Saisi">
         <span class="block whitespace-nowrap text-xs tabular-nums text-heading" data-test="consumption-entered">{{ summary.enteredQuarters|days }}</span>
         <twig:Ruler class="mt-1.5" :entered="summary.enteredQuarters" :remaining="summary.remainingQuarters" :overrun="summary.overrunQuarters" :estimate="summary.estimateDays * 4" :projected="lot.leaf ? summary.projectedQuarters : null" :scale="scale"/>
     </twig:Table:Cell>
-    <twig:Table:Cell class="whitespace-nowrap tabular-nums">
+    <twig:Table:Cell class="whitespace-nowrap tabular-nums max-md:whitespace-normal" data-label="Restant ou dépassement">
         {{ include('project/_remaining.html.twig', {line: summary}) }}
     </twig:Table:Cell>
-    <twig:Table:Cell class="tabular-nums" data-test="consumption-progress">
+    <twig:Table:Cell class="tabular-nums max-md:col-span-2" data-label="Avancement" data-test="consumption-progress">
         {% if lot.leaf %}
             {{ include('project/_progress.html.twig') }}
         {% elseif summary.progressPercent is not null %}
@@ -57,7 +57,7 @@
             <span class="text-body-subtle">—</span>
         {% endif %}
     </twig:Table:Cell>
-    <twig:Table:Cell class="whitespace-nowrap tabular-nums" data-test="consumption-projected">
+    <twig:Table:Cell class="whitespace-nowrap tabular-nums" data-label="Projeté" data-test="consumption-projected">
         {% if lot.leaf and summary.projectedQuarters is not null %}
             {% set projectedGap = summary.projectedGapQuarters %}
             {{ summary.projectedQuarters|days }}
@@ -66,7 +66,7 @@
             <span class="text-body-subtle">—</span>
         {% endif %}
     </twig:Table:Cell>
-    <twig:Table:Cell class="w-px">
+    <twig:Table:Cell class="w-px max-md:w-auto max-md:self-end">
         <div class="flex justify-end gap-1">
             {% if is_granted('LOT_EDIT', lot) %}
                 <twig:Button as="a" size="icon-xs" variant="ghost" class="text-body-subtle" href="{{ path('app_lot_edit', {id: lot.id}) }}" data-tooltip="Modifier" aria-label="Modifier « {{ lot.title }} »" data-test="lot-edit">

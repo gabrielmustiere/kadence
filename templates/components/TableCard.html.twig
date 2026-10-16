@@ -1,5 +1,5 @@
-{# The frame of a table: a card that scrolls sideways when the table needs more room than the page. #}
+{# The frame of a table: a card that scrolls sideways when the table needs more room than the page, fading its end edge below md while there is more to see. #}
 {# @block content The table #}
-<div class="{{ ('relative overflow-x-auto rounded-card border border-default bg-surface shadow-card ' ~ attributes.render('class'))|tailwind_merge }}" {{ attributes }}>
+<div class="{{ ('relative overflow-x-auto rounded-card border border-default bg-surface shadow-card max-md:scroll-hint ' ~ attributes.render('class'))|tailwind_merge }}" {{ attributes }}>
     {%- block content %}{% endblock -%}
 </div>

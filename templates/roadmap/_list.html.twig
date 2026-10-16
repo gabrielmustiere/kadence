@@ -1,0 +1,24 @@
+{#
+    The roadmap below md, where the frieze has no room: each project with its signals and its calculated end, opening
+    its page. Expects `roadmap` and `view`.
+#}
+<ul class="divide-y divide-default-subtle overflow-hidden rounded-card border border-default bg-surface shadow-card md:hidden" data-test="roadmap-list">
+    {% for project in roadmap.projects %}
+        <li data-test="roadmap-list-project" data-title="{{ project.title }}">
+            <a href="{{ path('app_project_show', {id: project.project.id, roadmap: roadmap.window.anchor.iso}|merge(view.signalParams)) }}" class="flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-neutral-secondary-soft">
+                <div class="min-w-0 flex-1">
+                    <p class="text-sm font-semibold text-heading">{{ project.title }}</p>
+                    {% if project.signals is not empty %}
+                        <div class="mt-1.5 flex flex-wrap gap-1.5">
+                            {% for signal in project.signals %}
+                                <twig:Badge variant="{{ signal.variant }}">{{ signal.label }}</twig:Badge>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    {{ include('roadmap/_end.html.twig', {row: project, focusable: false}) }}
+                </div>
+                <twig:ux:icon name="tabler:chevron-right" class="size-4 shrink-0 text-body-subtle" aria-hidden="true"/>
+            </a>
+        </li>
+    {% endfor %}
+</ul>

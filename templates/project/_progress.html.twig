@@ -10,7 +10,7 @@
         {% if back %}<input type="hidden" name="roadmap" value="{{ back.week.iso }}">{% endif %}
         {% if back.signal ?? null %}<input type="hidden" name="signal" value="{{ back.signal.value }}">{% endif %}
         <label for="progress-{{ lot.id }}" class="sr-only">Avancement de « {{ lot.title }} »</label>
-        <twig:Select id="progress-{{ lot.id }}" name="percent" required autocomplete="off" class="h-8 w-[7.5rem] ps-2.5 text-[13px] tabular-nums" data-test="progress-select">
+        <twig:Select id="progress-{{ lot.id }}" name="percent" required autocomplete="off" class="h-10 w-40 ps-2.5 text-base tabular-nums sm:h-8 sm:w-[7.5rem] sm:text-[13px]" data-test="progress-select">
             {% if declaration is null %}
                 <option value="" selected>Non déclaré</option>
             {% endif %}
@@ -18,7 +18,7 @@
                 <option value="{{ percent }}" {{ declaration and percent == declaration.percent ? 'selected' }}>{{ percent }} %</option>
             {% endfor %}
         </twig:Select>
-        <twig:Button type="submit" size="xs" variant="outline" class="h-8" data-test="progress-submit">Enregistrer<span class="sr-only"> l'avancement de « {{ lot.title }} »</span></twig:Button>
+        <twig:Button type="submit" size="xs" variant="outline" class="h-10 sm:h-8" data-test="progress-submit">Enregistrer<span class="sr-only"> l'avancement de « {{ lot.title }} »</span></twig:Button>
     </form>
     {% if declaration %}
         <span class="mt-1 block whitespace-nowrap text-xs text-body-subtle" data-test="progress-declared-on">déclaré le {{ declaration.declaredOn|date('d/m') }}</span>

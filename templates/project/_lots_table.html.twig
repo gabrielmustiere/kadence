@@ -9,7 +9,7 @@
     {% endfor %}
 {% endfor %}
 <twig:TableCard>
-    <twig:Table data-test="lots-table">
+    <twig:Table stack data-test="lots-table">
         <twig:Table:Header>
             <twig:Table:Row>
                 <twig:Table:Head>Lot</twig:Table:Head>
@@ -34,10 +34,10 @@
             <twig:Table:Row data-test="lot-total-row" data-title="Projet">
                 <twig:Table:Cell class="font-medium text-heading">Projet</twig:Table:Cell>
                 <twig:Table:Cell/>
-                <twig:Table:Cell class="whitespace-nowrap tabular-nums" data-test="consumption-estimate">{{ include('project/_estimate.html.twig') }}</twig:Table:Cell>
-                <twig:Table:Cell class="whitespace-nowrap tabular-nums text-heading" data-test="consumption-entered">{{ summary.enteredQuarters|days }}</twig:Table:Cell>
-                <twig:Table:Cell class="whitespace-nowrap tabular-nums">{{ include('project/_remaining.html.twig', {line: summary}) }}</twig:Table:Cell>
-                <twig:Table:Cell class="whitespace-nowrap tabular-nums" data-test="consumption-progress">
+                <twig:Table:Cell class="whitespace-nowrap tabular-nums" data-label="Estimation" data-test="consumption-estimate">{{ include('project/_estimate.html.twig') }}</twig:Table:Cell>
+                <twig:Table:Cell class="whitespace-nowrap tabular-nums text-heading" data-label="Saisi" data-test="consumption-entered">{{ summary.enteredQuarters|days }}</twig:Table:Cell>
+                <twig:Table:Cell class="whitespace-nowrap tabular-nums max-md:whitespace-normal" data-label="Restant ou dépassement">{{ include('project/_remaining.html.twig', {line: summary}) }}</twig:Table:Cell>
+                <twig:Table:Cell class="whitespace-nowrap tabular-nums" data-label="Avancement" data-test="consumption-progress">
                     {% if summary.progressPercent is not null %}
                         {{ summary.progressPercent }} %
                         {% if summary.isPartial %}<span class="block text-xs text-body" data-test="consumption-progress-partial">sur les lots estimés</span>{% endif %}
@@ -45,7 +45,7 @@
                         <span class="text-body">—</span>
                     {% endif %}
                 </twig:Table:Cell>
-                <twig:Table:Cell class="tabular-nums" data-test="consumption-projected"><span class="text-body">—</span></twig:Table:Cell>
+                <twig:Table:Cell class="tabular-nums" data-label="Projeté" data-test="consumption-projected"><span class="text-body">—</span></twig:Table:Cell>
                 <twig:Table:Cell/>
             </twig:Table:Row>
         </twig:Table:Footer>

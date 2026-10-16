@@ -339,14 +339,20 @@ test('la fiche s\'ouvre à ×1 sans toucher au zoom de la roadmap, et détaille 
   await expect(level).toHaveText('×4');
 });
 
-test('sur un téléphone, la fin d\'un projet se lit sans faire défiler la frise, à tout zoom', async ({ page }) => {
+test('sur un téléphone, la fin d\'un projet se lit dans la liste de la roadmap, celle d\'un lot sans faire défiler la frise de sa fiche, à tout zoom', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await login(page, 'antoine.leroy@anyti.me');
   await page.goto('/roadmap');
-  const end = projectRow(page).locator('summary [data-test="roadmap-end"]');
+  await expect(page.locator('[data-test="roadmap"]')).toBeHidden();
+  const item = page.locator(`[data-test="roadmap-list-project"][data-title="${project}"]`);
+  await expect(item.locator('[data-test="roadmap-end"]')).toHaveText(/^Fin (calculée|inconnue) : /);
+
+  await item.locator('a').click();
+  await expect(page.locator('[data-test="project-page-heading"]')).toHaveText(project);
+  const leaf = page.locator('[data-test="roadmap-leaf"]').first();
+  const end = leaf.locator('[data-test="roadmap-end"]');
   const level = page.locator('[data-test="roadmap-zoom-level"]');
   await expect(level).toHaveText('×1');
-  await expect(end).toHaveText(/^Fin (calculée|inconnue) : /);
   const text = await end.textContent();
 
   const inView = async () => {
@@ -355,7 +361,7 @@ test('sur un téléphone, la fin d\'un projet se lit sans faire défiler la fris
     expect(box.x + box.width).toBeLessThanOrEqual(390);
   };
   await inView();
-  const labels = (await projectRow(page).locator('summary > div').first().boundingBox())!;
+  const labels = (await leaf.locator('> div').first().boundingBox())!;
   expect(labels.width).toBeLessThanOrEqual(11 * 16);
 
   for (let i = 0; i < 3; i++) {

@@ -13,16 +13,16 @@
         </twig:block>
         <nav class="inline-flex items-center gap-0.5 rounded-xl border border-default bg-surface p-1" aria-label="Navigation entre semaines">
             <a href="{{ path('app_timesheet_week', {week: week.previous.iso}) }}" data-test="week-prev"
-               class="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-sm font-medium text-body transition-colors hover:bg-neutral-tertiary hover:text-heading">
+               class="inline-flex h-10 items-center sm:h-8 gap-1 rounded-lg px-2.5 text-sm font-medium text-body transition-colors hover:bg-neutral-tertiary hover:text-heading">
                 <twig:ux:icon name="tabler:chevron-left" class="size-4"/>
                 <span class="max-sm:sr-only">Semaine précédente</span>
             </a>
             <a href="{{ path('app_timesheet') }}" data-test="week-current" aria-current="{{ current ? 'page' : 'false' }}"
-               class="inline-flex h-8 items-center rounded-lg px-3 text-sm font-medium transition-colors {{ current ? 'bg-neutral-tertiary text-heading' : 'text-body hover:bg-neutral-tertiary hover:text-heading' }}">
+               class="inline-flex h-10 items-center sm:h-8 rounded-lg px-3 text-sm font-medium transition-colors {{ current ? 'bg-neutral-tertiary text-heading' : 'text-body hover:bg-neutral-tertiary hover:text-heading' }}">
                 Cette semaine
             </a>
             <a href="{{ path('app_timesheet_week', {week: week.next.iso}) }}" data-test="week-next"
-               class="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-sm font-medium text-body transition-colors hover:bg-neutral-tertiary hover:text-heading">
+               class="inline-flex h-10 items-center sm:h-8 gap-1 rounded-lg px-2.5 text-sm font-medium text-body transition-colors hover:bg-neutral-tertiary hover:text-heading">
                 <span class="max-sm:sr-only">Semaine suivante</span>
                 <twig:ux:icon name="tabler:chevron-right" class="size-4"/>
             </a>

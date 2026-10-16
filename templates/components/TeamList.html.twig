@@ -6,7 +6,7 @@
     {% set selected = {competence: this.competence, experience: this.experience, equipe: this.equipe, manager: this.manager} %}
     {% if lead %}
     {% set tags = this.tags %}
-    <div class="mb-5 flex flex-wrap items-end gap-x-3 gap-y-3 rounded-card border border-default bg-surface p-4 shadow-card" data-test="team-filter">
+    <div class="mb-5 grid grid-cols-2 items-end gap-3 rounded-card border border-default bg-surface p-4 shadow-card sm:flex sm:flex-wrap" data-test="team-filter">
         {% for category in categories.cases() %}
             <div class="w-full sm:w-48">
                 <twig:Label for="team-filter-{{ category.value }}" class="mb-1.5">{{ category.label }}</twig:Label>
@@ -40,7 +40,7 @@
     {% endif %}
 
     <twig:TableCard>
-        <twig:Table data-test="team-table">
+        <twig:Table stack data-test="team-table">
             <twig:Table:Header>
                 <twig:Table:Row>
                     <twig:Table:Head>Personne</twig:Table:Head>
@@ -77,15 +77,15 @@
                             </div>
                         </twig:Table:Cell>
                         {% if lead %}
-                        <twig:Table:Cell class="text-heading" data-test="member-role">{{ member.role.label }}</twig:Table:Cell>
-                        <twig:Table:Cell data-test="member-team-type">
+                        <twig:Table:Cell class="text-heading" data-label="Rôle" data-test="member-role">{{ member.role.label }}</twig:Table:Cell>
+                        <twig:Table:Cell data-label="Pôle" data-test="member-team-type">
                             {% if member.teamType %}
                                 <twig:Badge variant="brand" data-test="member-tag">{{ member.teamType.label }}</twig:Badge>
                             {% else %}
                                 <span class="text-body" aria-label="Aucune">—</span>
                             {% endif %}
                         </twig:Table:Cell>
-                        <twig:Table:Cell>
+                        <twig:Table:Cell class="max-md:col-span-2" data-label="Compétences et expériences">
                             <div class="space-y-1.5" data-test="member-tags">
                                 {% for group in [
                                     {tags: skills, icon: 'tabler:code', label: categories.TechnicalSkill.pluralLabel, variant: 'gray', border: 'none'},
@@ -112,10 +112,10 @@
                         </twig:Table:Cell>
                         {% endif %}
                         {% if direction %}
-                        <twig:Table:Cell class="whitespace-nowrap" data-test="member-manager">
+                        <twig:Table:Cell class="whitespace-nowrap" data-label="Manager" data-test="member-manager">
                             {% if member.manager %}{{ member.manager.firstName }} {{ member.manager.lastName }}{% else %}<span class="text-body" aria-label="Aucun">—</span>{% endif %}
                         </twig:Table:Cell>
-                        <twig:Table:Cell>
+                        <twig:Table:Cell class="max-md:self-end">
                             <div class="flex justify-end gap-0.5">
                                 <twig:Button as="a" size="icon-xs" variant="ghost" class="text-body-subtle" href="{{ path('app_team_edit', {id: member.id}) }}" data-tooltip="Modifier" aria-label="Modifier {{ member.firstName }} {{ member.lastName }}" data-test="member-edit">
                                     <twig:ux:icon name="tabler:pencil" class="size-4"/>

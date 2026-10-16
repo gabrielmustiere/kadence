@@ -340,6 +340,32 @@
     background-image: repeating-linear-gradient(-45deg, var(--color-brand-medium) 0 3px, transparent 3px 7px);
 }
 
+/* A container that scrolls sideways fades its end edge while there is more to see. Driven by its own scroll: where
+   scroll-driven animations are missing, or when nothing overflows, the timeline is inactive and nothing fades. */
+@property --scroll-hint-fade {
+    syntax: '<length>';
+    inherits: false;
+    initial-value: 0px;
+}
+
+@keyframes scroll-hint {
+    0%, 90% {
+        --scroll-hint-fade: 2.5rem;
+    }
+
+    100% {
+        --scroll-hint-fade: 0px;
+    }
+}
+
+@utility scroll-hint {
+    @supports (animation-timeline: scroll()) {
+        mask-image: linear-gradient(to left, transparent, #000 var(--scroll-hint-fade));
+        animation: scroll-hint linear both;
+        animation-timeline: scroll(self inline);
+    }
+}
+
 /* The native select arrow ignores padding and hugs the border: draw Flowbite's chevron instead, with room on both sides.
    Unlayered so its end padding wins over the px-* utilities the selects carry. */
 select:not([multiple], [size]) {
@@ -406,16 +432,26 @@ input[type='radio']:checked {
     .quarter-bar {
         display: flex;
         gap: 3px;
-        min-width: 6.5rem;
+        min-width: 9rem;
     }
 
     .quarter {
         flex: 1 1 0;
-        height: 2rem;
+        height: 2.75rem;
         border-radius: 3px;
         background-color: var(--color-neutral-quaternary);
         cursor: pointer;
         transition: background-color 90ms ease-in-out, transform 120ms var(--ease-snappy), box-shadow 90ms ease-in-out;
+    }
+
+    @media (width >= 48rem) {
+        .quarter-bar {
+            min-width: 6.5rem;
+        }
+
+        .quarter {
+            height: 2rem;
+        }
     }
 
     .quarter:first-child {
@@ -646,5 +682,51 @@ input[type='radio']:checked {
     [data-tooltip]:hover::after,
     [data-tooltip]:focus-visible::after {
         display: block;
+    }
+}
+
+/* Below md, a table marked data-stack lays each row out as a card rather than scroll: its first cell as the title,
+   the others as figures under the label their data-label repeats from the hidden header. Unlayered so it wins over
+   the padding utilities the cells carry. */
+@media (width < 48rem) {
+    table[data-stack],
+    table[data-stack] > tbody,
+    table[data-stack] > tfoot {
+        display: block;
+    }
+
+    table[data-stack] > thead {
+        display: none;
+    }
+
+    table[data-stack] > * > tr {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.75rem 1rem;
+        padding: 1rem 1.25rem;
+    }
+
+    table[data-stack] > * > tr > td {
+        display: block;
+        padding: 0;
+    }
+
+    table[data-stack] > * > tr > td:first-child {
+        grid-column: 1 / -1;
+    }
+
+    table[data-stack] > * > tr > td:empty {
+        display: none;
+    }
+
+    table[data-stack] td[data-label]::before {
+        content: attr(data-label);
+        display: block;
+        margin-bottom: 0.25rem;
+        color: var(--color-body-subtle);
+        font-size: var(--text-xs);
+        line-height: var(--text-xs--line-height);
+        font-weight: 500;
+        letter-spacing: 0.01em;
     }
 }

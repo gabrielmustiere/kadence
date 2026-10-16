@@ -27,7 +27,7 @@
         </twig:EmptyState>
     {% else %}
         <twig:TableCard>
-            <twig:Table data-test="projects-table">
+            <twig:Table stack data-test="projects-table">
                 <twig:Table:Header>
                     <twig:Table:Row>
                         <twig:Table:Head>Projet</twig:Table:Head>
@@ -44,14 +44,14 @@
                                     <a href="{{ path('app_project_show', {id: summary.project.id}) }}" class="decoration-default-strong underline-offset-4 hover:underline" data-test="project-link">{{ summary.project.title }}</a>
                                 </div>
                             </twig:Table:Cell>
-                            <twig:Table:Cell class="tabular-nums">
+                            <twig:Table:Cell class="tabular-nums" data-label="Estimation">
                                 {% if summary.isUnsplit %}
                                     <span class="text-body-subtle">—</span>
                                 {% else %}
                                     {{ include('project/_estimate.html.twig') }}
                                 {% endif %}
                             </twig:Table:Cell>
-                            <twig:Table:Cell>
+                            <twig:Table:Cell class="{{ summary.isUnsplit or summary.toEstimate + summary.toAssign + summary.toReassign > 0 ? '' : 'max-md:hidden' }}" data-label="À compléter">
                                 {% if summary.isUnsplit %}
                                     <twig:Badge variant="gray" data-test="signal-unsplit">à découper</twig:Badge>
                                 {% else %}

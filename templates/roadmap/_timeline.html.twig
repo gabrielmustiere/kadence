@@ -44,9 +44,15 @@
                                 {% endif %}
                             </div>
                             {% if with_team ?? true %}
-                                <div class="mt-2.5 max-w-md rounded-lg bg-neutral-secondary-soft px-3 py-2 text-xs">
-                                    {{ include('roadmap/_team.html.twig', {lines: run.team, entered: true, links: true}) }}
-                                </div>
+                                <details open class="group/team mt-2.5 max-w-md" data-controller="fold-on-narrow" data-test="timeline-entry-team">
+                                    <summary class="inline-flex cursor-pointer list-none items-center gap-1 text-xs font-medium text-fg-brand md:hidden [&::-webkit-details-marker]:hidden">
+                                        <twig:ux:icon name="tabler:chevron-down" class="size-3.5 transition-transform group-open/team:rotate-180" aria-hidden="true"/>
+                                        Qui a saisi ({{ run.team|length }})
+                                    </summary>
+                                    <div class="mt-2 rounded-lg bg-neutral-secondary-soft px-3 py-2 text-xs md:mt-0">
+                                        {{ include('roadmap/_team.html.twig', {lines: run.team, entered: true, links: true}) }}
+                                    </div>
+                                </details>
                             {% endif %}
                         </li>
                     {% endfor %}
